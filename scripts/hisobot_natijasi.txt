@@ -1,0 +1,34 @@
+===========================================================================
+TALABALAR TO'LIQ MA'LUMOTLARI BO'YICHA YAKUNIY HISOBOT
+Sana: 2026-08-20 08:49:34
+===========================================================================
+
+Manba Excel: talabalar ro'yhati.xlsx
+Natijaviy Excel: Talabalar_Toliq_Royxati.xlsx
+HTML Dashboard: natijalar_hisoboti.html
+
+STATISTIKA:
+- Jami talabalar: 196
+- Topilgan: 179 (91.3%)
+- Topilmagan: 17
+
+---------------------------------------------------------------------------
+TOPILMAGAN TALABALAR RO'YXATI:
+---------------------------------------------------------------------------
+T/R: 27   | Ism: Boynazarova Shahrizoda         | Shartnoma №: 124   
+T/R: 29   | Ism: G'iyosova Shodiyona            | Shartnoma №: 125   
+T/R: 55   | Ism: Dilmurodova Sevinch            | Shartnoma №: 104   
+T/R: 64   | Ism: Mamarajabova Yulduz            | Shartnoma №: 23    
+T/R: 93   | Ism: Zarifjonova Marjona            | Shartnoma №: 93    
+T/R: 99   | Ism: Ibodullayeva Charos            | Shartnoma №: 63    
+T/R: 159  | Ism: Muminova Gulnoza               | Shartnoma №: 134   
+T/R: 161  | Ism: Luqmonova Nafisa               | Shartnoma №: 132   
+T/R: 162  | Ism: Abduvasiyeva Durdona           | Shartnoma №: 131   
+T/R: 163  | Ism: Elmurodova Hadicha             | Shartnoma №: 130   
+T/R: 164  | Ism: Ibodullayeva Asilzoda          | Shartnoma №: 129   
+T/R: 165  | Ism: Qurbonova Kamola               | Shartnoma №: 128   
+T/R: 166  | Ism: Axmadova Sarvinoz              | Shartnoma №: 127   
+T/R: 167  | Ism: Abdusamiyeva Ruxshona          | Shartnoma №: 126   
+T/R: 174  | Ism: Zayidova Shabboda              | Shartnoma №: 387   
+T/R: 176  | Ism: Mingishova Shoxsanam           | Shartnoma №: 389   
+T/R: 178  | Ism: Rustamova Farzona              | Shartnoma №: 24    

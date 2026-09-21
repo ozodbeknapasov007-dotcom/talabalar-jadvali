@@ -1,0 +1,254 @@
+==============================================================================
+  PASPORTDAGI F.I.SH — 2-BOSQICH TEKSHIRUVI
+  Sana: 19.09.2026 09:07
+==============================================================================
+  Jami talaba                    : 167
+  ✅ Tekshiruvdan o'tdi (yoziladi): 77
+     ├ ro'yxat bilan aynan mos    : 61
+     ├ imlo farqi (q/k, x/h, unli): 16
+     └ RO'YXATDAN HAQIQIY FARQ    : 0
+  🛑 Rad etildi (yozilmaydi)      : 7
+  —  AI o'qiy olmadi              : 83
+  ⚠️  Otasining ismi tasdiqlanmagan: 0
+==============================================================================
+
+██████████████████████████████████████████████████████████████████████████████
+  ⚠️  LANGAR YO'Q — solishtirish uchun pasport ma'lumoti yo'q (5 ta)
+     AI o'qidi, lekin bazada ham, QR da ham pasport №/PINFL yo'q.
+     Xato emas — shunchaki tasdiqlab bo'lmaydi.
+██████████████████████████████████████████████████████████████████████████████
+
+  [26-01] Miliyeva Umida  (qator 10)
+      fayl  : Meliyeva Umida 281.docx
+      ❌ Langar yo'q: na MRZ, na bazada pasport ma'lumoti bor
+      AI            : MELIYEVA UMIDA SHAVKAT QIZI
+      ro'yxat       : Miliyeva Umida
+
+  [26-02] Meyliqulova Hilola  (qator 27)
+      fayl  : Jumayeva Muxlisa 60.docx
+      ❌ Langar yo'q: na MRZ, na bazada pasport ma'lumoti bor
+      AI            : JUMAYEVA MUXLISA KOMILJON QIZI
+      shartnoma     : Jumayeva Muxlisa Komiljon qizi
+      ro'yxat       : Meyliqulova Hilola Farxod qizi
+
+  [26-03] Aliqulova Shahzoda  (qator 47)
+      fayl  : Aliqulova Shahzoda 272.docx
+      ❌ Langar yo'q: na MRZ, na bazada pasport ma'lumoti bor
+      AI            : ALIQULOVA SHAKHZODA DILOVAR QIZI
+      shartnoma     : Aliqulova Shahzoda Anvar qizi
+      ro'yxat       : Aliqulova Shahzoda Anvar qizi
+
+  [26-03] Primova Husnora  (qator 60)
+      fayl  : Primova Husnora 251.docx
+      ❌ Langar yo'q: na MRZ, na bazada pasport ma'lumoti bor
+      AI            : PRIMOVA HUSNORA SHOVKAT QIZI
+      shartnoma     : Primova Husnora Shovkat qizi
+      ro'yxat       : Primova Husnora Shavkat qizi
+
+  [26-04] Eshquvatova Yulduz  (qator 81)
+      fayl  : Eshquvatova Yulduz  267.docx
+      ❌ Langar yo'q: na MRZ, na bazada pasport ma'lumoti bor
+      AI            : ESHQUVATOVA YULDUZ ASLIDDIN QIZI
+      shartnoma     : Eshquvatova Yulduz Asliddin qizi
+      ro'yxat       : Eshquvatova Yulduz Asliddin qizi
+
+██████████████████████████████████████████████████████████████████████████████
+  🛑 ZIDDIYAT — AI boshqacha o'qidi (2 ta)
+     AI javobi mustaqil manbalarga mos kelmadi. Rasmini o'zim ko'rishim kerak.
+██████████████████████████████████████████████████████████████████████████████
+
+  [26-03] Holmamatova Shohista  (qator 51)
+      fayl  : Xolmamatova Shoxista 243.docx
+      ❌ AI o'qigan familiya/ism hech bir manbaga mos emas (MRZ=boshqa, shartnoma=boshqa, shahodatnoma=boshqa, ro'yxat=boshqa)
+      AI            : OLMAMATOVA SHOXISTA SOBIR QIZI
+      MRZ           : XOLMAMATOVA SHOXISTA
+      shartnoma     : Xolmamatova Shoxista Sobir qizi
+      shahodatnoma  : Xolmamatova Shoxista Sobir qizi
+      ro'yxat       : Holmamatova Shohista Sobir qizi
+
+  [26-04] Xamdamova Madina  (qator 97)
+      fayl  : Xamdamova Madina 14.docx
+      ❌ AI o'qigan familiya/ism hech bir manbaga mos emas (shartnoma=boshqa, ro'yxat=boshqa)
+      AI            : KHAMDAMOVA MADINA ABDIQODIR QIZI
+      shartnoma     : Xamdamova Madina Abdiqodir qizi
+      ro'yxat       : Xamdamova Madina Abdiqodir qizi
+
+------------------------------------------------------------------------------
+  ≈ IMLO FARQI (16 ta) — bir odam, yozuvi boshqacha
+    Rasmiy hujjatdagi yozuv q/k, x/h yoki unli harf bilan farq qiladi.
+------------------------------------------------------------------------------
+
+  [26-01] qator 3
+      ro'yxatda : Arziqulova Amina Salohiddin qizi
+      pasportda : Arzikulova Amina Salohiddin qizi
+
+  [26-01] qator 13
+      ro'yxatda : Ravshanova Ruxshona Radju qizi
+      pasportda : Ravshanova Ruhshona Radju qizi
+
+  [26-02] qator 24
+      ro'yxatda : Jalolova Rayhona Akmal qizi
+      pasportda : Jalolova Rayxona Akmal qizi
+
+  [26-02] qator 29
+      ro'yxatda : O'roqova Jasmina Jasur qizi
+      pasportda : Uroqova Jasmina Jasur qizi
+
+  [26-02] qator 30
+      ro'yxatda : Ochildiyeva Dinara Otabek qizi
+      pasportda : Ochildiyeva Dinora Otabek qizi
+
+  [26-02] qator 31
+      ro'yxatda : Quysinova Ruhshona To'lqin qizi
+      pasportda : Quysinova Rohshona To'lqin qizi
+
+  [26-02] qator 32
+      ro'yxatda : Ruzimurodova Larisa Ma'matali qizi
+      pasportda : Ro'zimurodova Larisa Ma'matali qizi
+
+  [26-02] qator 37
+      ro'yxatda : To'raboyeva Sabrina Ovloqul qizi
+      pasportda : To'raboyeva Sabrina Ovlaqul qizi
+
+  [26-02] qator 43
+      ro'yxatda : Xasanova Dilnura Eson qizi
+      pasportda : Hasanova Dilnura Eson qizi
+
+  [26-04] qator 76
+      ro'yxatda : A'zamov Shoxjaxon Sherali o'g'li
+      pasportda : A'zamov Shohjaxon Sherali o'g'li
+
+  [26-04] qator 77
+      ro'yxatda : Abdixalilova Shahzoda Bahodir qizi
+      pasportda : Abdixalilova Shohzoda Bahodir qizi
+
+  [26-04] qator 79
+      ro'yxatda : Abdurahmonova Zahrobonu Toxir qizi
+      pasportda : Abduraxmonova Zahrobonu Toxir qizi
+
+  [26-04] qator 83
+      ro'yxatda : Hamraqulova Marjona O'ktam qizi
+      pasportda : Hamroqulova Marjona O'ktam qizi
+
+  [26-04] qator 89
+      ro'yxatda : Murodova Ruxshona Ilhomovna
+      pasportda : Murodova Ruhshona Ilhomovna
+
+  [26-04] qator 98
+      ro'yxatda : Xannonova Shoxsanam Orif qizi
+      pasportda : Xannonova Shohsanam Orif qizi
+
+  [26-05] qator 116
+      ro'yxatda : Jumayeva Muhlisa Komiljon qizi
+      pasportda : Jumayeva Muxlisa Komiljon qizi
+
+------------------------------------------------------------------------------
+  📄 AI PASPORTNI O'QIY OLMADI (83 ta)
+------------------------------------------------------------------------------
+      [26-01] G'iyosova Shodiyona          fayl=—
+      [26-01] Ibodullayeva Asilzoda        fayl=—
+      [26-02] Ilhomova Zuhra               fayl=—
+      [26-03] Abdujalolova Dilnura         fayl=—
+      [26-03] Eshnazarova Dilnoza          fayl=Eshnazarova Dilnoza 221.docx
+      [26-03] Mansurova Gulasal            fayl=—
+      [26-03] Mustafayeva Madina           fayl=—
+      [26-03] Niyozova Komila              fayl=—
+      [26-03] Raimova Nozliya              fayl=—
+      [26-03] Rustamova Charos             fayl=—
+      [26-03] Temirova Rushana             fayl=—
+      [26-03] Umirova Sevinch              fayl=—
+      [26-04] Isomiddinova Ruxshona        fayl=Isomiddinova Ruhshona 65.docx
+      [26-04] Jalolov Javlonbek            fayl=—
+      [26-04] Karimova Shaxina             fayl=—
+      [26-04] Maxmudova Musallam           fayl=—
+      [26-04] Qodirova Sabina              fayl=—
+      [26-04] Soyipova Dinora              fayl=—
+      [26-04] Xo'jaqulova Navbahor         fayl=—
+      [26-04] Xolmurodova Dilnura          fayl=—
+      [26-04] Xurramova Shahnoza           fayl=Xurramova Shahnoza 29.docx
+      [26-04] Xurramova Shahrizoda         fayl=Xurramova Shahrizoda 96.docx
+      [26-04] Zayidova Shaboda             fayl=Zayidova Shabboda 387.docx
+      [26-05] Abdishukurova Gulsevar       fayl=Abdishukurova Gulsevar 238.docx
+      [26-05] Ashirova Gulsanam            fayl=Ashirova Gulsanam 224.docx
+      [26-05] Axmadova Munisa              fayl=Axmadova Munisa 33.docx
+      [26-05] Choriyeva Zaxro              fayl=Choriyeva Zahro 109.docx
+      [26-05] Ergashova Shabbona           fayl=Ergasheva Shabbona 123.docx
+      [26-05] Eshboboyeva Fotima           fayl=Eshboboyeva Fotima 45.docx
+      [26-05] G'ayratova Jasmina           fayl=G'ayratova Jasmina 97.docx
+      [26-05] Ixtiyorova Niginabonu        fayl=Ixtiyorova Niginabonu 227.docx
+      [26-05] Jabborova Bahoroy            fayl=Jabborova Baxoroy 202.docx
+      [26-05] Jalilova Jasmina             fayl=Jalilova Jasmina 95.docx
+      [26-05] Luxmonova Nozima             fayl=luxmonova Nozima 139.docx
+      [26-05] Murodova Munisa              fayl=Murodova Munisa 169.docx
+      [26-05] Muzrapova Ruxshona           fayl=Muzrapova Ruxshona 69.docx
+      [26-05] Nematova Sevinch             fayl=—
+      [26-05] Normurodova Gulsanam         fayl=Normurodova Gulsanam 136.docx
+      [26-05] Omonova Charos               fayl=Omonova Charos 230.docx
+      [26-05] Oripova Sevinch              fayl=—
+      [26-05] Ozodova Klara                fayl=Ozodova Klara 285.docx
+      [26-05] Saidova Dilso'z              fayl=Saidova Dilso'z 67.docx
+      [26-05] Sharipova Diyora             fayl=Sharipova Diyora 57.docx
+      [26-05] Toshmurodova Sarvara         fayl=Toshmurodova Sarvara  388.docx
+      [26-05] Tursunova Aziza              fayl=Tursunova Aziza 276.docx
+      [26-05] Tursunova Fotima             fayl=Tursunova Fotima 218.docx
+      [26-05] Tursunova Zuhra              fayl=Tursunova Zuhra 219.docx
+      [26-05] Usmonova Sabrina             fayl=Usmonova Sabrina 188.docx
+      [26-05] Xolmirzayeva Zebiniso        fayl=Xolmirzayeva Zebiniso 183.docx
+      [26-05] Yo'ldosheva Ruxshona         fayl=Yo'ldosheva Ruhshona 118.docx
+      [26-06] Abduxoliqova Elmira          fayl=Abdixoliqova Elmira 286.docx
+      [26-06] Bahodirova Asila             fayl=Bahodirova Asila 44.docx
+      [26-06] Davlatova Gulnoza            fayl=Davlatova Gulnoza Xusan qizi 310.docx
+      [26-06] Eshimova Zilola              fayl=Eshimova Zilola  174.docx
+      [26-06] Jalilova Shabnam             fayl=Jalilova Shabnam 17.docx
+      [26-06] Jumayeva Xusnida             fayl=Jumayeva Husnida 18.docx
+      [26-06] Karimova Nozliya             fayl=Karimova Nozliya 250.docx
+      [26-06] Mahmamurodova Sevara         fayl=Maxmudmurodova Sevara 390.docx
+      [26-06] Mahmudova Maftuna            fayl=Maxmudova Maftuna 120.docx
+      [26-06] Mannonova Shahrizoda         fayl=Mannonova Shahrizoda 199.docx
+      [26-06] Maxmarajabova Zerda          fayl=Maxmarajabova Zerda 253.docx
+      [26-06] Muminova Durdona             fayl=—
+      [26-06] Muminova Sevinch             fayl=Muminova Sevinch 163.docx
+      [26-06] Muxtorova Xadicha            fayl=Muxtorova Xadicha 176.docx
+      [26-06] Niyozova Sevara              fayl=—
+      [26-06] Nuraliyeva Sevinch           fayl=Nuraliyeva Sevinch 62.docx
+      [26-06] Ortiqova Dilnoza             fayl=Ortiqova Dilnoza 47.docx
+      [26-06] Qarshiyeva Shahlo            fayl=Qarshiyeva Shahlo 56.docx
+      [26-06] Quchqarova Zebiniso          fayl=Kuchqarova Zebiniso 187.docx
+      [26-06] Samiyeva Sevinchbonu         fayl=Samiyeva Sevinchbonu 271.docx
+      [26-06] Sanaqulova Muxtarama         fayl=Sanaqulova  Muxtarama  254.docx
+      [26-06] Sanaqulova Nozliya           fayl=Sanaqulova Nozliya   N 32.docx
+      [26-06] Sayfullayeva Shodiyona       fayl=Sayfillayeva Shodiyona 03.docx
+      [26-06] Turayeva Gulasal             fayl=Turayeva Gulasal 21.docx
+      [26-06] Xolmurodova Sabina           fayl=Xolmurodova Sabina 138.docx
+      [26-06] Yahyomurodova Gulsanam       fayl=Yahyomurodova Gulsanam 247.docx
+      [26-06] Zarifova Marjona             fayl=Zarifova Marjona 93.docx
+      [26-07] G'aniyeva Asila              fayl=G'aniyeva Asila  381.docx
+      [26-07] Muhammadiyeva Gulbahor       fayl=Muhammadiyeva Gulbahor 81.docx
+      [26-07] Mustafayeva Nargiza          fayl=Mustafoyeva Nargiza    205 (1).docx
+      [26-07] Nazarova Munisa              fayl=Nazarova Munisa  258.docx
+      [26-07] Salayeva Dilroz              fayl=—
+      [26-07] Usmonova Gulnoza             fayl=Usmanova Gulnoza 283.docx
+
+------------------------------------------------------------------------------
+  ➕ BO'SH OTASINING ISMI TO'LDIRILADI (1 ta)
+    Pasport (AI) va shartnoma matni mustaqil ravishda bir xil aytdi.
+------------------------------------------------------------------------------
+      [26-01] Axmedova Saodat              -> Hamro qizi
+
+------------------------------------------------------------------------------
+  🔒 QO'LDA TASDIQLANGAN QATORLAR (11 ta)
+     Bu skript faqat 9 va 24-ustunga yozadi, boshqasiga tegmaydi.
+------------------------------------------------------------------------------
+      [26-01] Ravshanova Ruxshona          -> Ravshanova Ruhshona Radju qizi
+      [26-02] Hasanova Marjona             -> Hasanova Marjona Xolmurod qizi
+      [26-02] Saydalimova Ruxshona         -> Saydalimova Ruxshona Sharofiddin qizi
+      [26-02] Suyunova Maftuna             -> Suyunova Maftuna Akbar qizi
+      [26-02] Xurramova Shodiya            -> Xurramova Shodiya Arol qizi
+      [26-04] Tuychiyeva Farzona           -> Tuychiyeva Farzona Dalerovna
+      [26-04] Xusanova Aziza               -> Xusanova Aziza Fazliddin qizi
+      [26-05] Berdimurodova Nafosat        -> Berdimurodova Nafosat Javlon qizi
+      [26-05] Jumayeva Muhlisa             -> Jumayeva Muxlisa Komiljon qizi
+      [26-05] Jurayeva Madina              -> Jurayeva Madina Odil qizi
+      [26-07] Narziyeva Intizor            -> Narziyeva Intizor Iskandar qizi
+
+==============================================================================

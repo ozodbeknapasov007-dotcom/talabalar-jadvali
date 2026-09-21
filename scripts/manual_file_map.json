@@ -1,0 +1,118 @@
+{
+  "_izoh": "Qo'lda tekshirilgan ma'lumotlar. Avtomatik skriptlardan USTUN turadi. Kalit: \"I.F.O|Guruh\"",
+  "_fayl_izoh": "fayllar: avtomatik qidiruv o'rniga shu fayl ishlatiladi",
+  "fayllar": {
+    "Xurramova Shodiya|26-02": {
+      "file": "Xurramova Shodiya.docx",
+      "sabab": "Manba jadvalda xato fayl ko'rsatilgan edi (Ibodullayeva Charos 63 (2).docx). Haqiqiy fayl qo'lda tasdiqlandi: shartnoma #02, 29-sonli maktab, Arol qizi."
+    },
+    "Isomiddinova Ruxshona|26-04": {
+      "file": "Isomiddinova Ruhshona 65.docx",
+      "sabab": "Manba jadvalda xato fayl ko'rsatilgan edi (G'ayratova Jasmina 66.docx). Haqiqiy fayl tasdiqlandi: shartnoma #65, 5-maktab, Shavkat qizi."
+    },
+    "Jumayeva Muhlisa|26-05": {
+      "file": "Jumayeva Muxlisa 60.docx",
+      "sabab": "Manba jadvalda xato fayl ko'rsatilgan edi (Ergashova Janona 59.docx). Haqiqiy fayl tasdiqlandi: shartnoma #60, Qarshi ped kollej, Komiljon qizi."
+    },
+    "Ilhomova Zuhra|26-02": {
+      "file": "",
+      "sabab": "Fayli mavjud emas. Olimova Zuxra 15.docx xato biriktirilgan edi, uzildi."
+    },
+    "Nematova Sevinch|26-05": {
+      "file": "",
+      "sabab": "Fayli mavjud emas. Nurmatova Sevinch 85.docx xato biriktirilgan edi, uzildi."
+    },
+    "Muminova Durdona|26-06": {
+      "file": "",
+      "sabab": "Fayli mavjud emas. Raxmonova Durdona 200.docx xato biriktirilgan edi, uzildi."
+    },
+    "Rustamova Charos|26-03": {
+      "file": "Rustamova charos uktam qizi 309.docx",
+      "sabab": "Telegram (tg) orqali yuborilgan haqiqiy ID-karta va Shahodatnoma rasmlari biriktirildi"
+    },
+    "Maxmudova Musallam|26-04": {
+      "file": "Maxmudova Musallam qamariddin qizi 311.docx",
+      "sabab": "Telegram (tg) orqali yuborilgan haqiqiy ID-karta va Shahodatnoma rasmlari biriktirildi"
+    },
+    "Saidaliyeva Ruxshona|26-02": {
+      "file": "Saydalimova Ruxshona 74.docx",
+      "sabab": "Familiyadagi xato tuzatildi: Saydalimova Ruxshona Sharofiddin qizi (#74)"
+    },
+    "Saydalimova Ruxshona|26-02": {
+      "file": "Saydalimova Ruxshona 74.docx",
+      "sabab": "Familiyadagi xato tuzatildi: Saydalimova Ruxshona Sharofiddin qizi (#74)"
+    },
+    "Mustafayeva Madina|26-03": {
+      "file": "",
+      "sabab": "Mustafoyeva Madina 282.docx boshqa shaxs (Ortiq qizi), uzildi. Fayl mavjud emas."
+    },
+    "Qodirova Sabina|26-04": {
+      "file": "",
+      "sabab": "Qodirova Shabnam 137.docx boshqa shaxs (Shabnam O'tkir qizi), uzildi. Fayl mavjud emas."
+    },
+    "Quchqarova Zebiniso|26-06": {
+      "file": "Kuchqarova Zebiniso 187.docx",
+      "sabab": "Otasining ismi Farhod qizi deb tuzatildi (#187)"
+    },
+    "Kuchqarova Zebiniso|26-06": {
+      "file": "Kuchqarova Zebiniso 187.docx",
+      "sabab": "Otasining ismi Farhod qizi deb tuzatildi (#187)"
+    },
+    "Nazirova Intizor|26-07": {
+      "file": "Nazirova  Intizor 212.docx",
+      "sabab": "Familiya pasport va diplom bo'yicha Narziyeva deb tasdiqlandi (#212)"
+    },
+    "Narziyeva Intizor|26-07": {
+      "file": "Nazirova  Intizor 212.docx",
+      "sabab": "Familiya pasport va diplom bo'yicha Narziyeva deb tasdiqlandi (#212)"
+    },
+    "Tuychiyeva Farzona|26-04": {
+      "file": "To’ychiyeva  Farzona 280.docx",
+      "sabab": "ID-karta va shahodatnoma to'liq tasdiqlandi (#280)"
+    },
+    "Abdug'apporova E'zoza|N": {
+      "file": "Abdugapporova Ezoza186.docx",
+      "sabab": "Manba ro'yxatdagi #186 shartnoma fayli"
+    },
+    "G'afforova Sug'diyona|N": {
+      "file": "G'afforova Sug'diyona 149.docx",
+      "sabab": "Manba ro'yxatdagi #149 shartnoma fayli"
+    },
+    "Turayeva Sevinch|N": {
+      "file": "Sevinch Turayeva07.docx",
+      "sabab": "Manba ro'yxatdagi #07 shartnoma fayli"
+    },
+    "Niyozova Komila|26-03": {
+      "file": "Niyozova Komila.docx",
+      "sabab": "Telegram (tg) orqali yuborilgan pasport va shahodatnoma dublikatidan yaratildi"
+    },
+    "Xo'jaqulova Navbahor|26-04": {
+      "file": "Xo`jaqulova Navbaxor Azim qizi 302.docx",
+      "sabab": "Telegramdan olingan asl fayli biriktirildi"
+    }
+  },
+  "_qulf_izoh": "qulflangan: bu qatorlarga avtomatik skriptlar YOZMAYDI (qo'lda hujjat rasmidan tasdiqlangan)",
+  "qulflangan": {
+    "Xurramova Shodiya|26-02": "Pasport AC1967100 va ATTESTAT UM 0438281 rasmlari bilan to'liq tasdiqlandi",
+    "Isomiddinova Ruxshona|26-04": "Haqiqiy shartnoma Isomiddinova Ruhshona 65.docx bilan tasdiqlandi (#65)",
+    "Jumayeva Muhlisa|26-05": "Haqiqiy shartnoma Jumayeva Muxlisa 60.docx bilan tasdiqlandi (#60)",
+    "Ilhomova Zuhra|26-02": "Fayl yo'q, xato Olimova ma'lumotlari tozalandi",
+    "Nematova Sevinch|26-05": "Fayl yo'q, xato Nurmatova ma'lumotlari tozalandi",
+    "Muminova Durdona|26-06": "Fayl yo'q, xato Raxmonova ma'lumotlari tozalandi",
+    "Rustamova Charos|26-03": "ID-karta AE4730990 va Shahodatnoma UM 03728038 rasmlari (tg) dan to'liq kiritildi",
+    "Maxmudova Musallam|26-04": "ID-karta AE5297116 va Shahodatnoma UM 03728687 rasmlari (tg) dan to'liq kiritildi",
+    "Suyunova Maftuna|26-02": "Pasport AB7166586 MRZ (PINFL nazorat raqami bilan) va kasb-hunar kolleji diplomi K 5491697 rasmlaridan tasdiqlandi",
+    "Berdimurodova Nafosat|26-05": "ID-karta AD9709558 QR dan PINFL tuzatildi va nazorat raqami bilan tasdiqlandi",
+    "Ravshanova Ruxshona|26-01": "ID-karta AE6085379 bosma MRZ dan PINFL tuzatildi, nazorat raqami tasdiqladi",
+    "Hasanova Marjona|26-02": "ID-karta AE5685784 bosma MRZ dan PINFL tuzatildi, nazorat raqami tasdiqladi",
+    "Xusanova Aziza|26-04": "ID-karta AE5015467 bosma MRZ dan PINFL tuzatildi, nazorat raqami tasdiqladi",
+    "Jurayeva Madina|26-05": "ID-karta AD9394305 bosma MRZ dan PINFL tuzatildi, nazorat raqami tasdiqladi",
+    "Saydalimova Ruxshona|26-02": "ID-karta AE3352294 va Shahodatnoma UM 03754198 rasmlaridan to'liq tasdiqlandi (#74)",
+    "Mustafayeva Madina|26-03": "Fayl yo'q, xato biriktirilgan Mustafoyeva ma'lumotlari tozalandi",
+    "Qodirova Sabina|26-04": "Fayl yo'q, xato biriktirilgan Qodirova Shabnam ma'lumotlari tozalandi",
+    "Quchqarova Zebiniso|26-06": "ID-karta AE1143288 rasmidan otasining ismi Farhod qizi ekanligi to'liq tasdiqlandi (#187)",
+    "Narziyeva Intizor|26-07": "Biometrik pasport AB5359926 va Kollej diplomi K 5047841 rasmlaridan tasdiqlandi (#212)",
+    "Tuychiyeva Farzona|26-04": "ID-karta AE4114421 va Shahodatnoma UM-O 00064269 rasmlaridan to'liq tasdiqlandi (#280)",
+    "Niyozova Komila|26-03": "Pasport AB9205278 va Shahodatnoma dublikati DB 00222382 rasmlari (tg) dan to'liq kiritildi"
+  }
+}

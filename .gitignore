@@ -1,0 +1,37 @@
+# ===== SHAXSIY MA'LUMOTLAR (GitHub'ga yuklanmaydi) =====
+# Bu fayllar private repo bo'lgani uchun yuklansa ham bo'ladi,
+# lekin ehtiyot uchun muhim katta fayllarni chiqaramiz
+
+# Python kesh
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# Vaqtinchalik fayllar
+*.tmp
+*.temp
+$null
+
+# Scratch papkasi (vaqtinchalik ishchi fayllar)
+scratch/
+
+# Juda katta HTML fayllar (har safar qayta generatsiya qilinadi)
+hisobot.html
+natijalar_hisoboti.html
+messages.html
+
+# .claude papkasi
+.claude/
+
+# IDE fayllar
+.vscode/
+.idea/
+
+# Windows
+Thumbs.db
+Desktop.ini
+
+# Log fayllar
+*.log
