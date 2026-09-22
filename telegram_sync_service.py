@@ -75,7 +75,9 @@ def _do_git_push():
              'index.html',
              'Talabalar_Toliq_Royxati.xlsx',
              'Talabalar_Yangilangan_Royxat.xlsx',
+             'pdf_jurnallar',
              'scripts/verifications.json',
+             'scripts/remote_changes.json',
              'scripts/manual_file_map.json'],
             cwd=BASE_DIR, capture_output=True, text=True, timeout=30
         )
@@ -351,6 +353,8 @@ def _run_rebuild_worker():
                 else:
                     IS_REBUILDING = False
                     break
+        # Hisobot va index.html to'liq generatsiya qilingach, darhol GitHub'ga push qilamiz
+        _do_git_push()
     except Exception as e:
         print(f"Rebuild worker global xato: {e}")
         with REBUILD_LOCK:
@@ -359,7 +363,6 @@ def _run_rebuild_worker():
 def trigger_report_rebuild(delay=1.5, async_mode=True):
     """Barcha hisobotlar va yangilangan Excel fayllarini xavfsiz, debounced sinxronlashtirish"""
     global REBUILD_TIMER
-    schedule_git_push()   # Git push ham shu payt rejalashtirilib qo'yiladi
     if not async_mode:
         _run_rebuild_worker()
         return

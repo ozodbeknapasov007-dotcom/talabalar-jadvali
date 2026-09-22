@@ -2433,6 +2433,237 @@ window.saveNewStudentData = function() {
   const tel = document.getElementById('add_tel').value.trim();
   const docfile = document.getElementById('add_docfile').value.trim();
 
+// Yangi qo'shilgan talabalarni darhol DOMga kiritish (Optimistik yangilash)
+window.savePendingStudentToStorage = function(s) {
+  try {
+    let list = JSON.parse(localStorage.getItem('student_pending_students') || '[]');
+    if (!Array.isArray(list)) list = [];
+    const exists = list.some(function(item) {
+      return (item.pinfl && s.pinfl && item.pinfl.toString().trim() === s.pinfl.toString().trim()) ||
+             (item.fish && s.fish && item.fish.trim().toLowerCase() === s.fish.trim().toLowerCase() && (item.group || '') === (s.group || ''));
+    });
+    if (!exists) {
+      list.push(s);
+      localStorage.setItem('student_pending_students', JSON.stringify(list));
+    }
+  } catch(e) {}
+};
+
+window.reconcilePendingStudents = function() {
+  if (typeof RAW_STUDENTS === 'undefined' || !Array.isArray(RAW_STUDENTS)) return;
+  try {
+    let list = JSON.parse(localStorage.getItem('student_pending_students') || '[]');
+    if (!list || !list.length) return;
+    const remaining = [];
+    list.forEach(function(st) {
+      const alreadyInRaw = RAW_STUDENTS.some(function(item) {
+        const pinflMatch = (item.pinfl && st.pinfl && item.pinfl.toString().trim() === st.pinfl.toString().trim());
+        const nameMatch = (item.fish && st.fish && item.fish.trim().toLowerCase() === st.fish.trim().toLowerCase() && (item.group || '') === (st.group || ''));
+        return pinflMatch || nameMatch;
+      });
+      if (!alreadyInRaw) {
+        window.insertStudentToDOM(st);
+        remaining.push(st);
+      }
+    });
+    localStorage.setItem('student_pending_students', JSON.stringify(remaining));
+  } catch(e) {
+    console.error("Reconcile pending students error:", e);
+  }
+};
+
+window.insertStudentToDOM = function(s) {
+  if (typeof RAW_STUDENTS === 'undefined') window.RAW_STUDENTS = [];
+
+  let existingIdx = -1;
+  for (let i = 0; i < RAW_STUDENTS.length; i++) {
+    const item = RAW_STUDENTS[i];
+    if (item.pinfl && s.pinfl && item.pinfl.toString().trim() === s.pinfl.toString().trim()) {
+      existingIdx = i;
+      break;
+    }
+    if (item.fish && s.fish && item.fish.trim().toLowerCase() === s.fish.trim().toLowerCase() && (item.group || '') === (s.group || '')) {
+      existingIdx = i;
+      break;
+    }
+  }
+
+  let sIdx;
+  if (existingIdx !== -1) {
+    sIdx = existingIdx;
+    RAW_STUDENTS[sIdx] = Object.assign(RAW_STUDENTS[sIdx], s);
+  } else {
+    RAW_STUDENTS.push(s);
+    sIdx = RAW_STUDENTS.length - 1;
+  }
+
+  const trNum = sIdx + 1;
+  const grpName = s.group || '—';
+  const grpClean = (grpName || '').replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
+  const grpClass = 'grp-' + (grpClean || 'n');
+  const cleanFish = s.fish || (s.ism + ' ' + (s.ota || '')).trim();
+
+  // 1. Table tbody
+  const tbody = document.getElementById('studentsTbody');
+  if (tbody) {
+    let tr = document.getElementById('student-row-' + sIdx);
+    if (!tr) {
+      tr = document.createElement('tr');
+      tr.id = 'student-row-' + sIdx;
+      tr.className = 'student-row';
+      tbody.appendChild(tr);
+    }
+    tr.setAttribute('data-shnum', (s.shnum || '').toLowerCase());
+    tr.setAttribute('data-name', cleanFish.toLowerCase());
+    tr.setAttribute('data-group', (s.group || '').toLowerCase());
+    tr.setAttribute('data-pass', (s.pv || '').toLowerCase());
+    tr.setAttribute('data-passtype', s.pass_type || 'Biometrik Pasport');
+    tr.setAttribute('data-pinfl', s.pinfl || '');
+    tr.setAttribute('data-dob', (s.dob || '') + ' ' + (s.ber || ''));
+    tr.setAttribute('data-doc', (s.sh_doc || '').toLowerCase());
+    tr.setAttribute('data-doctype', s.doc_tur || 'Shahodatnoma');
+    tr.setAttribute('data-mak', (s.mak || '').toLowerCase());
+    tr.setAttribute('data-yil', s.yil || '2024');
+    tr.setAttribute('data-yon', (s.yon || '').toLowerCase());
+    tr.setAttribute('data-status', s.status || 'chala');
+    tr.setAttribute('data-file', (s.doc_file || '').toLowerCase());
+    tr.setAttribute('data-verified', (s.verified || 'kutilmoqda').toLowerCase());
+
+    const isVerified = (s.verified === 'TASDIQLANDI');
+    const vBtnClass = isVerified ? 'btn-v-mini btn-v-ok' : 'btn-v-mini btn-v-wait';
+    const vBtnHtml = isVerified ? (ICONS.checkSm + ' OK') : (ICONS.clockSm + ' Kutilmoqda');
+
+    tr.innerHTML = `
+      <td style="text-align:center;font-weight:700;color:#94a3b8;">${trNum}</td>
+      <td style="text-align:center;white-space:nowrap;">
+        <span class="table-group-badge ${grpClass}">${grpName}</span>
+      </td>
+      <td style="text-align:center;white-space:nowrap;">
+        <span class="shnum-clean" onclick="openStudentModal(${sIdx})" title="Talaba oynasini ochish">#${s.shnum || '—'}</span>
+      </td>
+      <td style="cursor:pointer;" onclick="openStudentModal(${sIdx})" title="Talaba ma'lumotlarini ko'rish / Fayl biriktirish">
+        <div class="student-name">${cleanFish}</div>
+      </td>
+      <td style="white-space:nowrap;">
+        <span class="mono-pass">${s.pv || '—'}</span>
+      </td>
+      <td style="white-space:nowrap;text-align:center;">
+        <span class="mono-pinfl">${s.pinfl || '—'}</span>
+      </td>
+      <td style="white-space:nowrap;text-align:center;">
+        <span class="clean-dob">${s.dob || '—'}</span>
+      </td>
+      <td style="white-space:nowrap;">
+        ${s.sh_doc ? `<span class="mono-doc">${s.sh_doc}</span>` : `<span style="color:#ef4444;font-weight:700;">—</span>`}
+      </td>
+      <td>
+        <div class="cell-school" title="${s.mak || '—'}">${s.mak || '—'}</div>
+      </td>
+      <td style="text-align:center;font-weight:700;font-size:12px;color:inherit;">${s.yil || '—'}</td>
+      <td style="text-align:center;white-space:nowrap;">
+        <button type="button" class="btn-file-mini btn-file-has" onclick="openStudentModal(${sIdx})" title="${s.doc_file || 'Hujjat'}">
+          ${ICONS.file} docx
+        </button>
+      </td>
+      <td style="text-align:center;white-space:nowrap;">
+        <button type="button" class="${vBtnClass}" id="vbtn-row-${sIdx}" onclick="toggleStudentVerification(${sIdx}, ${s.row || (sIdx + 2)})" title="Tasdiqlash holati">
+          ${vBtnHtml}
+        </button>
+      </td>
+      <td style="text-align:center;">
+        <svg class="svg-status svg-success" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+      </td>
+    `;
+  }
+
+  // 2. Card grid
+  const grid = document.getElementById('studentsGrid');
+  if (grid) {
+    let card = document.getElementById('student-card-' + sIdx);
+    if (!card) {
+      card = document.createElement('div');
+      card.id = 'student-card-' + sIdx;
+      card.className = 'student-card';
+      grid.appendChild(card);
+    }
+    card.setAttribute('data-group', (s.group || '').toLowerCase());
+    card.innerHTML = `
+      <div class="card-header" onclick="toggleStudentCard(this.parentElement)">
+        <div class="card-header-left">
+          <span class="card-tr-badge">#${trNum}</span>
+          <span class="card-group-badge ${grpClass}">${grpName}</span>
+          <h4 class="card-student-name">${cleanFish}</h4>
+        </div>
+        <div class="card-header-right">
+          <span class="shnum-clean">#${s.shnum || '—'}</span>
+          <span class="c-badge c-badge-full">QO'SHILDI</span>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="card-details-grid">
+          <div class="card-box card-box-pass">
+            <div class="box-title">SHAXSIY MA'LUMOTLAR</div>
+            <div class="pass-info-list">
+              <div class="pass-row"><span class="pass-label">Pasport:</span><strong>${s.pv || '—'}</strong></div>
+              <div class="pass-row"><span class="pass-label">JSHSHIR:</span><strong>${s.pinfl || '—'}</strong></div>
+              <div class="pass-row"><span class="pass-label">Tug'ilgan sana:</span><strong>${s.dob || '—'}</strong></div>
+            </div>
+          </div>
+          <div class="card-box card-box-doc">
+            <div class="box-title">TA'LIM HUJJATI</div>
+            <div class="doc-info-list">
+              <div class="doc-row"><span class="doc-label">Hujjat:</span><strong>${s.sh_doc || '—'}</strong></div>
+              <div class="doc-row"><span class="doc-label">Muassasa:</span><strong>${s.mak || '—'}</strong></div>
+              <div class="doc-row"><span class="doc-label">Bitirgan yili:</span><strong>${s.yil || '—'}</strong></div>
+            </div>
+          </div>
+        </div>
+        <div class="card-footer">
+          <div class="card-footer-left">
+            <span class="contact-label">Fayl:</span>
+            <span class="file-name-pill">${s.doc_file || '—'}</span>
+          </div>
+          <div class="card-footer-right">
+            <button type="button" class="btn-card-action btn-card-update" onclick="openStudentModal(${sIdx}, true)">Tahrirlash</button>
+            <button type="button" class="btn-card-action" onclick="openStudentModal(${sIdx}, false)">Rasmlar</button>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  // 3. Update stats, groups journal, and filter
+  if (typeof window.updateGroupsVerificationStats === 'function') {
+    window.updateGroupsVerificationStats();
+  }
+  if (typeof window.renderGroupsJournalTab === 'function') {
+    const grpSection = document.getElementById('view_groups_section');
+    if (grpSection && grpSection.style.display !== 'none') {
+      window.renderGroupsJournalTab();
+    }
+  }
+  if (typeof window.filterRows === 'function') {
+    window.filterRows(true);
+  }
+};
+
+window.saveNewStudentData = function() {
+  const ism = document.getElementById('add_ism').value.trim();
+  const ota = document.getElementById('add_ota').value.trim();
+  const group = document.getElementById('add_group') ? document.getElementById('add_group').value.trim() : '';
+  const shnum = document.getElementById('add_shnum').value.trim();
+  const pv = document.getElementById('add_pv').value.trim();
+  const pinfl = document.getElementById('add_pinfl').value.trim();
+  const dob = document.getElementById('add_dob').value.trim();
+  const ber = document.getElementById('add_ber').value.trim();
+  const doctur = document.getElementById('add_doctur').value.trim();
+  const shdoc = document.getElementById('add_shdoc').value.trim();
+  const mak = document.getElementById('add_mak').value.trim();
+  const yil = document.getElementById('add_yil').value.trim();
+  const yon = document.getElementById('add_yon').value.trim();
+  const tel = document.getElementById('add_tel').value.trim();
+  const docfile = document.getElementById('add_docfile').value.trim();
+
   // Majburiy maydonlar: Ismi va familiyasi, Otasining ismi, Guruh
   if (!ism) {
     alert("Iltimos, talabaning Ism va Familiyasini kiriting!");
@@ -2485,12 +2716,51 @@ window.saveNewStudentData = function() {
       }
 
       if (res.success) {
-        alert(res.message);
+        const fullFish = (ism + ' ' + ota).trim();
+        const newStudent = {
+          row: (typeof RAW_STUDENTS !== 'undefined' ? RAW_STUDENTS.length + 2 : 100),
+          tr: (typeof RAW_STUDENTS !== 'undefined' ? RAW_STUDENTS.length + 1 : 1),
+          shnum: shnum || '—',
+          sana: new Date().toLocaleDateString('ru-RU'),
+          ism: ism,
+          ota: ota,
+          fish: fullFish,
+          yon: yon || "Hamshiralik ishi - 3 yillik",
+          group: group,
+          pv: pv,
+          pass_type: (pv && pv.toUpperCase().startsWith('A')) ? 'Biometrik Pasport' : 'ID-karta',
+          pinfl: pinfl,
+          dob: dob,
+          ber: ber,
+          sh_doc: shdoc,
+          sh_qr: '',
+          mak: mak,
+          doc_tur: doctur || "Shahodatnoma",
+          yil: yil || "2024",
+          tel: tel,
+          doc_file: docfile || (fullFish + ' ' + (shnum || '') + '.docx'),
+          status: (pv && pinfl) ? 'full' : 'chala',
+          pass_fish: '',
+          cert_fish: (shdoc ? 'Mavjud' : ''),
+          name_match: '',
+          name_flag: '',
+          verified: 'KUTILMOQDA'
+        };
+
+        window.insertStudentToDOM(newStudent);
+        window.savePendingStudentToStorage(newStudent);
         window.closeAddStudentModal();
-        // Sahifani yangilash
-        setTimeout(function() {
-          location.reload();
-        }, 500);
+
+        // Formani tozalash
+        const formFields = ['add_ism', 'add_ota', 'add_shnum', 'add_pv', 'add_pinfl', 'add_dob', 'add_ber', 'add_shdoc', 'add_mak', 'add_yil', 'add_yon', 'add_tel', 'add_docfile'];
+        formFields.forEach(function(fid) {
+          const el = document.getElementById(fid);
+          if (el) el.value = '';
+        });
+
+        alert("✅ " + fullFish + " muvaffaqiyatli qo'shildi!\n\n" +
+              "Talaba " + group + " guruhiga darhol biriktirildi va ro'yxatda paydo bo'ldi.\n" +
+              "Server bazasi fonga yuborildi (~30 soniyada to'liq sinxronlanadi).");
       } else {
         alert("Xatolik: " + (res.error || 'Qo\'shib bo\'lmadi'));
       }
@@ -3133,6 +3403,11 @@ window.GitSyncManager = {
    ========================================================================= */
 function initPortalState() {
   if (typeof window.initTheme === 'function') window.initTheme();
+
+  // 0. Yangi qo'shilgan talabalarni tekshirish va tiklash (F5 bo'lganda yo'qolmasligi uchun)
+  if (typeof window.reconcilePendingStudents === 'function') {
+    window.reconcilePendingStudents();
+  }
 
   // 1. Asosiy rejim (Baza vs Guruhlar jurnali)
   try {
