@@ -1345,6 +1345,33 @@ def apply_full_excel_styling(wb, ws):
 
     ws.auto_filter.ref = f"A1:{get_column_letter(ws.max_column)}{ws.max_row}"
 
+# TUG'ILGAN TUMANNI JSHSHIR DAN ANIQLASH
+# JSHSHIR ning 8-10 raqamlari tug'ilgan joyni bildiradi. Jadval talabalarning
+# haqiqiy pasportlaridagi "TUG'ILGAN JOYI" yozuvi bilan tekshirilgan:
+#   559 Xurramova (SHAXRISABZ TUMANI), 568 Narziyeva (KITOB TUMANI),
+#   573 Eshquvatova (YAKKABOG' TUMANI), 789 Aliqulova (SHAHRISABZ SHAHRI),
+#   256 Miliyeva (SHAXRISABZ TUMANI, eski format).
+# 572 va 563 faqat shahodatnomadagi "berilgan joyi" bo'yicha taxminiy.
+# Qolgan kodlar (274, 565, 264, 574) aniqlanmagan - bo'sh qoladi.
+TUGILGAN_TUMAN_KODI = {
+    '559': "Shahrisabz tumani",
+    '568': "Kitob tumani",
+    '573': "Yakkabog' tumani",
+    '789': "Shahrisabz shahri",
+    '256': "Shahrisabz tumani",
+    '572': "Chiroqchi tumani",
+    '563': "Qamashi tumani",
+}
+
+
+def tugilgan_tuman(pinfl):
+    """JSHSHIR dan tug'ilgan tumanni qaytaradi. Aniqlanmasa bo'sh satr."""
+    p = str(pinfl or '').replace(' ', '').strip()
+    if len(p) != 14 or not p.isdigit():
+        return ''
+    return TUGILGAN_TUMAN_KODI.get(p[7:10], '')
+
+
 def build_full_multisheet_excel(source_ws, filter_status=None):
     import openpyxl
     out_wb = openpyxl.Workbook()
@@ -1376,6 +1403,7 @@ def build_full_multisheet_excel(source_ws, filter_status=None):
         "JSHSHIR (PINFL)",
         "Berilgan sanasi",
         "Tug'ilgan sanasi",
+        "Tug'ilgan tumani",
         "Shahodatnoma bo'yicha F.I.SH",
         "Shahodatnoma / Diplom Seriyasi",
         "Shahodatnoma QR Havolasi (e-shahodatnoma.uz)",
@@ -1442,6 +1470,7 @@ def build_full_multisheet_excel(source_ws, filter_status=None):
                 row_vals[10] or '',                             # 12: JSHSHIR (PINFL)
                 row_vals[11] or '',                             # 13: Berilgan sanasi
                 row_vals[12] or '',                             # 14: Tug'ilgan sanasi
+                tugilgan_tuman(row_vals[10]),                   # 15: Tug'ilgan tumani (JSHSHIR dan)
                 row_vals[13] or '',                             # 15: Shahodatnoma bo'yicha F.I.SH
                 row_vals[14] or '',                             # 16: Shahodatnoma / Diplom Seriyasi
                 row_vals[15] or '',                             # 17: Shahodatnoma QR Havolasi

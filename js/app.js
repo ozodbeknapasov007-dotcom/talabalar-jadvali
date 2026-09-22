@@ -2154,6 +2154,34 @@ window._buildFullWorkbook = function(students) {
   return wb;
 };
 
+/* TUG'ILGAN TUMANNI JSHSHIR DAN ANIQLASH
+   JSHSHIR ning 8-10 raqamlari tug'ilgan joyni bildiradi. Quyidagi jadval
+   talabalarning haqiqiy pasportlaridagi "TUG'ILGAN JOYI" yozuvi bilan
+   solishtirib tekshirildi (JSHSHIR MRZ dan o'qib tasdiqlandi):
+     559 -> Xurramova Shodiya   (pasport: SHAXRISABZ TUMANI)
+     568 -> Narziyeva Intizor   (pasport: KITOB TUMANI)
+     573 -> Eshquvatova Yulduz  (pasport: YAKKABOG' TUMANI)
+     789 -> Aliqulova Shaxzoda  (pasport: SHAHRISABZ SHAHRI)
+     256 -> Miliyeva Umida      (pasport: SHAXRISABZ TUMANI, eski format)
+   572 va 563 esa faqat shahodatnomadagi "berilgan joyi" bo'yicha
+   taxmin qilingan — pasport bilan tasdiqlanmagan.
+   Qolgan kodlar (274, 565, 264, 574) aniqlanmagan: bo'sh qoldiriladi. */
+window.TUGILGAN_TUMAN_KODI = {
+  '559': "Shahrisabz tumani",
+  '568': "Kitob tumani",
+  '573': "Yakkabog' tumani",
+  '789': "Shahrisabz shahri",
+  '256': "Shahrisabz tumani",
+  '572': "Chiroqchi tumani",
+  '563': "Qamashi tumani"
+};
+
+window.tugilganTuman = function(pinfl) {
+  var p = String(pinfl || '').replace(/\s/g, '');
+  if (p.length !== 14 || !/^\d+$/.test(p)) return '';
+  return window.TUGILGAN_TUMAN_KODI[p.substring(7, 10)] || '';
+};
+
 window._buildStyledSheet = function(students) {
   var COLS = [
     { header: 'T/R',             key: '__tr',   wch: 5  },
@@ -2164,6 +2192,7 @@ window._buildStyledSheet = function(students) {
     { header: 'Berilgan sana',   key: 'ber',    wch: 14 },
     { header: 'JSHSHIR',         key: 'pinfl',  wch: 16 },
     { header: "Tug'ilgan sana",  key: 'dob',    wch: 14 },
+    { header: "Tug'ilgan tumani",key: '__tuman',wch: 20 },
     { header: 'Hujjat raqami',   key: 'sh_doc', wch: 13 },
     { header: 'Muassasa',        key: 'mak',    wch: 36 },
     { header: 'Bitirgan yili',   key: 'yil',    wch: 13 },
@@ -2214,6 +2243,7 @@ window._buildStyledSheet = function(students) {
       st.ber    || '',
       st.pinfl  || '',
       st.dob    || '',
+      window.tugilganTuman(st.pinfl),
       st.sh_doc || '',
       st.mak    || '',
       st.yil    || '',
