@@ -6457,7 +6457,11 @@ window.showToast = function(msg, type) {
     toast.style.transition = 'all 0.3s ease';
     document.body.appendChild(toast);
   }
-  toast.style.background = (type === 'success') ? '#10b981' : '#ef4444';
+  // 'warning' qizil emas, sariq bo'lishi kerak — masalan "tarmoq yo'q, tahrir
+  // brauzerda saqlanib turibdi" xabari xatolik emas, ogohlantirish
+  toast.style.background = (type === 'success') ? '#10b981'
+                         : (type === 'warning') ? '#f59e0b'
+                         : '#ef4444';
   toast.style.color = '#fff';
   toast.innerText = msg;
   toast.style.display = 'block';
