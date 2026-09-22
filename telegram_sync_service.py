@@ -436,7 +436,7 @@ def trigger_report_rebuild(delay=1.5, async_mode=True):
 
 
 OPENROUTER_API_KEY = "" # API kalit o'chirilgan, oflayn rejimda ishlaydi
-OPENROUTER_MODELS = ["google/gemini-2.5-pro", "google/gemini-2.5-flash", "openai/gpt-4o"]
+OPENROUTER_MODELS = ["google/gemini-3.7-flash", "google/gemini-2.5-flash", "openai/gpt-4o"]
 
 def clean_uz_name(text):
     if not text:
@@ -738,7 +738,7 @@ def analyze_docx_content(docx_bytes, filename, default_ism="", default_yon="", u
             if qr_extracted.get('sh_qr'): result['sh_qr'] = qr_extracted['sh_qr']
 
         # 2-QADAM: AI VISION TAHLIL (PRO YOKI FLASH)
-        model_to_use = 'google/gemini-2.5-pro' if use_pro else 'google/gemini-2.5-flash'
+        model_to_use = 'google/gemini-3.7-flash' if use_pro else 'google/gemini-3.7-flash'
         print(f"Hujjat AI tahlili: model = {model_to_use}")
 
         content_items = [{'type': 'text', 'text': """Sen professional O'zbekiston ID-karta, Biometrik pasport va Shahodatnoma/Diplom o'quvchisisan.
@@ -1424,8 +1424,7 @@ class WebServerHandler(BaseHTTPRequestHandler):
                 qr_extracted = scan_all_qrs(image_blobs)
                 print(f"reanalyze_student QR natijasi: {qr_extracted}")
 
-                # 2-QADAM: GEMINI 2.5 PRO MODELI ORQALI CHUQUR TAHLIL
-                use_model = "google/gemini-2.5-pro" if (params.get('model') == 'pro' or params.get('pro') == '1' or True) else "google/gemini-2.5-flash"
+                use_model = "google/gemini-3.7-flash"
                 print(f"reanalyze_student ishlatilayotgan AI modeli: {use_model}")
 
                 content_items = [{"type": "text", "text": """Sen professional O'zbekiston ID-karta, Biometrik pasport va Shahodatnoma/Diplom o'quvchisisan.
@@ -2430,10 +2429,10 @@ Aniq JSON formatda qaytar:
                 for b in blobs_raw:
                     b64 = base64.b64encode(b).decode('utf-8')
                     content_items.append({'type': 'image_url', 'image_url': {'url': f'data:image/jpeg;base64,{b64}'}})
-
+                # 3. AI ORQALI CHUQUR TAHLIL QILISH (GEMINI 3.7 FLASH)
                 ai_data = {}
                 try:
-                    payload = {'model': 'google/gemini-2.5-pro', 'messages': [{'role': 'user', 'content': content_items}], 'temperature': 0.0}
+                    payload = {'model': 'google/gemini-3.7-flash', 'messages': [{'role': 'user', 'content': content_items}], 'temperature': 0.0}
                     req = urllib.request.Request('https://openrouter.ai/api/v1/chat/completions', data=json.dumps(payload).encode('utf-8'), headers={'Authorization': f'Bearer {OPENROUTER_API_KEY}', 'Content-Type': 'application/json'})
                     with urllib.request.urlopen(req, timeout=45) as resp:
                         res_json = json.loads(resp.read().decode('utf-8'))
