@@ -4032,7 +4032,7 @@ var RAW_STUDENTS = {students_json};
             </div>
 
             <div class="form-group-item full-width">
-              <label for="add_ota">Otasining ismi (Sharifi)</label>
+              <label for="add_ota">Otasining ismi (Sharifi) <span class="req-star">*</span></label>
               <input type="text" id="add_ota" class="form-ctrl" placeholder="Masalan: Sherali qizi">
             </div>
 
@@ -4055,23 +4055,23 @@ var RAW_STUDENTS = {students_json};
             </div>
 
             <div class="form-group-item half-width">
-              <label for="add_pv">Pasport seriya va № <span class="req-star">*</span></label>
-              <input type="text" id="add_pv" class="form-ctrl mono" oninput="this.value = this.value.toUpperCase()" placeholder="AD1234567">
+              <label for="add_pv">Pasport seriya va №</label>
+              <input type="text" id="add_pv" class="form-ctrl mono" oninput="this.value = this.value.toUpperCase()" placeholder="AD1234567 (Ixtiyoriy)">
             </div>
 
             <div class="form-group-item half-width">
               <label for="add_pinfl">JSHSHIR (PINFL - 14 xona)</label>
-              <input type="text" id="add_pinfl" class="form-ctrl mono" oninput="handlePinflAutoDob(this, 'add_dob')" placeholder="60406055720067" maxlength="14">
+              <input type="text" id="add_pinfl" class="form-ctrl mono" oninput="handlePinflAutoDob(this, 'add_dob')" placeholder="604060 5572 0067 (Ixtiyoriy)" maxlength="17">
             </div>
 
             <div class="form-group-item half-width">
               <label for="add_dob">Tug'ilgan sana (DOB)</label>
-              <input type="text" id="add_dob" class="form-ctrl mono" placeholder="DD.MM.YYYY">
+              <input type="text" id="add_dob" class="form-ctrl mono" placeholder="DD.MM.YYYY (Ixtiyoriy)">
             </div>
 
             <div class="form-group-item half-width">
-              <label for="add_ber">Pasport Berilgan Sana <span class="req-star">*</span></label>
-              <input type="text" id="add_ber" class="form-ctrl mono input-ber" placeholder="DD.MM.YYYY">
+              <label for="add_ber">Pasport Berilgan Sana</label>
+              <input type="text" id="add_ber" class="form-ctrl mono input-ber" placeholder="DD.MM.YYYY (Ixtiyoriy)">
             </div>
 
             <div class="form-group-item full-width">
@@ -4130,7 +4130,7 @@ var RAW_STUDENTS = {students_json};
 
             <div class="info-helper-box full-width">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
-              <span>JSHSHIR kiritilgach, tug'ilgan sana avtomatik aniqlanadi. Saqlash tugmasi bosilganda talaba Excel bazaga qo'shiladi.</span>
+              <span>Faqat <strong>Ism-Familiya</strong>, <strong>Sharif</strong> va <strong>Guruh</strong> majburiy (*). Boshqa ma'lumotlar ixtiyoriy bo'lib, keyinchalik kiritilishi ham mumkin.</span>
             </div>
           </div>
         </div>

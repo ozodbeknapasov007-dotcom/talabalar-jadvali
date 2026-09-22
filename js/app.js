@@ -2302,8 +2302,32 @@ window.analyzeUploadedNewDoc = function(usePro = false) {
 
   const reader = new FileReader();
   reader.onload = function(e) {
+    const isRemoteHost = (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1');
+
+    if (isRemoteHost) {
+      if (btnPro) {
+        btnPro.disabled = false;
+        btnPro.style.opacity = '1';
+        btnPro.innerHTML = '<svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg> QR & AI Pro Bilan Tekshirish';
+      }
+      if (btnNormal) {
+        btnNormal.disabled = false;
+        btnNormal.style.opacity = '1';
+        btnNormal.innerHTML = '<svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg> Oddiy AI';
+      }
+      if (statusBox) {
+        statusBox.style.display = 'block';
+        statusBox.style.background = '#fef3c7';
+        statusBox.style.color = '#92400e';
+        statusBox.style.border = '1px solid #fcd34d';
+        statusBox.innerHTML = '<strong>Eslatma:</strong> AI tahlil API kaliti o\'chirilgan yoki serverga ulanmagan. Iltimos, ma\'lumotlarni quyidagi maydonlarga qo\'lda kiriting (Faqat Ism-Familiya, Sharif va Guruh majburiy).';
+      }
+      document.getElementById('add_docfile').value = file.name;
+      return;
+    }
+
     const b64 = e.target.result.split(',')[1];
-    const apiHost = (window.location.protocol === 'http:' || window.location.protocol === 'https:') ? '' : 'http://localhost:8080';
+    const apiHost = 'http://localhost:8080';
 
     fetch(apiHost + '/api/analyze_docx', {
       method: 'POST',
@@ -2315,7 +2339,12 @@ window.analyzeUploadedNewDoc = function(usePro = false) {
         use_pro: usePro
       })
     })
-    .then(function(r) { return r.json(); })
+    .then(function(r) {
+      if (!r.ok) {
+        throw new Error("AI server javob bermadi (kod: " + r.status + "). Iltimos, ma'lumotlarni qo'lda kiriting.");
+      }
+      return r.json();
+    })
     .then(function(res) {
       if (btnPro) {
         btnPro.disabled = false;
@@ -2393,7 +2422,7 @@ window.saveNewStudentData = function() {
   const ota = document.getElementById('add_ota').value.trim();
   const shnum = document.getElementById('add_shnum').value.trim();
   const pv = document.getElementById('add_pv').value.trim();
-  const pinfl = document.getElementById('add_pinfl').value.trim();
+  const pinfl = document.getElementById('add_pinfl').value.replace(/\s+/g, '').trim();
   const dob = document.getElementById('add_dob').value.trim();
   const ber = document.getElementById('add_ber').value.trim(); // Faqat pasport berilgan sana
   const doctur = document.getElementById('add_doctur').value.trim();
@@ -2404,9 +2433,22 @@ window.saveNewStudentData = function() {
   const tel = document.getElementById('add_tel').value.trim();
   const docfile = document.getElementById('add_docfile').value.trim();
 
+  // Majburiy maydonlar: Ismi va familiyasi, Otasining ismi, Guruh
   if (!ism) {
     alert("Iltimos, talabaning Ism va Familiyasini kiriting!");
     document.getElementById('add_ism').focus();
+    return;
+  }
+
+  if (!ota) {
+    alert("Iltimos, talabaning Otasining ismini (Sharifini) kiriting!");
+    document.getElementById('add_ota').focus();
+    return;
+  }
+
+  if (!group) {
+    alert("Iltimos, talabaning Guruhini tanlang!");
+    if (document.getElementById('add_group')) document.getElementById('add_group').focus();
     return;
   }
 
@@ -3040,10 +3082,28 @@ window.GitSyncManager = {
         });
       }
 
+      if (url.includes('/api/update_group')) {
+        const p = parseQueryParams(url);
+        return originalFetch('/api/github_sync', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            type: 'update_group',
+            data: {
+              row: parseInt(p.row || '0', 10),
+              group: p.group || ''
+            }
+          })
+        });
+      }
+
       if (url.includes('/api/add_new_student')) {
-        let bodyData = {};
+        let bodyData = parseQueryParams(url);
         try {
-          if (init && init.body) bodyData = JSON.parse(init.body);
+          if (init && init.body) {
+            const parsed = typeof init.body === 'string' ? JSON.parse(init.body) : init.body;
+            bodyData = Object.assign(bodyData, parsed);
+          }
         } catch(e) {}
         return originalFetch('/api/github_sync', {
           method: 'POST',

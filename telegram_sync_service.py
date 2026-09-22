@@ -220,23 +220,30 @@ def process_remote_github_changes():
 
                 elif chg_type == 'add_student':
                     nr = ws.max_row + 1
+                    s_ism = clean_uz_name(data.get('ism', ''))
+                    s_ota = clean_uz_name(data.get('ota', ''))
+                    s_fish = f"{s_ism} {s_ota}".strip() if s_ota else s_ism
                     ws.cell(row=nr, column=1, value=nr - 1)
-                    ws.cell(row=nr, column=2, value=clean_uz_name(data.get('ism', '')))
-                    ws.cell(row=nr, column=3, value=data.get('yon', 'Davolash ishi'))
-                    ws.cell(row=nr, column=4, value="To'lanmagan")
+                    ws.cell(row=nr, column=2, value=s_ism)
+                    ws.cell(row=nr, column=3, value=data.get('yon', 'Hamshiralik ishi - 3 yillik'))
+                    ws.cell(row=nr, column=4, value="To'lov qildi")
                     ws.cell(row=nr, column=5, value=data.get('shnum', ''))
                     ws.cell(row=nr, column=6, value=time.strftime("%d.%m.%Y"))
-                    ws.cell(row=nr, column=7, value=clean_uz_name(data.get('ota', '')))
+                    ws.cell(row=nr, column=7, value=s_ota)
+                    ws.cell(row=nr, column=8, value=s_fish)
                     ws.cell(row=nr, column=10, value=data.get('pv', ''))
-                    ws.cell(row=nr, column=11, value=data.get('pinfl', ''))
+                    ws.cell(row=nr, column=11, value=str(data.get('pinfl', '')).replace(' ', '').strip())
                     ws.cell(row=nr, column=12, value=data.get('ber', ''))
                     ws.cell(row=nr, column=13, value=data.get('dob', ''))
+                    ws.cell(row=nr, column=14, value="Mavjud" if (data.get('pv') or data.get('sh_doc')) else "Yo'q")
                     ws.cell(row=nr, column=15, value=data.get('sh_doc', ''))
+                    ws.cell(row=nr, column=16, value="")
                     ws.cell(row=nr, column=17, value=data.get('mak', ''))
-                    ws.cell(row=nr, column=18, value=data.get('doc_tur', "Umumiy o'rta maktab"))
+                    ws.cell(row=nr, column=18, value=data.get('doc_tur', "Shahodatnoma"))
                     ws.cell(row=nr, column=19, value=data.get('yil', '2024'))
+                    ws.cell(row=nr, column=20, value=data.get('tel', ''))
                     ws.cell(row=nr, column=21, value="TOPILDI")
-                    ws.cell(row=nr, column=23, value=data.get('group', '26-01'))
+                    ws.cell(row=nr, column=23, value=data.get('group', '26-02'))
                     ws.cell(row=nr, column=25, value="KUTILMOQDA")
 
                 elif chg_type == 'delete_student':
@@ -1779,7 +1786,7 @@ Aniq JSON formatda qaytar:
                 fish = f"{ism} {ota}".strip() if ota else ism
                 shnum = get_param('shnum')
                 pv = get_param('pv')
-                pinfl = get_param('pinfl')
+                pinfl = get_param('pinfl').replace(' ', '').strip()
                 dob = get_param('dob')
                 ber = get_param('ber')  # FAQAT pasport berilgan sanasi
                 sh_doc = get_param('sh_doc')
@@ -1791,12 +1798,13 @@ Aniq JSON formatda qaytar:
                 group = get_param('group') or ('26-01' if 'farmat' in yon.lower() else '26-02')
                 doc_file = get_param('doc_file')
 
-                if not ism:
+                if not ism or not ota or not group:
                     self.send_response(400)
                     self.send_header('Content-Type', 'application/json; charset=utf-8')
                     self.send_header('Access-Control-Allow-Origin', '*')
                     self.end_headers()
-                    self.wfile.write(json.dumps({"success": False, "error": "Talaba ismi kiritilishi shart!"}).encode('utf-8'))
+                    err_msg = "Ism-familiya, otasining ismi va guruh kiritilishi shart!"
+                    self.wfile.write(json.dumps({"success": False, "error": err_msg}).encode('utf-8'))
                     return
 
                 # Shartnoma raqami avtomatik qo'yilmaydi — faqat kiritilgan bo'lsagina saqlanadi
