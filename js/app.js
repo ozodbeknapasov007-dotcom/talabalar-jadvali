@@ -3569,10 +3569,91 @@ window.GitSyncManager = {
   },
 
   notifyChange: function() {
-    // Foydalanuvchi biror amal bajarganda darhol ekranda yuklanishni ko'rsatish
+    // Foydalanuvchi biror amal bajarganda darhol ekranda ko'rsatish
     this.isUserInitiated = true;
-    this.updateUI('pending', "GitHub'ga yuklanmoqda...", "O'zgarishlar 2 soniyada GitHub repozitoriyasiga yuboriladi", true);
+    this.updateUI('pending', "O'zgarish saqlandi", "Excelga yozildi. GitHub'ga 30 soniyada yoki \"Yuborish\" tugmasi bilan jo'natiladi", true);
     this.startFastPolling();
+  },
+
+  /* "GITHUB'GA YUBORISH" TUGMASI
+     Tahrir darhol Excelga yoziladi, lekin hisobotni qayta yaratib GitHub'ga
+     push qilish ~15 soniya oladi. Shuning uchun u guruhlanadi: 30 soniyada
+     avtomatik, yoki shu tugma bilan darhol. */
+  ensureSaveButton: function() {
+    // Guruhlangan saqlashni lokal xizmat bajaradi. Vercel'da /api/flush_to_git
+    // yo'q (u yerda har tahrir to'g'ridan-to'g'ri navbatga yoziladi), shuning
+    // uchun tugma faqat localhost'da ko'rsatiladi.
+    const isLocal = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+    if (!isLocal) return null;
+
+    let btn = document.getElementById('gitFlushBtn');
+    if (btn) return btn;
+
+    btn = document.createElement('button');
+    btn.id = 'gitFlushBtn';
+    btn.type = 'button';
+    btn.style.position = 'fixed';
+    btn.style.bottom = '78px';
+    btn.style.right = '24px';
+    btn.style.zIndex = '999998';
+    btn.style.padding = '10px 18px';
+    btn.style.borderRadius = '10px';
+    btn.style.border = 'none';
+    btn.style.cursor = 'pointer';
+    btn.style.fontWeight = '700';
+    btn.style.fontSize = '13px';
+    btn.style.color = '#fff';
+    btn.style.boxShadow = '0 10px 25px -5px rgba(0,0,0,0.35)';
+    btn.style.transition = 'all 0.25s ease';
+    btn.style.display = 'none';
+    btn.onclick = function() { window.GitSyncManager.flushNow(); };
+    document.body.appendChild(btn);
+    return btn;
+  },
+
+  updateSaveButton: function(data) {
+    const btn = this.ensureSaveButton();
+    if (!btn) return;
+    const pending = !!(data && data.pending);
+    const secs = (data && data.pending_seconds) ? data.pending_seconds : 0;
+
+    if (pending) {
+      btn.style.display = 'block';
+      btn.style.background = '#f59e0b';
+      btn.disabled = false;
+      btn.innerText = secs > 0
+        ? "GitHub'ga yuborish (" + secs + "s kutyapti)"
+        : "GitHub'ga yuborish";
+      btn.title = "Saqlanmagan o'zgarishlar bor. Bosilsa darhol yuboriladi, aks holda 30 soniyada o'zi jo'naydi.";
+    } else if (data && data.state === 'syncing') {
+      btn.style.display = 'block';
+      btn.style.background = '#38bdf8';
+      btn.disabled = true;
+      btn.innerText = "Yuborilmoqda...";
+    } else {
+      btn.style.display = 'none';
+    }
+  },
+
+  flushNow: function() {
+    const btn = document.getElementById('gitFlushBtn');
+    if (btn) { btn.disabled = true; btn.innerText = 'Yuborilmoqda...'; btn.style.background = '#38bdf8'; }
+
+    const apiHost = (window.location.protocol === 'http:' || window.location.protocol === 'https:') ? '' : 'http://localhost:8080';
+    fetch(apiHost + '/api/flush_to_git?t=' + Date.now())
+      .then(function(r) { return r.json(); })
+      .then(function(res) {
+        if (res && res.success) {
+          showToast(res.had_pending ? "GitHub'ga yuborilmoqda..." : "Yuboriladigan o'zgarish yo'q edi", 'success');
+        } else {
+          showToast("Yuborishda xatolik", 'danger');
+        }
+        window.GitSyncManager.startFastPolling();
+      })
+      .catch(function() {
+        showToast("Serverga ulanib bo'lmadi", 'warning');
+        if (btn) { btn.disabled = false; btn.innerText = "GitHub'ga yuborish"; btn.style.background = '#f59e0b'; }
+      });
   },
 
   startFastPolling: function() {
@@ -3603,6 +3684,9 @@ window.GitSyncManager = {
         const lastSync = data.last_sync ? ` (${data.last_sync})` : '';
         const prevStatus = this.currentStatus;
         this.currentStatus = state;
+
+        // "GitHub'ga yuborish" tugmasini holatga qarab yangilash
+        this.updateSaveButton(data);
 
         // Toast faqat amal bajarilganda yoki sinxronizatsiya vaqtida ko'rsatiladi
         const showToast = !isInitialCheck && (this.isUserInitiated || state === 'syncing' || state === 'pending' || state === 'error' || (state === 'synced' && (prevStatus === 'syncing' || prevStatus === 'pending')));
