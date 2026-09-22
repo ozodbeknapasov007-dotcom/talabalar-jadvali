@@ -41,3 +41,7 @@ Desktop.ini
 
 # Log fayllar
 *.log
+
+# Zahira sozlamalari (bot tokeni — GitHub'ga tushmasin)
+scripts/backup_config.json
+scripts/backup_state.json

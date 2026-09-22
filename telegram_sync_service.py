@@ -344,6 +344,139 @@ def process_remote_github_changes():
     except Exception as e:
         print(f"[SYNC] Masofaviy o'zgarishlarni qo'llashda xato: {e}")
 
+# =========================================================================
+# KUNLIK AVTO-ZAHIRA (TELEGRAM)
+# Har kuni belgilangan soatda (standart 18:00) talabalar bazasini Telegram
+# botga yuboradi.
+#
+# DIQQAT: bot tokeni shu faylga YOZILMAYDI — bu fayl ommaviy GitHub
+# repozitoriysida turadi. Token 'scripts/backup_config.json' dan yoki
+# TG_BACKUP_TOKEN / TG_BACKUP_CHAT_ID muhit o'zgaruvchilaridan o'qiladi.
+# Sozlanmagan bo'lsa zahira jim o'tkazib yuboriladi.
+# =========================================================================
+BACKUP_CONFIG_PATH = os.path.join(BASE_DIR, 'scripts', 'backup_config.json')
+BACKUP_STATE_PATH = os.path.join(BASE_DIR, 'scripts', 'backup_state.json')
+BACKUP_HOUR = 18
+BACKUP_MINUTE = 0
+
+
+def load_backup_config():
+    """Zahira sozlamalarini o'qiydi. Topilmasa None qaytaradi."""
+    token = os.environ.get('TG_BACKUP_TOKEN', '').strip()
+    chat_id = os.environ.get('TG_BACKUP_CHAT_ID', '').strip()
+
+    if not (token and chat_id) and os.path.exists(BACKUP_CONFIG_PATH):
+        try:
+            with open(BACKUP_CONFIG_PATH, 'r', encoding='utf-8') as f:
+                cfg = json.load(f)
+            token = token or str(cfg.get('bot_token', '')).strip()
+            chat_id = chat_id or str(cfg.get('chat_id', '')).strip()
+            global BACKUP_HOUR, BACKUP_MINUTE
+            BACKUP_HOUR = int(cfg.get('hour', BACKUP_HOUR))
+            BACKUP_MINUTE = int(cfg.get('minute', BACKUP_MINUTE))
+        except Exception as e:
+            print(f"[ZAHIRA] Sozlama faylini o'qishda xato: {e}")
+
+    if not token or not chat_id:
+        return None
+    return {'token': token, 'chat_id': chat_id}
+
+
+def send_backup_to_telegram(reason='kunlik'):
+    """Bazani Telegram'ga yuboradi. True/False qaytaradi."""
+    cfg = load_backup_config()
+    if not cfg:
+        print("[ZAHIRA] Sozlanmagan (scripts/backup_config.json yo'q) — o'tkazib yuborildi")
+        return False
+
+    import requests
+
+    files_to_send = [
+        os.path.join(BASE_DIR, 'Talabalar_Toliq_Royxati.xlsx'),
+        os.path.join(BASE_DIR, 'Talabalar_Yangilangan_Royxat.xlsx'),
+    ]
+    stamp = time.strftime('%Y-%m-%d %H:%M')
+
+    try:
+        talaba_soni = '?'
+        try:
+            wb = openpyxl.load_workbook(files_to_send[0], read_only=True)
+            talaba_soni = wb.worksheets[0].max_row - 1
+            wb.close()
+        except Exception:
+            pass
+
+        caption = (f"Talabalar bazasi zahirasi ({reason})\n"
+                   f"Sana: {stamp}\n"
+                   f"Talabalar soni: {talaba_soni}")
+
+        sent = 0
+        for idx, path in enumerate(files_to_send):
+            if not os.path.exists(path):
+                continue
+            with open(path, 'rb') as fh:
+                resp = requests.post(
+                    f"https://api.telegram.org/bot{cfg['token']}/sendDocument",
+                    data={
+                        'chat_id': cfg['chat_id'],
+                        'caption': caption if idx == 0 else os.path.basename(path)
+                    },
+                    files={'document': (os.path.basename(path), fh)},
+                    timeout=120
+                )
+            if resp.ok and resp.json().get('ok'):
+                sent += 1
+            else:
+                print(f"[ZAHIRA] {os.path.basename(path)} yuborilmadi: {resp.text[:160]}")
+
+        if sent:
+            print(f"[ZAHIRA] ✅ {sent} ta fayl Telegram'ga yuborildi ({stamp})")
+            return True
+        return False
+    except Exception as e:
+        print(f"[ZAHIRA] ❌ Xato: {e}")
+        return False
+
+
+def _backup_already_sent_today():
+    try:
+        with open(BACKUP_STATE_PATH, 'r', encoding='utf-8') as f:
+            return json.load(f).get('last_date') == time.strftime('%Y-%m-%d')
+    except Exception:
+        return False
+
+
+def _mark_backup_sent():
+    try:
+        os.makedirs(os.path.dirname(BACKUP_STATE_PATH), exist_ok=True)
+        with open(BACKUP_STATE_PATH, 'w', encoding='utf-8') as f:
+            json.dump({'last_date': time.strftime('%Y-%m-%d'),
+                       'last_time': time.strftime('%H:%M:%S')}, f, indent=2)
+    except Exception:
+        pass
+
+
+def _start_daily_backup_scheduler():
+    """Har daqiqada tekshiradi: belgilangan soat kelsa va bugun hali
+    yuborilmagan bo'lsa zahirani jo'natadi. Xizmat qayta ishga tushsa ham
+    bir kunda ikki marta yubormaydi (holat faylga yoziladi)."""
+    def loop():
+        while True:
+            try:
+                now = time.localtime()
+                if (now.tm_hour > BACKUP_HOUR or
+                        (now.tm_hour == BACKUP_HOUR and now.tm_min >= BACKUP_MINUTE)):
+                    if not _backup_already_sent_today():
+                        if send_backup_to_telegram('kunlik avtomatik'):
+                            _mark_backup_sent()
+            except Exception as e:
+                print(f"[ZAHIRA] Rejalashtiruvchi xatosi: {e}")
+            time.sleep(60)
+
+    t = threading.Thread(target=loop, daemon=True)
+    t.start()
+
+
 def _start_remote_sync_listener():
     """Fonda har 4 soniyada GitHub'dan yangi o'zgarishlar bor-yo'qligini tezkor tekshirib turadi."""
     def listener_loop():
@@ -1403,6 +1536,22 @@ class WebServerHandler(BaseHTTPRequestHandler):
             st['pending'] = has_pending_changes()
             st['pending_seconds'] = round(time.time() - PENDING_SINCE) if PENDING_SINCE else 0
             self.wfile.write(json.dumps(st).encode('utf-8'))
+            return
+
+        # Qo'lda zahira olish (kunlik 18:00 dan tashqari)
+        if parsed_path.startswith('/api/send_backup'):
+            ok = send_backup_to_telegram("qo'lda")
+            if ok:
+                _mark_backup_sent()
+            self.send_response(200)
+            self.send_header('Content-Type', 'application/json; charset=utf-8')
+            self.send_header('Access-Control-Allow-Origin', '*')
+            self.end_headers()
+            self.wfile.write(json.dumps({
+                "success": ok,
+                "message": "Zahira Telegram'ga yuborildi" if ok
+                           else "Zahira yuborilmadi (sozlamani tekshiring)"
+            }).encode('utf-8'))
             return
 
         # "GitHub'ga yuborish" tugmasi — kutayotgan o'zgarishlarni darhol yuborish
@@ -2909,6 +3058,16 @@ def run_server(port=8080):
         print("[SYNC] 🔄 GitHub masofaviy sinxronizatsiya tinglovchisi ishga tushirildi!")
     except Exception as e_sync:
         print(f"[SYNC] Tinglovchini ishga tushirishda xato: {e_sync}")
+
+    # Kunlik avto-zahira (Telegram)
+    try:
+        _start_daily_backup_scheduler()
+        if load_backup_config():
+            print(f"[ZAHIRA] 🕕 Kunlik avto-zahira yoqildi — har kuni {BACKUP_HOUR:02d}:{BACKUP_MINUTE:02d}")
+        else:
+            print("[ZAHIRA] ⚠️ Sozlanmagan: scripts/backup_config.json yarating (bot_token, chat_id)")
+    except Exception as e_bk:
+        print(f"[ZAHIRA] Rejalashtiruvchini ishga tushirishda xato: {e_bk}")
 
     try:
         httpd.serve_forever()
