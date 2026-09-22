@@ -68,9 +68,7 @@
     overflow: hidden;
   }
   .header::after {
-    content: ''; position: absolute; top: -50px; right: -50px; width: 220px; height: 220px;
-    background: radial-gradient(circle, rgba(37,99,235,0.25) 0%, rgba(37,99,235,0) 70%);
-    border-radius: 50%; pointer-events: none;
+    display: none;
   }
   .brand-header-flex {
     display: flex;
@@ -126,35 +124,53 @@
 
   .header-actions { display: flex; gap: 10px; align-items: center; z-index: 2; }
   
+  /* =========================================================================
+     GITHUB USLUBIDAGI TUGMALAR TIZIMI (YAGONA STIL)
+     ========================================================================= */
   .btn {
-    display: inline-flex; align-items: center; gap: 8px;
-    padding: 9px 18px; border-radius: 10px; font-weight: 700; font-size: 13px;
-    cursor: pointer; border: none; transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    display: inline-flex; align-items: center; gap: 7px;
+    padding: 5px 16px; border-radius: 6px; font-weight: 500; font-size: 13px;
+    line-height: 20px; cursor: pointer;
+    border: 1px solid rgba(27,31,36,0.15);
+    transition: background 80ms, border-color 80ms, box-shadow 80ms;
     text-decoration: none; user-select: none;
+    background: #f6f8fa; color: #24292f;
+    box-shadow: 0 1px 0 rgba(27,31,36,0.04), inset 0 1px 0 rgba(255,255,255,0.25);
   }
+  .btn:hover {
+    background: #f3f4f6; border-color: rgba(27,31,36,0.2);
+  }
+  .btn:active {
+    background: #ebecf0; box-shadow: inset 0 1px 0 rgba(27,31,36,0.1);
+  }
+
   .btn-add {
-    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-    color: white; box-shadow: 0 4px 14px rgba(16, 185, 129, 0.35);
+    background: #2da44e; color: #fff;
+    border-color: rgba(27,31,36,0.15);
+    box-shadow: 0 1px 0 rgba(27,31,36,0.1), inset 0 1px 0 rgba(255,255,255,0.2);
   }
-  .btn-add:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(16, 185, 129, 0.45); }
-  
+  .btn-add:hover { background: #2c974b; border-color: rgba(27,31,36,0.15); }
+  .btn-add:active { background: #298e46; box-shadow: inset 0 1px 0 rgba(27,31,36,0.15); }
+
   .btn-multi-export {
-    background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
-    color: white; box-shadow: 0 4px 14px rgba(139, 92, 246, 0.35);
+    background: #8250df; color: #fff;
+    border-color: rgba(27,31,36,0.15);
+    box-shadow: 0 1px 0 rgba(27,31,36,0.1), inset 0 1px 0 rgba(255,255,255,0.15);
   }
-  .btn-multi-export:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(139, 92, 246, 0.45); }
+  .btn-multi-export:hover { background: #7539d1; }
 
   .btn-export {
-    background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
-    color: white; box-shadow: 0 4px 14px rgba(37, 99, 235, 0.35);
+    background: #0969da; color: #fff;
+    border-color: rgba(27,31,36,0.15);
+    box-shadow: 0 1px 0 rgba(27,31,36,0.1), inset 0 1px 0 rgba(255,255,255,0.15);
   }
-  .btn-export:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(37, 99, 235, 0.45); }
-  
+  .btn-export:hover { background: #0860ca; }
+
   .btn-refresh {
-    background: rgba(255, 255, 255, 0.08); color: #e2e8f0;
-    border: 1px solid rgba(255, 255, 255, 0.15); backdrop-filter: blur(8px);
+    background: rgba(255,255,255,0.1); color: #e2e8f0;
+    border: 1px solid rgba(255,255,255,0.2);
   }
-  .btn-refresh:hover { background: rgba(255, 255, 255, 0.16); color: #fff; }
+  .btn-refresh:hover { background: rgba(255,255,255,0.18); color: #fff; }
 
   /* ASOSIY 2 TA REJIM SWITCH TABS */
   .view-switcher-bar {
@@ -440,12 +456,13 @@
     flex-shrink: 0;
   }
   .btn-ai-reanalyze {
-    background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
-    color: #fff; font-weight: 700; font-size: 12px; padding: 6px 14px; border-radius: 8px;
-    border: none; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;
-    box-shadow: 0 2px 8px rgba(139, 92, 246, 0.3); transition: all 0.15s;
+    background: #8250df; color: #fff; font-weight: 500; font-size: 12px;
+    padding: 5px 14px; border-radius: 6px;
+    border: 1px solid rgba(27,31,36,0.15); cursor: pointer;
+    display: inline-flex; align-items: center; gap: 6px;
+    box-shadow: 0 1px 0 rgba(27,31,36,0.1); transition: background 80ms;
   }
-  .btn-ai-reanalyze:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(139, 92, 246, 0.4); }
+  .btn-ai-reanalyze:hover { background: #7539d1; }
 
   /* Rasmlar Galereyasi */
   .gallery-wrapper {
@@ -663,32 +680,22 @@
   }
 
   .btn-ai-action {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    padding: 8px 14px;
-    border-radius: 8px;
-    font-size: 12px;
-    font-weight: 800;
-    cursor: pointer;
-    border: none;
-    transition: all 0.15s;
-    white-space: nowrap;
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 5px 14px; border-radius: 6px; font-size: 12px; font-weight: 500;
+    cursor: pointer; border: 1px solid rgba(27,31,36,0.15);
+    transition: background 80ms; white-space: nowrap;
+    box-shadow: 0 1px 0 rgba(27,31,36,0.04);
   }
   .btn-ai-purple {
-    background: linear-gradient(135deg, #7c3aed 0%, #4f46e5 100%);
-    color: #ffffff;
-    box-shadow: 0 3px 10px rgba(124, 58, 237, 0.25);
+    background: #8250df; color: #ffffff;
+    border-color: rgba(27,31,36,0.15);
   }
-  .btn-ai-purple:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 5px 14px rgba(124, 58, 237, 0.35);
-  }
+  .btn-ai-purple:hover { background: #7539d1; }
   .btn-ai-blue {
-    background: #2563eb;
-    color: #ffffff;
+    background: #0969da; color: #ffffff;
+    border-color: rgba(27,31,36,0.15);
   }
-  .btn-ai-blue:hover { background: #1d4ed8; }
+  .btn-ai-blue:hover { background: #0860ca; }
 
   .ai-status-msg {
     padding: 8px 12px;
@@ -862,45 +869,41 @@
   }
 
   .btn-modal-cancel {
-    padding: 8px 16px;
-    background: #f1f5f9;
-    border: 1px solid #cbd5e1;
-    border-radius: 7px;
-    font-size: 12px;
-    font-weight: 700;
-    color: #475569;
+    padding: 5px 16px;
+    background: #f6f8fa;
+    border: 1px solid rgba(27,31,36,0.15);
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 500;
+    color: #24292f;
     cursor: pointer;
-    transition: all 0.15s;
+    transition: background 80ms;
+    box-shadow: 0 1px 0 rgba(27,31,36,0.04);
   }
   body.dark-mode .btn-modal-cancel {
-    background: #0f172a;
-    border-color: #334155;
-    color: #cbd5e1;
+    background: #21262d;
+    border-color: #30363d;
+    color: #c9d1d9;
   }
   .btn-modal-cancel:hover {
-    background: #e2e8f0;
-    color: #0f172a;
+    background: #f3f4f6; border-color: rgba(27,31,36,0.2);
   }
 
   .btn-modal-save {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    padding: 8px 22px;
-    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-    border: none;
-    border-radius: 7px;
-    font-size: 12.5px;
-    font-weight: 800;
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 5px 16px;
+    background: #2da44e;
+    border: 1px solid rgba(27,31,36,0.15);
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 500;
     color: #ffffff;
     cursor: pointer;
-    box-shadow: 0 3px 12px rgba(16, 185, 129, 0.35);
-    transition: all 0.15s;
+    box-shadow: 0 1px 0 rgba(27,31,36,0.1), inset 0 1px 0 rgba(255,255,255,0.2);
+    transition: background 80ms;
   }
-  .btn-modal-save:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 5px 16px rgba(16, 185, 129, 0.45);
-  }
+  .btn-modal-save:hover { background: #2c974b; }
+  .btn-modal-save:active { background: #298e46; }
 
   /* =========================================================================
      MINIMALIST VA BIR OYNAGA TO'LIQ SIG'ADIGAN JADVAL STILLARI
@@ -2169,15 +2172,14 @@
   }
 
   .btn-card-action {
-    background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
-    color: #ffffff; font-weight: 800; font-size: 13px; padding: 9px 20px;
-    border-radius: 10px; border: none; cursor: pointer; display: inline-flex;
-    align-items: center; gap: 6px; box-shadow: 0 4px 12px rgba(37,99,235,0.25);
-    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    background: #0969da;
+    color: #ffffff; font-weight: 500; font-size: 13px; padding: 5px 16px;
+    border-radius: 6px; border: 1px solid rgba(27,31,36,0.15); cursor: pointer;
+    display: inline-flex; align-items: center; gap: 6px;
+    box-shadow: 0 1px 0 rgba(27,31,36,0.1), inset 0 1px 0 rgba(255,255,255,0.15);
+    transition: background 80ms;
   }
-  .btn-card-action:hover {
-    transform: translateY(-2px); box-shadow: 0 6px 18px rgba(37,99,235,0.35);
-  }
+  .btn-card-action:hover { background: #0860ca; }
 
   /* =========================================================================
      TUNGI REJIM (DARK MODE) - KO'ZNI TOLIQTIMAYDIGAN PROFESSIONAL DIZAYN
