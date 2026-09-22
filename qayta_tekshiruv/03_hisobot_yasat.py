@@ -3819,6 +3819,116 @@ html = f"""<!DOCTYPE html>
     background: rgba(255, 255, 255, 0.22);
     transform: translateY(-1px);
   }}
+
+  /* GitHub Auto-Sync Status Chip & Spinner */
+  .git-sync-chip {{
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 7px 14px;
+    border-radius: 9999px;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    background: rgba(15, 23, 42, 0.6);
+    color: #e2e8f0;
+    user-select: none;
+    text-decoration: none;
+  }}
+  .git-sync-chip:hover {{
+    background: rgba(30, 41, 59, 0.9);
+    transform: translateY(-1px);
+  }}
+  .git-sync-chip.status-synced {{
+    border-color: rgba(16, 185, 129, 0.5);
+    color: #6ee7b7;
+  }}
+  .git-sync-chip.status-pending {{
+    border-color: rgba(245, 158, 11, 0.5);
+    color: #fcd34d;
+    background: rgba(245, 158, 11, 0.12);
+  }}
+  .git-sync-chip.status-syncing {{
+    border-color: rgba(59, 130, 246, 0.6);
+    color: #93c5fd;
+    background: rgba(59, 130, 246, 0.15);
+    box-shadow: 0 0 14px rgba(59, 130, 246, 0.35);
+  }}
+  .git-sync-chip.status-error {{
+    border-color: rgba(239, 68, 68, 0.6);
+    color: #fca5a5;
+    background: rgba(239, 68, 68, 0.15);
+  }}
+  .gh-spin {{
+    display: inline-block;
+    width: 13px;
+    height: 13px;
+    border: 2px solid currentColor;
+    border-right-color: transparent;
+    border-radius: 50%;
+    animation: ghSpinAnim 0.75s linear infinite;
+  }}
+  @keyframes ghSpinAnim {{
+    from {{ transform: rotate(0deg); }}
+    to {{ transform: rotate(360deg); }}
+  }}
+
+  /* Katta ekrandagi suzuvchi (Floating) yuklanish bildirishnomasi */
+  .git-sync-floating-overlay {{
+    position: fixed;
+    top: 24px;
+    right: 24px;
+    z-index: 99999;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 13px 20px;
+    border-radius: 14px;
+    background: rgba(15, 23, 42, 0.95);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    box-shadow: 0 12px 30px -5px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.12);
+    color: #ffffff;
+    font-size: 13px;
+    transform: translateY(-90px);
+    opacity: 0;
+    pointer-events: none;
+    transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  }}
+  .git-sync-floating-overlay.active {{
+    transform: translateY(0);
+    opacity: 1;
+    pointer-events: auto;
+  }}
+  .git-sync-floating-overlay.syncing {{
+    border-left: 4px solid #3b82f6;
+  }}
+  .git-sync-floating-overlay.synced {{
+    border-left: 4px solid #10b981;
+  }}
+  .git-sync-floating-overlay.error {{
+    border-left: 4px solid #ef4444;
+  }}
+  .git-pulse-ring {{
+    position: relative;
+    width: 26px;
+    height: 26px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }}
+  .git-pulse-ring .ring-anim {{
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    border: 2.5px solid #3b82f6;
+    border-top-color: transparent;
+    animation: ghSpinAnim 0.8s linear infinite;
+  }}
 </style>
 
 <!-- ASOSIY DATA VA SKRIPT -->
@@ -4040,6 +4150,18 @@ var RAW_STUDENTS = {students_json};
   </div>
 </div>
 
+<!-- Katta ekrandagi suzuvchi GitHub yuklanish bildirishnomasi -->
+<div id="gitSyncFloatingOverlay" class="git-sync-floating-overlay" onclick="window.open('https://github.com/OzodbekNapasov/Talabalar-ro-yhati', '_blank')" title="GitHub repozitoriyasini ochish">
+  <div class="git-pulse-ring">
+    <span id="gitOverlaySpinner" class="ring-anim"></span>
+    <span id="gitOverlayIcon" style="font-size:14px;">🔄</span>
+  </div>
+  <div>
+    <div id="gitOverlayTitle" style="font-weight:800; font-size:13px; color:#ffffff;">GitHub'ga yuklanmoqda...</div>
+    <div id="gitOverlaySubtitle" style="font-size:11.5px; color:#94a3b8; margin-top:2px;">O'zgarishlar 2 soniyada GitHub repozitoriyasiga yuboriladi</div>
+  </div>
+</div>
+
 <div class="container">
 
   <!-- Header -->
@@ -4054,6 +4176,13 @@ var RAW_STUDENTS = {students_json};
       </p>
     </div>
     <div class="header-actions">
+      <!-- GitHub Sinxronizatsiya Status Chip -->
+      <a id="githubSyncBadge" class="git-sync-chip status-synced" href="https://github.com/OzodbekNapasov/Talabalar-ro-yhati" target="_blank" title="GitHub repozitoriyasini ko'rish (Yangi oynada)">
+        <svg viewBox="0 0 24 24" fill="currentColor" style="width:14px;height:14px;flex-shrink:0;"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+        <span id="ghSyncSpinner" class="gh-spin" style="display:none;"></span>
+        <span id="ghSyncText">GitHub: Sinxronlangan</span>
+      </a>
+
       <button type="button" class="btn btn-add" onclick="openAddStudentModal()">
         <svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><line x1="20" y1="8" x2="20" y2="14"></line><line x1="23" y1="11" x2="17" y2="11"></line></svg>
         Yangi Talaba

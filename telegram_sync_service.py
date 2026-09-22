@@ -57,13 +57,23 @@ REBUILD_PENDING = False
 GIT_AUTO_PUSH = True   # False qilib qo'ying agar push kerak bo'lmasa
 GIT_PUSH_LOCK = threading.Lock()
 _git_push_timer = None
+GIT_SYNC_STATUS = {
+    "state": "synced",           # "synced", "pending", "syncing", "error"
+    "message": "Sinxronlangan",
+    "last_sync": time.strftime("%H:%M:%S")
+}
 
 def _do_git_push():
     """Fonda git add + commit + push bajaradi (bloklamaydi)."""
+    global GIT_SYNC_STATUS
+    with GIT_PUSH_LOCK:
+        GIT_SYNC_STATUS["state"] = "syncing"
+        GIT_SYNC_STATUS["message"] = "GitHub'ga yuklanmoqda..."
     try:
         result_add = subprocess.run(
             ['git', 'add',
              'Talabalar_Toliq_Royxati.xlsx',
+             'Talabalar_Yangilangan_Royxat.xlsx',
              'scripts/verifications.json',
              'scripts/manual_file_map.json'],
             cwd=BASE_DIR, capture_output=True, text=True, timeout=30
@@ -74,7 +84,7 @@ def _do_git_push():
         )
         if result_status.stdout.strip():
             result_commit = subprocess.run(
-                ['git', 'commit', '-m', 'Auto: talaba ma\'lumotlari yangilandi'],
+                ['git', 'commit', '-m', f"Auto: talaba ma'lumotlari yangilandi ({time.strftime('%Y-%m-%d %H:%M:%S')})"],
                 cwd=BASE_DIR, capture_output=True, text=True, timeout=30
             )
             if result_commit.returncode == 0:
@@ -84,27 +94,52 @@ def _do_git_push():
                 )
                 if result_push.returncode == 0:
                     print("[GIT] ✅ GitHub'ga muvaffaqiyatli push qilindi")
+                    with GIT_PUSH_LOCK:
+                        GIT_SYNC_STATUS["state"] = "synced"
+                        GIT_SYNC_STATUS["message"] = "GitHub bilan sinxronlandi"
+                        GIT_SYNC_STATUS["last_sync"] = time.strftime("%H:%M:%S")
                 else:
-                    print(f"[GIT] ⚠️ Push xatosi: {result_push.stderr.strip()}")
+                    err_msg = result_push.stderr.strip() or "Push xatosi"
+                    print(f"[GIT] ⚠️ Push xatosi: {err_msg}")
+                    with GIT_PUSH_LOCK:
+                        GIT_SYNC_STATUS["state"] = "error"
+                        GIT_SYNC_STATUS["message"] = f"Push xatosi"
+                        GIT_SYNC_STATUS["detail"] = err_msg[:60]
             else:
-                print(f"[GIT] ℹ️ Commit xatosi: {result_commit.stderr.strip()}")
+                err_msg = result_commit.stderr.strip() or "Commit xatosi"
+                print(f"[GIT] ℹ️ Commit xatosi: {err_msg}")
+                with GIT_PUSH_LOCK:
+                    GIT_SYNC_STATUS["state"] = "error"
+                    GIT_SYNC_STATUS["message"] = f"Commit xatosi"
         else:
             print("[GIT] ℹ️ O'zgarmagan fayl yo'q — push o'tkazib yuborildi")
+            with GIT_PUSH_LOCK:
+                GIT_SYNC_STATUS["state"] = "synced"
+                GIT_SYNC_STATUS["message"] = "Barcha ma'lumotlar GitHub'da mavjud"
+                GIT_SYNC_STATUS["last_sync"] = time.strftime("%H:%M:%S")
     except subprocess.TimeoutExpired:
         print("[GIT] ⚠️ Git operatsiyasi vaqt tugashi bilan bekor qilindi")
+        with GIT_PUSH_LOCK:
+            GIT_SYNC_STATUS["state"] = "error"
+            GIT_SYNC_STATUS["message"] = "Vaqt tugashi (Timeout)"
     except Exception as e:
         print(f"[GIT] ❌ Git xatosi: {e}")
+        with GIT_PUSH_LOCK:
+            GIT_SYNC_STATUS["state"] = "error"
+            GIT_SYNC_STATUS["message"] = "Git xatosi"
 
-def schedule_git_push():
-    """Ma'lumot saqlangandan so'ng 5 soniyadan keyin git push qiladi.
+def schedule_git_push(delay=2.0):
+    """Ma'lumot saqlangandan so'ng 2-3 soniyadan keyin git push qiladi.
     Bir necha ketma-ket o'zgarish bo'lsa, faqat bitta push qiladi."""
-    global _git_push_timer
+    global _git_push_timer, GIT_SYNC_STATUS
     if not GIT_AUTO_PUSH:
         return
     with GIT_PUSH_LOCK:
+        GIT_SYNC_STATUS["state"] = "pending"
+        GIT_SYNC_STATUS["message"] = "GitHub'ga tayyorlanmoqda..."
         if _git_push_timer is not None:
             _git_push_timer.cancel()
-        _git_push_timer = threading.Timer(5.0, _do_git_push)
+        _git_push_timer = threading.Timer(delay, _do_git_push)
         _git_push_timer.daemon = True
         _git_push_timer.start()
 
@@ -1038,6 +1073,17 @@ class WebServerHandler(BaseHTTPRequestHandler):
                     self.wfile.write(f.read())
             else:
                 self.send_error(404, "Excel topilmadi")
+            return
+
+        if parsed_path.startswith('/api/git_sync_status'):
+            self.send_response(200)
+            self.send_header('Content-Type', 'application/json; charset=utf-8')
+            self.send_header('Access-Control-Allow-Origin', '*')
+            self.send_header('Cache-Control', 'no-cache, no-store, must-revalidate')
+            self.end_headers()
+            with GIT_PUSH_LOCK:
+                st = dict(GIT_SYNC_STATUS)
+            self.wfile.write(json.dumps(st).encode('utf-8'))
             return
 
         if parsed_path.startswith('/api/doc_preview'):
