@@ -1869,7 +1869,7 @@ Aniq JSON formatda qaytar:
                 self.wfile.write(json.dumps({"success": False, "error": str(e)}).encode('utf-8'))
                 return
 
-        if parsed_path.startswith('/js/') or parsed_path.startswith('/css/') or parsed_path.startswith('/images/') or parsed_path.startswith('/pdf_jurnallar/'):
+        if parsed_path.startswith('/js/') or parsed_path.startswith('/css/') or parsed_path.startswith('/images/') or parsed_path.startswith('/pdf_jurnallar/') or parsed_path in ('/favicon.ico', '/favicon.svg', '/favicon.png'):
             rel_path = parsed_path.lstrip('/')
             static_file = os.path.join(BASE_DIR, rel_path)
             if os.path.exists(static_file) and os.path.isfile(static_file):
@@ -1880,6 +1880,7 @@ Aniq JSON formatda qaytar:
                     elif rel_path.endswith('.png'): mime = 'image/png'
                     elif rel_path.endswith('.jpg') or rel_path.endswith('.jpeg'): mime = 'image/jpeg'
                     elif rel_path.endswith('.svg'): mime = 'image/svg+xml'
+                    elif rel_path.endswith('.ico'): mime = 'image/x-icon'
                     elif rel_path.endswith('.pdf'): mime = 'application/pdf'
                     else: mime = 'application/octet-stream'
                 self.send_response(200)
