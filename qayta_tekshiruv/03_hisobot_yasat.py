@@ -1711,6 +1711,57 @@ html = f"""<!DOCTYPE html>
     .add-form-container {{
       grid-template-columns: 1fr;
     }}
+    /* Telefonlarda sarlavha tugmalari bir qatorga sig'masdi: .header
+       da overflow:hidden bo'lgani uchun "Jadvalni Eksport" va "Excel
+       Eksport" tugmalari kesilib, umuman bosib bo'lmasdi. Endi ular
+       yangi qatorga o'tadi. */
+    .header-actions {{
+      flex-wrap: wrap;
+      justify-content: flex-start;
+      row-gap: 8px;
+    }}
+
+    /* Xuddi shu muammo talaba kartasi modalida ham bor edi:
+       .modal-body overflow:hidden bo'lgani uchun "Tahrirlash" va
+       boshqa tugmalar telefonda kesilib qolardi.
+       Faqat .modal-top-bar ga wrap berish yetmaydi — ichidagi tugmalar
+       guruhi flex element sifatida qisqarmay 1000px+ bo'lib qolardi,
+       shuning uchun bolalarini ham kenglikka cheklaymiz. */
+    .modal-top-bar {{
+      flex-wrap: wrap;
+      row-gap: 8px;
+    }}
+    .modal-top-bar > * {{
+      max-width: 100%;
+      min-width: 0;
+      flex-wrap: wrap;
+    }}
+
+    /* Modal ichidagi qolgan uchta toshish sababi (hammasi .modal-body
+       overflow:hidden ostida kesilib qolardi): */
+
+    /* 1) Uzun fayl yo'li bir qatorda cho'zilib ketardi */
+    #modalFilePath {{
+      white-space: normal;
+      word-break: break-all;
+      overflow-wrap: anywhere;
+    }}
+
+    /* 2) Hujjat rasmlari yonma-yon turib sig'masdi (3 ta x 154px = 490px) */
+    #modalImagesContainer {{
+      flex-wrap: wrap;
+      justify-content: center;
+    }}
+    .gallery-grid {{
+      flex-wrap: wrap;
+      justify-content: center;
+      max-width: 100%;
+    }}
+
+    /* 3) Ma'lumot kartalari ikki ustun bo'lib qolardi */
+    .data-cards-grid {{
+      grid-template-columns: 1fr;
+    }}
   }}
 
   .form-card-box {{
