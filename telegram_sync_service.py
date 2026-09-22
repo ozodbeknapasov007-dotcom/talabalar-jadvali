@@ -72,6 +72,7 @@ def _do_git_push():
     try:
         result_add = subprocess.run(
             ['git', 'add',
+             'index.html',
              'Talabalar_Toliq_Royxati.xlsx',
              'Talabalar_Yangilangan_Royxat.xlsx',
              'scripts/verifications.json',

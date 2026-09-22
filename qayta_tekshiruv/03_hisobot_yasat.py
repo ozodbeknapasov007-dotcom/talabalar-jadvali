@@ -24,6 +24,7 @@ EXCEL_PATH = os.path.join(BASE_DIR, 'Talabalar_Toliq_Royxati.xlsx')
 OUTPUT_HTML = os.path.join(BASE_DIR, 'qayta_tekshiruv', 'hisobot.html')
 MAIN_HTML = os.path.join(BASE_DIR, 'natijalar_hisoboti.html')
 ROOT_HISOBOT = os.path.join(BASE_DIR, 'hisobot.html')
+INDEX_HTML = os.path.join(BASE_DIR, 'index.html')
 JS_SRC = os.path.join(BASE_DIR, 'js', 'app.js')
 
 wb = openpyxl.load_workbook(EXCEL_PATH)
@@ -4438,6 +4439,9 @@ with open(MAIN_HTML, 'w', encoding='utf-8') as f:
     f.write(html)
 
 with open(ROOT_HISOBOT, 'w', encoding='utf-8') as f:
+    f.write(html)
+
+with open(INDEX_HTML, 'w', encoding='utf-8') as f:
     f.write(html)
 
 # Formatlangan ko'p sahifali (8 ta guruh) Excel faylini saqlash

@@ -2841,6 +2841,144 @@ try {
 } catch(e) {}
 
 /* =========================================================================
+   GITHUB AVTO-SINXRONIZATSIYA VA LOADING KONTROLLERI
+   ========================================================================= */
+window.GitSyncManager = {
+  pollTimer: null,
+  hideOverlayTimer: null,
+  currentStatus: 'synced',
+
+  init: function() {
+    this.checkStatus();
+    // Har 10 soniyada fonda tekshirib turish
+    setInterval(() => {
+      if (this.currentStatus === 'synced') {
+        this.checkStatus();
+      }
+    }, 10000);
+  },
+
+  notifyChange: function() {
+    // Foydalanuvchi biror amal bajarganda darhol ekranda yuklanishni ko'rsatish
+    this.updateUI('pending', "GitHub'ga yuklanmoqda...", "O'zgarishlar 2 soniyada GitHub repozitoriyasiga yuboriladi");
+    this.startFastPolling();
+  },
+
+  startFastPolling: function() {
+    if (this.pollTimer) clearInterval(this.pollTimer);
+    let attempts = 0;
+    this.pollTimer = setInterval(() => {
+      attempts++;
+      this.checkStatus((status) => {
+        if (status === 'synced' || attempts > 30) {
+          clearInterval(this.pollTimer);
+          this.pollTimer = null;
+        }
+      });
+    }, 1200);
+  },
+
+  checkStatus: function(callback) {
+    const apiHost = (window.location.protocol === 'http:' || window.location.protocol === 'https:') ? '' : 'http://localhost:8080';
+    fetch(apiHost + '/api/git_sync_status?t=' + Date.now())
+      .then(res => {
+        if (!res.ok) throw new Error('Status HTTP ' + res.status);
+        return res.json();
+      })
+      .then(data => {
+        const state = data.state || 'synced';
+        const msg = data.message || 'Sinxronlangan';
+        const lastSync = data.last_sync ? ` (${data.last_sync})` : '';
+        this.currentStatus = state;
+
+        if (state === 'syncing') {
+          this.updateUI('syncing', "GitHub'ga yuklanmoqda...", "O'zgarishlar GitHub repozitoriyasiga yuborilmoqda...");
+        } else if (state === 'pending') {
+          this.updateUI('pending', "GitHub'ga tayyorlanmoqda...", "2-3 soniya ichida yuklash boshlanadi");
+        } else if (state === 'error') {
+          this.updateUI('error', "GitHub xatosi", data.detail || msg);
+        } else {
+          this.updateUI('synced', "GitHub: Sinxronlangan" + lastSync, "Barcha ma'lumotlar saqlandi");
+        }
+
+        if (typeof callback === 'function') callback(state);
+      })
+      .catch(err => {
+        if (typeof callback === 'function') callback('synced');
+      });
+  },
+
+  updateUI: function(state, title, subtitle) {
+    const badge = document.getElementById('githubSyncBadge');
+    const badgeText = document.getElementById('ghSyncText');
+    const badgeSpinner = document.getElementById('ghSyncSpinner');
+
+    const overlay = document.getElementById('gitSyncFloatingOverlay');
+    const overlaySpinner = document.getElementById('gitOverlaySpinner');
+    const overlayIcon = document.getElementById('gitOverlayIcon');
+    const overlayTitle = document.getElementById('gitOverlayTitle');
+    const overlaySub = document.getElementById('gitOverlaySubtitle');
+
+    if (badge && badgeText) {
+      badge.className = 'git-sync-chip status-' + state;
+      badgeText.innerText = title;
+      if (badgeSpinner) {
+        badgeSpinner.style.display = (state === 'syncing' || state === 'pending') ? 'inline-block' : 'none';
+      }
+    }
+
+    if (overlay && overlayTitle && overlaySub) {
+      overlay.className = 'git-sync-floating-overlay ' + state;
+      overlayTitle.innerText = title;
+      overlaySub.innerText = subtitle;
+
+      if (state === 'syncing' || state === 'pending') {
+        if (this.hideOverlayTimer) clearTimeout(this.hideOverlayTimer);
+        overlay.classList.add('active');
+        if (overlaySpinner) overlaySpinner.style.display = 'block';
+        if (overlayIcon) overlayIcon.innerText = '🔄';
+      } else if (state === 'synced') {
+        if (overlaySpinner) overlaySpinner.style.display = 'none';
+        if (overlayIcon) overlayIcon.innerText = '✅';
+        overlay.classList.add('active');
+        if (this.hideOverlayTimer) clearTimeout(this.hideOverlayTimer);
+        this.hideOverlayTimer = setTimeout(() => {
+          overlay.classList.remove('active');
+        }, 3500);
+      } else if (state === 'error') {
+        if (overlaySpinner) overlaySpinner.style.display = 'none';
+        if (overlayIcon) overlayIcon.innerText = '⚠️';
+        overlay.classList.add('active');
+        if (this.hideOverlayTimer) clearTimeout(this.hideOverlayTimer);
+        this.hideOverlayTimer = setTimeout(() => {
+          overlay.classList.remove('active');
+        }, 6000);
+      }
+    }
+  }
+};
+
+// Global fetch hook: Har qanday o'zgartirish amalga oshirilganda avtomat GitSync bildirishnoma ko'rsatiladi
+(function() {
+  const originalFetch = window.fetch;
+  window.fetch = function(input, init) {
+    const url = typeof input === 'string' ? input : (input && input.url ? input.url : '');
+    if (url.includes('/api/update_student') ||
+        url.includes('/api/verify_student') ||
+        url.includes('/api/delete_student') ||
+        url.includes('/api/add_new_student') ||
+        url.includes('/api/batch_add_students') ||
+        url.includes('/api/update_group') ||
+        url.includes('/api/upload_and_attach_to_student')) {
+      if (window.GitSyncManager) {
+        window.GitSyncManager.notifyChange();
+      }
+    }
+    return originalFetch.apply(this, arguments);
+  };
+})();
+
+/* =========================================================================
    PORTAL HOLATINI TIKLASH VA ISHGA TUSHIRISH (F5 BO'LGANDA)
    ========================================================================= */
 function initPortalState() {
@@ -2875,6 +3013,11 @@ function initPortalState() {
   // 4. Guruhlar tasdiqlash monitoringi statistikasini yangilash
   if (typeof window.updateGroupsVerificationStats === 'function') {
     window.updateGroupsVerificationStats();
+  }
+
+  // 5. GitHub Avto-Sinxronizatsiya statusini ishga tushirish
+  if (window.GitSyncManager && typeof window.GitSyncManager.init === 'function') {
+    window.GitSyncManager.init();
   }
 }
 
