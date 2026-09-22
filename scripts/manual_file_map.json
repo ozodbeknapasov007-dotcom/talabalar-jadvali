@@ -2,6 +2,14 @@
   "_izoh": "Qo'lda tekshirilgan ma'lumotlar. Avtomatik skriptlardan USTUN turadi. Kalit: \"I.F.O|Guruh\"",
   "_fayl_izoh": "fayllar: avtomatik qidiruv o'rniga shu fayl ishlatiladi",
   "fayllar": {
+    "Abdijalolova Dilnura|26-01": {
+      "file": "Abdijalilova Dilnura Yusufjon qizi 303.docx",
+      "sabab": "26-01 guruhiga o'tkazildi, shartnoma #303"
+    },
+    "Abdijalilova Dilnura|26-01": {
+      "file": "Abdijalilova Dilnura Yusufjon qizi 303.docx",
+      "sabab": "26-01 guruhiga o'tkazildi, shartnoma #303"
+    },
     "Xurramova Shodiya|26-02": {
       "file": "Xurramova Shodiya.docx",
       "sabab": "Manba jadvalda xato fayl ko'rsatilgan edi (Ibodullayeva Charos 63 (2).docx). Haqiqiy fayl qo'lda tasdiqlandi: shartnoma #02, 29-sonli maktab, Arol qizi."
@@ -93,6 +101,7 @@
   },
   "_qulf_izoh": "qulflangan: bu qatorlarga avtomatik skriptlar YOZMAYDI (qo'lda hujjat rasmidan tasdiqlangan)",
   "qulflangan": {
+    "Abdijalolova Dilnura|26-01": "ID-karta AE3226696 va Shahodatnoma UM 03728883 rasmlaridan to'liq tasdiqlandi (#303)",
     "Xurramova Shodiya|26-02": "Pasport AC1967100 va ATTESTAT UM 0438281 rasmlari bilan to'liq tasdiqlandi",
     "Isomiddinova Ruxshona|26-04": "Haqiqiy shartnoma Isomiddinova Ruhshona 65.docx bilan tasdiqlandi (#65)",
     "Jumayeva Muhlisa|26-05": "Haqiqiy shartnoma Jumayeva Muxlisa 60.docx bilan tasdiqlandi (#60)",
