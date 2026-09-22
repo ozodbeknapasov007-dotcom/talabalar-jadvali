@@ -1735,7 +1735,7 @@
   }
 
   /* =========================================================================
-     TALABALAR KONTINGENTI VA AKADEMIK TAQSIMOT (MODERN EXECUTIVE DASHBOARD)
+     TALABALAR KONTINGENTI VA AKADEMIK TAQSIMOT (TIBBIYOT PORTALI USLUBI)
      ========================================================================= */
   .kontingent-panel {
     background: #ffffff;
@@ -1750,13 +1750,26 @@
     justify-content: space-between;
     align-items: center;
     flex-wrap: wrap;
-    gap: 12px;
+    gap: 16px;
     margin-bottom: 18px;
-    padding-bottom: 14px;
+    padding-bottom: 16px;
     border-bottom: 1px solid #f1f5f9;
   }
+  .k-crest-box {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    background: #eff6ff;
+    border: 1.5px solid #bfdbfe;
+    color: #2563eb;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    box-shadow: 0 2px 8px rgba(37, 99, 235, 0.12);
+  }
   .kontingent-title {
-    font-size: 16px;
+    font-size: 16.5px;
     font-weight: 800;
     color: #0f172a;
     display: flex;
@@ -1768,7 +1781,7 @@
     font-size: 12px;
     color: #64748b;
     font-weight: 600;
-    margin-top: 3px;
+    margin-top: 2px;
   }
   .kontingent-header-pills {
     display: flex;
@@ -1781,13 +1794,22 @@
     font-weight: 700;
     color: #334155;
     background: #f1f5f9;
-    padding: 5px 11px;
+    padding: 5px 12px;
     border-radius: 8px;
     border: 1px solid #e2e8f0;
     white-space: nowrap;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
   }
   .k-header-pill strong {
     color: #0f172a;
+  }
+  .k-header-pill-accreditation {
+    background: #ecfdf5 !important;
+    color: #059669 !important;
+    border-color: #a7f3d0 !important;
+    font-weight: 800 !important;
   }
   .k-header-pill.k-header-pill-success {
     background: #ecfdf5;
@@ -1797,18 +1819,14 @@
   .k-header-pill.k-header-pill-success strong {
     color: #059669;
   }
-
-  /* Eksport Tugmasi (Header Pill) */
   .k-header-pill.k-header-pill-export {
     background: #2563eb !important;
     color: #ffffff !important;
     border: 1px solid #2563eb !important;
     cursor: pointer;
     transition: all 0.15s ease;
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
     font-weight: 700;
+    box-shadow: 0 2px 8px rgba(37, 99, 235, 0.25);
   }
   .k-header-pill.k-header-pill-export:hover {
     background: #1d4ed8 !important;
@@ -1817,13 +1835,10 @@
     box-shadow: 0 4px 12px rgba(37, 99, 235, 0.35);
   }
 
-  /* Rasmiy Kontingent Jadvali (To'liq Kenglikda - Katta va Qulay) */
   .kontingent-table-card {
-    background: #ffffff;
-    border: 1.5px solid #e2e8f0;
-    border-radius: 14px;
-    overflow: hidden;
-    box-shadow: 0 2px 12px rgba(15, 23, 42, 0.04);
+    background: transparent;
+    border: none;
+    box-shadow: none;
     width: 100%;
     display: flex;
     flex-direction: column;
@@ -1834,47 +1849,85 @@
   }
   .kontingent-table {
     width: 100%;
-    border-collapse: collapse;
+    border-collapse: separate;
+    border-spacing: 0 8px;
     font-family: inherit;
     text-align: left;
   }
   .kontingent-table th {
-    background: #f8fafc;
-    color: #475569;
-    font-size: 12px;
+    color: #64748b;
+    font-size: 11.5px;
     font-weight: 800;
     text-transform: uppercase;
-    letter-spacing: 0.5px;
-    padding: 12px 18px;
-    border-bottom: 1.5px solid #e2e8f0;
+    letter-spacing: 0.6px;
+    padding: 8px 16px;
     white-space: nowrap;
+    border: none;
   }
   .kontingent-row {
-    background: #ffffff;
-    border-bottom: 1px solid #f1f5f9;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
     cursor: pointer;
-    transition: all 0.15s ease;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .kontingent-row td {
+    padding: 13px 16px;
+    font-size: 13.5px;
+    vertical-align: middle;
+    border-top: 1px solid #e2e8f0;
+    border-bottom: 1px solid #e2e8f0;
+  }
+  .kontingent-row td:first-child {
+    border-left: 1px solid #e2e8f0;
+    border-top-left-radius: 10px;
+    border-bottom-left-radius: 10px;
+  }
+  .kontingent-row td:last-child {
+    border-right: 1px solid #e2e8f0;
+    border-top-right-radius: 10px;
+    border-bottom-right-radius: 10px;
   }
   .kontingent-row:hover {
-    background: #f8fafc;
+    background: #ffffff;
+    border-color: #2563eb;
+    box-shadow: 0 4px 16px rgba(37, 99, 235, 0.12);
+    transform: translateY(-1px);
+  }
+  .kontingent-row:hover td {
+    border-color: #2563eb;
   }
   .kontingent-row.active {
     background: #eff6ff !important;
-    outline: 2.5px solid #2563eb !important;
-    outline-offset: -1px;
+  }
+  .kontingent-row.active td {
+    border-color: #2563eb !important;
+    background: #eff6ff !important;
+  }
+  .kontingent-row.active td:first-child {
+    border-left: 3px solid #2563eb !important;
   }
   .kontingent-row.active .k-action-btn {
     background: #2563eb !important;
     color: #ffffff !important;
     border-color: #2563eb !important;
   }
-  .kontingent-row td {
-    padding: 12px 18px;
-    font-size: 13.5px;
-    vertical-align: middle;
+
+  .k-num-badge {
+    font-size: 12px;
+    font-weight: 800;
+    color: #2563eb;
+    background: rgba(37, 99, 235, 0.08);
+    border: 1px solid rgba(37, 99, 235, 0.2);
+    padding: 3px 8px;
+    border-radius: 6px;
+    font-family: 'JetBrains Mono', monospace;
+    display: inline-block;
   }
   .leader-avatar {
-    font-size: 15px;
+    color: #2563eb;
+    display: inline-block;
+    vertical-align: -2px;
     margin-right: 6px;
   }
   .k-grp-badge {
@@ -1886,27 +1939,30 @@
     letter-spacing: 0.3px;
     display: inline-block;
   }
+  .k-grp-badge-farm {
+    background: #059669 !important;
+    box-shadow: 0 2px 6px rgba(5, 150, 105, 0.25);
+  }
+  .k-grp-badge-hamsh {
+    background: #2563eb !important;
+    box-shadow: 0 2px 6px rgba(37, 99, 235, 0.25);
+  }
+  .k-yon-wrap {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
   .k-count-pill {
-    background: rgba(37,99,235,0.08);
+    background: rgba(37, 99, 235, 0.08);
     color: #2563eb;
     font-weight: 800;
     font-size: 12.5px;
     padding: 4px 12px;
     border-radius: 12px;
-    border: 1px solid rgba(37,99,235,0.2);
+    border: 1px solid rgba(37, 99, 235, 0.2);
     display: inline-block;
     white-space: nowrap;
-  }
-  .k-count-pill.k-count-pill-unassigned {
-    background: rgba(217, 119, 6, 0.1);
-    color: #d97706;
-    border-color: rgba(217, 119, 6, 0.25);
-  }
-  .k-count-share {
-    font-size: 11px;
-    opacity: 0.75;
-    margin-left: 2px;
-    font-weight: 600;
+    font-family: 'JetBrains Mono', monospace;
   }
   .k-ver-wrap {
     display: flex;
@@ -1917,10 +1973,13 @@
   .k-ver-text {
     font-size: 12px;
     font-weight: 700;
-    color: #059669;
+    font-family: 'JetBrains Mono', monospace;
   }
+  .k-ver-completed { color: #059669; }
+  .k-ver-near { color: #0284c7; }
+  .k-ver-pending { color: #d97706; }
   .k-mini-bar {
-    width: 80px;
+    width: 90px;
     height: 6px;
     background: #e2e8f0;
     border-radius: 10px;
@@ -1928,7 +1987,6 @@
   }
   .k-mini-bar-fill {
     height: 100%;
-    background: #10b981;
     border-radius: 10px;
     transition: width 0.3s ease;
   }
@@ -1936,7 +1994,7 @@
     font-size: 11.5px;
     font-weight: 700;
     color: #475569;
-    background: #f1f5f9;
+    background: #ffffff;
     padding: 5px 12px;
     border-radius: 8px;
     border: 1px solid #cbd5e1;
@@ -1948,19 +2006,39 @@
     background: #2563eb;
     color: #ffffff;
     border-color: #2563eb;
+    box-shadow: 0 2px 8px rgba(37, 99, 235, 0.3);
   }
+
+  /* Footer */
   .kontingent-footer {
-    background: #f8fafc;
-    border-top: 2px solid #e2e8f0;
+    background: #f1f5f9;
+    border: 1.5px solid #cbd5e1;
+    border-radius: 10px;
     font-weight: 800;
     cursor: pointer;
-    transition: background 0.15s ease;
-  }
-  .kontingent-footer:hover {
-    background: #f1f5f9;
+    transition: all 0.15s ease;
   }
   .kontingent-footer td {
-    padding: 13px 18px;
+    padding: 14px 16px;
+    border-top: 1.5px solid #cbd5e1;
+    border-bottom: 1.5px solid #cbd5e1;
+  }
+  .kontingent-footer td:first-child {
+    border-left: 1.5px solid #cbd5e1;
+    border-top-left-radius: 10px;
+    border-bottom-left-radius: 10px;
+  }
+  .kontingent-footer td:last-child {
+    border-right: 1.5px solid #cbd5e1;
+    border-top-right-radius: 10px;
+    border-bottom-right-radius: 10px;
+  }
+  .kontingent-footer:hover {
+    background: #e2e8f0;
+    border-color: #2563eb;
+  }
+  .kontingent-footer:hover td {
+    border-color: #2563eb;
   }
   .td-jami-label {
     font-size: 13px;
@@ -1969,15 +2047,13 @@
     font-weight: 800;
     text-transform: uppercase;
   }
-  .td-jami-count {
-    text-align: center;
-  }
   .k-count-pill-total {
     background: #0f172a;
     color: #ffffff;
     border: none;
     padding: 5px 14px;
     font-size: 13px;
+    border-radius: 10px;
   }
   .k-action-btn-all {
     background: #0f172a;
@@ -1988,15 +2064,17 @@
 
   /* Dark Mode Moslashuvi */
   body.dark-mode .kontingent-panel {
-    background: #131b2a;
+    background: #111a28;
     border-color: #233047;
-    box-shadow: 0 6px 24px -2px rgba(0, 0, 0, 0.5);
+    box-shadow: 0 8px 28px -4px rgba(0, 0, 0, 0.45);
+  }
+  body.dark-mode .k-crest-box {
+    background: rgba(56, 189, 248, 0.12);
+    border-color: rgba(56, 189, 248, 0.3);
+    color: #38bdf8;
   }
   body.dark-mode .kontingent-title {
     color: #f8fafc !important;
-  }
-  body.dark-mode .kontingent-title svg {
-    stroke: #38bdf8 !important;
   }
   body.dark-mode .kontingent-subtitle {
     color: #cbd5e1 !important;
@@ -2012,41 +2090,62 @@
   body.dark-mode .k-header-pill strong {
     color: #ffffff !important;
   }
+  body.dark-mode .k-header-pill-accreditation {
+    background: rgba(16, 185, 129, 0.15) !important;
+    color: #34d399 !important;
+    border-color: rgba(16, 185, 129, 0.4) !important;
+  }
   body.dark-mode .k-header-pill.k-header-pill-success {
-    background: #064e3b;
-    color: #6ee7b7;
-    border-color: #047857;
+    background: #064e3b !important;
+    color: #6ee7b7 !important;
+    border-color: #047857 !important;
   }
   body.dark-mode .k-header-pill.k-header-pill-success strong {
-    color: #34d399;
-  }
-  body.dark-mode .kontingent-table-card {
-    background: #162033;
-    border-color: #28374e;
+    color: #34d399 !important;
   }
   body.dark-mode .kontingent-table th {
-    background: #1e293b !important;
-    color: #cbd5e1 !important;
-    border-bottom: 1.5px solid #28374e !important;
-    font-weight: 800 !important;
+    color: #94a3b8 !important;
   }
   body.dark-mode .kontingent-row {
-    background: #162033;
-    border-bottom-color: #1e293b;
+    background: #172234;
+    border-color: #283850;
     color: #f8fafc;
   }
+  body.dark-mode .kontingent-row td {
+    border-color: #283850;
+    color: #f1f5f9;
+  }
+  body.dark-mode .kontingent-row td:first-child {
+    border-left-color: #283850;
+  }
+  body.dark-mode .kontingent-row td:last-child {
+    border-right-color: #283850;
+  }
   body.dark-mode .kontingent-row:hover {
-    background: #1c2a44;
+    background: #1e2c42;
+    border-color: #38bdf8;
+    box-shadow: 0 4px 16px rgba(56, 189, 248, 0.18);
+  }
+  body.dark-mode .kontingent-row:hover td {
+    border-color: #38bdf8;
   }
   body.dark-mode .kontingent-row.active {
     background: #1e3a5f !important;
-    outline-color: #38bdf8 !important;
   }
-  body.dark-mode .kontingent-row td {
-    color: #f1f5f9;
+  body.dark-mode .kontingent-row.active td {
+    background: #1e3a5f !important;
+    border-color: #38bdf8 !important;
   }
-  body.dark-mode .td-tr {
-    color: #94a3b8 !important;
+  body.dark-mode .kontingent-row.active td:first-child {
+    border-left: 3px solid #38bdf8 !important;
+  }
+  body.dark-mode .k-num-badge {
+    color: #38bdf8;
+    background: rgba(56, 189, 248, 0.12);
+    border-color: rgba(56, 189, 248, 0.3);
+  }
+  body.dark-mode .leader-avatar {
+    color: #38bdf8;
   }
   body.dark-mode .td-leader {
     color: #f8fafc !important;
@@ -2056,14 +2155,14 @@
     color: #cbd5e1 !important;
     font-weight: 600 !important;
   }
-  body.dark-mode .td-yon.td-yon-unassigned {
-    color: #fbbf24 !important;
-  }
   body.dark-mode .k-count-pill {
-    background: rgba(56,189,248,0.12);
+    background: rgba(56, 189, 248, 0.12);
     color: #38bdf8;
-    border-color: rgba(56,189,248,0.3);
+    border-color: rgba(56, 189, 248, 0.3);
   }
+  body.dark-mode .k-ver-completed { color: #34d399; }
+  body.dark-mode .k-ver-near { color: #38bdf8; }
+  body.dark-mode .k-ver-pending { color: #fbbf24; }
   body.dark-mode .k-mini-bar {
     background: #0b1320;
   }
@@ -2076,13 +2175,21 @@
     background: #38bdf8;
     color: #0f172a;
     border-color: #38bdf8;
+    box-shadow: 0 2px 10px rgba(56, 189, 248, 0.4);
   }
   body.dark-mode .kontingent-footer {
-    background: #1e293b;
-    border-top-color: #28374e;
+    background: #172234;
+    border-color: #283850;
+  }
+  body.dark-mode .kontingent-footer td {
+    border-color: #283850;
   }
   body.dark-mode .kontingent-footer:hover {
-    background: #253347;
+    background: #1e2c42;
+    border-color: #38bdf8;
+  }
+  body.dark-mode .kontingent-footer:hover td {
+    border-color: #38bdf8;
   }
   body.dark-mode .td-jami-label {
     color: #f8fafc;
@@ -7845,21 +7952,26 @@ if (document.readyState === 'loading') {
        ========================================================================= -->
   <div id="view_database_section">
     
-    <!-- Talabalar Kontingenti va Guruh Rahbarlari Bo'limi -->
+    <!-- Talabalar Kontingenti va Guruh Rahbarlari Bo'limi (Tibbiyot Texnikumi Portali) -->
     <div class="kontingent-panel">
       <!-- Panel Header & KPI Badges -->
       <div class="kontingent-header">
-        <div>
-          <div class="kontingent-title">
-            <svg class="svg-icon" style="width:22px;height:22px;" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
-            Talabalar Kontingenti va Guruh Rahbarlari
+        <div style="display:flex; align-items:center; gap:14px;">
+          <div class="k-crest-box">
+            <svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="width:22px;height:22px;"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
           </div>
-          <div class="kontingent-subtitle">
-            Rasmiy akademik taqsimot (guruhlar kesimida) &bull; Istalgan qatorni bosib guruhni saralashingiz mumkin
+          <div>
+            <div class="kontingent-title">
+              Talabalar Kontingenti va Guruh Rahbarlari
+            </div>
+            <div class="kontingent-subtitle">
+              Shahrisabz Tibbiyot Texnikumi rasmiy akademik taqsimoti &bull; Istalgan guruh qatorini bosib filtrlashingiz mumkin
+            </div>
           </div>
         </div>
-        <!-- Yuqori qisqa ko'rsatkichlar & Eksport -->
+        <!-- Yuqori ko'rsatkichlar & Eksport -->
         <div class="kontingent-header-pills">
+          <span class="k-header-pill k-header-pill-accreditation">Rasmiy Kontingent: 2026/2027</span>
           <span class="k-header-pill"><svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg> Jami: <strong id="k-header-total">167</strong> nafar talaba</span>
           <span class="k-header-pill"><svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg> <strong>7</strong> ta akademik guruh</span>
           <span class="k-header-pill"><svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg> <strong>7</strong> nafar guruh rahbari</span>
@@ -7871,39 +7983,43 @@ if (document.readyState === 'loading') {
         </div>
       </div>
 
-      <!-- Rasmiy Kontingent Jadvali (To'liq Kenglikda - Katta va Qulay) -->
+      <!-- Rasmiy Kontingent Jadvali (Variant 5 Uslubi - Spaced Separated Rows) -->
       <div class="kontingent-table-card">
         <div class="kontingent-table-wrap">
           <table class="kontingent-table">
             <thead>
               <tr>
-                <th style="width:50px; text-align:center;">№</th>
-                <th style="text-align:left; min-width:220px;">Guruh rahbari</th>
-                <th style="text-align:center; width:120px;">Guruh</th>
-                <th style="text-align:left; min-width:200px;">Yo'nalishi</th>
+                <th style="width:55px; text-align:center;">№</th>
+                <th style="text-align:left; min-width:220px;">Mas'ul murabbiy</th>
+                <th style="text-align:center; width:130px;">Akademik guruh</th>
+                <th style="text-align:left; min-width:200px;">Ixtisoslik (Yo'nalishi)</th>
                 <th style="text-align:center; width:170px;">Talabalar soni</th>
-                <th style="text-align:center; width:200px;">Tasdiqlangan</th>
+                <th style="text-align:center; width:200px;">Hujjatlar tasdig'i</th>
                 <th style="text-align:center; width:130px;">Harakat</th>
               </tr>
             </thead>
             <tbody>
 
             <tr class="kontingent-row" id="kontingent-row-26-01" onclick="filterByGroup('26-01')" title="Guruh 26-01 talabalarini ko'rish uchun bosing">
-              <td class="td-tr" style="text-align:center; font-weight:700; font-size:12.5px;">1</td>
+              <td class="td-tr" style="text-align:center;">
+                <span class="k-num-badge">1</span>
+              </td>
               <td class="td-leader" style="font-weight:700;">
                 <span class="leader-avatar"><svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg></span> Mirzayeva.D
               </td>
               <td class="td-group" style="text-align:center;">
-                <span class="k-grp-badge" style="background:#059669;">26-01</span>
+                <span class="k-grp-badge k-grp-badge-farm" style="background:#059669;">Guruh 26-01</span>
               </td>
-              <td class="td-yon" style="font-size:13px; font-weight:600;">Farmatsiya ishi</td>
+              <td class="td-yon" style="font-size:13px; font-weight:600;">
+                <span class="k-yon-wrap"><svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2" style="width:14px;height:14px;display:inline-block;vertical-align:-2px;margin-right:6px;"><path d="m10.5 20.5 10-10a4.95 4.95 0 1 0-7-7l-10 10a4.95 4.95 0 1 0 7 7Z"></path><path d="m8.5 8.5 7 7"></path></svg><span>Farmatsiya ishi</span></span>
+              </td>
               <td class="td-count" style="text-align:center;">
                 <span class="k-count-pill"><strong id="kontingent-count-26-01">14</strong> nafar <span class="k-count-share">(8.3%)</span></span>
               </td>
               <td class="td-ver" style="text-align:center;">
                 <div class="k-ver-wrap">
-                  <span id="kontingent-ver-26-01" class="k-ver-text">14/14 (100%)</span>
-                  <div class="k-mini-bar"><div id="kontingent-bar-26-01" class="k-mini-bar-fill" style="width:100%;"></div></div>
+                  <span id="kontingent-ver-26-01" class="k-ver-text k-ver-completed">14/14 (100%)</span>
+                  <div class="k-mini-bar"><div id="kontingent-bar-26-01" class="k-mini-bar-fill" style="width:100%; background:linear-gradient(90deg, #059669, #10b981);"></div></div>
                 </div>
               </td>
               <td class="td-action" style="text-align:center;">
@@ -7912,21 +8028,25 @@ if (document.readyState === 'loading') {
             </tr>
 
             <tr class="kontingent-row" id="kontingent-row-26-02" onclick="filterByGroup('26-02')" title="Guruh 26-02 talabalarini ko'rish uchun bosing">
-              <td class="td-tr" style="text-align:center; font-weight:700; font-size:12.5px;">2</td>
+              <td class="td-tr" style="text-align:center;">
+                <span class="k-num-badge">2</span>
+              </td>
               <td class="td-leader" style="font-weight:700;">
                 <span class="leader-avatar"><svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg></span> Ochilov.D
               </td>
               <td class="td-group" style="text-align:center;">
-                <span class="k-grp-badge" style="background:#2563eb;">26-02</span>
+                <span class="k-grp-badge k-grp-badge-hamsh" style="background:#2563eb;">Guruh 26-02</span>
               </td>
-              <td class="td-yon" style="font-size:13px; font-weight:600;">Hamshiralik ishi</td>
+              <td class="td-yon" style="font-size:13px; font-weight:600;">
+                <span class="k-yon-wrap"><svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2" style="width:14px;height:14px;display:inline-block;vertical-align:-2px;margin-right:6px;"><path d="M22 12h-4l-3 9L9 3l-3 9H2"></path></svg><span>Hamshiralik ishi</span></span>
+              </td>
               <td class="td-count" style="text-align:center;">
                 <span class="k-count-pill"><strong id="kontingent-count-26-02">30</strong> nafar <span class="k-count-share">(17.8%)</span></span>
               </td>
               <td class="td-ver" style="text-align:center;">
                 <div class="k-ver-wrap">
-                  <span id="kontingent-ver-26-02" class="k-ver-text">29/30 (97%)</span>
-                  <div class="k-mini-bar"><div id="kontingent-bar-26-02" class="k-mini-bar-fill" style="width:97%;"></div></div>
+                  <span id="kontingent-ver-26-02" class="k-ver-text k-ver-near">29/30 (97%)</span>
+                  <div class="k-mini-bar"><div id="kontingent-bar-26-02" class="k-mini-bar-fill" style="width:97%; background:linear-gradient(90deg, #0284c7, #38bdf8);"></div></div>
                 </div>
               </td>
               <td class="td-action" style="text-align:center;">
@@ -7935,21 +8055,25 @@ if (document.readyState === 'loading') {
             </tr>
 
             <tr class="kontingent-row" id="kontingent-row-26-03" onclick="filterByGroup('26-03')" title="Guruh 26-03 talabalarini ko'rish uchun bosing">
-              <td class="td-tr" style="text-align:center; font-weight:700; font-size:12.5px;">3</td>
+              <td class="td-tr" style="text-align:center;">
+                <span class="k-num-badge">3</span>
+              </td>
               <td class="td-leader" style="font-weight:700;">
                 <span class="leader-avatar"><svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg></span> To'rayeva.S
               </td>
               <td class="td-group" style="text-align:center;">
-                <span class="k-grp-badge" style="background:#2563eb;">26-03</span>
+                <span class="k-grp-badge k-grp-badge-hamsh" style="background:#2563eb;">Guruh 26-03</span>
               </td>
-              <td class="td-yon" style="font-size:13px; font-weight:600;">Hamshiralik ishi</td>
+              <td class="td-yon" style="font-size:13px; font-weight:600;">
+                <span class="k-yon-wrap"><svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2" style="width:14px;height:14px;display:inline-block;vertical-align:-2px;margin-right:6px;"><path d="M22 12h-4l-3 9L9 3l-3 9H2"></path></svg><span>Hamshiralik ishi</span></span>
+              </td>
               <td class="td-count" style="text-align:center;">
                 <span class="k-count-pill"><strong id="kontingent-count-26-03">29</strong> nafar <span class="k-count-share">(17.2%)</span></span>
               </td>
               <td class="td-ver" style="text-align:center;">
                 <div class="k-ver-wrap">
-                  <span id="kontingent-ver-26-03" class="k-ver-text">28/29 (97%)</span>
-                  <div class="k-mini-bar"><div id="kontingent-bar-26-03" class="k-mini-bar-fill" style="width:97%;"></div></div>
+                  <span id="kontingent-ver-26-03" class="k-ver-text k-ver-near">28/29 (97%)</span>
+                  <div class="k-mini-bar"><div id="kontingent-bar-26-03" class="k-mini-bar-fill" style="width:97%; background:linear-gradient(90deg, #0284c7, #38bdf8);"></div></div>
                 </div>
               </td>
               <td class="td-action" style="text-align:center;">
@@ -7958,21 +8082,25 @@ if (document.readyState === 'loading') {
             </tr>
 
             <tr class="kontingent-row" id="kontingent-row-26-04" onclick="filterByGroup('26-04')" title="Guruh 26-04 talabalarini ko'rish uchun bosing">
-              <td class="td-tr" style="text-align:center; font-weight:700; font-size:12.5px;">4</td>
+              <td class="td-tr" style="text-align:center;">
+                <span class="k-num-badge">4</span>
+              </td>
               <td class="td-leader" style="font-weight:700;">
                 <span class="leader-avatar"><svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg></span> Hamdamova.M
               </td>
               <td class="td-group" style="text-align:center;">
-                <span class="k-grp-badge" style="background:#2563eb;">26-04</span>
+                <span class="k-grp-badge k-grp-badge-hamsh" style="background:#2563eb;">Guruh 26-04</span>
               </td>
-              <td class="td-yon" style="font-size:13px; font-weight:600;">Hamshiralik ishi</td>
+              <td class="td-yon" style="font-size:13px; font-weight:600;">
+                <span class="k-yon-wrap"><svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2" style="width:14px;height:14px;display:inline-block;vertical-align:-2px;margin-right:6px;"><path d="M22 12h-4l-3 9L9 3l-3 9H2"></path></svg><span>Hamshiralik ishi</span></span>
+              </td>
               <td class="td-count" style="text-align:center;">
                 <span class="k-count-pill"><strong id="kontingent-count-26-04">29</strong> nafar <span class="k-count-share">(17.2%)</span></span>
               </td>
               <td class="td-ver" style="text-align:center;">
                 <div class="k-ver-wrap">
-                  <span id="kontingent-ver-26-04" class="k-ver-text">25/29 (86%)</span>
-                  <div class="k-mini-bar"><div id="kontingent-bar-26-04" class="k-mini-bar-fill" style="width:86%;"></div></div>
+                  <span id="kontingent-ver-26-04" class="k-ver-text k-ver-pending">25/29 (86%)</span>
+                  <div class="k-mini-bar"><div id="kontingent-bar-26-04" class="k-mini-bar-fill" style="width:86%; background:linear-gradient(90deg, #d97706, #f59e0b);"></div></div>
                 </div>
               </td>
               <td class="td-action" style="text-align:center;">
@@ -7981,21 +8109,25 @@ if (document.readyState === 'loading') {
             </tr>
 
             <tr class="kontingent-row" id="kontingent-row-26-05" onclick="filterByGroup('26-05')" title="Guruh 26-05 talabalarini ko'rish uchun bosing">
-              <td class="td-tr" style="text-align:center; font-weight:700; font-size:12.5px;">5</td>
+              <td class="td-tr" style="text-align:center;">
+                <span class="k-num-badge">5</span>
+              </td>
               <td class="td-leader" style="font-weight:700;">
                 <span class="leader-avatar"><svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg></span> Rayimova.X
               </td>
               <td class="td-group" style="text-align:center;">
-                <span class="k-grp-badge" style="background:#2563eb;">26-05</span>
+                <span class="k-grp-badge k-grp-badge-hamsh" style="background:#2563eb;">Guruh 26-05</span>
               </td>
-              <td class="td-yon" style="font-size:13px; font-weight:600;">Hamshiralik ishi</td>
+              <td class="td-yon" style="font-size:13px; font-weight:600;">
+                <span class="k-yon-wrap"><svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2" style="width:14px;height:14px;display:inline-block;vertical-align:-2px;margin-right:6px;"><path d="M22 12h-4l-3 9L9 3l-3 9H2"></path></svg><span>Hamshiralik ishi</span></span>
+              </td>
               <td class="td-count" style="text-align:center;">
                 <span class="k-count-pill"><strong id="kontingent-count-26-05">32</strong> nafar <span class="k-count-share">(18.9%)</span></span>
               </td>
               <td class="td-ver" style="text-align:center;">
                 <div class="k-ver-wrap">
-                  <span id="kontingent-ver-26-05" class="k-ver-text">32/32 (100%)</span>
-                  <div class="k-mini-bar"><div id="kontingent-bar-26-05" class="k-mini-bar-fill" style="width:100%;"></div></div>
+                  <span id="kontingent-ver-26-05" class="k-ver-text k-ver-completed">32/32 (100%)</span>
+                  <div class="k-mini-bar"><div id="kontingent-bar-26-05" class="k-mini-bar-fill" style="width:100%; background:linear-gradient(90deg, #059669, #10b981);"></div></div>
                 </div>
               </td>
               <td class="td-action" style="text-align:center;">
@@ -8004,21 +8136,25 @@ if (document.readyState === 'loading') {
             </tr>
 
             <tr class="kontingent-row" id="kontingent-row-26-06" onclick="filterByGroup('26-06')" title="Guruh 26-06 talabalarini ko'rish uchun bosing">
-              <td class="td-tr" style="text-align:center; font-weight:700; font-size:12.5px;">6</td>
+              <td class="td-tr" style="text-align:center;">
+                <span class="k-num-badge">6</span>
+              </td>
               <td class="td-leader" style="font-weight:700;">
                 <span class="leader-avatar"><svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg></span> Yuldashev.O
               </td>
               <td class="td-group" style="text-align:center;">
-                <span class="k-grp-badge" style="background:#2563eb;">26-06</span>
+                <span class="k-grp-badge k-grp-badge-hamsh" style="background:#2563eb;">Guruh 26-06</span>
               </td>
-              <td class="td-yon" style="font-size:13px; font-weight:600;">Hamshiralik ishi</td>
+              <td class="td-yon" style="font-size:13px; font-weight:600;">
+                <span class="k-yon-wrap"><svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2" style="width:14px;height:14px;display:inline-block;vertical-align:-2px;margin-right:6px;"><path d="M22 12h-4l-3 9L9 3l-3 9H2"></path></svg><span>Hamshiralik ishi</span></span>
+              </td>
               <td class="td-count" style="text-align:center;">
                 <span class="k-count-pill"><strong id="kontingent-count-26-06">27</strong> nafar <span class="k-count-share">(16.0%)</span></span>
               </td>
               <td class="td-ver" style="text-align:center;">
                 <div class="k-ver-wrap">
-                  <span id="kontingent-ver-26-06" class="k-ver-text">26/27 (96%)</span>
-                  <div class="k-mini-bar"><div id="kontingent-bar-26-06" class="k-mini-bar-fill" style="width:96%;"></div></div>
+                  <span id="kontingent-ver-26-06" class="k-ver-text k-ver-near">26/27 (96%)</span>
+                  <div class="k-mini-bar"><div id="kontingent-bar-26-06" class="k-mini-bar-fill" style="width:96%; background:linear-gradient(90deg, #0284c7, #38bdf8);"></div></div>
                 </div>
               </td>
               <td class="td-action" style="text-align:center;">
@@ -8027,21 +8163,25 @@ if (document.readyState === 'loading') {
             </tr>
 
             <tr class="kontingent-row" id="kontingent-row-26-07" onclick="filterByGroup('26-07')" title="Guruh 26-07 talabalarini ko'rish uchun bosing">
-              <td class="td-tr" style="text-align:center; font-weight:700; font-size:12.5px;">7</td>
+              <td class="td-tr" style="text-align:center;">
+                <span class="k-num-badge">7</span>
+              </td>
               <td class="td-leader" style="font-weight:700;">
                 <span class="leader-avatar"><svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg></span> Asraliyev.A
               </td>
               <td class="td-group" style="text-align:center;">
-                <span class="k-grp-badge" style="background:#2563eb;">26-07</span>
+                <span class="k-grp-badge k-grp-badge-hamsh" style="background:#2563eb;">Guruh 26-07</span>
               </td>
-              <td class="td-yon" style="font-size:13px; font-weight:600;">Hamshiralik ishi</td>
+              <td class="td-yon" style="font-size:13px; font-weight:600;">
+                <span class="k-yon-wrap"><svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2" style="width:14px;height:14px;display:inline-block;vertical-align:-2px;margin-right:6px;"><path d="M22 12h-4l-3 9L9 3l-3 9H2"></path></svg><span>Hamshiralik ishi</span></span>
+              </td>
               <td class="td-count" style="text-align:center;">
                 <span class="k-count-pill"><strong id="kontingent-count-26-07">6</strong> nafar <span class="k-count-share">(3.6%)</span></span>
               </td>
               <td class="td-ver" style="text-align:center;">
                 <div class="k-ver-wrap">
-                  <span id="kontingent-ver-26-07" class="k-ver-text">5/6 (83%)</span>
-                  <div class="k-mini-bar"><div id="kontingent-bar-26-07" class="k-mini-bar-fill" style="width:83%;"></div></div>
+                  <span id="kontingent-ver-26-07" class="k-ver-text k-ver-pending">5/6 (83%)</span>
+                  <div class="k-mini-bar"><div id="kontingent-bar-26-07" class="k-mini-bar-fill" style="width:83%; background:linear-gradient(90deg, #d97706, #f59e0b);"></div></div>
                 </div>
               </td>
               <td class="td-action" style="text-align:center;">
@@ -8051,7 +8191,12 @@ if (document.readyState === 'loading') {
             </tbody>
             <tfoot>
               <tr class="kontingent-footer" onclick="filterByGroup('')" title="Barcha talabalarni ko'rish uchun bosing">
-                <td class="td-jami-label" colspan="4">JAMI TALABALAR KONTINGENTI</td>
+                <td class="td-jami-label" colspan="4">
+                  <div style="display:flex; align-items:center; gap:8px;">
+                    <span style="font-weight:800; letter-spacing:0.5px;">JAMI TALABALAR KONTINGENTI</span>
+                    <span style="font-size:11.5px; opacity:0.75; font-weight:600;">(7 ta akademik guruh)</span>
+                  </div>
+                </td>
                 <td class="td-jami-count" style="text-align:center;">
                   <span class="k-count-pill k-count-pill-total"><strong id="kontingent-count-total">167</strong> nafar (100%)</span>
                 </td>

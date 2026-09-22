@@ -303,6 +303,9 @@ SVG_WARN_SM = '<svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="cur
 SVG_CROSS_SM = '<svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:12px;height:12px;display:inline-block;vertical-align:-1px;margin-right:4px;"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>'
 SVG_PHONE = '<svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px;display:inline-block;vertical-align:-2px;margin-right:4px;"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>'
 SVG_EYE = '<svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;display:inline-block;vertical-align:-2px;margin-right:4px;"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>'
+SVG_CREST = '<svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="width:22px;height:22px;"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>'
+SVG_PHARMACY = '<svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2" style="width:14px;height:14px;display:inline-block;vertical-align:-2px;margin-right:6px;"><path d="m10.5 20.5 10-10a4.95 4.95 0 1 0-7-7l-10 10a4.95 4.95 0 1 0 7 7Z"></path><path d="m8.5 8.5 7 7"></path></svg>'
+SVG_NURSING = '<svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2" style="width:14px;height:14px;display:inline-block;vertical-align:-2px;margin-right:6px;"><path d="M22 12h-4l-3 9L9 3l-3 9H2"></path></svg>'
 
 groups_stats_cards = []
 
@@ -360,7 +363,7 @@ for g in GROUPS_LIST:
 
 groups_stats_cards_html = "\n".join(groups_stats_cards)
 
-# 2. TALABALAR KONTINGENTI VA AKADEMIK TAQSIMOT BO'LIMI
+# 2. TALABALAR KONTINGENTI VA AKADEMIK TAQSIMOT BO'LIMI (TIBBIYOT PORTALI USLUBI)
 kontingent_rows = []
 for idx_g, g in enumerate(GROUPS_LIST, 1):
     cnt = groups_count.get(g, 0)
@@ -368,27 +371,44 @@ for idx_g, g in enumerate(GROUPS_LIST, 1):
     g_pct = round(g_ver / cnt * 100) if cnt > 0 else 0
     leader = GROUP_LEADERS.get(g, '—')
     is_farmat = (g == '26-01')
+    badge_cls = 'k-grp-badge-farm' if is_farmat else 'k-grp-badge-hamsh'
     badge_bg = '#059669' if is_farmat else '#2563eb'
     g_yon_short = "Farmatsiya ishi" if is_farmat else "Hamshiralik ishi"
+    yon_icon = SVG_PHARMACY if is_farmat else SVG_NURSING
+
+    # Progress ranglari (dashboard bilan to'liq uyg'un)
+    if g_pct == 100:
+        ver_status_cls = 'k-ver-completed'
+        bar_bg = 'linear-gradient(90deg, #059669, #10b981)'
+    elif g_pct >= 90:
+        ver_status_cls = 'k-ver-near'
+        bar_bg = 'linear-gradient(90deg, #0284c7, #38bdf8)'
+    else:
+        ver_status_cls = 'k-ver-pending'
+        bar_bg = 'linear-gradient(90deg, #d97706, #f59e0b)'
 
     g_share = round(cnt / total * 100, 1) if total > 0 else 0
     k_row = f'''
             <tr class="kontingent-row" id="kontingent-row-{g}" onclick="filterByGroup('{g}')" title="Guruh {g} talabalarini ko'rish uchun bosing">
-              <td class="td-tr" style="text-align:center; font-weight:700; font-size:12.5px;">{idx_g}</td>
+              <td class="td-tr" style="text-align:center;">
+                <span class="k-num-badge">{idx_g}</span>
+              </td>
               <td class="td-leader" style="font-weight:700;">
                 <span class="leader-avatar">{SVG_USER}</span> {leader}
               </td>
               <td class="td-group" style="text-align:center;">
-                <span class="k-grp-badge" style="background:{badge_bg};">{g}</span>
+                <span class="k-grp-badge {badge_cls}" style="background:{badge_bg};">Guruh {g}</span>
               </td>
-              <td class="td-yon" style="font-size:13px; font-weight:600;">{g_yon_short}</td>
+              <td class="td-yon" style="font-size:13px; font-weight:600;">
+                <span class="k-yon-wrap">{yon_icon}<span>{g_yon_short}</span></span>
+              </td>
               <td class="td-count" style="text-align:center;">
                 <span class="k-count-pill"><strong id="kontingent-count-{g}">{cnt}</strong> nafar <span class="k-count-share">({g_share}%)</span></span>
               </td>
               <td class="td-ver" style="text-align:center;">
                 <div class="k-ver-wrap">
-                  <span id="kontingent-ver-{g}" class="k-ver-text">{g_ver}/{cnt} ({g_pct}%)</span>
-                  <div class="k-mini-bar"><div id="kontingent-bar-{g}" class="k-mini-bar-fill" style="width:{g_pct}%;"></div></div>
+                  <span id="kontingent-ver-{g}" class="k-ver-text {ver_status_cls}">{g_ver}/{cnt} ({g_pct}%)</span>
+                  <div class="k-mini-bar"><div id="kontingent-bar-{g}" class="k-mini-bar-fill" style="width:{g_pct}%; background:{bar_bg};"></div></div>
                 </div>
               </td>
               <td class="td-action" style="text-align:center;">
@@ -433,21 +453,26 @@ k_unassigned_row = f'''
 kontingent_rows_html = "\n".join(kontingent_rows)
 
 kontingent_panel_html = f'''
-    <!-- Talabalar Kontingenti va Guruh Rahbarlari Bo'limi -->
+    <!-- Talabalar Kontingenti va Guruh Rahbarlari Bo'limi (Tibbiyot Texnikumi Portali) -->
     <div class="kontingent-panel">
       <!-- Panel Header & KPI Badges -->
       <div class="kontingent-header">
-        <div>
-          <div class="kontingent-title">
-            <svg class="svg-icon" style="width:22px;height:22px;" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
-            Talabalar Kontingenti va Guruh Rahbarlari
+        <div style="display:flex; align-items:center; gap:14px;">
+          <div class="k-crest-box">
+            {SVG_CREST}
           </div>
-          <div class="kontingent-subtitle">
-            Rasmiy akademik taqsimot (guruhlar kesimida) &bull; Istalgan qatorni bosib guruhni saralashingiz mumkin
+          <div>
+            <div class="kontingent-title">
+              Talabalar Kontingenti va Guruh Rahbarlari
+            </div>
+            <div class="kontingent-subtitle">
+              Shahrisabz Tibbiyot Texnikumi rasmiy akademik taqsimoti &bull; Istalgan guruh qatorini bosib filtrlashingiz mumkin
+            </div>
           </div>
         </div>
-        <!-- Yuqori qisqa ko'rsatkichlar & Eksport -->
+        <!-- Yuqori ko'rsatkichlar & Eksport -->
         <div class="kontingent-header-pills">
+          <span class="k-header-pill k-header-pill-accreditation">Rasmiy Kontingent: 2026/2027</span>
           <span class="k-header-pill">{SVG_USERS} Jami: <strong id="k-header-total">{official_total}</strong> nafar talaba</span>
           <span class="k-header-pill">{SVG_BOOK} <strong>7</strong> ta akademik guruh</span>
           <span class="k-header-pill">{SVG_USER} <strong>7</strong> nafar guruh rahbari</span>
@@ -459,18 +484,18 @@ kontingent_panel_html = f'''
         </div>
       </div>
 
-      <!-- Rasmiy Kontingent Jadvali (To'liq Kenglikda - Katta va Qulay) -->
+      <!-- Rasmiy Kontingent Jadvali (Variant 5 Uslubi - Spaced Separated Rows) -->
       <div class="kontingent-table-card">
         <div class="kontingent-table-wrap">
           <table class="kontingent-table">
             <thead>
               <tr>
-                <th style="width:50px; text-align:center;">№</th>
-                <th style="text-align:left; min-width:220px;">Guruh rahbari</th>
-                <th style="text-align:center; width:120px;">Guruh</th>
-                <th style="text-align:left; min-width:200px;">Yo'nalishi</th>
+                <th style="width:55px; text-align:center;">№</th>
+                <th style="text-align:left; min-width:220px;">Mas'ul murabbiy</th>
+                <th style="text-align:center; width:130px;">Akademik guruh</th>
+                <th style="text-align:left; min-width:200px;">Ixtisoslik (Yo'nalishi)</th>
                 <th style="text-align:center; width:170px;">Talabalar soni</th>
-                <th style="text-align:center; width:200px;">Tasdiqlangan</th>
+                <th style="text-align:center; width:200px;">Hujjatlar tasdig'i</th>
                 <th style="text-align:center; width:130px;">Harakat</th>
               </tr>
             </thead>
@@ -479,7 +504,12 @@ kontingent_panel_html = f'''
             </tbody>
             <tfoot>
               <tr class="kontingent-footer" onclick="filterByGroup('')" title="Barcha talabalarni ko'rish uchun bosing">
-                <td class="td-jami-label" colspan="4">JAMI TALABALAR KONTINGENTI</td>
+                <td class="td-jami-label" colspan="4">
+                  <div style="display:flex; align-items:center; gap:8px;">
+                    <span style="font-weight:800; letter-spacing:0.5px;">JAMI TALABALAR KONTINGENTI</span>
+                    <span style="font-size:11.5px; opacity:0.75; font-weight:600;">(7 ta akademik guruh)</span>
+                  </div>
+                </td>
                 <td class="td-jami-count" style="text-align:center;">
                   <span class="k-count-pill k-count-pill-total"><strong id="kontingent-count-total">{official_total}</strong> nafar (100%)</span>
                 </td>
@@ -2514,7 +2544,7 @@ html = f"""<!DOCTYPE html>
   }}
 
   /* =========================================================================
-     TALABALAR KONTINGENTI VA AKADEMIK TAQSIMOT (MODERN EXECUTIVE DASHBOARD)
+     TALABALAR KONTINGENTI VA AKADEMIK TAQSIMOT (TIBBIYOT PORTALI USLUBI)
      ========================================================================= */
   .kontingent-panel {{
     background: #ffffff;
@@ -2529,13 +2559,26 @@ html = f"""<!DOCTYPE html>
     justify-content: space-between;
     align-items: center;
     flex-wrap: wrap;
-    gap: 12px;
+    gap: 16px;
     margin-bottom: 18px;
-    padding-bottom: 14px;
+    padding-bottom: 16px;
     border-bottom: 1px solid #f1f5f9;
   }}
+  .k-crest-box {{
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    background: #eff6ff;
+    border: 1.5px solid #bfdbfe;
+    color: #2563eb;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    box-shadow: 0 2px 8px rgba(37, 99, 235, 0.12);
+  }}
   .kontingent-title {{
-    font-size: 16px;
+    font-size: 16.5px;
     font-weight: 800;
     color: #0f172a;
     display: flex;
@@ -2547,7 +2590,7 @@ html = f"""<!DOCTYPE html>
     font-size: 12px;
     color: #64748b;
     font-weight: 600;
-    margin-top: 3px;
+    margin-top: 2px;
   }}
   .kontingent-header-pills {{
     display: flex;
@@ -2560,13 +2603,22 @@ html = f"""<!DOCTYPE html>
     font-weight: 700;
     color: #334155;
     background: #f1f5f9;
-    padding: 5px 11px;
+    padding: 5px 12px;
     border-radius: 8px;
     border: 1px solid #e2e8f0;
     white-space: nowrap;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
   }}
   .k-header-pill strong {{
     color: #0f172a;
+  }}
+  .k-header-pill-accreditation {{
+    background: #ecfdf5 !important;
+    color: #059669 !important;
+    border-color: #a7f3d0 !important;
+    font-weight: 800 !important;
   }}
   .k-header-pill.k-header-pill-success {{
     background: #ecfdf5;
@@ -2576,18 +2628,14 @@ html = f"""<!DOCTYPE html>
   .k-header-pill.k-header-pill-success strong {{
     color: #059669;
   }}
-
-  /* Eksport Tugmasi (Header Pill) */
   .k-header-pill.k-header-pill-export {{
     background: #2563eb !important;
     color: #ffffff !important;
     border: 1px solid #2563eb !important;
     cursor: pointer;
     transition: all 0.15s ease;
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
     font-weight: 700;
+    box-shadow: 0 2px 8px rgba(37, 99, 235, 0.25);
   }}
   .k-header-pill.k-header-pill-export:hover {{
     background: #1d4ed8 !important;
@@ -2596,13 +2644,10 @@ html = f"""<!DOCTYPE html>
     box-shadow: 0 4px 12px rgba(37, 99, 235, 0.35);
   }}
 
-  /* Rasmiy Kontingent Jadvali (To'liq Kenglikda - Katta va Qulay) */
   .kontingent-table-card {{
-    background: #ffffff;
-    border: 1.5px solid #e2e8f0;
-    border-radius: 14px;
-    overflow: hidden;
-    box-shadow: 0 2px 12px rgba(15, 23, 42, 0.04);
+    background: transparent;
+    border: none;
+    box-shadow: none;
     width: 100%;
     display: flex;
     flex-direction: column;
@@ -2613,47 +2658,85 @@ html = f"""<!DOCTYPE html>
   }}
   .kontingent-table {{
     width: 100%;
-    border-collapse: collapse;
+    border-collapse: separate;
+    border-spacing: 0 8px;
     font-family: inherit;
     text-align: left;
   }}
   .kontingent-table th {{
-    background: #f8fafc;
-    color: #475569;
-    font-size: 12px;
+    color: #64748b;
+    font-size: 11.5px;
     font-weight: 800;
     text-transform: uppercase;
-    letter-spacing: 0.5px;
-    padding: 12px 18px;
-    border-bottom: 1.5px solid #e2e8f0;
+    letter-spacing: 0.6px;
+    padding: 8px 16px;
     white-space: nowrap;
+    border: none;
   }}
   .kontingent-row {{
-    background: #ffffff;
-    border-bottom: 1px solid #f1f5f9;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
     cursor: pointer;
-    transition: all 0.15s ease;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  }}
+  .kontingent-row td {{
+    padding: 13px 16px;
+    font-size: 13.5px;
+    vertical-align: middle;
+    border-top: 1px solid #e2e8f0;
+    border-bottom: 1px solid #e2e8f0;
+  }}
+  .kontingent-row td:first-child {{
+    border-left: 1px solid #e2e8f0;
+    border-top-left-radius: 10px;
+    border-bottom-left-radius: 10px;
+  }}
+  .kontingent-row td:last-child {{
+    border-right: 1px solid #e2e8f0;
+    border-top-right-radius: 10px;
+    border-bottom-right-radius: 10px;
   }}
   .kontingent-row:hover {{
-    background: #f8fafc;
+    background: #ffffff;
+    border-color: #2563eb;
+    box-shadow: 0 4px 16px rgba(37, 99, 235, 0.12);
+    transform: translateY(-1px);
+  }}
+  .kontingent-row:hover td {{
+    border-color: #2563eb;
   }}
   .kontingent-row.active {{
     background: #eff6ff !important;
-    outline: 2.5px solid #2563eb !important;
-    outline-offset: -1px;
+  }}
+  .kontingent-row.active td {{
+    border-color: #2563eb !important;
+    background: #eff6ff !important;
+  }}
+  .kontingent-row.active td:first-child {{
+    border-left: 3px solid #2563eb !important;
   }}
   .kontingent-row.active .k-action-btn {{
     background: #2563eb !important;
     color: #ffffff !important;
     border-color: #2563eb !important;
   }}
-  .kontingent-row td {{
-    padding: 12px 18px;
-    font-size: 13.5px;
-    vertical-align: middle;
+
+  .k-num-badge {{
+    font-size: 12px;
+    font-weight: 800;
+    color: #2563eb;
+    background: rgba(37, 99, 235, 0.08);
+    border: 1px solid rgba(37, 99, 235, 0.2);
+    padding: 3px 8px;
+    border-radius: 6px;
+    font-family: 'JetBrains Mono', monospace;
+    display: inline-block;
   }}
   .leader-avatar {{
-    font-size: 15px;
+    color: #2563eb;
+    display: inline-block;
+    vertical-align: -2px;
     margin-right: 6px;
   }}
   .k-grp-badge {{
@@ -2665,27 +2748,30 @@ html = f"""<!DOCTYPE html>
     letter-spacing: 0.3px;
     display: inline-block;
   }}
+  .k-grp-badge-farm {{
+    background: #059669 !important;
+    box-shadow: 0 2px 6px rgba(5, 150, 105, 0.25);
+  }}
+  .k-grp-badge-hamsh {{
+    background: #2563eb !important;
+    box-shadow: 0 2px 6px rgba(37, 99, 235, 0.25);
+  }}
+  .k-yon-wrap {{
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }}
   .k-count-pill {{
-    background: rgba(37,99,235,0.08);
+    background: rgba(37, 99, 235, 0.08);
     color: #2563eb;
     font-weight: 800;
     font-size: 12.5px;
     padding: 4px 12px;
     border-radius: 12px;
-    border: 1px solid rgba(37,99,235,0.2);
+    border: 1px solid rgba(37, 99, 235, 0.2);
     display: inline-block;
     white-space: nowrap;
-  }}
-  .k-count-pill.k-count-pill-unassigned {{
-    background: rgba(217, 119, 6, 0.1);
-    color: #d97706;
-    border-color: rgba(217, 119, 6, 0.25);
-  }}
-  .k-count-share {{
-    font-size: 11px;
-    opacity: 0.75;
-    margin-left: 2px;
-    font-weight: 600;
+    font-family: 'JetBrains Mono', monospace;
   }}
   .k-ver-wrap {{
     display: flex;
@@ -2696,10 +2782,13 @@ html = f"""<!DOCTYPE html>
   .k-ver-text {{
     font-size: 12px;
     font-weight: 700;
-    color: #059669;
+    font-family: 'JetBrains Mono', monospace;
   }}
+  .k-ver-completed {{ color: #059669; }}
+  .k-ver-near {{ color: #0284c7; }}
+  .k-ver-pending {{ color: #d97706; }}
   .k-mini-bar {{
-    width: 80px;
+    width: 90px;
     height: 6px;
     background: #e2e8f0;
     border-radius: 10px;
@@ -2707,7 +2796,6 @@ html = f"""<!DOCTYPE html>
   }}
   .k-mini-bar-fill {{
     height: 100%;
-    background: #10b981;
     border-radius: 10px;
     transition: width 0.3s ease;
   }}
@@ -2715,7 +2803,7 @@ html = f"""<!DOCTYPE html>
     font-size: 11.5px;
     font-weight: 700;
     color: #475569;
-    background: #f1f5f9;
+    background: #ffffff;
     padding: 5px 12px;
     border-radius: 8px;
     border: 1px solid #cbd5e1;
@@ -2727,19 +2815,39 @@ html = f"""<!DOCTYPE html>
     background: #2563eb;
     color: #ffffff;
     border-color: #2563eb;
+    box-shadow: 0 2px 8px rgba(37, 99, 235, 0.3);
   }}
+
+  /* Footer */
   .kontingent-footer {{
-    background: #f8fafc;
-    border-top: 2px solid #e2e8f0;
+    background: #f1f5f9;
+    border: 1.5px solid #cbd5e1;
+    border-radius: 10px;
     font-weight: 800;
     cursor: pointer;
-    transition: background 0.15s ease;
-  }}
-  .kontingent-footer:hover {{
-    background: #f1f5f9;
+    transition: all 0.15s ease;
   }}
   .kontingent-footer td {{
-    padding: 13px 18px;
+    padding: 14px 16px;
+    border-top: 1.5px solid #cbd5e1;
+    border-bottom: 1.5px solid #cbd5e1;
+  }}
+  .kontingent-footer td:first-child {{
+    border-left: 1.5px solid #cbd5e1;
+    border-top-left-radius: 10px;
+    border-bottom-left-radius: 10px;
+  }}
+  .kontingent-footer td:last-child {{
+    border-right: 1.5px solid #cbd5e1;
+    border-top-right-radius: 10px;
+    border-bottom-right-radius: 10px;
+  }}
+  .kontingent-footer:hover {{
+    background: #e2e8f0;
+    border-color: #2563eb;
+  }}
+  .kontingent-footer:hover td {{
+    border-color: #2563eb;
   }}
   .td-jami-label {{
     font-size: 13px;
@@ -2748,15 +2856,13 @@ html = f"""<!DOCTYPE html>
     font-weight: 800;
     text-transform: uppercase;
   }}
-  .td-jami-count {{
-    text-align: center;
-  }}
   .k-count-pill-total {{
     background: #0f172a;
     color: #ffffff;
     border: none;
     padding: 5px 14px;
     font-size: 13px;
+    border-radius: 10px;
   }}
   .k-action-btn-all {{
     background: #0f172a;
@@ -2767,15 +2873,17 @@ html = f"""<!DOCTYPE html>
 
   /* Dark Mode Moslashuvi */
   body.dark-mode .kontingent-panel {{
-    background: #131b2a;
+    background: #111a28;
     border-color: #233047;
-    box-shadow: 0 6px 24px -2px rgba(0, 0, 0, 0.5);
+    box-shadow: 0 8px 28px -4px rgba(0, 0, 0, 0.45);
+  }}
+  body.dark-mode .k-crest-box {{
+    background: rgba(56, 189, 248, 0.12);
+    border-color: rgba(56, 189, 248, 0.3);
+    color: #38bdf8;
   }}
   body.dark-mode .kontingent-title {{
     color: #f8fafc !important;
-  }}
-  body.dark-mode .kontingent-title svg {{
-    stroke: #38bdf8 !important;
   }}
   body.dark-mode .kontingent-subtitle {{
     color: #cbd5e1 !important;
@@ -2791,41 +2899,62 @@ html = f"""<!DOCTYPE html>
   body.dark-mode .k-header-pill strong {{
     color: #ffffff !important;
   }}
+  body.dark-mode .k-header-pill-accreditation {{
+    background: rgba(16, 185, 129, 0.15) !important;
+    color: #34d399 !important;
+    border-color: rgba(16, 185, 129, 0.4) !important;
+  }}
   body.dark-mode .k-header-pill.k-header-pill-success {{
-    background: #064e3b;
-    color: #6ee7b7;
-    border-color: #047857;
+    background: #064e3b !important;
+    color: #6ee7b7 !important;
+    border-color: #047857 !important;
   }}
   body.dark-mode .k-header-pill.k-header-pill-success strong {{
-    color: #34d399;
-  }}
-  body.dark-mode .kontingent-table-card {{
-    background: #162033;
-    border-color: #28374e;
+    color: #34d399 !important;
   }}
   body.dark-mode .kontingent-table th {{
-    background: #1e293b !important;
-    color: #cbd5e1 !important;
-    border-bottom: 1.5px solid #28374e !important;
-    font-weight: 800 !important;
+    color: #94a3b8 !important;
   }}
   body.dark-mode .kontingent-row {{
-    background: #162033;
-    border-bottom-color: #1e293b;
+    background: #172234;
+    border-color: #283850;
     color: #f8fafc;
   }}
+  body.dark-mode .kontingent-row td {{
+    border-color: #283850;
+    color: #f1f5f9;
+  }}
+  body.dark-mode .kontingent-row td:first-child {{
+    border-left-color: #283850;
+  }}
+  body.dark-mode .kontingent-row td:last-child {{
+    border-right-color: #283850;
+  }}
   body.dark-mode .kontingent-row:hover {{
-    background: #1c2a44;
+    background: #1e2c42;
+    border-color: #38bdf8;
+    box-shadow: 0 4px 16px rgba(56, 189, 248, 0.18);
+  }}
+  body.dark-mode .kontingent-row:hover td {{
+    border-color: #38bdf8;
   }}
   body.dark-mode .kontingent-row.active {{
     background: #1e3a5f !important;
-    outline-color: #38bdf8 !important;
   }}
-  body.dark-mode .kontingent-row td {{
-    color: #f1f5f9;
+  body.dark-mode .kontingent-row.active td {{
+    background: #1e3a5f !important;
+    border-color: #38bdf8 !important;
   }}
-  body.dark-mode .td-tr {{
-    color: #94a3b8 !important;
+  body.dark-mode .kontingent-row.active td:first-child {{
+    border-left: 3px solid #38bdf8 !important;
+  }}
+  body.dark-mode .k-num-badge {{
+    color: #38bdf8;
+    background: rgba(56, 189, 248, 0.12);
+    border-color: rgba(56, 189, 248, 0.3);
+  }}
+  body.dark-mode .leader-avatar {{
+    color: #38bdf8;
   }}
   body.dark-mode .td-leader {{
     color: #f8fafc !important;
@@ -2835,14 +2964,14 @@ html = f"""<!DOCTYPE html>
     color: #cbd5e1 !important;
     font-weight: 600 !important;
   }}
-  body.dark-mode .td-yon.td-yon-unassigned {{
-    color: #fbbf24 !important;
-  }}
   body.dark-mode .k-count-pill {{
-    background: rgba(56,189,248,0.12);
+    background: rgba(56, 189, 248, 0.12);
     color: #38bdf8;
-    border-color: rgba(56,189,248,0.3);
+    border-color: rgba(56, 189, 248, 0.3);
   }}
+  body.dark-mode .k-ver-completed {{ color: #34d399; }}
+  body.dark-mode .k-ver-near {{ color: #38bdf8; }}
+  body.dark-mode .k-ver-pending {{ color: #fbbf24; }}
   body.dark-mode .k-mini-bar {{
     background: #0b1320;
   }}
@@ -2855,13 +2984,21 @@ html = f"""<!DOCTYPE html>
     background: #38bdf8;
     color: #0f172a;
     border-color: #38bdf8;
+    box-shadow: 0 2px 10px rgba(56, 189, 248, 0.4);
   }}
   body.dark-mode .kontingent-footer {{
-    background: #1e293b;
-    border-top-color: #28374e;
+    background: #172234;
+    border-color: #283850;
+  }}
+  body.dark-mode .kontingent-footer td {{
+    border-color: #283850;
   }}
   body.dark-mode .kontingent-footer:hover {{
-    background: #253347;
+    background: #1e2c42;
+    border-color: #38bdf8;
+  }}
+  body.dark-mode .kontingent-footer:hover td {{
+    border-color: #38bdf8;
   }}
   body.dark-mode .td-jami-label {{
     color: #f8fafc;
