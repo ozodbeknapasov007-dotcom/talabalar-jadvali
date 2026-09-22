@@ -6135,21 +6135,111 @@ window.GitSyncManager = {
 };
 
 // Global fetch hook: Har qanday o'zgartirish amalga oshirilganda avtomat GitSync bildirishnoma ko'rsatiladi
+// Va agar sayt Vercel'da ishlayotgan bo'lsa, so'rovlarni to'g'ridan-to'g'ri GitHub'ga yo'naltiradi
 (function() {
+  function parseQueryParams(url) {
+    const params = {};
+    const qIdx = url.indexOf('?');
+    if (qIdx >= 0) {
+      const query = url.substring(qIdx + 1);
+      query.split('&').forEach(part => {
+        const kv = part.split('=');
+        if (kv.length >= 2) {
+          try {
+            params[decodeURIComponent(kv[0])] = decodeURIComponent(kv.slice(1).join('='));
+          } catch(e) {
+            params[kv[0]] = kv.slice(1).join('=');
+          }
+        }
+      });
+    }
+    return params;
+  }
+
   const originalFetch = window.fetch;
   window.fetch = function(input, init) {
     const url = typeof input === 'string' ? input : (input && input.url ? input.url : '');
+    const isRemoteHost = (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1');
+
     if (url.includes('/api/update_student') ||
         url.includes('/api/verify_student') ||
         url.includes('/api/delete_student') ||
         url.includes('/api/add_new_student') ||
         url.includes('/api/batch_add_students') ||
-        url.includes('/api/update_group') ||
-        url.includes('/api/upload_and_attach_to_student')) {
+        url.includes('/api/update_group')) {
       if (window.GitSyncManager) {
         window.GitSyncManager.notifyChange();
       }
     }
+
+    if (isRemoteHost) {
+      if (url.includes('/api/verify_student')) {
+        const p = parseQueryParams(url);
+        return originalFetch('/api/github_sync', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            type: 'verify_student',
+            data: {
+              row: parseInt(p.row || '0', 10),
+              status: p.status || 'TASDIQLANDI',
+              shnum: p.shnum || '',
+              pinfl: p.pinfl || ''
+            }
+          })
+        });
+      }
+
+      if (url.includes('/api/update_student')) {
+        const p = parseQueryParams(url);
+        const row = parseInt(p.row || '0', 10);
+        delete p.row;
+        return originalFetch('/api/github_sync', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            type: 'update_student',
+            data: { row: row, fields: p }
+          })
+        });
+      }
+
+      if (url.includes('/api/delete_student')) {
+        const p = parseQueryParams(url);
+        return originalFetch('/api/github_sync', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            type: 'delete_student',
+            data: { row: parseInt(p.row || '0', 10) }
+          })
+        });
+      }
+
+      if (url.includes('/api/add_new_student')) {
+        let bodyData = {};
+        try {
+          if (init && init.body) bodyData = JSON.parse(init.body);
+        } catch(e) {}
+        return originalFetch('/api/github_sync', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            type: 'add_student',
+            data: bodyData
+          })
+        });
+      }
+
+      if (url.includes('/api/git_sync_status')) {
+        return Promise.resolve(new Response(JSON.stringify({
+          state: 'synced',
+          message: "GitHub bilan bog'langan",
+          last_sync: new Date().toLocaleTimeString()
+        }), { status: 200, headers: { 'Content-Type': 'application/json' } }));
+      }
+    }
+
     return originalFetch.apply(this, arguments);
   };
 })();

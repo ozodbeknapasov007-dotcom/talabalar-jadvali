@@ -144,6 +144,134 @@ def schedule_git_push(delay=2.0):
         _git_push_timer.daemon = True
         _git_push_timer.start()
 
+def process_remote_github_changes():
+    """Fonda GitHub'dagi remote_changes.json faylini tekshiradi.
+    Agar Vercel/GitHub'dan yangi o'zgarishlar kelgan bo'lsa, lokal Excelga qo'llaydi."""
+    changes_file = os.path.join(BASE_DIR, 'scripts', 'remote_changes.json')
+    try:
+        # 1. GitHub'dan eng yangi o'zgarishlarni tortib olish
+        pull_res = subprocess.run(
+            ['git', 'pull', 'origin', 'main', '--quiet'],
+            cwd=BASE_DIR, capture_output=True, text=True, timeout=30
+        )
+        if not os.path.exists(changes_file):
+            return
+
+        with open(changes_file, 'r', encoding='utf-8') as f:
+            try:
+                changes = json.load(f)
+            except Exception:
+                changes = []
+
+        if not changes or not isinstance(changes, list) or len(changes) == 0:
+            return
+
+        print(f"[SYNC] 📥 GitHub'dan {len(changes)} ta yangi o'zgarish qabul qilindi! Lokal Excelga qo'llanmoqda...")
+
+        with EXCEL_LOCK:
+            wb = openpyxl.load_workbook(EXCEL_PATH)
+            ws = wb.worksheets[0]
+
+            for chg in changes:
+                chg_type = chg.get('type')
+                data = chg.get('data', {})
+
+                if chg_type == 'verify_student':
+                    r_idx = int(data.get('row', 0))
+                    v_status = data.get('status', 'TASDIQLANDI')
+                    shnum = data.get('shnum', '')
+                    pinfl = data.get('pinfl', '')
+                    if 2 <= r_idx <= ws.max_row:
+                        ws.cell(row=r_idx, column=25, value=v_status)
+                    save_verification_atomic(r_idx, v_status, shnum, pinfl)
+
+                elif chg_type == 'update_student':
+                    r_idx = int(data.get('row', 0))
+                    fields = data.get('fields', {})
+                    if 2 <= r_idx <= ws.max_row:
+                        if 'ism' in fields and fields['ism']:
+                            ws.cell(row=r_idx, column=2, value=clean_uz_name(fields['ism']))
+                        if 'ota' in fields and fields['ota']:
+                            ws.cell(row=r_idx, column=7, value=clean_uz_name(fields['ota']))
+                        if 'pass_val' in fields:
+                            ws.cell(row=r_idx, column=10, value=str(fields['pass_val']).strip())
+                        if 'pinfl' in fields:
+                            ws.cell(row=r_idx, column=11, value=str(fields['pinfl']).strip())
+                        if 'dob' in fields:
+                            ws.cell(row=r_idx, column=13, value=str(fields['dob']).strip())
+                        if 'cert_val' in fields:
+                            ws.cell(row=r_idx, column=15, value=str(fields['cert_val']).strip())
+                        if 'maktab' in fields:
+                            ws.cell(row=r_idx, column=17, value=str(fields['maktab']).strip())
+                        if 'cert_tur' in fields:
+                            ws.cell(row=r_idx, column=18, value=str(fields['cert_tur']).strip())
+                        if 'yil' in fields:
+                            ws.cell(row=r_idx, column=19, value=str(fields['yil']).strip())
+                        if 'yon' in fields:
+                            ws.cell(row=r_idx, column=3, value=str(fields['yon']).strip())
+                        if 'group' in fields:
+                            ws.cell(row=r_idx, column=23, value=str(fields['group']).strip())
+
+                elif chg_type == 'update_group':
+                    r_idx = int(data.get('row', 0))
+                    new_grp = str(data.get('group', '')).strip()
+                    if 2 <= r_idx <= ws.max_row and new_grp:
+                        ws.cell(row=r_idx, column=23, value=new_grp)
+
+                elif chg_type == 'add_student':
+                    nr = ws.max_row + 1
+                    ws.cell(row=nr, column=1, value=nr - 1)
+                    ws.cell(row=nr, column=2, value=clean_uz_name(data.get('ism', '')))
+                    ws.cell(row=nr, column=3, value=data.get('yon', 'Davolash ishi'))
+                    ws.cell(row=nr, column=4, value="To'lanmagan")
+                    ws.cell(row=nr, column=5, value=data.get('shnum', ''))
+                    ws.cell(row=nr, column=6, value=time.strftime("%d.%m.%Y"))
+                    ws.cell(row=nr, column=7, value=clean_uz_name(data.get('ota', '')))
+                    ws.cell(row=nr, column=10, value=data.get('pv', ''))
+                    ws.cell(row=nr, column=11, value=data.get('pinfl', ''))
+                    ws.cell(row=nr, column=12, value=data.get('ber', ''))
+                    ws.cell(row=nr, column=13, value=data.get('dob', ''))
+                    ws.cell(row=nr, column=15, value=data.get('sh_doc', ''))
+                    ws.cell(row=nr, column=17, value=data.get('mak', ''))
+                    ws.cell(row=nr, column=18, value=data.get('doc_tur', "Umumiy o'rta maktab"))
+                    ws.cell(row=nr, column=19, value=data.get('yil', '2024'))
+                    ws.cell(row=nr, column=21, value="TOPILDI")
+                    ws.cell(row=nr, column=23, value=data.get('group', '26-01'))
+                    ws.cell(row=nr, column=25, value="KUTILMOQDA")
+
+                elif chg_type == 'delete_student':
+                    r_idx = int(data.get('row', 0))
+                    if 2 <= r_idx <= ws.max_row:
+                        ws.delete_rows(r_idx)
+                        for idx, r in enumerate(range(2, ws.max_row + 1), start=1):
+                            ws.cell(row=r, column=1, value=idx)
+
+            wb.save(EXCEL_PATH)
+            wb.save(os.path.join(BASE_DIR, 'Talabalar_Yangilangan_Royxat.xlsx'))
+
+            # O'qib bo'lingan navbatni tozalash
+            with open(changes_file, 'w', encoding='utf-8') as f:
+                json.dump([], f, indent=2)
+
+        # Hisobotlarni yangilash va toza holatni GitHub'ga push qilish
+        trigger_report_rebuild(delay=0.5, async_mode=False)
+        print("[SYNC] ✅ Lokal Excel yangilandi va qayta generatsiya qilindi!")
+    except Exception as e:
+        print(f"[SYNC] Masofaviy o'zgarishlarni qo'llashda xato: {e}")
+
+def _start_remote_sync_listener():
+    """Fonda har 12 soniyada GitHub'dan yangi o'zgarishlar bor-yo'qligini tekshirib turadi."""
+    def listener_loop():
+        while True:
+            time.sleep(12)
+            try:
+                process_remote_github_changes()
+            except Exception:
+                pass
+    t = threading.Thread(target=listener_loop, daemon=True)
+    t.start()
+
+
 def load_verifications_map():
     with VERIFICATIONS_LOCK:
         if os.path.exists(VERIFICATIONS_FILE):
@@ -237,7 +365,7 @@ def trigger_report_rebuild(delay=1.5, async_mode=True):
         REBUILD_TIMER.start()
 
 
-OPENROUTER_API_KEY = "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"
+OPENROUTER_API_KEY = "" # API kalit o'chirilgan, oflayn rejimda ishlaydi
 OPENROUTER_MODELS = ["google/gemini-2.5-pro", "google/gemini-2.5-flash", "openai/gpt-4o"]
 
 def clean_uz_name(text):
@@ -305,6 +433,8 @@ MUHIM QOIDALAR:
 5. Faqat toza JSON qaytaring."""
 
 def call_openrouter_vision(img_bytes, is_retry=False):
+    if not OPENROUTER_API_KEY:
+        return None
     b64_img = base64.b64encode(img_bytes).decode('utf-8')
     url = "https://openrouter.ai/api/v1/chat/completions"
     
@@ -2436,6 +2566,13 @@ def run_server(port=8080):
         webbrowser.open(dashboard_url)
     except Exception:
         pass
+
+    # GitHub'dan masofaviy o'zgarishlarni avtomatik qabul qilish tinglovchisi
+    try:
+        _start_remote_sync_listener()
+        print("[SYNC] 🔄 GitHub masofaviy sinxronizatsiya tinglovchisi ishga tushirildi!")
+    except Exception as e_sync:
+        print(f"[SYNC] Tinglovchini ishga tushirishda xato: {e_sync}")
 
     try:
         httpd.serve_forever()
