@@ -235,15 +235,22 @@ for r in range(2, ws.max_row + 1):
     })
 
 total = len(students)
-full  = sum(1 for s in students if s['status'] == 'full')
-chala = sum(1 for s in students if s['status'] == 'chala')
-yoq   = sum(1 for s in students if s['status'] == 'yoq')
-id_cards = sum(1 for s in students if s['pass_type'] == 'ID-karta')
-bio_pass = sum(1 for s in students if s['pass_type'] == 'Biometrik Pasport')
 
-# Operator tasdiqlagan talabalar statistikasi
-verified_count = sum(1 for s in students if s['verified'] == 'TASDIQLANDI')
-pending_count  = total - verified_count
+# N-Guruh (ketganlar / chiqarilganlar) — rasmiy kontingentga kirmaydi
+# Lekin bazada qoladi, qidirilib topiladi
+GROUPS_LIST_OFFICIAL = ["26-01", "26-02", "26-03", "26-04", "26-05", "26-06", "26-07"]
+official_students = [s for s in students if s['group'] in GROUPS_LIST_OFFICIAL]
+official_total = len(official_students)   # rasmiy kontingent soni (N-guruhsiz)
+
+full  = sum(1 for s in official_students if s['status'] == 'full')
+chala = sum(1 for s in official_students if s['status'] == 'chala')
+yoq   = sum(1 for s in official_students if s['status'] == 'yoq')
+id_cards = sum(1 for s in official_students if s['pass_type'] == 'ID-karta')
+bio_pass = sum(1 for s in official_students if s['pass_type'] == 'Biometrik Pasport')
+
+# Operator tasdiqlagan talabalar statistikasi (faqat rasmiy kontingent)
+verified_count = sum(1 for s in official_students if s['verified'] == 'TASDIQLANDI')
+pending_count  = official_total - verified_count
 
 # Yo'nalishlar bo'yicha aniq statistika
 hamshiralik_count = sum(1 for s in students if 'hamshira' in s['yon'].lower())
@@ -417,7 +424,11 @@ k_unassigned_row = f'''
                 <span class="k-action-btn k-action-btn-unassigned">Saralash →</span>
               </td>
             </tr>'''
-kontingent_rows.append(k_unassigned_row)
+
+# N-Guruh qatori kontingent jadvaliga QO'SHILMAYDI (rasmiy emas)
+# unassigned_row faqat texnik maqsadlar uchun qoldiriladi
+# kontingent_rows.append(k_unassigned_row)  <- ataylab o'chirilgan
+
 
 kontingent_rows_html = "\n".join(kontingent_rows)
 
@@ -437,7 +448,7 @@ kontingent_panel_html = f'''
         </div>
         <!-- Yuqori qisqa ko'rsatkichlar & Eksport -->
         <div class="kontingent-header-pills">
-          <span class="k-header-pill">{SVG_USERS} Jami: <strong id="k-header-total">{total}</strong> nafar talaba</span>
+          <span class="k-header-pill">{SVG_USERS} Jami: <strong id="k-header-total">{official_total}</strong> nafar talaba</span>
           <span class="k-header-pill">{SVG_BOOK} <strong>7</strong> ta akademik guruh</span>
           <span class="k-header-pill">{SVG_USER} <strong>7</strong> nafar guruh rahbari</span>
           <span class="k-header-pill k-header-pill-success">{SVG_CHECK_CIRCLE} <strong id="k-header-verified">{verified_count}</strong> ta tasdiqlangan</span>
@@ -470,10 +481,10 @@ kontingent_panel_html = f'''
               <tr class="kontingent-footer" onclick="filterByGroup('')" title="Barcha talabalarni ko'rish uchun bosing">
                 <td class="td-jami-label" colspan="4">JAMI TALABALAR KONTINGENTI</td>
                 <td class="td-jami-count" style="text-align:center;">
-                  <span class="k-count-pill k-count-pill-total"><strong id="kontingent-count-total">{total}</strong> nafar (100%)</span>
+                  <span class="k-count-pill k-count-pill-total"><strong id="kontingent-count-total">{official_total}</strong> nafar (100%)</span>
                 </td>
                 <td class="td-jami-ver" style="text-align:center;">
-                  <strong id="kontingent-ver-total">{verified_count} / {total} ({round(verified_count/total*100, 1) if total else 0}%)</strong>
+                  <strong id="kontingent-ver-total">{verified_count} / {official_total} ({round(verified_count/official_total*100, 1) if official_total else 0}%)</strong>
                 </td>
                 <td class="td-jami-action" style="text-align:center;">
                   <span class="k-action-btn k-action-btn-all">Barchasi →</span>

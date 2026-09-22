@@ -6291,24 +6291,27 @@ window.updateGroupsVerificationStats = function() {
 
   RAW_STUDENTS.forEach(function(item) {
     const isVer = (item.verified === 'TASDIQLANDI');
-    if (isVer) overallVerified++;
 
     const g = (item.group || '').trim();
     if (groups.includes(g)) {
       groupCounts[g]++;
-      if (isVer) groupVerified[g]++;
+      if (isVer) { groupVerified[g]++; overallVerified++; }
     } else {
+      /* N-Guruh yoki guruhsiz — rasmiy kontingentga kirmaydi */
       unassignedTotal++;
       if (isVer) unassignedVerified++;
     }
   });
 
-  // Barcha guruhlar kartasi (All Card)
-  const vPctAll = total > 0 ? Math.round((overallVerified / total) * 100) : 0;
+  /* officialTotal = faqat 7 ta rasmiy guruh talabalar soni (N-guruhsiz) */
+  const officialTotal = total - unassignedTotal;
+  const vPctAll = officialTotal > 0 ? Math.round((overallVerified / officialTotal) * 100) : 0;
+
+  // Barcha guruhlar kartasi (All Card) - officialTotal bilan
   const vCountAllEl = document.getElementById('grp-vcount-all');
   if (vCountAllEl) vCountAllEl.innerText = overallVerified;
   const totalAllEl = document.getElementById('grp-total-all');
-  if (totalAllEl) totalAllEl.innerText = total;
+  if (totalAllEl) totalAllEl.innerText = officialTotal;
   const percentAllEl = document.getElementById('grp-percent-all');
   if (percentAllEl) percentAllEl.innerText = vPctAll + '%';
   const barAllEl = document.getElementById('grp-bar-all');
@@ -6356,37 +6359,28 @@ window.updateGroupsVerificationStats = function() {
     if (distCountEl) distCountEl.innerText = gTotal;
 
     const distBarEl = document.getElementById('dist-bar-' + g);
-    const pctShare = total > 0 ? (gTotal / total * 100).toFixed(1) : 0;
+    const pctShare = officialTotal > 0 ? (gTotal / officialTotal * 100).toFixed(1) : 0;
     if (distBarEl) distBarEl.style.width = pctShare + '%';
   });
 
-  // Kontingent unassigned qatori (agar mavjud bo'lsa)
+  // N-Guruh qatori kontingent jadvalida DOIM YASHIRILGAN (rasmiy emas)
   const kUnassignedRow = document.getElementById('kontingent-row-unassigned');
-  const kUnassignedCount = document.getElementById('kontingent-count-unassigned');
-  if (kUnassignedCount) kUnassignedCount.innerText = unassignedTotal;
-  const kUnassignedVer = document.getElementById('kontingent-ver-unassigned');
-  if (kUnassignedVer) kUnassignedVer.innerText = unassignedVerified + '/' + unassignedTotal;
-  const kUnassignedBar = document.getElementById('kontingent-bar-unassigned');
-  const unassignedPct = unassignedTotal > 0 ? Math.round(unassignedVerified / unassignedTotal * 100) : 0;
-  if (kUnassignedBar) kUnassignedBar.style.width = unassignedPct + '%';
-  if (kUnassignedRow) {
-    kUnassignedRow.style.display = unassignedTotal > 0 ? '' : 'none';
-  }
+  if (kUnassignedRow) kUnassignedRow.style.display = 'none';
 
-  // Kontingent jami soni va tasdiqlash
+  // Kontingent jami soni va tasdiqlash — faqat rasmiy (N-guruhsiz)
   const kJamiEl = document.getElementById('kontingent-count-total');
-  if (kJamiEl) kJamiEl.innerText = total;
+  if (kJamiEl) kJamiEl.innerText = officialTotal;
   const kJamiVerEl = document.getElementById('kontingent-ver-total');
-  if (kJamiVerEl) kJamiVerEl.innerText = overallVerified + ' / ' + total;
+  if (kJamiVerEl) kJamiVerEl.innerText = overallVerified + ' / ' + officialTotal;
 
-  // Header va Widgetdagi KPI ko'rsatkichlari
+  // Header va Widgetdagi KPI ko'rsatkichlari — rasmiy son
   const kHdrTot = document.getElementById('k-header-total');
-  if (kHdrTot) kHdrTot.innerText = total;
+  if (kHdrTot) kHdrTot.innerText = officialTotal;
   const kHdrVer = document.getElementById('k-header-verified');
   if (kHdrVer) kHdrVer.innerText = overallVerified;
 
   const sKpiTot = document.getElementById('s-kpi-total');
-  if (sKpiTot) sKpiTot.innerText = total;
+  if (sKpiTot) sKpiTot.innerText = officialTotal;
   const sKpiVer = document.getElementById('s-kpi-ver');
   if (sKpiVer) sKpiVer.innerText = overallVerified;
 
@@ -6397,9 +6391,9 @@ window.updateGroupsVerificationStats = function() {
   }
 
   // Umumiy statistika
-  const pCount = total - overallVerified;
+  const pCount = officialTotal - overallVerified;
   const statVal = document.getElementById('statVerifiedVal');
-  if (statVal) statVal.innerText = overallVerified + ' / ' + total;
+  if (statVal) statVal.innerText = overallVerified + ' / ' + officialTotal;
   const statPVal = document.getElementById('statPendingVal');
   if (statPVal) statPVal.innerText = pCount;
 };
@@ -7057,10 +7051,10 @@ if (document.readyState === 'loading') {
         </div>
         <!-- Yuqori qisqa ko'rsatkichlar & Eksport -->
         <div class="kontingent-header-pills">
-          <span class="k-header-pill"><svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg> Jami: <strong id="k-header-total">169</strong> nafar talaba</span>
+          <span class="k-header-pill"><svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg> Jami: <strong id="k-header-total">167</strong> nafar talaba</span>
           <span class="k-header-pill"><svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg> <strong>7</strong> ta akademik guruh</span>
           <span class="k-header-pill"><svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg> <strong>7</strong> nafar guruh rahbari</span>
-          <span class="k-header-pill k-header-pill-success"><svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2.5" style="width:14px;height:14px;"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg> <strong id="k-header-verified">159</strong> ta tasdiqlangan</span>
+          <span class="k-header-pill k-header-pill-success"><svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2.5" style="width:14px;height:14px;"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg> <strong id="k-header-verified">157</strong> ta tasdiqlangan</span>
           <button type="button" class="k-header-pill k-header-pill-export" onclick="exportAllGroupsMultiSheetExcel()" title="Barcha 7 ta guruhni 7 ta alohida varaq bilan bitta Excel qilib yuklash">
             <svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
             Excel Eksport (.xlsx)
@@ -7245,38 +7239,15 @@ if (document.readyState === 'loading') {
                 <span class="k-action-btn">Saralash →</span>
               </td>
             </tr>
-
-            <tr class="kontingent-row kontingent-unassigned-row" id="kontingent-row-unassigned" onclick="filterByGroup('belgilanmagan')" title="N-guruh (noma'lum / taqsimlanmagan) talabalarni ko'rish uchun bosing" style="display:table-row;">
-              <td class="td-tr" style="text-align:center; font-weight:700; font-size:12.5px; color:#d97706;">•</td>
-              <td class="td-leader" style="font-weight:700; color:#d97706;">
-                <span class="leader-avatar"><svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:12px;height:12px;display:inline-block;vertical-align:-1px;margin-right:4px;"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg></span> Noma'lum / Biriktirilmagan
-              </td>
-              <td class="td-group" style="text-align:center;">
-                <span class="k-grp-badge" style="background:#d97706;">N-Guruh</span>
-              </td>
-              <td class="td-yon td-yon-unassigned" style="font-size:13px; font-weight:600;">Tayinlanishi kutilmoqda</td>
-              <td class="td-count" style="text-align:center;">
-                <span class="k-count-pill k-count-pill-unassigned"><strong id="kontingent-count-unassigned">2</strong> nafar <span class="k-count-share">(1.2%)</span></span>
-              </td>
-              <td class="td-ver" style="text-align:center;">
-                <div class="k-ver-wrap">
-                  <span id="kontingent-ver-unassigned" class="k-ver-text" style="color:#d97706;">2/2 (100%)</span>
-                  <div class="k-mini-bar"><div id="kontingent-bar-unassigned" class="k-mini-bar-fill" style="width:100%; background:#d97706;"></div></div>
-                </div>
-              </td>
-              <td class="td-action" style="text-align:center;">
-                <span class="k-action-btn k-action-btn-unassigned">Saralash →</span>
-              </td>
-            </tr>
             </tbody>
             <tfoot>
               <tr class="kontingent-footer" onclick="filterByGroup('')" title="Barcha talabalarni ko'rish uchun bosing">
                 <td class="td-jami-label" colspan="4">JAMI TALABALAR KONTINGENTI</td>
                 <td class="td-jami-count" style="text-align:center;">
-                  <span class="k-count-pill k-count-pill-total"><strong id="kontingent-count-total">169</strong> nafar (100%)</span>
+                  <span class="k-count-pill k-count-pill-total"><strong id="kontingent-count-total">167</strong> nafar (100%)</span>
                 </td>
                 <td class="td-jami-ver" style="text-align:center;">
-                  <strong id="kontingent-ver-total">159 / 169 (94.1%)</strong>
+                  <strong id="kontingent-ver-total">157 / 167 (94.0%)</strong>
                 </td>
                 <td class="td-jami-action" style="text-align:center;">
                   <span class="k-action-btn k-action-btn-all">Barchasi →</span>

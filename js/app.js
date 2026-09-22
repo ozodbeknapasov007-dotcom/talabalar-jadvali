@@ -3071,24 +3071,27 @@ window.updateGroupsVerificationStats = function() {
 
   RAW_STUDENTS.forEach(function(item) {
     const isVer = (item.verified === 'TASDIQLANDI');
-    if (isVer) overallVerified++;
 
     const g = (item.group || '').trim();
     if (groups.includes(g)) {
       groupCounts[g]++;
-      if (isVer) groupVerified[g]++;
+      if (isVer) { groupVerified[g]++; overallVerified++; }
     } else {
+      /* N-Guruh yoki guruhsiz — rasmiy kontingentga kirmaydi */
       unassignedTotal++;
       if (isVer) unassignedVerified++;
     }
   });
 
-  // Barcha guruhlar kartasi (All Card)
-  const vPctAll = total > 0 ? Math.round((overallVerified / total) * 100) : 0;
+  /* officialTotal = faqat 7 ta rasmiy guruh talabalar soni (N-guruhsiz) */
+  const officialTotal = total - unassignedTotal;
+  const vPctAll = officialTotal > 0 ? Math.round((overallVerified / officialTotal) * 100) : 0;
+
+  // Barcha guruhlar kartasi (All Card) - officialTotal bilan
   const vCountAllEl = document.getElementById('grp-vcount-all');
   if (vCountAllEl) vCountAllEl.innerText = overallVerified;
   const totalAllEl = document.getElementById('grp-total-all');
-  if (totalAllEl) totalAllEl.innerText = total;
+  if (totalAllEl) totalAllEl.innerText = officialTotal;
   const percentAllEl = document.getElementById('grp-percent-all');
   if (percentAllEl) percentAllEl.innerText = vPctAll + '%';
   const barAllEl = document.getElementById('grp-bar-all');
@@ -3136,37 +3139,28 @@ window.updateGroupsVerificationStats = function() {
     if (distCountEl) distCountEl.innerText = gTotal;
 
     const distBarEl = document.getElementById('dist-bar-' + g);
-    const pctShare = total > 0 ? (gTotal / total * 100).toFixed(1) : 0;
+    const pctShare = officialTotal > 0 ? (gTotal / officialTotal * 100).toFixed(1) : 0;
     if (distBarEl) distBarEl.style.width = pctShare + '%';
   });
 
-  // Kontingent unassigned qatori (agar mavjud bo'lsa)
+  // N-Guruh qatori kontingent jadvalida DOIM YASHIRILGAN (rasmiy emas)
   const kUnassignedRow = document.getElementById('kontingent-row-unassigned');
-  const kUnassignedCount = document.getElementById('kontingent-count-unassigned');
-  if (kUnassignedCount) kUnassignedCount.innerText = unassignedTotal;
-  const kUnassignedVer = document.getElementById('kontingent-ver-unassigned');
-  if (kUnassignedVer) kUnassignedVer.innerText = unassignedVerified + '/' + unassignedTotal;
-  const kUnassignedBar = document.getElementById('kontingent-bar-unassigned');
-  const unassignedPct = unassignedTotal > 0 ? Math.round(unassignedVerified / unassignedTotal * 100) : 0;
-  if (kUnassignedBar) kUnassignedBar.style.width = unassignedPct + '%';
-  if (kUnassignedRow) {
-    kUnassignedRow.style.display = unassignedTotal > 0 ? '' : 'none';
-  }
+  if (kUnassignedRow) kUnassignedRow.style.display = 'none';
 
-  // Kontingent jami soni va tasdiqlash
+  // Kontingent jami soni va tasdiqlash — faqat rasmiy (N-guruhsiz)
   const kJamiEl = document.getElementById('kontingent-count-total');
-  if (kJamiEl) kJamiEl.innerText = total;
+  if (kJamiEl) kJamiEl.innerText = officialTotal;
   const kJamiVerEl = document.getElementById('kontingent-ver-total');
-  if (kJamiVerEl) kJamiVerEl.innerText = overallVerified + ' / ' + total;
+  if (kJamiVerEl) kJamiVerEl.innerText = overallVerified + ' / ' + officialTotal;
 
-  // Header va Widgetdagi KPI ko'rsatkichlari
+  // Header va Widgetdagi KPI ko'rsatkichlari — rasmiy son
   const kHdrTot = document.getElementById('k-header-total');
-  if (kHdrTot) kHdrTot.innerText = total;
+  if (kHdrTot) kHdrTot.innerText = officialTotal;
   const kHdrVer = document.getElementById('k-header-verified');
   if (kHdrVer) kHdrVer.innerText = overallVerified;
 
   const sKpiTot = document.getElementById('s-kpi-total');
-  if (sKpiTot) sKpiTot.innerText = total;
+  if (sKpiTot) sKpiTot.innerText = officialTotal;
   const sKpiVer = document.getElementById('s-kpi-ver');
   if (sKpiVer) sKpiVer.innerText = overallVerified;
 
@@ -3177,9 +3171,9 @@ window.updateGroupsVerificationStats = function() {
   }
 
   // Umumiy statistika
-  const pCount = total - overallVerified;
+  const pCount = officialTotal - overallVerified;
   const statVal = document.getElementById('statVerifiedVal');
-  if (statVal) statVal.innerText = overallVerified + ' / ' + total;
+  if (statVal) statVal.innerText = overallVerified + ' / ' + officialTotal;
   const statPVal = document.getElementById('statPendingVal');
   if (statPVal) statPVal.innerText = pCount;
 };
