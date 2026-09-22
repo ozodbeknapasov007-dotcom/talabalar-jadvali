@@ -1752,10 +1752,8 @@ window.renderGroupsJournalTab = function() {
 
   // Guruhlar aniq 2 ta ustunli GRID ko'rinishida joylashadi
   let html = `
-    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;
-                background:#fff; border:1px solid #e2e8f0; border-radius:10px; padding:10px 16px;
-                margin-bottom:16px; box-shadow:0 1px 4px rgba(0,0,0,0.03);">
-      <div style="font-size:13px; font-weight:600; color:#24292f; display:flex; align-items:center; gap:8px;">
+    <div class="group-journal-toolbar">
+      <div class="group-journal-toolbar-title">
         <svg style="width:16px;height:16px;stroke:#0969da;fill:none;stroke-width:2;" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
         Barcha guruhlar (<strong>${RAW_STUDENTS.length} nafar talaba</strong>)
       </div>
@@ -1787,10 +1785,10 @@ window.renderGroupsJournalTab = function() {
     const leaderName = groupLeaders[g] || '—';
 
     html += `
-      <div class="group-grid-card" style="background:#fff; border:1px solid #e2e8f0; border-radius:12px; box-shadow:0 1px 4px rgba(0,0,0,0.04); overflow:hidden; display:flex; flex-direction:column;">
+      <div class="group-grid-card">
         
         <!-- Guruh Card Header (flat, minimalist) -->
-        <div style="background:#0f172a; color:#fff; padding:10px 16px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+        <div class="group-card-header">
           <div>
             <div style="display:flex; align-items:center; gap:8px;">
               <span style="background:${badgeBg}; color:#fff; font-weight:600; font-size:12px; padding:2px 9px; border-radius:5px; letter-spacing:0.2px;">Guruh ${g}</span>
@@ -1810,14 +1808,14 @@ window.renderGroupsJournalTab = function() {
           </div>
         </div>
 
-        <!-- Talabalar Jadvali: T/R, F.I.SH va Tug'ilgan Sana (Telefon raqamisiz, toza) -->
+        <!-- Talabalar Jadvali: T/R, F.I.SH va Tug'ilgan Sana (aniq chiziqli grid jadval) -->
         <div style="width:100%; overflow:hidden;">
-          <table style="width:100%; border-collapse:collapse; text-align:left; font-size:12.5px; table-layout:fixed;">
+          <table class="group-journal-table">
             <thead>
-              <tr style="background:#f8fafc; border-bottom:2px solid #e2e8f0; height:34px; color:#475569; font-size:11px; text-transform:uppercase; letter-spacing:0.3px;">
-                <th style="width:36px; text-align:center; padding:0 4px;">T/R</th>
-                <th style="padding:0 10px;">F.I.SH (Talaba Ism Sharif)</th>
-                <th style="width:110px; text-align:center; padding:0 6px;">Tug'ilgan Sana</th>
+              <tr>
+                <th style="width:40px; text-align:center;">T/R</th>
+                <th>F.I.SH (Talaba Ism Sharif)</th>
+                <th style="width:120px; text-align:center;">Tug'ilgan Sana</th>
               </tr>
             </thead>
             <tbody>
@@ -1830,12 +1828,12 @@ window.renderGroupsJournalTab = function() {
         const fullFish = st.fish || `${st.ism} ${st.ota}`.trim();
         
         html += `
-          <tr class="group-journal-row" style="border-bottom:1px solid #f1f5f9; height:36px; cursor:pointer; transition:background 0.15s;" onclick="openStudentByRow(${st.row})">
-            <td style="text-align:center; font-weight:700; color:#94a3b8; font-size:11.5px; padding:0 4px;">${idx + 1}</td>
-            <td class="td-st-name" style="padding:0 10px; font-weight:700; font-size:12.5px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="${fullFish}">
+          <tr class="group-journal-row" onclick="openStudentByRow(${st.row})">
+            <td style="text-align:center; font-weight:700; font-size:11.5px;">${idx + 1}</td>
+            <td class="td-st-name" title="${fullFish}">
               ${fullFish}
             </td>
-            <td class="td-st-dob" style="text-align:center; padding:0 6px; font-weight:600; font-size:12px; white-space:nowrap; color:#334155;">
+            <td class="td-st-dob" style="text-align:center; font-size:12px;">
               ${st.dob || '—'}
             </td>
           </tr>
@@ -1856,28 +1854,28 @@ window.renderGroupsJournalTab = function() {
   if (unassignedStudents.length > 0) {
     unassignedStudents.sort(function(a, b) { return (a.ism || '').localeCompare(b.ism || '', 'uz'); });
     html += `
-      <div class="group-grid-card" style="background:#fff; border:1.5px solid #fde68a; border-radius:16px; box-shadow:0 4px 16px -2px rgba(15,23,42,0.04); overflow:hidden; display:flex; flex-direction:column;">
-        <div style="background:linear-gradient(135deg, #78350f 0%, #92400e 100%); color:#fff; padding:12px 18px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+      <div class="group-grid-card group-grid-card-n">
+        <div class="group-card-header" style="background:#78350f;">
           <div>
             <div style="display:flex; align-items:center; gap:8px;">
               <span style="background:#d97706; color:#fff; font-weight:800; font-size:12.5px; padding:3px 9px; border-radius:6px;">N-Guruh</span>
-              <h3 style="font-size:14.5px; font-weight:800; margin:0; letter-spacing:-0.2px;">N-Guruh (Taqsimlanmagan / Noma'lumlar)</h3>
+              <h3 style="font-size:14.5px; font-weight:800; margin:0; letter-spacing:-0.2px; color:#fff;">N-Guruh (Taqsimlanmagan / Noma'lumlar)</h3>
             </div>
             <p style="font-size:11.5px; color:#fef08a; margin-top:3px; display:flex; align-items:center; gap:5px;">
               ${ICONS.infoSm} Holati: <strong>Guruh tayinlanishi kutilmoqda</strong> &nbsp;&bull;&nbsp; Jami: <strong style="color:#fff;">${unassignedStudents.length} nafar</strong>
             </p>
           </div>
-          <button type="button" class="btn btn-export" style="padding:6px 12px; font-size:12px; border-radius:8px; background:#d97706; border-color:#b45309;" onclick="exportSingleGroupExcel('N')">
+          <button type="button" class="btn btn-export" style="padding:4px 12px; font-size:11.5px; background:#d97706; border-color:#b45309;" onclick="exportSingleGroupExcel('N')">
             <svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg> .xlsx
           </button>
         </div>
         <div style="width:100%; overflow:hidden;">
-          <table style="width:100%; border-collapse:collapse; text-align:left; font-size:12.5px; table-layout:fixed;">
+          <table class="group-journal-table group-journal-table-n">
             <thead>
-              <tr style="background:#fefce8; border-bottom:2px solid #fef08a; height:34px; color:#78350f; font-size:11px; text-transform:uppercase; letter-spacing:0.3px;">
-                <th style="width:36px; text-align:center; padding:0 4px;">T/R</th>
-                <th style="padding:0 10px;">F.I.SH (Talaba Ism Sharif)</th>
-                <th style="width:110px; text-align:center; padding:0 6px;">Tug'ilgan Sana</th>
+              <tr>
+                <th style="width:40px; text-align:center;">T/R</th>
+                <th>F.I.SH (Talaba Ism Sharif)</th>
+                <th style="width:120px; text-align:center;">Tug'ilgan Sana</th>
               </tr>
             </thead>
             <tbody>
@@ -1885,12 +1883,12 @@ window.renderGroupsJournalTab = function() {
     unassignedStudents.forEach(function(st, idx) {
       const fullFish = st.fish || `${st.ism} ${st.ota}`.trim();
       html += `
-        <tr class="group-journal-row" style="border-bottom:1px solid #fef9c3; height:36px; cursor:pointer; transition:background 0.15s;" onclick="openStudentByRow(${st.row})">
-          <td style="text-align:center; font-weight:700; color:#b45309; font-size:11.5px; padding:0 4px;">${idx + 1}</td>
-          <td class="td-st-name" style="padding:0 10px; font-weight:700; font-size:12.5px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="${fullFish}">
+        <tr class="group-journal-row" onclick="openStudentByRow(${st.row})">
+          <td style="text-align:center; font-weight:700; font-size:11.5px;">${idx + 1}</td>
+          <td class="td-st-name" title="${fullFish}">
             ${fullFish}
           </td>
-          <td class="td-st-dob" style="text-align:center; padding:0 6px; font-weight:600; font-size:12px; white-space:nowrap;">
+          <td class="td-st-dob" style="text-align:center; font-size:12px;">
             ${st.dob || '—'}
           </td>
         </tr>
@@ -1951,34 +1949,35 @@ window._buildStyledSheet = function(students) {
     { header: 'Holati',          key: '__ver',  wch: 13 }
   ];
 
-  /* ---- Stillar ---- */
+  /* ---- Stillar (14pt font, to'liq aniq chiziqlar) ---- */
+  var borderGrid = {
+    top:    { style: 'thin', color: { rgb: '94A3B8' } },
+    bottom: { style: 'thin', color: { rgb: '94A3B8' } },
+    left:   { style: 'thin', color: { rgb: '94A3B8' } },
+    right:  { style: 'thin', color: { rgb: '94A3B8' } }
+  };
   var hSt = {
     font: { bold: true, sz: 14, color: { rgb: 'FFFFFF' }, name: 'Calibri' },
     fill: { fgColor: { rgb: '0F172A' }, patternType: 'solid' },
     alignment: { horizontal: 'center', vertical: 'center', wrapText: false },
     border: {
-      top:    { style: 'thin', color: { rgb: '334155' } },
-      bottom: { style: 'thin', color: { rgb: '334155' } },
+      top:    { style: 'medium', color: { rgb: '334155' } },
+      bottom: { style: 'medium', color: { rgb: '334155' } },
       left:   { style: 'thin', color: { rgb: '334155' } },
       right:  { style: 'thin', color: { rgb: '334155' } }
     }
   };
   var dSt = function(alt, bold) { return {
-    font: { sz: 13, name: 'Calibri', bold: !!bold, color: { rgb: '0F172A' } },
+    font: { sz: 14, name: 'Calibri', bold: !!bold, color: { rgb: '0F172A' } },
     fill: { fgColor: { rgb: alt ? 'F1F5F9' : 'FFFFFF' }, patternType: 'solid' },
     alignment: { vertical: 'center', wrapText: false },
-    border: {
-      top:    { style: 'thin', color: { rgb: 'E2E8F0' } },
-      bottom: { style: 'thin', color: { rgb: 'E2E8F0' } },
-      left:   { style: 'thin', color: { rgb: 'E2E8F0' } },
-      right:  { style: 'thin', color: { rgb: 'E2E8F0' } }
-    }
+    border: borderGrid
   }; };
   var trSt = function(alt) { return {
-    font: { sz: 13, name: 'Calibri', color: { rgb: '64748B' } },
+    font: { sz: 14, name: 'Calibri', color: { rgb: '475569' }, bold: true },
     fill: { fgColor: { rgb: alt ? 'F1F5F9' : 'FFFFFF' }, patternType: 'solid' },
     alignment: { horizontal: 'center', vertical: 'center' },
-    border: dSt(alt).border
+    border: borderGrid
   }; };
 
   /* ---- Ma'lumotlardan sheet yaratish ---- */

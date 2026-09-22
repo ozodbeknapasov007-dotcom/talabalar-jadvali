@@ -783,7 +783,7 @@ html = f"""<!DOCTYPE html>
 <link rel="shortcut icon" href="favicon.ico">
 <link rel="apple-touch-icon" href="favicon.png">
 <meta name="theme-color" content="#091428">
-<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
 <style>
   :root {{
@@ -1095,12 +1095,12 @@ html = f"""<!DOCTYPE html>
     box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
   }}
 
-  /* Modern Jadval Konteyneri */
+  /* Modern Jadval Konteyneri - Aniq Chiziqli Jadval (Grid Table) */
   .table-container {{
     background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 18px;
-    box-shadow: 0 10px 30px -5px rgba(15, 23, 42, 0.04);
+    border: 1.5px solid #cbd5e1;
+    border-radius: 14px;
+    box-shadow: 0 4px 20px -4px rgba(15, 23, 42, 0.06);
     overflow: hidden;
   }}
   .table-wrapper {{
@@ -1108,24 +1108,27 @@ html = f"""<!DOCTYPE html>
   }}
   table {{
     width: 100%; border-collapse: collapse; text-align: left; min-width: 1000px;
+    border: 1px solid #cbd5e1;
   }}
   
   /* 2 Qatorli Thead */
   thead tr.th-titles th {{
     background: #0f172a; color: #ffffff; font-weight: 700; font-size: 12px;
-    padding: 13px 12px; border-right: 1px solid rgba(255,255,255,0.08);
+    padding: 11px 10px; border: 1px solid #334155;
     white-space: nowrap; vertical-align: middle; text-transform: uppercase; letter-spacing: 0.5px;
   }}
   thead tr.th-filters th {{
-    background: #f8fafc; padding: 8px 8px; border-bottom: 2px solid var(--border);
-    border-right: 1px solid #f1f5f9;
+    background: #f8fafc; padding: 7px 6px;
+    border: 1px solid #cbd5e1;
   }}
 
   td {{
-    padding: 12px 10px; border-bottom: 1px solid #f1f5f9; vertical-align: middle;
+    padding: 9px 10px; border: 1px solid #e2e8f0; vertical-align: middle;
   }}
-  tr.student-row {{ transition: background 0.15s ease; }}
-  tr.student-row:hover td {{ background: #f8faff; }}
+  tr.student-row {{ transition: background 0.1s ease; }}
+  tr.student-row:nth-child(even) td {{ background: #f8fafc; }}
+  tr.student-row:nth-child(odd) td {{ background: #ffffff; }}
+  tr.student-row:hover td {{ background: #eff6ff !important; }}
 
   /* Ustun ichidagi mini-qidiruv kataklari */
   .col-filter {{
@@ -3489,28 +3492,44 @@ html = f"""<!DOCTYPE html>
     border-color: #059669 !important;
   }}
 
-  /* 7. Asosiy Jadval (Table View) */
+  /* 7. Asosiy Jadval (Table View) - Dark Mode Aniq Chiziqli Jadval */
+  body.dark-mode .table-container {{
+    background: #0b1329 !important;
+    border: 1.5px solid #23385e !important;
+  }}
+  body.dark-mode table {{
+    border: 1px solid #23385e !important;
+  }}
   body.dark-mode thead tr.th-titles th {{
-    background: #090d16 !important;
-    border-color: #1e293b !important;
+    background: #070c18 !important;
+    border: 1px solid #23385e !important;
     color: #f8fafc !important;
   }}
   body.dark-mode thead tr.th-filters th {{
-    background: #101624 !important;
-    border-color: #233047 !important;
+    background: #0d1629 !important;
+    border: 1px solid #23385e !important;
+  }}
+  body.dark-mode thead tr.th-filters th .col-filter {{
+    background: #080e1c !important;
+    border: 1px solid #23385e !important;
+    color: #f1f5f9 !important;
+  }}
+  body.dark-mode thead tr.th-filters th .col-filter:focus {{
+    border-color: #3b82f6 !important;
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3) !important;
   }}
   body.dark-mode tr.student-row td {{
-    border-color: #1a2438 !important;
+    border: 1px solid #1a273f !important;
     color: #f1f5f9 !important;
   }}
   body.dark-mode tr.student-row:nth-child(even) td {{
-    background: #121927 !important;
+    background: #0d1527 !important;
   }}
   body.dark-mode tr.student-row:nth-child(odd) td {{
-    background: #151e2e !important;
+    background: #111a30 !important;
   }}
   body.dark-mode tr.student-row:hover td {{
-    background: #1e2c44 !important;
+    background: #1a2d52 !important;
   }}
   body.dark-mode .student-name {{
     color: #f8fafc !important;
@@ -3611,11 +3630,109 @@ html = f"""<!DOCTYPE html>
     color: #60a5fa !important;
   }}
 
-  /* 8. Section 2: Akademik Guruhlar Jurnali */
+  /* 8. Section 2: Akademik Guruhlar Jurnali (Toolbar, Kartalar va Aniq Chiziqli Jadvallar) */
+  .group-journal-toolbar {{
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    background: #ffffff;
+    border: 1.5px solid #cbd5e1;
+    border-radius: 12px;
+    padding: 10px 16px;
+    margin-bottom: 16px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  }}
+  .group-journal-toolbar-title {{
+    font-size: 13px;
+    font-weight: 600;
+    color: #24292f;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }}
+  .group-grid-card {{
+    background: #ffffff;
+    border: 1.5px solid #cbd5e1;
+    border-radius: 12px;
+    box-shadow: 0 4px 14px rgba(15,23,42,0.05);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }}
+  .group-card-header {{
+    background: #0f172a;
+    color: #ffffff;
+    padding: 10px 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+  }}
+  .group-journal-table {{
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+    font-size: 12.5px;
+    table-layout: fixed;
+    border: 1px solid #e2e8f0;
+  }}
+  .group-journal-table thead tr {{
+    background: #f8fafc;
+    border-bottom: 2px solid #cbd5e1;
+    height: 34px;
+    color: #475569;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+  }}
+  .group-journal-table th {{
+    border: 1px solid #cbd5e1;
+    padding: 6px 10px;
+    font-weight: 700;
+  }}
+  .group-journal-table td {{
+    border: 1px solid #e2e8f0;
+    padding: 7px 10px;
+    color: #334155;
+    vertical-align: middle;
+  }}
+  .group-journal-row {{
+    cursor: pointer;
+    transition: background 0.1s ease;
+  }}
+  .group-journal-row:nth-child(even) td {{
+    background: #fafcff;
+  }}
+  .group-journal-row:nth-child(odd) td {{
+    background: #ffffff;
+  }}
+  .group-journal-row:hover td {{
+    background: #eff6ff !important;
+  }}
+  .group-grid-card-n {{
+    border-color: #f59e0b !important;
+  }}
+  .group-journal-table-n thead tr {{
+    background: #fefce8 !important;
+    border-bottom-color: #fde68a !important;
+    color: #92400e !important;
+  }}
+  .group-journal-table-n th {{
+    border-color: #fde68a !important;
+  }}
+  .group-journal-table-n td {{
+    border-color: #fef9c3 !important;
+  }}
+
+  /* Dark mode: Akademik Guruhlar Jurnali */
   body.dark-mode .groups-journal-header,
   body.dark-mode #view_groups_section > div:first-child {{
-    background: #131b2a !important;
-    border: 1.5px solid #233047 !important;
+    background: #0b1329 !important;
+    border: 1.5px solid #23385e !important;
     box-shadow: 0 4px 16px rgba(0,0,0,0.4) !important;
   }}
   body.dark-mode #view_groups_section h2 {{
@@ -3624,39 +3741,141 @@ html = f"""<!DOCTYPE html>
   body.dark-mode #view_groups_section p {{
     color: #94a3b8 !important;
   }}
+  body.dark-mode .group-journal-toolbar {{
+    background: #0b1329 !important;
+    border-color: #23385e !important;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.3) !important;
+  }}
+  body.dark-mode .group-journal-toolbar-title {{
+    color: #f8fafc !important;
+  }}
   body.dark-mode .group-grid-card {{
-    background: #131b2a !important;
-    border-color: #233047 !important;
+    background: #0b1329 !important;
+    border-color: #23385e !important;
     box-shadow: 0 4px 16px -2px rgba(0, 0, 0, 0.4) !important;
   }}
-  body.dark-mode .group-grid-card thead tr {{
-    background: #0d1524 !important;
+  body.dark-mode .group-card-header {{
+    background: #070c18 !important;
+    border-bottom-color: #23385e !important;
+  }}
+  body.dark-mode .group-journal-table {{
+    border-color: #23385e !important;
+  }}
+  body.dark-mode .group-journal-table thead tr {{
+    background: #0e172a !important;
     color: #cbd5e1 !important;
-    border-bottom-color: #233047 !important;
   }}
-  body.dark-mode .group-grid-card tbody tr {{
-    border-bottom-color: #1e293b !important;
+  body.dark-mode .group-journal-table th {{
+    border: 1px solid #23385e !important;
+    color: #cbd5e1 !important;
   }}
-  body.dark-mode .group-grid-card tbody tr:hover {{
-    background: #1e2c44 !important;
-  }}
-  body.dark-mode .group-grid-card td {{
+  body.dark-mode .group-journal-table td {{
+    border: 1px solid #1a273f !important;
     color: #f1f5f9 !important;
+  }}
+  body.dark-mode .group-journal-row:nth-child(even) td {{
+    background: #0d1527 !important;
+  }}
+  body.dark-mode .group-journal-row:nth-child(odd) td {{
+    background: #111a30 !important;
+  }}
+  body.dark-mode .group-journal-row:hover td {{
+    background: #1a2d52 !important;
+  }}
+  body.dark-mode .group-grid-card-n {{
+    background: #121927 !important;
+    border-color: #92400e !important;
+  }}
+  body.dark-mode .group-journal-table-n thead tr {{
+    background: #1e1b13 !important;
+    color: #fef08a !important;
+  }}
+  body.dark-mode .group-journal-table-n th {{
+    border-color: #78350f !important;
+    color: #fef08a !important;
+  }}
+  body.dark-mode .group-journal-table-n td {{
+    border-color: #292518 !important;
+    color: #fef08a !important;
   }}
 
   /* 9. Modallar va Talaba Qo'shish Oynasi */
-  body.dark-mode .modal-content {{
+  body.dark-mode .modal-content,
+  body.dark-mode #addStudentModal .modal-content,
+  body.dark-mode #viewerModal .modal-content {{
     background: #0b1329 !important;
     border: 1.5px solid #23385e !important;
     color: #f8fafc !important;
   }}
   body.dark-mode .modal-header {{
-    background: linear-gradient(135deg, #090d16 0%, #131c2e 100%) !important;
+    background: linear-gradient(135deg, #070c18 0%, #0f172a 100%) !important;
     border-bottom: 1.5px solid #23385e !important;
   }}
   body.dark-mode .modal-top-bar {{
     background: #111e38 !important;
     border-color: #23385e !important;
+  }}
+  body.dark-mode .gallery-wrapper,
+  body.dark-mode #modalGalleryWrapper {{
+    background: #0b1329 !important;
+    border-color: #23385e !important;
+  }}
+  body.dark-mode #addStudentModal .add-modal-body {{
+    background: #0b1329 !important;
+  }}
+  body.dark-mode #addStudentModal .ai-upload-box {{
+    background: #111e38 !important;
+    border: 2px dashed #2563eb !important;
+  }}
+  body.dark-mode #addStudentModal .form-card-box {{
+    background: #111e38 !important;
+    border: 1.5px solid #23385e !important;
+  }}
+  body.dark-mode #addStudentModal .card-box-head {{
+    border-bottom: 1.5px solid #23385e !important;
+  }}
+  body.dark-mode #addStudentModal .card-box-head.head-blue {{
+    background: rgba(37,99,235,0.2) !important;
+    color: #93c5fd !important;
+  }}
+  body.dark-mode #addStudentModal .card-box-head.head-green {{
+    background: rgba(16,185,129,0.2) !important;
+    color: #6ee7b7 !important;
+  }}
+  body.dark-mode #addStudentModal .form-group-item label {{
+    color: #94a3b8 !important;
+  }}
+  body.dark-mode #addStudentModal .form-ctrl {{
+    background: #0b1329 !important;
+    border: 1.5px solid #23385e !important;
+    color: #f8fafc !important;
+  }}
+  body.dark-mode #addStudentModal .form-ctrl:focus {{
+    border-color: #3b82f6 !important;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.25) !important;
+  }}
+  body.dark-mode #addStudentModal .form-ctrl option {{
+    background: #0b1329 !important;
+    color: #f8fafc !important;
+  }}
+  body.dark-mode #addStudentModal .form-ctrl.ctrl-readonly {{
+    background: #070c18 !important;
+    color: #64748b !important;
+    border-color: #1a273f !important;
+  }}
+  body.dark-mode #addStudentModal .modal-footer-sticky {{
+    background: #070c18 !important;
+    border-top: 1px solid #23385e !important;
+  }}
+  body.dark-mode #addStudentModal .info-helper-box {{
+    background: #111e38 !important;
+    border: 1px solid #23385e !important;
+    color: #94a3b8 !important;
+  }}
+  body.dark-mode #addStudentModal .file-picker-btn {{
+    background: #0b1329 !important;
+    border: 1.5px solid #23385e !important;
+    color: #cbd5e1 !important;
   }}
   body.dark-mode #addStudentModal div[style*="background: #f0f7ff"],
   body.dark-mode div[style*="background: #f0f7ff"],
