@@ -71,8 +71,8 @@ def build_group_flowables(group_code, students, avail_width):
     title_style = ParagraphStyle(
         'DocTitle',
         fontName=FONT_BOLD,
-        fontSize=15,
-        leading=18,
+        fontSize=16,
+        leading=20,
         alignment=1,
         textColor=colors.HexColor('#0f172a')
     )
@@ -124,7 +124,7 @@ def build_group_flowables(group_code, students, avail_width):
 
     header_table_data = [
         [
-            Paragraph("Abu Ali ibn Sino nomidagi Shahrisabz tibbiyot texnikumi", title_style),
+            Paragraph("Shahrisabz Tibbiyot Texnikumi", title_style),
             ""
         ],
         [
