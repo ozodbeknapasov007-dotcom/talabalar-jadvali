@@ -75,7 +75,9 @@ def _do_git_push():
              'index.html',
              'Talabalar_Toliq_Royxati.xlsx',
              'Talabalar_Yangilangan_Royxat.xlsx',
+             'qayta_tekshiruv/Talabalar_Yangilangan_Royxat.xlsx',
              'pdf_jurnallar',
+             'qayta_tekshiruv/pdf_jurnallar',
              'scripts/verifications.json',
              'scripts/remote_changes.json',
              'scripts/manual_file_map.json'],
@@ -91,8 +93,13 @@ def _do_git_push():
                 cwd=BASE_DIR, capture_output=True, text=True, timeout=30
             )
             if result_commit.returncode == 0:
+                # Masofaviy o'zgarishlar bilan ziddiyat bo'lmasligi uchun oldin rebase bilan tortib olamiz
+                subprocess.run(
+                    ['git', 'pull', '--rebase', 'origin', 'main', '--quiet'],
+                    cwd=BASE_DIR, capture_output=True, text=True, timeout=30
+                )
                 result_push = subprocess.run(
-                    ['git', 'push'],
+                    ['git', 'push', 'origin', 'main'],
                     cwd=BASE_DIR, capture_output=True, text=True, timeout=60
                 )
                 if result_push.returncode == 0:
@@ -102,12 +109,22 @@ def _do_git_push():
                         GIT_SYNC_STATUS["message"] = "GitHub bilan sinxronlandi"
                         GIT_SYNC_STATUS["last_sync"] = time.strftime("%H:%M:%S")
                 else:
-                    err_msg = result_push.stderr.strip() or "Push xatosi"
-                    print(f"[GIT] ⚠️ Push xatosi: {err_msg}")
-                    with GIT_PUSH_LOCK:
-                        GIT_SYNC_STATUS["state"] = "error"
-                        GIT_SYNC_STATUS["message"] = f"Push xatosi"
-                        GIT_SYNC_STATUS["detail"] = err_msg[:60]
+                    # Agar birinchi urinish o'tmasa, yana bir bor rebase qilib ko'rish
+                    subprocess.run(['git', 'pull', '--rebase', 'origin', 'main', '--quiet'], cwd=BASE_DIR, capture_output=True, text=True, timeout=30)
+                    retry_push = subprocess.run(['git', 'push', 'origin', 'main'], cwd=BASE_DIR, capture_output=True, text=True, timeout=60)
+                    if retry_push.returncode == 0:
+                        print("[GIT] ✅ GitHub'ga qayta urinishda push qilindi")
+                        with GIT_PUSH_LOCK:
+                            GIT_SYNC_STATUS["state"] = "synced"
+                            GIT_SYNC_STATUS["message"] = "GitHub bilan sinxronlandi"
+                            GIT_SYNC_STATUS["last_sync"] = time.strftime("%H:%M:%S")
+                    else:
+                        err_msg = retry_push.stderr.strip() or "Push xatosi"
+                        print(f"[GIT] ⚠️ Push xatosi: {err_msg}")
+                        with GIT_PUSH_LOCK:
+                            GIT_SYNC_STATUS["state"] = "error"
+                            GIT_SYNC_STATUS["message"] = f"Push xatosi"
+                            GIT_SYNC_STATUS["detail"] = err_msg[:60]
             else:
                 err_msg = result_commit.stderr.strip() or "Commit xatosi"
                 print(f"[GIT] ℹ️ Commit xatosi: {err_msg}")
@@ -252,14 +269,54 @@ def process_remote_github_changes():
                     ws.cell(row=nr, column=25, value="KUTILMOQDA")
 
                 elif chg_type == 'delete_student':
+                    target_row = None
+                    sh_clean = str(data.get('shnum', '')).strip()
+                    pinfl_clean = str(data.get('pinfl', '')).replace(' ', '').strip()
+                    ism_clean = str(data.get('ism', '') or data.get('fish', '')).strip().lower()
                     r_idx = int(data.get('row', 0))
-                    if 2 <= r_idx <= ws.max_row:
-                        ws.delete_rows(r_idx)
+
+                    if sh_clean and sh_clean != '—' and sh_clean != '-':
+                        for r in range(2, ws.max_row + 1):
+                            if str(ws.cell(row=r, column=5).value or '').strip() == sh_clean:
+                                target_row = r
+                                break
+                    if not target_row and pinfl_clean:
+                        for r in range(2, ws.max_row + 1):
+                            if str(ws.cell(row=r, column=11).value or '').replace(' ', '').strip() == pinfl_clean:
+                                target_row = r
+                                break
+                    if not target_row and ism_clean:
+                        for r in range(2, ws.max_row + 1):
+                            c2 = str(ws.cell(row=r, column=2).value or '').strip().lower()
+                            c8 = str(ws.cell(row=r, column=8).value or '').strip().lower()
+                            if c2 == ism_clean or c8 == ism_clean or (len(ism_clean) > 6 and ism_clean in c8) or (len(c2) > 6 and c2 in ism_clean):
+                                target_row = r
+                                break
+                    if not target_row and 2 <= r_idx <= ws.max_row:
+                        target_row = r_idx
+
+                    if target_row and 2 <= target_row <= ws.max_row:
+                        del_sh = str(ws.cell(row=target_row, column=5).value or '').strip()
+                        del_pinfl = str(ws.cell(row=target_row, column=11).value or '').strip()
+                        ws.delete_rows(target_row)
                         for idx, r in enumerate(range(2, ws.max_row + 1), start=1):
                             ws.cell(row=r, column=1, value=idx)
+                        try:
+                            with VERIFICATIONS_LOCK:
+                                if os.path.exists(VERIFICATIONS_FILE):
+                                    with open(VERIFICATIONS_FILE, 'r', encoding='utf-8') as vf:
+                                        vmap = json.load(vf)
+                                    vmap.pop(str(target_row), None)
+                                    if del_sh: vmap.pop('sh_' + del_sh, None)
+                                    if del_pinfl: vmap.pop('pinfl_' + del_pinfl, None)
+                                    with open(VERIFICATIONS_FILE, 'w', encoding='utf-8') as vf:
+                                        json.dump(vmap, vf, ensure_ascii=False, indent=2)
+                        except Exception:
+                            pass
 
             wb.save(EXCEL_PATH)
             wb.save(os.path.join(BASE_DIR, 'Talabalar_Yangilangan_Royxat.xlsx'))
+            wb.save(os.path.join(BASE_DIR, 'qayta_tekshiruv', 'Talabalar_Yangilangan_Royxat.xlsx'))
 
             # O'qib bo'lingan navbatni tozalash
             with open(changes_file, 'w', encoding='utf-8') as f:
@@ -1552,22 +1609,49 @@ Aniq JSON formatda qaytar:
             query = self.path.split('?')[-1] if '?' in self.path else ''
             params = dict(qc.split('=') for qc in query.split('&') if '=' in qc)
             row_idx = int(params.get('row', '0'))
-
-            if row_idx < 2:
-                self.send_response(400)
-                self.send_header('Content-Type', 'application/json; charset=utf-8')
-                self.send_header('Access-Control-Allow-Origin', '*')
-                self.end_headers()
-                self.wfile.write(json.dumps({"success": False, "error": "Noto'g'ri qator indeksi"}).encode('utf-8'))
-                return
+            sh_clean = unquote(params.get('shnum', '')).strip()
+            pinfl_clean = unquote(params.get('pinfl', '')).replace(' ', '').strip()
+            ism_clean = unquote(params.get('ism', '') or params.get('fish', '')).strip().lower()
 
             try:
-                import openpyxl, subprocess
+                import openpyxl
                 wb = openpyxl.load_workbook(os.path.join(BASE_DIR, 'Talabalar_Toliq_Royxati.xlsx'))
                 ws = wb.active
+
+                target_row = None
+                if sh_clean and sh_clean != '—' and sh_clean != '-':
+                    for r in range(2, ws.max_row + 1):
+                        if str(ws.cell(row=r, column=5).value or '').strip() == sh_clean:
+                            target_row = r
+                            break
+                if not target_row and pinfl_clean:
+                    for r in range(2, ws.max_row + 1):
+                        if str(ws.cell(row=r, column=11).value or '').replace(' ', '').strip() == pinfl_clean:
+                            target_row = r
+                            break
+                if not target_row and ism_clean:
+                    for r in range(2, ws.max_row + 1):
+                        c2 = str(ws.cell(row=r, column=2).value or '').strip().lower()
+                        c8 = str(ws.cell(row=r, column=8).value or '').strip().lower()
+                        if c2 == ism_clean or c8 == ism_clean or (len(ism_clean) > 6 and ism_clean in c8) or (len(c2) > 6 and c2 in ism_clean):
+                            target_row = r
+                            break
+                if not target_row and 2 <= row_idx <= ws.max_row:
+                    target_row = row_idx
+
+                if not target_row or target_row < 2 or target_row > ws.max_row:
+                    self.send_response(404)
+                    self.send_header('Content-Type', 'application/json; charset=utf-8')
+                    self.send_header('Access-Control-Allow-Origin', '*')
+                    self.end_headers()
+                    self.wfile.write(json.dumps({"success": False, "error": "Talaba topilmadi"}).encode('utf-8'))
+                    return
                 
-                deleted_name = str(ws.cell(row=row_idx, column=2).value or '')
-                ws.delete_rows(row_idx)
+                deleted_name = str(ws.cell(row=target_row, column=2).value or '')
+                del_sh = str(ws.cell(row=target_row, column=5).value or '').strip()
+                del_pinfl = str(ws.cell(row=target_row, column=11).value or '').strip()
+
+                ws.delete_rows(target_row)
                 
                 # T/r larni qayta tartiblash
                 for idx, r in enumerate(range(2, ws.max_row + 1), start=1):
@@ -1575,7 +1659,22 @@ Aniq JSON formatda qaytar:
                     
                 wb.save(os.path.join(BASE_DIR, 'Talabalar_Toliq_Royxati.xlsx'))
                 wb.save(os.path.join(BASE_DIR, 'Talabalar_Yangilangan_Royxat.xlsx'))
+                wb.save(os.path.join(BASE_DIR, 'qayta_tekshiruv', 'Talabalar_Yangilangan_Royxat.xlsx'))
                 
+                # verifications.json dan tozalash
+                try:
+                    with VERIFICATIONS_LOCK:
+                        if os.path.exists(VERIFICATIONS_FILE):
+                            with open(VERIFICATIONS_FILE, 'r', encoding='utf-8') as vf:
+                                vmap = json.load(vf)
+                            vmap.pop(str(target_row), None)
+                            if del_sh: vmap.pop('sh_' + del_sh, None)
+                            if del_pinfl: vmap.pop('pinfl_' + del_pinfl, None)
+                            with open(VERIFICATIONS_FILE, 'w', encoding='utf-8') as vf:
+                                json.dump(vmap, vf, ensure_ascii=False, indent=2)
+                except Exception:
+                    pass
+
                 # Hisobotni qayta yaratish
                 trigger_report_rebuild()
 
@@ -1585,7 +1684,7 @@ Aniq JSON formatda qaytar:
                 self.end_headers()
                 self.wfile.write(json.dumps({
                     "success": True,
-                    "deleted_row": row_idx,
+                    "deleted_row": target_row,
                     "deleted_name": deleted_name,
                     "remaining_total": ws.max_row - 1
                 }).encode('utf-8'))
@@ -2540,12 +2639,30 @@ def delete_student_data(shnum, ism):
     if not target_row:
         return False
         
+    del_sh = str(ws.cell(row=target_row, column=5).value or '').strip()
+    del_pinfl = str(ws.cell(row=target_row, column=11).value or '').strip()
     ws.delete_rows(target_row, 1)
     
     for r in range(2, ws.max_row + 1):
         ws.cell(row=r, column=1, value=r - 1)
         
     wb.save(EXCEL_PATH)
+    wb.save(os.path.join(BASE_DIR, 'Talabalar_Yangilangan_Royxat.xlsx'))
+    wb.save(os.path.join(BASE_DIR, 'qayta_tekshiruv', 'Talabalar_Yangilangan_Royxat.xlsx'))
+
+    try:
+        with VERIFICATIONS_LOCK:
+            if os.path.exists(VERIFICATIONS_FILE):
+                with open(VERIFICATIONS_FILE, 'r', encoding='utf-8') as vf:
+                    vmap = json.load(vf)
+                vmap.pop(str(target_row), None)
+                if del_sh: vmap.pop('sh_' + del_sh, None)
+                if del_pinfl: vmap.pop('pinfl_' + del_pinfl, None)
+                with open(VERIFICATIONS_FILE, 'w', encoding='utf-8') as vf:
+                    json.dump(vmap, vf, ensure_ascii=False, indent=2)
+    except Exception:
+        pass
+
     trigger_report_rebuild()
     return True
 

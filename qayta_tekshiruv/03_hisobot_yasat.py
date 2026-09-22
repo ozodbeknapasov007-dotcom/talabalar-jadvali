@@ -559,7 +559,7 @@ for idx, s in enumerate(students, 1):
         table_v_btn = f'''<button type="button" class="btn-v-mini btn-v-wait" id="vbtn-row-{idx-1}" onclick="toggleStudentVerification({idx-1}, {s['row']})" title="Ushbu talabani to'g'ri deb tasdiqlash">{SVG_CLOCK_SM} Kutilmoqda</button>'''
 
     # Jadval Qatori (Minimalist va Bir oynaga to'liq sig'adigan)
-    row_html = f'''<tr class="student-row"
+    row_html = f'''<tr class="student-row" id="student-row-{idx-1}"
       data-shnum="{s['shnum'].lower()}"
       data-name="{clean_fish.lower()}"
       data-group="{s['group'].lower()}"

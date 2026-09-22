@@ -949,7 +949,7 @@ window.scanStudentQROnly = function() {
 /* 2. TALABANI BAZADAN BUTUNLAY O'CHIRISH */
 window.deleteCurrentStudent = function() {
   if (window.currentStudentIdx === null || !RAW_STUDENTS[window.currentStudentIdx]) return;
-  const s = RAW_STUDENTS[window.currentStudentIdx];
+  const s = Object.assign({}, RAW_STUDENTS[window.currentStudentIdx]);
 
   const studentName = s.fish || s.ism || 'ushbu talaba';
   const confirmMsg = "Haqiqatan ham " + studentName + " (Shartnoma: #" + (s.shnum || '—') + ") ni bazadan butunlay o'chirib tashlamoqchimisiz?\n\nBu amal Excel bazadan ham o'chiradi!";
@@ -963,31 +963,46 @@ window.deleteCurrentStudent = function() {
     btn.style.opacity = '0.7';
   }
 
+  // 1. DARHOL EKRANDAN VA MA'LUMOTLAR BAZASIDAN O'CHIRISH (INSTANT OPTIMISTIC DELETE)
+  if (typeof window.removeStudentFromDOM === 'function') {
+    window.removeStudentFromDOM(s);
+  }
+  if (typeof window.saveDeletedStudentToStorage === 'function') {
+    window.saveDeletedStudentToStorage(s);
+  }
+  if (typeof window.closeStudentModal === 'function') {
+    window.closeStudentModal();
+  }
+
+  if (typeof showToast === 'function') {
+    showToast(`🗑️ ${studentName} bazadan muvaffaqiyatli o'chirildi!`, 'success');
+  }
+
+  // 2. FONDA SERVER VA GITHUB BILAN BOG'LANIB O'CHIRISHNI SAQLAYMIZ
   const apiHost = (window.location.protocol === 'http:' || window.location.protocol === 'https:') ? '' : 'http://localhost:8080';
-  const url = apiHost + '/api/delete_student?row=' + (s.row || 0);
+  const url = apiHost + '/api/delete_student?' +
+    'row=' + encodeURIComponent(s.row || 0) +
+    '&shnum=' + encodeURIComponent(s.shnum || '') +
+    '&pinfl=' + encodeURIComponent(s.pinfl || '') +
+    '&ism=' + encodeURIComponent(s.ism || '') +
+    '&fish=' + encodeURIComponent(s.fish || '');
 
   fetch(url)
     .then(function(r) { return r.json(); })
     .then(function(res) {
       if (res && res.success) {
-        alert(studentName + " bazadan muvaffaqiyatli o'chirildi!");
-        window.closeStudentModal();
-        location.reload();
+        if (typeof showToast === 'function') {
+          showToast(`☁️ ${studentName} server bazasidan to'liq o'chirildi!`, 'success');
+        }
       } else {
-        alert("O'chirishda xatolik: " + (res.error || 'Noma\'lum xato'));
-        if (btn) {
-          btn.disabled = false;
-          btn.innerHTML = '<svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg> Talabani O\'chirish';
-          btn.style.opacity = '1';
+        if (typeof showToast === 'function') {
+          showToast("⚠️ Serverda o'chirishda xatolik: " + (res.error || 'Noma\'lum xato'), 'error');
         }
       }
     })
     .catch(function(err) {
-      alert("Server bilan ulanishda xatolik: " + err);
-      if (btn) {
-        btn.disabled = false;
-        btn.innerHTML = '<svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg> Talabani O\'chirish';
-        btn.style.opacity = '1';
+      if (typeof showToast === 'function') {
+        showToast("⚠️ Server bilan ulanishda xatolik: " + err, 'error');
       }
     });
 };
@@ -2517,6 +2532,127 @@ window.savePendingStudentToStorage = function(s) {
   } catch(e) {}
 };
 
+window.removeStudentFromDOM = function(s) {
+  if (typeof RAW_STUDENTS === 'undefined' || !Array.isArray(RAW_STUDENTS)) return;
+
+  const targetIdx = RAW_STUDENTS.findIndex(function(item) {
+    if (s.pinfl && item.pinfl && item.pinfl.toString().trim() === s.pinfl.toString().trim()) return true;
+    if (s.shnum && s.shnum !== '—' && s.shnum !== '-' && item.shnum && item.shnum.toString().trim() === s.shnum.toString().trim()) return true;
+    if (s.fish && item.fish && item.fish.trim().toLowerCase() === s.fish.trim().toLowerCase()) return true;
+    if (s.row && item.row && item.row === s.row) return true;
+    return false;
+  });
+
+  if (targetIdx !== -1) {
+    RAW_STUDENTS.splice(targetIdx, 1);
+  }
+
+  // 1. Asosiy jadvaldan (tr) o'chirish
+  const rows = document.querySelectorAll('.student-row');
+  rows.forEach(function(tr) {
+    const rSh = tr.getAttribute('data-shnum') || '';
+    const rPinfl = tr.getAttribute('data-pinfl') || '';
+    const rName = tr.getAttribute('data-name') || '';
+    const matchSh = (s.shnum && s.shnum !== '—' && s.shnum !== '-' && rSh.toLowerCase() === s.shnum.toString().toLowerCase());
+    const matchPinfl = (s.pinfl && rPinfl.trim() === s.pinfl.toString().trim());
+    const matchName = (s.fish && rName.toLowerCase() === s.fish.toLowerCase());
+    if (matchSh || matchPinfl || matchName) {
+      tr.remove();
+    }
+  });
+
+  // 2. Kartalar qatoridan (card) o'chirish
+  const cards = document.querySelectorAll('.student-card');
+  cards.forEach(function(c) {
+    const cSh = c.getAttribute('data-shnum') || '';
+    const cPinfl = c.getAttribute('data-pinfl') || '';
+    const cName = c.getAttribute('data-name') || '';
+    const matchSh = (s.shnum && s.shnum !== '—' && s.shnum !== '-' && cSh.toLowerCase() === s.shnum.toString().toLowerCase());
+    const matchPinfl = (s.pinfl && cPinfl.trim() === s.pinfl.toString().trim());
+    const matchName = (s.fish && cName.toLowerCase() === s.fish.toLowerCase());
+    if (matchSh || matchPinfl || matchName) {
+      c.remove();
+    }
+  });
+
+  // 3. T/r tartib raqamlarini yangilash
+  const remainingRows = document.querySelectorAll('#studentsTbody tr.student-row');
+  remainingRows.forEach(function(tr, i) {
+    const firstTd = tr.querySelector('td');
+    if (firstTd) firstTd.innerText = i + 1;
+  });
+
+  // 4. Statistikani qayta hisoblash
+  if (typeof window.updateGroupsVerificationStats === 'function') {
+    window.updateGroupsVerificationStats();
+  }
+
+  // 5. Guruhlar jurnali tabini qayta chizish
+  if (typeof window.renderGroupsJournalTab === 'function') {
+    window.renderGroupsJournalTab();
+  }
+
+  // 6. Filtrlarni yangilash
+  if (typeof window.filterStudents === 'function') {
+    window.filterStudents();
+  }
+};
+
+window.saveDeletedStudentToStorage = function(s) {
+  try {
+    let deleted = JSON.parse(localStorage.getItem('student_deleted_students') || '[]');
+    if (!Array.isArray(deleted)) deleted = [];
+    deleted.push({
+      shnum: s.shnum || '',
+      pinfl: s.pinfl || '',
+      fish: s.fish || s.ism || '',
+      row: s.row || 0,
+      deleted_at: Date.now()
+    });
+    localStorage.setItem('student_deleted_students', JSON.stringify(deleted));
+
+    // Agar bu talaba pending_students da bo'lsa, u yerdan ham olib tashlaymiz
+    let pending = JSON.parse(localStorage.getItem('student_pending_students') || '[]');
+    if (Array.isArray(pending) && pending.length) {
+      pending = pending.filter(function(item) {
+        const pMatch = (s.pinfl && item.pinfl && item.pinfl.toString().trim() === s.pinfl.toString().trim());
+        const sMatch = (s.shnum && s.shnum !== '—' && s.shnum !== '-' && item.shnum && item.shnum.toString().trim() === s.shnum.toString().trim());
+        const nMatch = (s.fish && item.fish && item.fish.toLowerCase() === s.fish.toLowerCase());
+        return !(pMatch || sMatch || nMatch);
+      });
+      localStorage.setItem('student_pending_students', JSON.stringify(pending));
+    }
+  } catch(e) {
+    console.error("saveDeletedStudentToStorage xatosi:", e);
+  }
+};
+
+window.reconcileDeletedStudents = function() {
+  if (typeof RAW_STUDENTS === 'undefined' || !Array.isArray(RAW_STUDENTS)) return;
+  try {
+    let deleted = JSON.parse(localStorage.getItem('student_deleted_students') || '[]');
+    if (!deleted || !deleted.length) return;
+
+    const remainingDeleted = [];
+    deleted.forEach(function(del) {
+      const stillInRaw = RAW_STUDENTS.some(function(item) {
+        const pMatch = (del.pinfl && item.pinfl && item.pinfl.toString().trim() === del.pinfl.toString().trim());
+        const sMatch = (del.shnum && del.shnum !== '—' && del.shnum !== '-' && item.shnum && item.shnum.toString().trim() === del.shnum.toString().trim());
+        const nMatch = (del.fish && item.fish && item.fish.toLowerCase() === del.fish.toLowerCase());
+        return pMatch || sMatch || nMatch;
+      });
+
+      if (stillInRaw) {
+        window.removeStudentFromDOM(del);
+        remainingDeleted.push(del);
+      }
+    });
+    localStorage.setItem('student_deleted_students', JSON.stringify(remainingDeleted));
+  } catch(e) {
+    console.error("reconcileDeletedStudents xatosi:", e);
+  }
+};
+
 window.reconcilePendingStudents = function() {
   if (typeof RAW_STUDENTS === 'undefined' || !Array.isArray(RAW_STUDENTS)) return;
   try {
@@ -3410,7 +3546,13 @@ window.GitSyncManager = {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             type: 'delete_student',
-            data: { row: parseInt(p.row || '0', 10) }
+            data: {
+              row: parseInt(p.row || '0', 10),
+              shnum: p.shnum || '',
+              pinfl: p.pinfl || '',
+              ism: p.ism || '',
+              fish: p.fish || ''
+            }
           })
         });
       }
@@ -3467,7 +3609,10 @@ window.GitSyncManager = {
 function initPortalState() {
   if (typeof window.initTheme === 'function') window.initTheme();
 
-  // 0. Yangi qo'shilgan talabalarni tekshirish va tiklash (F5 bo'lganda yo'qolmasligi uchun)
+  // 0. O'chirilgan va yangi qo'shilgan talabalarni tekshirish va tiklash (F5 bo'lganda)
+  if (typeof window.reconcileDeletedStudents === 'function') {
+    window.reconcileDeletedStudents();
+  }
   if (typeof window.reconcilePendingStudents === 'function') {
     window.reconcilePendingStudents();
   }

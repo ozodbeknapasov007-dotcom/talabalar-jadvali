@@ -22,69 +22,104 @@ module.exports = async function handler(req, res) {
   }
 
   try {
-    const change = req.body;
+    let change = req.body;
+    if (typeof change === 'string') {
+      try { change = JSON.parse(change); } catch(e) {}
+    }
     if (!change || !change.type) {
       return res.status(400).json({ error: 'O\'zgarish ma\'lumoti noto\'g\'ri' });
     }
 
-    // 1. GitHub'dagi mavjud remote_changes.json faylini o'qish
-    const getUrl = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${FILE_PATH}`;
-    const getRes = await fetch(getUrl, {
-      headers: {
-        'Authorization': `token ${GITHUB_TOKEN}`,
-        'Accept': 'application/vnd.github.v3+json',
-        'User-Agent': 'Vercel-GitHub-Sync'
-      }
-    });
+    change.id = change.id || ('chg_' + Date.now());
+    change.created_at = change.created_at || new Date().toISOString();
 
-    let currentList = [];
-    let sha = null;
+    // RETRY LOOP (409 Conflict yoki tarmoq kechikishida 4 martagacha qayta urinadi)
+    const maxRetries = 4;
+    let lastError = null;
 
-    if (getRes.ok) {
-      const fileData = await getRes.json();
-      sha = fileData.sha;
-      const decodedContent = Buffer.from(fileData.content, 'base64').toString('utf-8');
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
       try {
-        currentList = JSON.parse(decodedContent);
-        if (!Array.isArray(currentList)) currentList = [];
-      } catch (e) {
-        currentList = [];
+        // 1. GitHub'dagi mavjud remote_changes.json faylini keshsiz yangi SHA bilan o'qish
+        const getUrl = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${FILE_PATH}?ref=main&_t=${Date.now()}`;
+        const getRes = await fetch(getUrl, {
+          headers: {
+            'Authorization': `token ${GITHUB_TOKEN}`,
+            'Accept': 'application/vnd.github.v3+json',
+            'User-Agent': 'Vercel-GitHub-Sync',
+            'Cache-Control': 'no-cache, no-store, must-revalidate',
+            'Pragma': 'no-cache'
+          }
+        });
+
+        let currentList = [];
+        let sha = null;
+
+        if (getRes.ok) {
+          const fileData = await getRes.json();
+          sha = fileData.sha;
+          const decodedContent = Buffer.from(fileData.content, 'base64').toString('utf-8');
+          try {
+            currentList = JSON.parse(decodedContent);
+            if (!Array.isArray(currentList)) currentList = [];
+          } catch (e) {
+            currentList = [];
+          }
+        }
+
+        // 2. Yangi o'zgarishni navbatga qo'shish (dublikatsiz)
+        const alreadyExists = currentList.some(item => item.id === change.id);
+        if (!alreadyExists) {
+          currentList.push(change);
+        }
+
+        // 3. GitHub'ga to'g'ridan-to'g'ri commit qilish
+        const updatedContent = Buffer.from(JSON.stringify(currentList, null, 2), 'utf-8').toString('base64');
+        const putUrl = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${FILE_PATH}`;
+        const putRes = await fetch(putUrl, {
+          method: 'PUT',
+          headers: {
+            'Authorization': `token ${GITHUB_TOKEN}`,
+            'Accept': 'application/vnd.github.v3+json',
+            'Content-Type': 'application/json',
+            'User-Agent': 'Vercel-GitHub-Sync'
+          },
+          body: JSON.stringify({
+            message: `Remote o'zgarish: ${change.type} (${change.id})`,
+            content: updatedContent,
+            sha: sha
+          })
+        });
+
+        if (putRes.ok) {
+          return res.status(200).json({
+            success: true,
+            change_id: change.id,
+            message: 'O\'zgarish to\'g\'ridan-to\'g\'ri GitHub\'ga saqlandi!'
+          });
+        }
+
+        // Agar 409 Conflict bo'lsa (boshqa commit bo'lgan) - yangi SHA bilan qayta urinish
+        const errDetails = await putRes.text();
+        lastError = errDetails;
+        if (putRes.status === 409 && attempt < maxRetries) {
+          await new Promise(r => setTimeout(r, 400 * attempt));
+          continue;
+        }
+
+        if (attempt === maxRetries) {
+          return res.status(500).json({ error: 'GitHub commit xatosi', details: errDetails, attempt: attempt });
+        }
+      } catch(innerErr) {
+        lastError = innerErr.message;
+        if (attempt < maxRetries) {
+          await new Promise(r => setTimeout(r, 400 * attempt));
+          continue;
+        }
       }
     }
 
-    // 2. Yangi o'zgarishni navbatga qo'shish
-    change.id = 'chg_' + Date.now();
-    change.created_at = new Date().toISOString();
-    currentList.push(change);
-
-    // 3. GitHub'ga to'g'ridan-to'g'ri commit qilish
-    const updatedContent = Buffer.from(JSON.stringify(currentList, null, 2), 'utf-8').toString('base64');
-    const putRes = await fetch(getUrl, {
-      method: 'PUT',
-      headers: {
-        'Authorization': `token ${GITHUB_TOKEN}`,
-        'Accept': 'application/vnd.github.v3+json',
-        'Content-Type': 'application/json',
-        'User-Agent': 'Vercel-GitHub-Sync'
-      },
-      body: JSON.stringify({
-        message: `Remote o'zgarish: ${change.type} (${change.id})`,
-        content: updatedContent,
-        sha: sha
-      })
-    });
-
-    if (!putRes.ok) {
-      const errDetails = await putRes.text();
-      return res.status(500).json({ error: 'GitHub commit xatosi', details: errDetails });
-    }
-
-    return res.status(200).json({
-      success: true,
-      change_id: change.id,
-      message: 'O\'zgarish to\'g\'ridan-to\'g\'ri GitHub\'ga saqlandi!'
-    });
+    return res.status(500).json({ error: 'GitHub commit xatosi', details: lastError });
   } catch (err) {
     return res.status(500).json({ error: err.message });
   }
-}
+};
