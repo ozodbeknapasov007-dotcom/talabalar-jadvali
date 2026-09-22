@@ -219,9 +219,12 @@ def process_remote_github_changes():
                         ws.cell(row=r_idx, column=23, value=new_grp)
 
                 elif chg_type == 'add_student':
-                    nr = ws.max_row + 1
                     s_ism = clean_uz_name(data.get('ism', ''))
                     s_ota = clean_uz_name(data.get('ota', ''))
+                    if not s_ism:
+                        print("[SYNC] ⚠️ Bo'sh talaba ma'lumoti kelgani sababli e'tiborsiz qoldirildi.")
+                        continue
+                    nr = ws.max_row + 1
                     s_fish = f"{s_ism} {s_ota}".strip() if s_ota else s_ism
                     ws.cell(row=nr, column=1, value=nr - 1)
                     ws.cell(row=nr, column=2, value=s_ism)
