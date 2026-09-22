@@ -1277,6 +1277,17 @@ class WebServerHandler(BaseHTTPRequestHandler):
     def do_GET(self):
         parsed_path = unquote(self.path.split('?')[0])
 
+        if parsed_path in ('/kontingent_variantlari.html', '/variantlar', '/kontingent_variantlari'):
+            v_html = os.path.join(BASE_DIR, 'kontingent_variantlari.html')
+            if os.path.exists(v_html):
+                self.send_response(200)
+                self.send_header('Content-Type', 'text/html; charset=utf-8')
+                self.send_header('Access-Control-Allow-Origin', '*')
+                self.end_headers()
+                with open(v_html, 'rb') as f:
+                    self.wfile.write(f.read())
+                return
+
         if parsed_path in ('/', '/index.html', '/hisobot.html', '/natijalar_hisoboti.html', '/qayta_tekshiruv/hisobot.html'):
             target_html = None
             for candidate in [

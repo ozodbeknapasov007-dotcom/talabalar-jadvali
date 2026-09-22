@@ -1,0 +1,2583 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Talabalar Kontingenti Jadvali — 10 Xil Zamonaviy UI Variantlari</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    /* Global Reset & Base */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg-main: #06090e;
+      --bg-card: #0b111a;
+      --bg-card-sub: #111a26;
+      --border-color: rgba(255, 255, 255, 0.08);
+      --border-glow: rgba(56, 189, 248, 0.25);
+      --text-main: #f1f5f9;
+      --text-muted: #94a3b8;
+      --accent-blue: #38bdf8;
+      --accent-emerald: #10b981;
+      --accent-purple: #a855f7;
+      --accent-amber: #f59e0b;
+      --accent-rose: #f43f5e;
+      --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+      --shadow-lg: 0 10px 30px -5px rgba(0, 0, 0, 0.5), 0 0 20px rgba(56, 189, 248, 0.05);
+      --radius-lg: 16px;
+      --radius-md: 10px;
+    }
+
+    body.light-mode {
+      --bg-main: #f1f5f9;
+      --bg-card: #ffffff;
+      --bg-card-sub: #f8fafc;
+      --border-color: rgba(15, 23, 42, 0.08);
+      --border-glow: rgba(2, 132, 199, 0.2);
+      --text-main: #0f172a;
+      --text-muted: #64748b;
+      --shadow-lg: 0 10px 25px -5px rgba(0, 0, 0, 0.08);
+    }
+
+    body {
+      font-family: var(--font-sans);
+      background-color: var(--bg-main);
+      color: var(--text-main);
+      line-height: 1.5;
+      padding-bottom: 80px;
+      transition: background-color 0.3s ease, color 0.3s ease;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* Top Sticky Navigation Bar */
+    .top-navbar {
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      background: rgba(6, 9, 14, 0.85);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--border-color);
+      padding: 12px 24px;
+      transition: all 0.3s ease;
+    }
+    body.light-mode .top-navbar {
+      background: rgba(255, 255, 255, 0.88);
+      border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+    }
+    .nav-container {
+      max-width: 1440px;
+      margin: 0 auto;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .brand-area {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .brand-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, #0284c7, #10b981);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-weight: 800;
+      box-shadow: 0 4px 12px rgba(2, 132, 199, 0.35);
+    }
+    .brand-title {
+      font-size: 16px;
+      font-weight: 800;
+      letter-spacing: -0.3px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .brand-tag {
+      font-size: 11px;
+      font-weight: 700;
+      background: rgba(56, 189, 248, 0.15);
+      color: var(--accent-blue);
+      padding: 2px 8px;
+      border-radius: 6px;
+      border: 1px solid rgba(56, 189, 248, 0.3);
+    }
+    .nav-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .theme-toggle-btn, .export-main-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 14px;
+      font-size: 13px;
+      font-weight: 600;
+      border-radius: 8px;
+      cursor: pointer;
+      border: 1px solid var(--border-color);
+      background: var(--bg-card-sub);
+      color: var(--text-main);
+      transition: all 0.2s ease;
+    }
+    .theme-toggle-btn:hover, .export-main-btn:hover {
+      border-color: var(--accent-blue);
+      transform: translateY(-1px);
+    }
+    .export-main-btn {
+      background: linear-gradient(135deg, #0284c7, #0369a1);
+      color: #ffffff;
+      border: none;
+      box-shadow: 0 4px 12px rgba(2, 132, 199, 0.3);
+    }
+
+    /* Variant Switcher Pills */
+    .switcher-bar {
+      max-width: 1440px;
+      margin: 16px auto 0;
+      padding: 0 24px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+    }
+    .switcher-label {
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--text-muted);
+      margin-right: 4px;
+    }
+    .v-pill {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      color: var(--text-muted);
+      padding: 6px 14px;
+      font-size: 13px;
+      font-weight: 600;
+      border-radius: 20px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .v-pill:hover {
+      color: var(--text-main);
+      border-color: var(--accent-blue);
+      transform: translateY(-1px);
+    }
+    .v-pill.active {
+      background: linear-gradient(135deg, #0284c7, #2563eb);
+      color: #ffffff;
+      border-color: transparent;
+      box-shadow: 0 4px 14px rgba(37, 99, 235, 0.35);
+    }
+    .v-pill-all {
+      background: rgba(16, 185, 129, 0.15);
+      color: var(--accent-emerald);
+      border-color: rgba(16, 185, 129, 0.3);
+    }
+    .v-pill-all.active {
+      background: linear-gradient(135deg, #10b981, #059669);
+      color: #ffffff;
+      border-color: transparent;
+      box-shadow: 0 4px 14px rgba(16, 185, 129, 0.35);
+    }
+
+    /* Main Container */
+    .main-wrapper {
+      max-width: 1440px;
+      margin: 24px auto;
+      padding: 0 24px;
+    }
+
+    /* Variant Section Shell */
+    .variant-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg);
+      padding: 28px;
+      margin-bottom: 40px;
+      box-shadow: var(--shadow-lg);
+      transition: all 0.3s ease;
+      position: relative;
+    }
+    .variant-header {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 24px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--border-color);
+    }
+    .variant-info {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .variant-num {
+      background: linear-gradient(135deg, #0284c7, #6366f1);
+      color: #fff;
+      font-size: 13px;
+      font-weight: 800;
+      padding: 4px 10px;
+      border-radius: 8px;
+      letter-spacing: 0.5px;
+    }
+    .variant-title {
+      font-size: 19px;
+      font-weight: 800;
+      color: var(--text-main);
+    }
+    .variant-desc {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+    .variant-select-btn {
+      background: rgba(16, 185, 129, 0.15);
+      color: #10b981;
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      padding: 8px 16px;
+      font-size: 13px;
+      font-weight: 700;
+      border-radius: 8px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s ease;
+    }
+    .variant-select-btn:hover {
+      background: #10b981;
+      color: #fff;
+      box-shadow: 0 4px 14px rgba(16, 185, 129, 0.4);
+      transform: translateY(-1px);
+    }
+
+    /* Common Mini Elements */
+    .k-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      font-family: var(--font-mono);
+    }
+    .k-badge-farm { background: rgba(16, 185, 129, 0.18); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.35); }
+    .k-badge-hamsh { background: rgba(56, 189, 248, 0.18); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.35); }
+    
+    .status-completed { color: #10b981; font-weight: 700; }
+    .status-near { color: #38bdf8; font-weight: 700; }
+    .status-progress { color: #f59e0b; font-weight: 700; }
+
+    /* SVG Icon Helpers */
+    .icon-inline {
+      width: 14px;
+      height: 14px;
+      vertical-align: -2px;
+      display: inline-block;
+      stroke-width: 2.2;
+    }
+
+    /* Floating Toast */
+    .toast-box {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      z-index: 9999;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      pointer-events: none;
+    }
+    .toast-item {
+      background: #0f172a;
+      color: #f8fafc;
+      border: 1px solid rgba(56, 189, 248, 0.4);
+      padding: 12px 18px;
+      border-radius: 10px;
+      font-size: 13.5px;
+      font-weight: 600;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      animation: slideIn 0.3s ease forwards, fadeOut 0.4s ease 2.6s forwards;
+      pointer-events: auto;
+    }
+    @keyframes slideIn {
+      from { transform: translateY(20px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+    @keyframes fadeOut {
+      from { opacity: 1; transform: translateY(0); }
+      to { opacity: 0; transform: translateY(-10px); }
+    }
+
+    /* =========================================================================
+       VARIANT 1: GLASSMORPISHM PRO (NEON ACCENTS & BLUR)
+       ========================================================================= */
+    .v1-table-card {
+      background: rgba(15, 23, 42, 0.65);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 16px 40px -10px rgba(0,0,0,0.7), 0 0 30px rgba(56, 189, 248, 0.08);
+    }
+    .v1-table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+    }
+    .v1-table th {
+      background: rgba(30, 41, 59, 0.5);
+      padding: 14px 18px;
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: #94a3b8;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    .v1-table td {
+      padding: 14px 18px;
+      font-size: 13.5px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      transition: background 0.15s ease;
+    }
+    .v1-table tr.v1-row:hover td {
+      background: rgba(56, 189, 248, 0.08);
+      cursor: pointer;
+    }
+    .v1-bar-track {
+      width: 100px;
+      height: 6px;
+      background: rgba(255, 255, 255, 0.08);
+      border-radius: 99px;
+      overflow: hidden;
+      margin-top: 4px;
+    }
+    .v1-bar-fill {
+      height: 100%;
+      border-radius: 99px;
+      background: linear-gradient(90deg, #0284c7, #10b981);
+      box-shadow: 0 0 10px rgba(16, 185, 129, 0.5);
+    }
+    .v1-action-btn {
+      background: rgba(56, 189, 248, 0.12);
+      color: #38bdf8;
+      border: 1px solid rgba(56, 189, 248, 0.3);
+      padding: 5px 12px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .v1-action-btn:hover {
+      background: #0284c7;
+      color: #fff;
+      border-color: #0284c7;
+      box-shadow: 0 0 12px rgba(2, 132, 199, 0.5);
+    }
+    .v1-footer-row td {
+      background: rgba(30, 41, 59, 0.8);
+      font-weight: 800;
+      border-top: 2px solid rgba(56, 189, 248, 0.3);
+      padding: 16px 18px;
+    }
+
+    /* =========================================================================
+       VARIANT 2: EXECUTIVE FLOATING METRIC STRIPS
+       ========================================================================= */
+    .v2-strips-wrapper {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .v2-strip {
+      background: var(--bg-card-sub);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 14px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      cursor: pointer;
+    }
+    .v2-strip:hover {
+      transform: translateX(4px);
+      border-color: var(--accent-blue);
+      box-shadow: 0 6px 20px rgba(0,0,0,0.3), 0 0 12px rgba(56, 189, 248, 0.15);
+      background: rgba(30, 41, 59, 0.4);
+    }
+    .v2-left {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      min-width: 240px;
+    }
+    .v2-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, rgba(2, 132, 199, 0.2), rgba(16, 185, 129, 0.2));
+      border: 1.5px solid rgba(56, 189, 248, 0.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      color: var(--accent-blue);
+      font-size: 15px;
+    }
+    .v2-leader-name {
+      font-size: 14.5px;
+      font-weight: 700;
+      color: var(--text-main);
+    }
+    .v2-direction-text {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+    .v2-center {
+      display: flex;
+      align-items: center;
+      gap: 24px;
+      flex: 1;
+    }
+    .v2-count-pill {
+      font-family: var(--font-mono);
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text-main);
+      background: rgba(255,255,255,0.05);
+      padding: 6px 12px;
+      border-radius: 8px;
+      border: 1px solid var(--border-color);
+      white-space: nowrap;
+    }
+    .v2-progress-area {
+      flex: 1;
+      max-width: 240px;
+    }
+    .v2-progress-header {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+      margin-bottom: 4px;
+      font-weight: 600;
+    }
+    .v2-bar {
+      height: 6px;
+      background: rgba(255,255,255,0.08);
+      border-radius: 6px;
+      overflow: hidden;
+    }
+    .v2-bar-fill {
+      height: 100%;
+      border-radius: 6px;
+      background: linear-gradient(90deg, #0284c7, #10b981);
+    }
+    .v2-footer-strip {
+      background: linear-gradient(90deg, rgba(2, 132, 199, 0.15), rgba(16, 185, 129, 0.15));
+      border: 1.5px dashed rgba(56, 189, 248, 0.4);
+      padding: 16px 20px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-weight: 800;
+    }
+
+    /* =========================================================================
+       VARIANT 3: BENTO GRID DASHBOARD
+       ========================================================================= */
+    .v3-bento-kpis {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 14px;
+      margin-bottom: 18px;
+    }
+    .v3-kpi-card {
+      background: var(--bg-card-sub);
+      border: 1px solid var(--border-color);
+      border-radius: 14px;
+      padding: 18px;
+      position: relative;
+      overflow: hidden;
+    }
+    .v3-kpi-label {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .v3-kpi-val {
+      font-size: 28px;
+      font-weight: 900;
+      font-family: var(--font-mono);
+      margin: 6px 0 2px;
+      color: var(--text-main);
+    }
+    .v3-kpi-sub {
+      font-size: 12px;
+      color: var(--accent-emerald);
+      font-weight: 600;
+    }
+    .v3-bento-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 14px;
+    }
+    .v3-bento-card {
+      background: var(--bg-card-sub);
+      border: 1px solid var(--border-color);
+      border-radius: 14px;
+      padding: 18px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      transition: all 0.2s ease;
+      cursor: pointer;
+    }
+    .v3-bento-card:hover {
+      border-color: var(--accent-blue);
+      transform: translateY(-3px);
+      box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+    }
+    .v3-bento-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 12px;
+    }
+    .v3-bento-pct {
+      font-size: 18px;
+      font-weight: 900;
+      font-family: var(--font-mono);
+      color: var(--accent-emerald);
+    }
+    .v3-bento-leader {
+      font-size: 15px;
+      font-weight: 800;
+      margin-bottom: 4px;
+    }
+    .v3-bento-dir {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-bottom: 14px;
+    }
+    .v3-bento-bottom {
+      border-top: 1px solid var(--border-color);
+      padding-top: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 12.5px;
+    }
+
+    /* =========================================================================
+       VARIANT 4: LINEAR / VERCEL DARK MINIMALIST
+       ========================================================================= */
+    .v4-linear-wrap {
+      background: #090a0f;
+      border: 1px solid #1f2430;
+      border-radius: 12px;
+      overflow: hidden;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
+    .v4-row {
+      display: grid;
+      grid-template-columns: 40px 220px 100px 160px 140px 180px 100px;
+      align-items: center;
+      padding: 12px 16px;
+      border-bottom: 1px solid #161a24;
+      font-size: 13px;
+      color: #94a3b8;
+      transition: background 0.1s ease;
+    }
+    .v4-row:hover:not(.v4-header):not(.v4-footer) {
+      background: #11141d;
+      color: #f8fafc;
+      cursor: pointer;
+    }
+    .v4-header {
+      background: #0d0f17;
+      font-size: 11.5px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: #64748b;
+      border-bottom: 1px solid #232938;
+    }
+    .v4-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      display: inline-block;
+      margin-right: 6px;
+    }
+    .v4-dot-green { background: #10b981; box-shadow: 0 0 8px #10b981; }
+    .v4-dot-blue { background: #38bdf8; box-shadow: 0 0 8px #38bdf8; }
+    .v4-dot-amber { background: #f59e0b; box-shadow: 0 0 8px #f59e0b; }
+    .v4-badge {
+      font-family: var(--font-mono);
+      font-size: 11.5px;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 4px;
+      background: #19202f;
+      color: #e2e8f0;
+      border: 1px solid #2b3548;
+    }
+    .v4-footer {
+      background: #0d0f17;
+      border-top: 1px solid #232938;
+      font-weight: 700;
+      color: #f1f5f9;
+    }
+
+    /* =========================================================================
+       VARIANT 5: MEDICAL & ACADEMIC PORTAL
+       ========================================================================= */
+    .v5-med-wrap {
+      background: #061e24;
+      border: 1.5px solid #0e3d48;
+      border-radius: 16px;
+      padding: 20px;
+      box-shadow: 0 10px 30px rgba(4, 28, 34, 0.8);
+    }
+    .v5-header-banner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1.5px solid #0e3d48;
+      padding-bottom: 16px;
+      margin-bottom: 18px;
+    }
+    .v5-crest {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .v5-crest-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      background: #0d4a57;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #14b8a6;
+    }
+    .v5-table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0 8px;
+    }
+    .v5-table th {
+      color: #5eead4;
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      padding: 8px 16px;
+      letter-spacing: 0.5px;
+    }
+    .v5-tr {
+      background: #0a2931;
+      border: 1px solid #134e5e;
+      border-radius: 10px;
+      transition: all 0.2s ease;
+      cursor: pointer;
+    }
+    .v5-tr:hover {
+      background: #0e3742;
+      box-shadow: 0 4px 15px rgba(20, 184, 166, 0.15);
+    }
+    .v5-tr td {
+      padding: 14px 16px;
+      color: #ccfbf1;
+      font-size: 13.5px;
+    }
+    .v5-tr td:first-child { border-top-left-radius: 10px; border-bottom-left-radius: 10px; }
+    .v5-tr td:last-child { border-top-right-radius: 10px; border-bottom-right-radius: 10px; }
+    .v5-med-badge {
+      background: rgba(20, 184, 166, 0.2);
+      border: 1px solid rgba(20, 184, 166, 0.4);
+      color: #2dd4bf;
+      padding: 3px 8px;
+      border-radius: 6px;
+      font-weight: 700;
+      font-size: 12px;
+    }
+
+    /* =========================================================================
+       VARIANT 6: VISUAL ANALYTICS SPLIT (DONUT + LIST)
+       ========================================================================= */
+    .v6-split-wrap {
+      display: grid;
+      grid-template-columns: 340px 1fr;
+      gap: 24px;
+      align-items: center;
+    }
+    @media (max-width: 900px) {
+      .v6-split-wrap { grid-template-columns: 1fr; }
+    }
+    .v6-donut-box {
+      background: var(--bg-card-sub);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 24px;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+    .v6-donut-svg {
+      width: 180px;
+      height: 180px;
+      transform: rotate(-90deg);
+    }
+    .v6-donut-center {
+      margin-top: -120px;
+      margin-bottom: 40px;
+    }
+    .v6-donut-pct {
+      font-size: 32px;
+      font-weight: 900;
+      font-family: var(--font-mono);
+      color: var(--accent-emerald);
+      line-height: 1;
+    }
+    .v6-donut-lbl {
+      font-size: 12px;
+      color: var(--text-muted);
+      font-weight: 700;
+      text-transform: uppercase;
+      margin-top: 4px;
+    }
+    .v6-list-box {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .v6-list-item {
+      background: var(--bg-card-sub);
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      padding: 12px 18px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      transition: all 0.2s ease;
+      cursor: pointer;
+    }
+    .v6-list-item:hover {
+      border-color: var(--accent-blue);
+      background: rgba(30, 41, 59, 0.4);
+      transform: translateX(4px);
+    }
+
+    /* =========================================================================
+       VARIANT 7: KANBAN PROGRESS COLUMNS
+       ========================================================================= */
+    .v7-kanban-cols {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+    }
+    @media (max-width: 900px) {
+      .v7-kanban-cols { grid-template-columns: 1fr; }
+    }
+    .v7-col {
+      background: var(--bg-card-sub);
+      border: 1px solid var(--border-color);
+      border-radius: 14px;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .v7-col-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-bottom: 10px;
+      border-bottom: 1.5px solid var(--border-color);
+    }
+    .v7-col-title {
+      font-size: 13px;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .v7-col-count {
+      font-size: 11px;
+      background: rgba(255,255,255,0.08);
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-weight: 700;
+    }
+    .v7-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      padding: 14px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .v7-card:hover {
+      border-color: var(--accent-blue);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 15px rgba(0,0,0,0.3);
+    }
+    .v7-card-top {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 8px;
+    }
+
+    /* =========================================================================
+       VARIANT 8: CYBERPUNK HUD / HIGH-TECH MATRIX
+       ========================================================================= */
+    .v8-cyber-wrap {
+      background: #050811;
+      border: 1.5px solid #00f0ff;
+      box-shadow: 0 0 25px rgba(0, 240, 255, 0.2), inset 0 0 15px rgba(0, 240, 255, 0.05);
+      border-radius: 8px;
+      padding: 20px;
+      position: relative;
+      font-family: var(--font-mono);
+    }
+    .v8-hud-line {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      color: #00f0ff;
+      font-size: 11px;
+      letter-spacing: 2px;
+      margin-bottom: 16px;
+      text-transform: uppercase;
+      border-bottom: 1px dashed rgba(0, 240, 255, 0.3);
+      padding-bottom: 8px;
+    }
+    .v8-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    .v8-table th {
+      color: #7000ff;
+      font-size: 11px;
+      letter-spacing: 1.5px;
+      text-align: left;
+      padding: 10px 14px;
+      border-bottom: 1px solid #7000ff;
+    }
+    .v8-tr {
+      border-bottom: 1px solid rgba(0, 240, 255, 0.15);
+      transition: all 0.15s ease;
+      cursor: pointer;
+    }
+    .v8-tr:hover {
+      background: rgba(0, 240, 255, 0.08);
+      box-shadow: inset 3px 0 0 #00f0ff;
+    }
+    .v8-tr td {
+      padding: 12px 14px;
+      color: #e0f2fe;
+      font-size: 12.5px;
+    }
+    .v8-pill {
+      background: rgba(0, 240, 255, 0.15);
+      border: 1px solid #00f0ff;
+      color: #00f0ff;
+      padding: 3px 8px;
+      font-size: 11px;
+      font-weight: 700;
+    }
+
+    /* =========================================================================
+       VARIANT 9: ACCORDION MASTER-DETAIL
+       ========================================================================= */
+    .v9-acc-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .v9-item {
+      background: var(--bg-card-sub);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      overflow: hidden;
+      transition: all 0.2s ease;
+    }
+    .v9-header-row {
+      padding: 16px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      cursor: pointer;
+      user-select: none;
+    }
+    .v9-header-row:hover {
+      background: rgba(255, 255, 255, 0.03);
+    }
+    .v9-chevron {
+      transition: transform 0.25s ease;
+      color: var(--text-muted);
+    }
+    .v9-item.open .v9-chevron {
+      transform: rotate(180deg);
+      color: var(--accent-blue);
+    }
+    .v9-body {
+      display: none;
+      padding: 16px 20px;
+      background: rgba(0, 0, 0, 0.2);
+      border-top: 1px solid var(--border-color);
+    }
+    .v9-item.open .v9-body {
+      display: block;
+      animation: fadeIn 0.25s ease;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .v9-details-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 12px;
+    }
+    .v9-stat-mini {
+      background: var(--bg-card);
+      padding: 10px 14px;
+      border-radius: 8px;
+      border: 1px solid var(--border-color);
+    }
+
+    /* =========================================================================
+       VARIANT 10: 3D INTERACTIVE CARDS MATRIX
+       ========================================================================= */
+    .v10-cards-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 16px;
+      perspective: 1000px;
+    }
+    .v10-card {
+      background: var(--bg-card-sub);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s ease, border-color 0.2s ease;
+      cursor: pointer;
+      position: relative;
+    }
+    .v10-card:hover {
+      transform: translateY(-6px) rotateX(2deg);
+      box-shadow: 0 16px 35px -5px rgba(0, 0, 0, 0.4), 0 0 20px rgba(56, 189, 248, 0.2);
+      border-color: var(--accent-blue);
+    }
+    .v10-card-header {
+      height: 6px;
+      width: 100%;
+      background: linear-gradient(90deg, #0284c7, #10b981);
+    }
+    .v10-card-content {
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      justify-content: space-between;
+    }
+    .v10-group-big {
+      font-size: 26px;
+      font-weight: 900;
+      font-family: var(--font-mono);
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 8px;
+    }
+    .v10-radial-wrap {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin: 14px 0;
+      background: rgba(255,255,255,0.03);
+      padding: 10px 14px;
+      border-radius: 10px;
+    }
+    .v10-btn {
+      width: 100%;
+      padding: 9px;
+      border-radius: 8px;
+      border: 1px solid var(--border-color);
+      background: rgba(56, 189, 248, 0.12);
+      color: var(--accent-blue);
+      font-weight: 700;
+      font-size: 13px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      text-align: center;
+    }
+    .v10-btn:hover {
+      background: #0284c7;
+      color: #fff;
+      border-color: #0284c7;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Sticky Navbar -->
+  <header class="top-navbar">
+    <div class="nav-container">
+      <div class="brand-area">
+        <div class="brand-icon">10</div>
+        <div>
+          <div class="brand-title">
+            Talabalar Kontingenti Jadvali
+            <span class="brand-tag">10 XIL UI DIZAYN</span>
+          </div>
+          <div style="font-size:12px; color:var(--text-muted);">Shahrisabz Tibbiyot Texnikumi rasmiy akademik taqsimoti</div>
+        </div>
+      </div>
+      <div class="nav-actions">
+        <button class="theme-toggle-btn" onclick="toggleTheme()" id="themeBtn">
+          <svg class="icon-inline" viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+          <span id="themeLabel">Yorug' rejim</span>
+        </button>
+        <button class="export-main-btn" onclick="showToast('Excel eksport boshlandi... (7 guruh yuklanmoqda)')">
+          <svg class="icon-inline" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+          Excel Eksport
+        </button>
+      </div>
+    </div>
+
+    <!-- Variant Switcher Pills -->
+    <div class="switcher-bar">
+      <span class="switcher-label">Variantlar:</span>
+      <button class="v-pill active" onclick="switchVariant('v1', this)">1. Glass Pro</button>
+      <button class="v-pill" onclick="switchVariant('v2', this)">2. Executive Strips</button>
+      <button class="v-pill" onclick="switchVariant('v3', this)">3. Bento Grid</button>
+      <button class="v-pill" onclick="switchVariant('v4', this)">4. Linear Minimal</button>
+      <button class="v-pill" onclick="switchVariant('v5', this)">5. Medical Portal</button>
+      <button class="v-pill" onclick="switchVariant('v6', this)">6. Visual Split</button>
+      <button class="v-pill" onclick="switchVariant('v7', this)">7. Kanban Bosqich</button>
+      <button class="v-pill" onclick="switchVariant('v8', this)">8. Cyber HUD</button>
+      <button class="v-pill" onclick="switchVariant('v9', this)">9. Accordion</button>
+      <button class="v-pill" onclick="switchVariant('v10', this)">10. 3D Cards</button>
+      <button class="v-pill v-pill-all" onclick="switchVariant('all', this)">👁️ Barchasini Ko'rish</button>
+    </div>
+  </header>
+
+  <!-- Main Showcase Container -->
+  <main class="main-wrapper">
+
+    <!-- =====================================================================
+         VARIANT 1: GLASSMORPISHM PRO
+         ===================================================================== -->
+    <section class="variant-card" id="section-v1">
+      <div class="variant-header">
+        <div class="variant-info">
+          <span class="variant-num">VARIANT 01</span>
+          <div>
+            <h2 class="variant-title">Glassmorphism Ultra-Clean Jadval</h2>
+            <p class="variant-desc">Shaffof xira fon (Frosted Blur), nozik neon hoshiyalar va silliq mikro-progress barlar</p>
+          </div>
+        </div>
+        <button class="variant-select-btn" onclick="selectVariant(1, 'Glassmorphism Pro')">
+          <svg class="icon-inline" viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="20 6 9 17 4 12"></polyline></svg>
+          Ushbu variantni tanlash
+        </button>
+      </div>
+
+      <div class="v1-table-card">
+        <table class="v1-table">
+          <thead>
+            <tr>
+              <th style="width:50px; text-align:center;">№</th>
+              <th>Guruh Rahbari</th>
+              <th style="text-align:center; width:120px;">Guruh</th>
+              <th>Yo'nalishi</th>
+              <th style="text-align:center; width:160px;">Talabalar Soni</th>
+              <th style="text-align:center; width:200px;">Tasdiqlanish Holati</th>
+              <th style="text-align:center; width:130px;">Harakat</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr class="v1-row" onclick="onGroupClick('26-01', 'Mirzayeva.D', '14/14 (100%)')">
+              <td style="text-align:center; font-weight:700;">1</td>
+              <td style="font-weight:700;">Mirzayeva.D</td>
+              <td style="text-align:center;"><span class="k-badge k-badge-farm">26-01</span></td>
+              <td style="font-size:13px; color:#10b981; font-weight:600;">Farmatsiya ishi</td>
+              <td style="text-align:center; font-family:var(--font-mono); font-weight:700;">14 nafar <span style="font-size:11.5px; color:#94a3b8;">(8.3%)</span></td>
+              <td style="text-align:center;">
+                <div style="font-family:var(--font-mono); font-size:12.5px; font-weight:700;" class="status-completed">14/14 (100%)</div>
+                <div class="v1-bar-track" style="margin:4px auto 0;"><div class="v1-bar-fill" style="width:100%;"></div></div>
+              </td>
+              <td style="text-align:center;"><button class="v1-action-btn">Saralash →</button></td>
+            </tr>
+
+            <tr class="v1-row" onclick="onGroupClick('26-02', 'Ochilov.D', '29/30 (96.7%)')">
+              <td style="text-align:center; font-weight:700;">2</td>
+              <td style="font-weight:700;">Ochilov.D</td>
+              <td style="text-align:center;"><span class="k-badge k-badge-hamsh">26-02</span></td>
+              <td style="font-size:13px; color:#38bdf8; font-weight:600;">Hamshiralik ishi</td>
+              <td style="text-align:center; font-family:var(--font-mono); font-weight:700;">30 nafar <span style="font-size:11.5px; color:#94a3b8;">(17.8%)</span></td>
+              <td style="text-align:center;">
+                <div style="font-family:var(--font-mono); font-size:12.5px; font-weight:700;" class="status-near">29/30 (96.7%)</div>
+                <div class="v1-bar-track" style="margin:4px auto 0;"><div class="v1-bar-fill" style="width:96.7%;"></div></div>
+              </td>
+              <td style="text-align:center;"><button class="v1-action-btn">Saralash →</button></td>
+            </tr>
+
+            <tr class="v1-row" onclick="onGroupClick('26-03', 'To\'rayeva.S', '28/29 (96.6%)')">
+              <td style="text-align:center; font-weight:700;">3</td>
+              <td style="font-weight:700;">To'rayeva.S</td>
+              <td style="text-align:center;"><span class="k-badge k-badge-hamsh">26-03</span></td>
+              <td style="font-size:13px; color:#38bdf8; font-weight:600;">Hamshiralik ishi</td>
+              <td style="text-align:center; font-family:var(--font-mono); font-weight:700;">29 nafar <span style="font-size:11.5px; color:#94a3b8;">(17.2%)</span></td>
+              <td style="text-align:center;">
+                <div style="font-family:var(--font-mono); font-size:12.5px; font-weight:700;" class="status-near">28/29 (96.6%)</div>
+                <div class="v1-bar-track" style="margin:4px auto 0;"><div class="v1-bar-fill" style="width:96.6%;"></div></div>
+              </td>
+              <td style="text-align:center;"><button class="v1-action-btn">Saralash →</button></td>
+            </tr>
+
+            <tr class="v1-row" onclick="onGroupClick('26-04', 'Hamdamova.M', '25/29 (86.2%)')">
+              <td style="text-align:center; font-weight:700;">4</td>
+              <td style="font-weight:700;">Hamdamova.M</td>
+              <td style="text-align:center;"><span class="k-badge k-badge-hamsh">26-04</span></td>
+              <td style="font-size:13px; color:#38bdf8; font-weight:600;">Hamshiralik ishi</td>
+              <td style="text-align:center; font-family:var(--font-mono); font-weight:700;">29 nafar <span style="font-size:11.5px; color:#94a3b8;">(17.2%)</span></td>
+              <td style="text-align:center;">
+                <div style="font-family:var(--font-mono); font-size:12.5px; font-weight:700;" class="status-progress">25/29 (86.2%)</div>
+                <div class="v1-bar-track" style="margin:4px auto 0;"><div class="v1-bar-fill" style="width:86.2%; background:#f59e0b;"></div></div>
+              </td>
+              <td style="text-align:center;"><button class="v1-action-btn">Saralash →</button></td>
+            </tr>
+
+            <tr class="v1-row" onclick="onGroupClick('26-05', 'Rayimova.X', '32/32 (100%)')">
+              <td style="text-align:center; font-weight:700;">5</td>
+              <td style="font-weight:700;">Rayimova.X</td>
+              <td style="text-align:center;"><span class="k-badge k-badge-hamsh">26-05</span></td>
+              <td style="font-size:13px; color:#38bdf8; font-weight:600;">Hamshiralik ishi</td>
+              <td style="text-align:center; font-family:var(--font-mono); font-weight:700;">32 nafar <span style="font-size:11.5px; color:#94a3b8;">(18.9%)</span></td>
+              <td style="text-align:center;">
+                <div style="font-family:var(--font-mono); font-size:12.5px; font-weight:700;" class="status-completed">32/32 (100%)</div>
+                <div class="v1-bar-track" style="margin:4px auto 0;"><div class="v1-bar-fill" style="width:100%;"></div></div>
+              </td>
+              <td style="text-align:center;"><button class="v1-action-btn">Saralash →</button></td>
+            </tr>
+
+            <tr class="v1-row" onclick="onGroupClick('26-06', 'Yuldashev.O', '26/27 (96.3%)')">
+              <td style="text-align:center; font-weight:700;">6</td>
+              <td style="font-weight:700;">Yuldashev.O</td>
+              <td style="text-align:center;"><span class="k-badge k-badge-hamsh">26-06</span></td>
+              <td style="font-size:13px; color:#38bdf8; font-weight:600;">Hamshiralik ishi</td>
+              <td style="text-align:center; font-family:var(--font-mono); font-weight:700;">27 nafar <span style="font-size:11.5px; color:#94a3b8;">(16.0%)</span></td>
+              <td style="text-align:center;">
+                <div style="font-family:var(--font-mono); font-size:12.5px; font-weight:700;" class="status-near">26/27 (96.3%)</div>
+                <div class="v1-bar-track" style="margin:4px auto 0;"><div class="v1-bar-fill" style="width:96.3%;"></div></div>
+              </td>
+              <td style="text-align:center;"><button class="v1-action-btn">Saralash →</button></td>
+            </tr>
+
+            <tr class="v1-row" onclick="onGroupClick('26-07', 'Asraliyev.A', '5/6 (83.3%)')">
+              <td style="text-align:center; font-weight:700;">7</td>
+              <td style="font-weight:700;">Asraliyev.A</td>
+              <td style="text-align:center;"><span class="k-badge k-badge-hamsh">26-07</span></td>
+              <td style="font-size:13px; color:#38bdf8; font-weight:600;">Hamshiralik ishi</td>
+              <td style="text-align:center; font-family:var(--font-mono); font-weight:700;">6 nafar <span style="font-size:11.5px; color:#94a3b8;">(3.6%)</span></td>
+              <td style="text-align:center;">
+                <div style="font-family:var(--font-mono); font-size:12.5px; font-weight:700;" class="status-progress">5/6 (83.3%)</div>
+                <div class="v1-bar-track" style="margin:4px auto 0;"><div class="v1-bar-fill" style="width:83.3%; background:#f59e0b;"></div></div>
+              </td>
+              <td style="text-align:center;"><button class="v1-action-btn">Saralash →</button></td>
+            </tr>
+          </tbody>
+          <tfoot>
+            <tr class="v1-footer-row" onclick="onGroupClick('all', 'Barcha Guruhlar', '159/167 (95.2%)')">
+              <td colspan="4">JAMI TALABALAR KONTINGENTI</td>
+              <td style="text-align:center; font-family:var(--font-mono);">167 nafar (100%)</td>
+              <td style="text-align:center; font-family:var(--font-mono); color:#10b981;">159 / 167 (95.2%)</td>
+              <td style="text-align:center;"><button class="v1-action-btn" style="background:#10b981; color:#fff; border:none;">Barchasi →</button></td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+    </section>
+
+    <!-- =====================================================================
+         VARIANT 2: EXECUTIVE FLOATING METRIC STRIPS
+         ===================================================================== -->
+    <section class="variant-card" id="section-v2">
+      <div class="variant-header">
+        <div class="variant-info">
+          <span class="variant-num">VARIANT 02</span>
+          <div>
+            <h2 class="variant-title">Executive Floating Metric Strips</h2>
+            <p class="variant-desc">Jadval kataklarisiz, alohida mustaqil suzuvchi qatorlar (hoverda yengil ko'tariladi)</p>
+          </div>
+        </div>
+        <button class="variant-select-btn" onclick="selectVariant(2, 'Executive Strips')">
+          <svg class="icon-inline" viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="20 6 9 17 4 12"></polyline></svg>
+          Ushbu variantni tanlash
+        </button>
+      </div>
+
+      <div class="v2-strips-wrapper">
+        <div class="v2-strip" onclick="onGroupClick('26-01', 'Mirzayeva.D', '14/14 (100%)')">
+          <div class="v2-left">
+            <div class="v2-avatar" style="color:#10b981; border-color:rgba(16,185,129,0.4);">MD</div>
+            <div>
+              <div class="v2-leader-name">Mirzayeva.D</div>
+              <div class="v2-direction-text">Farmatsiya ishi</div>
+            </div>
+          </div>
+          <div class="v2-center">
+            <span class="k-badge k-badge-farm">Guruh 26-01</span>
+            <span class="v2-count-pill">14 nafar talaba</span>
+            <div class="v2-progress-area">
+              <div class="v2-progress-header">
+                <span style="color:#94a3b8;">Tasdiq: 14/14</span>
+                <span class="status-completed">100%</span>
+              </div>
+              <div class="v2-bar"><div class="v2-bar-fill" style="width:100%; background:#10b981;"></div></div>
+            </div>
+          </div>
+          <button class="v1-action-btn">Saralash →</button>
+        </div>
+
+        <div class="v2-strip" onclick="onGroupClick('26-02', 'Ochilov.D', '29/30 (96.7%)')">
+          <div class="v2-left">
+            <div class="v2-avatar">OD</div>
+            <div>
+              <div class="v2-leader-name">Ochilov.D</div>
+              <div class="v2-direction-text">Hamshiralik ishi</div>
+            </div>
+          </div>
+          <div class="v2-center">
+            <span class="k-badge k-badge-hamsh">Guruh 26-02</span>
+            <span class="v2-count-pill">30 nafar talaba</span>
+            <div class="v2-progress-area">
+              <div class="v2-progress-header">
+                <span style="color:#94a3b8;">Tasdiq: 29/30</span>
+                <span class="status-near">96.7%</span>
+              </div>
+              <div class="v2-bar"><div class="v2-bar-fill" style="width:96.7%;"></div></div>
+            </div>
+          </div>
+          <button class="v1-action-btn">Saralash →</button>
+        </div>
+
+        <div class="v2-strip" onclick="onGroupClick('26-03', 'To\'rayeva.S', '28/29 (96.6%)')">
+          <div class="v2-left">
+            <div class="v2-avatar">TS</div>
+            <div>
+              <div class="v2-leader-name">To'rayeva.S</div>
+              <div class="v2-direction-text">Hamshiralik ishi</div>
+            </div>
+          </div>
+          <div class="v2-center">
+            <span class="k-badge k-badge-hamsh">Guruh 26-03</span>
+            <span class="v2-count-pill">29 nafar talaba</span>
+            <div class="v2-progress-area">
+              <div class="v2-progress-header">
+                <span style="color:#94a3b8;">Tasdiq: 28/29</span>
+                <span class="status-near">96.6%</span>
+              </div>
+              <div class="v2-bar"><div class="v2-bar-fill" style="width:96.6%;"></div></div>
+            </div>
+          </div>
+          <button class="v1-action-btn">Saralash →</button>
+        </div>
+
+        <div class="v2-strip" onclick="onGroupClick('26-04', 'Hamdamova.M', '25/29 (86.2%)')">
+          <div class="v2-left">
+            <div class="v2-avatar" style="color:#f59e0b; border-color:rgba(245,158,11,0.4);">HM</div>
+            <div>
+              <div class="v2-leader-name">Hamdamova.M</div>
+              <div class="v2-direction-text">Hamshiralik ishi</div>
+            </div>
+          </div>
+          <div class="v2-center">
+            <span class="k-badge k-badge-hamsh">Guruh 26-04</span>
+            <span class="v2-count-pill">29 nafar talaba</span>
+            <div class="v2-progress-area">
+              <div class="v2-progress-header">
+                <span style="color:#94a3b8;">Tasdiq: 25/29</span>
+                <span class="status-progress">86.2%</span>
+              </div>
+              <div class="v2-bar"><div class="v2-bar-fill" style="width:86.2%; background:#f59e0b;"></div></div>
+            </div>
+          </div>
+          <button class="v1-action-btn">Saralash →</button>
+        </div>
+
+        <div class="v2-strip" onclick="onGroupClick('26-05', 'Rayimova.X', '32/32 (100%)')">
+          <div class="v2-left">
+            <div class="v2-avatar" style="color:#10b981; border-color:rgba(16,185,129,0.4);">RX</div>
+            <div>
+              <div class="v2-leader-name">Rayimova.X</div>
+              <div class="v2-direction-text">Hamshiralik ishi</div>
+            </div>
+          </div>
+          <div class="v2-center">
+            <span class="k-badge k-badge-hamsh">Guruh 26-05</span>
+            <span class="v2-count-pill">32 nafar talaba</span>
+            <div class="v2-progress-area">
+              <div class="v2-progress-header">
+                <span style="color:#94a3b8;">Tasdiq: 32/32</span>
+                <span class="status-completed">100%</span>
+              </div>
+              <div class="v2-bar"><div class="v2-bar-fill" style="width:100%; background:#10b981;"></div></div>
+            </div>
+          </div>
+          <button class="v1-action-btn">Saralash →</button>
+        </div>
+
+        <div class="v2-strip" onclick="onGroupClick('26-06', 'Yuldashev.O', '26/27 (96.3%)')">
+          <div class="v2-left">
+            <div class="v2-avatar">YO</div>
+            <div>
+              <div class="v2-leader-name">Yuldashev.O</div>
+              <div class="v2-direction-text">Hamshiralik ishi</div>
+            </div>
+          </div>
+          <div class="v2-center">
+            <span class="k-badge k-badge-hamsh">Guruh 26-06</span>
+            <span class="v2-count-pill">27 nafar talaba</span>
+            <div class="v2-progress-area">
+              <div class="v2-progress-header">
+                <span style="color:#94a3b8;">Tasdiq: 26/27</span>
+                <span class="status-near">96.3%</span>
+              </div>
+              <div class="v2-bar"><div class="v2-bar-fill" style="width:96.3%;"></div></div>
+            </div>
+          </div>
+          <button class="v1-action-btn">Saralash →</button>
+        </div>
+
+        <div class="v2-strip" onclick="onGroupClick('26-07', 'Asraliyev.A', '5/6 (83.3%)')">
+          <div class="v2-left">
+            <div class="v2-avatar" style="color:#f59e0b; border-color:rgba(245,158,11,0.4);">AA</div>
+            <div>
+              <div class="v2-leader-name">Asraliyev.A</div>
+              <div class="v2-direction-text">Hamshiralik ishi</div>
+            </div>
+          </div>
+          <div class="v2-center">
+            <span class="k-badge k-badge-hamsh">Guruh 26-07</span>
+            <span class="v2-count-pill">6 nafar talaba</span>
+            <div class="v2-progress-area">
+              <div class="v2-progress-header">
+                <span style="color:#94a3b8;">Tasdiq: 5/6</span>
+                <span class="status-progress">83.3%</span>
+              </div>
+              <div class="v2-bar"><div class="v2-bar-fill" style="width:83.3%; background:#f59e0b;"></div></div>
+            </div>
+          </div>
+          <button class="v1-action-btn">Saralash →</button>
+        </div>
+
+        <!-- Jami Strip -->
+        <div class="v2-footer-strip" onclick="onGroupClick('all', 'Barcha Guruhlar', '159/167 (95.2%)')">
+          <div style="display:flex; align-items:center; gap:12px;">
+            <span style="font-size:16px;">📊</span>
+            <div>
+              <div style="font-size:15px; font-weight:800;">JAMI AKADEMIK KONTINGENT</div>
+              <div style="font-size:12px; color:var(--text-muted); font-weight:600;">7 ta guruh, 7 nafar murabbiy</div>
+            </div>
+          </div>
+          <div style="display:flex; align-items:center; gap:30px;">
+            <div style="font-family:var(--font-mono); font-size:14px;"><strong>167</strong> nafar talaba</div>
+            <div style="font-family:var(--font-mono); font-size:15px; color:#10b981;"><strong>159 / 167 (95.2%)</strong> tasdiqlandi</div>
+            <button class="export-main-btn" style="padding:6px 14px; font-size:12px;">Barchasi →</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- =====================================================================
+         VARIANT 3: BENTO GRID DASHBOARD
+         ===================================================================== -->
+    <section class="variant-card" id="section-v3">
+      <div class="variant-header">
+        <div class="variant-info">
+          <span class="variant-num">VARIANT 03</span>
+          <div>
+            <h2 class="variant-title">Bento Grid Zamonaviy Dashboard</h2>
+            <p class="variant-desc">Apple & Vercel uslubidagi asimmetrik kartalar, katta KPI metrikalari va visual taqsimot</p>
+          </div>
+        </div>
+        <button class="variant-select-btn" onclick="selectVariant(3, 'Bento Grid')">
+          <svg class="icon-inline" viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="20 6 9 17 4 12"></polyline></svg>
+          Ushbu variantni tanlash
+        </button>
+      </div>
+
+      <!-- Top KPI Row -->
+      <div class="v3-bento-kpis">
+        <div class="v3-kpi-card">
+          <div class="v3-kpi-label">Jami Talabalar</div>
+          <div class="v3-kpi-val">167</div>
+          <div class="v3-kpi-sub">7 ta akademik guruh</div>
+        </div>
+        <div class="v3-kpi-card">
+          <div class="v3-kpi-label">Tasdiqlanganlik</div>
+          <div class="v3-kpi-val" style="color:#10b981;">95.2%</div>
+          <div class="v3-kpi-sub" style="color:#10b981;">159 nafar talaba tasdiqlangan</div>
+        </div>
+        <div class="v3-kpi-card">
+          <div class="v3-kpi-label">Guruh Rahbarlari</div>
+          <div class="v3-kpi-val">7</div>
+          <div class="v3-kpi-sub">100% biriktirilgan</div>
+        </div>
+        <div class="v3-kpi-card">
+          <div class="v3-kpi-label">Ta'lim Yo'nalishlari</div>
+          <div class="v3-kpi-val">2</div>
+          <div class="v3-kpi-sub">Farmatsiya & Hamshiralik</div>
+        </div>
+      </div>
+
+      <!-- Groups Bento Grid -->
+      <div class="v3-bento-grid">
+        <div class="v3-bento-card" onclick="onGroupClick('26-01', 'Mirzayeva.D', '14/14 (100%)')">
+          <div>
+            <div class="v3-bento-top">
+              <span class="k-badge k-badge-farm">Guruh 26-01</span>
+              <span class="v3-bento-pct" style="color:#10b981;">100%</span>
+            </div>
+            <div class="v3-bento-leader">Mirzayeva.D</div>
+            <div class="v3-bento-dir">Farmatsiya ishi</div>
+          </div>
+          <div class="v3-bento-bottom">
+            <span><strong>14</strong> talaba</span>
+            <span style="color:#10b981; font-weight:700;">14/14 tasdiq</span>
+          </div>
+        </div>
+
+        <div class="v3-bento-card" onclick="onGroupClick('26-02', 'Ochilov.D', '29/30 (96.7%)')">
+          <div>
+            <div class="v3-bento-top">
+              <span class="k-badge k-badge-hamsh">Guruh 26-02</span>
+              <span class="v3-bento-pct" style="color:#38bdf8;">96.7%</span>
+            </div>
+            <div class="v3-bento-leader">Ochilov.D</div>
+            <div class="v3-bento-dir">Hamshiralik ishi</div>
+          </div>
+          <div class="v3-bento-bottom">
+            <span><strong>30</strong> talaba</span>
+            <span style="color:#38bdf8; font-weight:700;">29/30 tasdiq</span>
+          </div>
+        </div>
+
+        <div class="v3-bento-card" onclick="onGroupClick('26-03', 'To\'rayeva.S', '28/29 (96.6%)')">
+          <div>
+            <div class="v3-bento-top">
+              <span class="k-badge k-badge-hamsh">Guruh 26-03</span>
+              <span class="v3-bento-pct" style="color:#38bdf8;">96.6%</span>
+            </div>
+            <div class="v3-bento-leader">To'rayeva.S</div>
+            <div class="v3-bento-dir">Hamshiralik ishi</div>
+          </div>
+          <div class="v3-bento-bottom">
+            <span><strong>29</strong> talaba</span>
+            <span style="color:#38bdf8; font-weight:700;">28/29 tasdiq</span>
+          </div>
+        </div>
+
+        <div class="v3-bento-card" onclick="onGroupClick('26-04', 'Hamdamova.M', '25/29 (86.2%)')">
+          <div>
+            <div class="v3-bento-top">
+              <span class="k-badge k-badge-hamsh">Guruh 26-04</span>
+              <span class="v3-bento-pct" style="color:#f59e0b;">86.2%</span>
+            </div>
+            <div class="v3-bento-leader">Hamdamova.M</div>
+            <div class="v3-bento-dir">Hamshiralik ishi</div>
+          </div>
+          <div class="v3-bento-bottom">
+            <span><strong>29</strong> talaba</span>
+            <span style="color:#f59e0b; font-weight:700;">25/29 tasdiq</span>
+          </div>
+        </div>
+
+        <div class="v3-bento-card" onclick="onGroupClick('26-05', 'Rayimova.X', '32/32 (100%)')">
+          <div>
+            <div class="v3-bento-top">
+              <span class="k-badge k-badge-hamsh">Guruh 26-05</span>
+              <span class="v3-bento-pct" style="color:#10b981;">100%</span>
+            </div>
+            <div class="v3-bento-leader">Rayimova.X</div>
+            <div class="v3-bento-dir">Hamshiralik ishi</div>
+          </div>
+          <div class="v3-bento-bottom">
+            <span><strong>32</strong> talaba</span>
+            <span style="color:#10b981; font-weight:700;">32/32 tasdiq</span>
+          </div>
+        </div>
+
+        <div class="v3-bento-card" onclick="onGroupClick('26-06', 'Yuldashev.O', '26/27 (96.3%)')">
+          <div>
+            <div class="v3-bento-top">
+              <span class="k-badge k-badge-hamsh">Guruh 26-06</span>
+              <span class="v3-bento-pct" style="color:#38bdf8;">96.3%</span>
+            </div>
+            <div class="v3-bento-leader">Yuldashev.O</div>
+            <div class="v3-bento-dir">Hamshiralik ishi</div>
+          </div>
+          <div class="v3-bento-bottom">
+            <span><strong>27</strong> talaba</span>
+            <span style="color:#38bdf8; font-weight:700;">26/27 tasdiq</span>
+          </div>
+        </div>
+
+        <div class="v3-bento-card" onclick="onGroupClick('26-07', 'Asraliyev.A', '5/6 (83.3%)')">
+          <div>
+            <div class="v3-bento-top">
+              <span class="k-badge k-badge-hamsh">Guruh 26-07</span>
+              <span class="v3-bento-pct" style="color:#f59e0b;">83.3%</span>
+            </div>
+            <div class="v3-bento-leader">Asraliyev.A</div>
+            <div class="v3-bento-dir">Hamshiralik ishi</div>
+          </div>
+          <div class="v3-bento-bottom">
+            <span><strong>6</strong> talaba</span>
+            <span style="color:#f59e0b; font-weight:700;">5/6 tasdiq</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- =====================================================================
+         VARIANT 4: LINEAR / VERCEL DARK MINIMALIST
+         ===================================================================== -->
+    <section class="variant-card" id="section-v4">
+      <div class="variant-header">
+        <div class="variant-info">
+          <span class="variant-num">VARIANT 04</span>
+          <div>
+            <h2 class="variant-title">Linear & Vercel Dark Minimalist</h2>
+            <p class="variant-desc">Muhandislik darajasidagi qora minimalist jadval, qat'iy 1px chiziqlar va status nuqtalari</p>
+          </div>
+        </div>
+        <button class="variant-select-btn" onclick="selectVariant(4, 'Linear Minimal')">
+          <svg class="icon-inline" viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="20 6 9 17 4 12"></polyline></svg>
+          Ushbu variantni tanlash
+        </button>
+      </div>
+
+      <div class="v4-linear-wrap">
+        <div class="v4-row v4-header">
+          <div>№</div>
+          <div>Guruh Rahbari</div>
+          <div>Guruh</div>
+          <div>Yo'nalishi</div>
+          <div style="text-align:right;">Talabalar</div>
+          <div style="text-align:right;">Tasdiq Holati</div>
+          <div style="text-align:center;">Harakat</div>
+        </div>
+
+        <div class="v4-row" onclick="onGroupClick('26-01', 'Mirzayeva.D', '14/14 (100%)')">
+          <div>01</div>
+          <div style="font-weight:600; color:#f8fafc;"><span class="v4-dot v4-dot-green"></span>Mirzayeva.D</div>
+          <div><span class="v4-badge">26-01</span></div>
+          <div>Farmatsiya ishi</div>
+          <div style="text-align:right; font-family:var(--font-mono); color:#f8fafc;">14 (8.3%)</div>
+          <div style="text-align:right; font-family:var(--font-mono); color:#10b981; font-weight:700;">14/14 (100%)</div>
+          <div style="text-align:center;"><span style="color:#38bdf8; font-weight:600; font-size:12px;">Filter ↵</span></div>
+        </div>
+
+        <div class="v4-row" onclick="onGroupClick('26-02', 'Ochilov.D', '29/30 (96.7%)')">
+          <div>02</div>
+          <div style="font-weight:600; color:#f8fafc;"><span class="v4-dot v4-dot-blue"></span>Ochilov.D</div>
+          <div><span class="v4-badge">26-02</span></div>
+          <div>Hamshiralik ishi</div>
+          <div style="text-align:right; font-family:var(--font-mono); color:#f8fafc;">30 (17.8%)</div>
+          <div style="text-align:right; font-family:var(--font-mono); color:#38bdf8; font-weight:700;">29/30 (96.7%)</div>
+          <div style="text-align:center;"><span style="color:#38bdf8; font-weight:600; font-size:12px;">Filter ↵</span></div>
+        </div>
+
+        <div class="v4-row" onclick="onGroupClick('26-03', 'To\'rayeva.S', '28/29 (96.6%)')">
+          <div>03</div>
+          <div style="font-weight:600; color:#f8fafc;"><span class="v4-dot v4-dot-blue"></span>To'rayeva.S</div>
+          <div><span class="v4-badge">26-03</span></div>
+          <div>Hamshiralik ishi</div>
+          <div style="text-align:right; font-family:var(--font-mono); color:#f8fafc;">29 (17.2%)</div>
+          <div style="text-align:right; font-family:var(--font-mono); color:#38bdf8; font-weight:700;">28/29 (96.6%)</div>
+          <div style="text-align:center;"><span style="color:#38bdf8; font-weight:600; font-size:12px;">Filter ↵</span></div>
+        </div>
+
+        <div class="v4-row" onclick="onGroupClick('26-04', 'Hamdamova.M', '25/29 (86.2%)')">
+          <div>04</div>
+          <div style="font-weight:600; color:#f8fafc;"><span class="v4-dot v4-dot-amber"></span>Hamdamova.M</div>
+          <div><span class="v4-badge">26-04</span></div>
+          <div>Hamshiralik ishi</div>
+          <div style="text-align:right; font-family:var(--font-mono); color:#f8fafc;">29 (17.2%)</div>
+          <div style="text-align:right; font-family:var(--font-mono); color:#f59e0b; font-weight:700;">25/29 (86.2%)</div>
+          <div style="text-align:center;"><span style="color:#38bdf8; font-weight:600; font-size:12px;">Filter ↵</span></div>
+        </div>
+
+        <div class="v4-row" onclick="onGroupClick('26-05', 'Rayimova.X', '32/32 (100%)')">
+          <div>05</div>
+          <div style="font-weight:600; color:#f8fafc;"><span class="v4-dot v4-dot-green"></span>Rayimova.X</div>
+          <div><span class="v4-badge">26-05</span></div>
+          <div>Hamshiralik ishi</div>
+          <div style="text-align:right; font-family:var(--font-mono); color:#f8fafc;">32 (18.9%)</div>
+          <div style="text-align:right; font-family:var(--font-mono); color:#10b981; font-weight:700;">32/32 (100%)</div>
+          <div style="text-align:center;"><span style="color:#38bdf8; font-weight:600; font-size:12px;">Filter ↵</span></div>
+        </div>
+
+        <div class="v4-row" onclick="onGroupClick('26-06', 'Yuldashev.O', '26/27 (96.3%)')">
+          <div>06</div>
+          <div style="font-weight:600; color:#f8fafc;"><span class="v4-dot v4-dot-blue"></span>Yuldashev.O</div>
+          <div><span class="v4-badge">26-06</span></div>
+          <div>Hamshiralik ishi</div>
+          <div style="text-align:right; font-family:var(--font-mono); color:#f8fafc;">27 (16.0%)</div>
+          <div style="text-align:right; font-family:var(--font-mono); color:#38bdf8; font-weight:700;">26/27 (96.3%)</div>
+          <div style="text-align:center;"><span style="color:#38bdf8; font-weight:600; font-size:12px;">Filter ↵</span></div>
+        </div>
+
+        <div class="v4-row" onclick="onGroupClick('26-07', 'Asraliyev.A', '5/6 (83.3%)')">
+          <div>07</div>
+          <div style="font-weight:600; color:#f8fafc;"><span class="v4-dot v4-dot-amber"></span>Asraliyev.A</div>
+          <div><span class="v4-badge">26-07</span></div>
+          <div>Hamshiralik ishi</div>
+          <div style="text-align:right; font-family:var(--font-mono); color:#f8fafc;">6 (3.6%)</div>
+          <div style="text-align:right; font-family:var(--font-mono); color:#f59e0b; font-weight:700;">5/6 (83.3%)</div>
+          <div style="text-align:center;"><span style="color:#38bdf8; font-weight:600; font-size:12px;">Filter ↵</span></div>
+        </div>
+
+        <!-- Footer -->
+        <div class="v4-row v4-footer" onclick="onGroupClick('all', 'Barcha Guruhlar', '159/167 (95.2%)')">
+          <div>Σ</div>
+          <div>JAMI KONTINGENT</div>
+          <div>7 GURUH</div>
+          <div>2 YO'NALISH</div>
+          <div style="text-align:right; font-family:var(--font-mono);">167 nafar</div>
+          <div style="text-align:right; font-family:var(--font-mono); color:#10b981;">159/167 (95.2%)</div>
+          <div style="text-align:center;"><span style="color:#10b981; font-weight:700; font-size:12px;">BARCHASI →</span></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- =====================================================================
+         VARIANT 5: MEDICAL & ACADEMIC PORTAL
+         ===================================================================== -->
+    <section class="variant-card" id="section-v5">
+      <div class="variant-header">
+        <div class="variant-info">
+          <span class="variant-num">VARIANT 05</span>
+          <div>
+            <h2 class="variant-title">Tibbiyot Texnikumi Rasmiy Portali</h2>
+            <p class="variant-desc">Klinik Teal & Zumrad palitrasi, rasmiy kafedra atributlari va tibbiy ixtisoslik belgilari</p>
+          </div>
+        </div>
+        <button class="variant-select-btn" onclick="selectVariant(5, 'Medical Portal')">
+          <svg class="icon-inline" viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="20 6 9 17 4 12"></polyline></svg>
+          Ushbu variantni tanlash
+        </button>
+      </div>
+
+      <div class="v5-med-wrap">
+        <div class="v5-header-banner">
+          <div class="v5-crest">
+            <div class="v5-crest-icon">
+              <svg style="width:24px;height:24px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"></path></svg>
+            </div>
+            <div>
+              <div style="font-size:16px; font-weight:800; color:#5eead4;">Shahrisabz Tibbiyot Texnikumi</div>
+              <div style="font-size:12px; color:#99f6e4;">Akademik Guruhlar va Mas'ul Murabbiylar Reyestri</div>
+            </div>
+          </div>
+          <div style="font-size:12px; font-weight:700; color:#2dd4bf; background:rgba(20,184,166,0.15); padding:6px 14px; border-radius:8px; border:1px solid rgba(20,184,166,0.3);">
+            Rasmiy Akkreditatsiya: 2026/2027
+          </div>
+        </div>
+
+        <table class="v5-table">
+          <thead>
+            <tr>
+              <th style="text-align:center;">№</th>
+              <th>Mas'ul Murabbiy</th>
+              <th style="text-align:center;">Akademik Guruh</th>
+              <th>Ixtisoslik</th>
+              <th style="text-align:center;">Kontingent</th>
+              <th style="text-align:center;">Hujjatlar Tasdig'i</th>
+              <th style="text-align:center;">Jurnal</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr class="v5-tr" onclick="onGroupClick('26-01', 'Mirzayeva.D', '14/14 (100%)')">
+              <td style="text-align:center; font-weight:800; color:#5eead4;">1</td>
+              <td style="font-weight:700;">Mirzayeva.D</td>
+              <td style="text-align:center;"><span class="v5-med-badge">Guruh 26-01</span></td>
+              <td>💊 Farmatsiya ishi</td>
+              <td style="text-align:center; font-family:var(--font-mono); font-weight:700;">14 nafar</td>
+              <td style="text-align:center; color:#34d399; font-weight:700; font-family:var(--font-mono);">14/14 (100%)</td>
+              <td style="text-align:center;"><button class="v1-action-btn" style="border-color:#14b8a6; color:#5eead4;">Ochish →</button></td>
+            </tr>
+
+            <tr class="v5-tr" onclick="onGroupClick('26-02', 'Ochilov.D', '29/30 (96.7%)')">
+              <td style="text-align:center; font-weight:800; color:#5eead4;">2</td>
+              <td style="font-weight:700;">Ochilov.D</td>
+              <td style="text-align:center;"><span class="v5-med-badge">Guruh 26-02</span></td>
+              <td>🩺 Hamshiralik ishi</td>
+              <td style="text-align:center; font-family:var(--font-mono); font-weight:700;">30 nafar</td>
+              <td style="text-align:center; color:#38bdf8; font-weight:700; font-family:var(--font-mono);">29/30 (96.7%)</td>
+              <td style="text-align:center;"><button class="v1-action-btn" style="border-color:#14b8a6; color:#5eead4;">Ochish →</button></td>
+            </tr>
+
+            <tr class="v5-tr" onclick="onGroupClick('26-03', 'To\'rayeva.S', '28/29 (96.6%)')">
+              <td style="text-align:center; font-weight:800; color:#5eead4;">3</td>
+              <td style="font-weight:700;">To'rayeva.S</td>
+              <td style="text-align:center;"><span class="v5-med-badge">Guruh 26-03</span></td>
+              <td>🩺 Hamshiralik ishi</td>
+              <td style="text-align:center; font-family:var(--font-mono); font-weight:700;">29 nafar</td>
+              <td style="text-align:center; color:#38bdf8; font-weight:700; font-family:var(--font-mono);">28/29 (96.6%)</td>
+              <td style="text-align:center;"><button class="v1-action-btn" style="border-color:#14b8a6; color:#5eead4;">Ochish →</button></td>
+            </tr>
+
+            <tr class="v5-tr" onclick="onGroupClick('26-04', 'Hamdamova.M', '25/29 (86.2%)')">
+              <td style="text-align:center; font-weight:800; color:#5eead4;">4</td>
+              <td style="font-weight:700;">Hamdamova.M</td>
+              <td style="text-align:center;"><span class="v5-med-badge">Guruh 26-04</span></td>
+              <td>🩺 Hamshiralik ishi</td>
+              <td style="text-align:center; font-family:var(--font-mono); font-weight:700;">29 nafar</td>
+              <td style="text-align:center; color:#fbbf24; font-weight:700; font-family:var(--font-mono);">25/29 (86.2%)</td>
+              <td style="text-align:center;"><button class="v1-action-btn" style="border-color:#14b8a6; color:#5eead4;">Ochish →</button></td>
+            </tr>
+
+            <tr class="v5-tr" onclick="onGroupClick('26-05', 'Rayimova.X', '32/32 (100%)')">
+              <td style="text-align:center; font-weight:800; color:#5eead4;">5</td>
+              <td style="font-weight:700;">Rayimova.X</td>
+              <td style="text-align:center;"><span class="v5-med-badge">Guruh 26-05</span></td>
+              <td>🩺 Hamshiralik ishi</td>
+              <td style="text-align:center; font-family:var(--font-mono); font-weight:700;">32 nafar</td>
+              <td style="text-align:center; color:#34d399; font-weight:700; font-family:var(--font-mono);">32/32 (100%)</td>
+              <td style="text-align:center;"><button class="v1-action-btn" style="border-color:#14b8a6; color:#5eead4;">Ochish →</button></td>
+            </tr>
+
+            <tr class="v5-tr" onclick="onGroupClick('26-06', 'Yuldashev.O', '26/27 (96.3%)')">
+              <td style="text-align:center; font-weight:800; color:#5eead4;">6</td>
+              <td style="font-weight:700;">Yuldashev.O</td>
+              <td style="text-align:center;"><span class="v5-med-badge">Guruh 26-06</span></td>
+              <td>🩺 Hamshiralik ishi</td>
+              <td style="text-align:center; font-family:var(--font-mono); font-weight:700;">27 nafar</td>
+              <td style="text-align:center; color:#38bdf8; font-weight:700; font-family:var(--font-mono);">26/27 (96.3%)</td>
+              <td style="text-align:center;"><button class="v1-action-btn" style="border-color:#14b8a6; color:#5eead4;">Ochish →</button></td>
+            </tr>
+
+            <tr class="v5-tr" onclick="onGroupClick('26-07', 'Asraliyev.A', '5/6 (83.3%)')">
+              <td style="text-align:center; font-weight:800; color:#5eead4;">7</td>
+              <td style="font-weight:700;">Asraliyev.A</td>
+              <td style="text-align:center;"><span class="v5-med-badge">Guruh 26-07</span></td>
+              <td>🩺 Hamshiralik ishi</td>
+              <td style="text-align:center; font-family:var(--font-mono); font-weight:700;">6 nafar</td>
+              <td style="text-align:center; color:#fbbf24; font-weight:700; font-family:var(--font-mono);">5/6 (83.3%)</td>
+              <td style="text-align:center;"><button class="v1-action-btn" style="border-color:#14b8a6; color:#5eead4;">Ochish →</button></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- =====================================================================
+         VARIANT 6: VISUAL ANALYTICS SPLIT
+         ===================================================================== -->
+    <section class="variant-card" id="section-v6">
+      <div class="variant-header">
+        <div class="variant-info">
+          <span class="variant-num">VARIANT 06</span>
+          <div>
+            <h2 class="variant-title">Visual Analytics Split (Diagramma + Ro'yxat)</h2>
+            <p class="variant-desc">Chapda dumaloq SVG Donut diagrammasi va o'ngda tezkor filtrlash paneli</p>
+          </div>
+        </div>
+        <button class="variant-select-btn" onclick="selectVariant(6, 'Visual Split')">
+          <svg class="icon-inline" viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="20 6 9 17 4 12"></polyline></svg>
+          Ushbu variantni tanlash
+        </button>
+      </div>
+
+      <div class="v6-split-wrap">
+        <!-- Donut Chart Box -->
+        <div class="v6-donut-box">
+          <svg class="v6-donut-svg" viewBox="0 0 100 100">
+            <circle cx="50" cy="50" r="40" fill="transparent" stroke="rgba(255,255,255,0.08)" stroke-width="12"></circle>
+            <circle cx="50" cy="50" r="40" fill="transparent" stroke="#10b981" stroke-width="12" stroke-dasharray="251.2" stroke-dashoffset="12.0" stroke-linecap="round"></circle>
+          </svg>
+          <div class="v6-donut-center">
+            <div class="v6-donut-pct">95.2%</div>
+            <div class="v6-donut-lbl">Tasdiqlangan</div>
+          </div>
+          <div style="width:100%; border-top:1px solid var(--border-color); padding-top:16px; font-size:13px;">
+            <div style="display:flex; justify-content:space-between; margin-bottom:6px;">
+              <span style="color:var(--text-muted);">Jami talaba:</span>
+              <strong style="font-family:var(--font-mono);">167 nafar</strong>
+            </div>
+            <div style="display:flex; justify-content:space-between; margin-bottom:6px;">
+              <span style="color:var(--text-muted);">Tasdiqlangan:</span>
+              <strong style="font-family:var(--font-mono); color:#10b981;">159 nafar</strong>
+            </div>
+            <div style="display:flex; justify-content:space-between;">
+              <span style="color:var(--text-muted);">Kutilmoqda:</span>
+              <strong style="font-family:var(--font-mono); color:#f59e0b;">8 nafar</strong>
+            </div>
+          </div>
+        </div>
+
+        <!-- Groups Quick List -->
+        <div class="v6-list-box">
+          <div class="v6-list-item" onclick="onGroupClick('26-01', 'Mirzayeva.D', '14/14 (100%)')">
+            <div style="display:flex; align-items:center; gap:12px;">
+              <span class="k-badge k-badge-farm">26-01</span>
+              <div>
+                <strong style="font-size:14px;">Mirzayeva.D</strong>
+                <div style="font-size:11.5px; color:var(--text-muted);">Farmatsiya &bull; 14 talaba</div>
+              </div>
+            </div>
+            <div style="display:flex; align-items:center; gap:16px;">
+              <span class="status-completed" style="font-family:var(--font-mono); font-size:13px;">14/14 (100%)</span>
+              <span style="color:var(--accent-blue); font-weight:700;">→</span>
+            </div>
+          </div>
+
+          <div class="v6-list-item" onclick="onGroupClick('26-02', 'Ochilov.D', '29/30 (96.7%)')">
+            <div style="display:flex; align-items:center; gap:12px;">
+              <span class="k-badge k-badge-hamsh">26-02</span>
+              <div>
+                <strong style="font-size:14px;">Ochilov.D</strong>
+                <div style="font-size:11.5px; color:var(--text-muted);">Hamshiralik &bull; 30 talaba</div>
+              </div>
+            </div>
+            <div style="display:flex; align-items:center; gap:16px;">
+              <span class="status-near" style="font-family:var(--font-mono); font-size:13px;">29/30 (96.7%)</span>
+              <span style="color:var(--accent-blue); font-weight:700;">→</span>
+            </div>
+          </div>
+
+          <div class="v6-list-item" onclick="onGroupClick('26-03', 'To\'rayeva.S', '28/29 (96.6%)')">
+            <div style="display:flex; align-items:center; gap:12px;">
+              <span class="k-badge k-badge-hamsh">26-03</span>
+              <div>
+                <strong style="font-size:14px;">To'rayeva.S</strong>
+                <div style="font-size:11.5px; color:var(--text-muted);">Hamshiralik &bull; 29 talaba</div>
+              </div>
+            </div>
+            <div style="display:flex; align-items:center; gap:16px;">
+              <span class="status-near" style="font-family:var(--font-mono); font-size:13px;">28/29 (96.6%)</span>
+              <span style="color:var(--accent-blue); font-weight:700;">→</span>
+            </div>
+          </div>
+
+          <div class="v6-list-item" onclick="onGroupClick('26-04', 'Hamdamova.M', '25/29 (86.2%)')">
+            <div style="display:flex; align-items:center; gap:12px;">
+              <span class="k-badge k-badge-hamsh">26-04</span>
+              <div>
+                <strong style="font-size:14px;">Hamdamova.M</strong>
+                <div style="font-size:11.5px; color:var(--text-muted);">Hamshiralik &bull; 29 talaba</div>
+              </div>
+            </div>
+            <div style="display:flex; align-items:center; gap:16px;">
+              <span class="status-progress" style="font-family:var(--font-mono); font-size:13px;">25/29 (86.2%)</span>
+              <span style="color:var(--accent-blue); font-weight:700;">→</span>
+            </div>
+          </div>
+
+          <div class="v6-list-item" onclick="onGroupClick('26-05', 'Rayimova.X', '32/32 (100%)')">
+            <div style="display:flex; align-items:center; gap:12px;">
+              <span class="k-badge k-badge-hamsh">26-05</span>
+              <div>
+                <strong style="font-size:14px;">Rayimova.X</strong>
+                <div style="font-size:11.5px; color:var(--text-muted);">Hamshiralik &bull; 32 talaba</div>
+              </div>
+            </div>
+            <div style="display:flex; align-items:center; gap:16px;">
+              <span class="status-completed" style="font-family:var(--font-mono); font-size:13px;">32/32 (100%)</span>
+              <span style="color:var(--accent-blue); font-weight:700;">→</span>
+            </div>
+          </div>
+
+          <div class="v6-list-item" onclick="onGroupClick('26-06', 'Yuldashev.O', '26/27 (96.3%)')">
+            <div style="display:flex; align-items:center; gap:12px;">
+              <span class="k-badge k-badge-hamsh">26-06</span>
+              <div>
+                <strong style="font-size:14px;">Yuldashev.O</strong>
+                <div style="font-size:11.5px; color:var(--text-muted);">Hamshiralik &bull; 27 talaba</div>
+              </div>
+            </div>
+            <div style="display:flex; align-items:center; gap:16px;">
+              <span class="status-near" style="font-family:var(--font-mono); font-size:13px;">26/27 (96.3%)</span>
+              <span style="color:var(--accent-blue); font-weight:700;">→</span>
+            </div>
+          </div>
+
+          <div class="v6-list-item" onclick="onGroupClick('26-07', 'Asraliyev.A', '5/6 (83.3%)')">
+            <div style="display:flex; align-items:center; gap:12px;">
+              <span class="k-badge k-badge-hamsh">26-07</span>
+              <div>
+                <strong style="font-size:14px;">Asraliyev.A</strong>
+                <div style="font-size:11.5px; color:var(--text-muted);">Hamshiralik &bull; 6 talaba</div>
+              </div>
+            </div>
+            <div style="display:flex; align-items:center; gap:16px;">
+              <span class="status-progress" style="font-family:var(--font-mono); font-size:13px;">5/6 (83.3%)</span>
+              <span style="color:var(--accent-blue); font-weight:700;">→</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- =====================================================================
+         VARIANT 7: KANBAN PROGRESS COLUMNS
+         ===================================================================== -->
+    <section class="variant-card" id="section-v7">
+      <div class="variant-header">
+        <div class="variant-info">
+          <span class="variant-num">VARIANT 07</span>
+          <div>
+            <h2 class="variant-title">Kanban Progress Bosqichlari</h2>
+            <p class="variant-desc">Guruhlarni tasdiqlanish darajasi bo'yicha 3 ta ustunga taqsimlovchi boshqaruv doskasi</p>
+          </div>
+        </div>
+        <button class="variant-select-btn" onclick="selectVariant(7, 'Kanban')">
+          <svg class="icon-inline" viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="20 6 9 17 4 12"></polyline></svg>
+          Ushbu variantni tanlash
+        </button>
+      </div>
+
+      <div class="v7-kanban-cols">
+        <!-- Col 1: 100% Completed -->
+        <div class="v7-col">
+          <div class="v7-col-header">
+            <div class="v7-col-title" style="color:#10b981;">
+              <span>🏆 To'liq Yakunlangan</span>
+            </div>
+            <span class="v7-col-count" style="color:#10b981;">2 ta guruh</span>
+          </div>
+
+          <div class="v7-card" onclick="onGroupClick('26-01', 'Mirzayeva.D', '14/14 (100%)')">
+            <div class="v7-card-top">
+              <span class="k-badge k-badge-farm">Guruh 26-01</span>
+              <span class="status-completed" style="font-family:var(--font-mono);">100%</span>
+            </div>
+            <strong style="font-size:15px;">Mirzayeva.D</strong>
+            <div style="font-size:12px; color:var(--text-muted); margin:4px 0 10px;">Farmatsiya ishi</div>
+            <div style="font-size:12px; border-top:1px solid var(--border-color); padding-top:8px; display:flex; justify-content:space-between;">
+              <span>14 talaba</span>
+              <span style="color:#10b981; font-weight:700;">14/14 tasdiq</span>
+            </div>
+          </div>
+
+          <div class="v7-card" onclick="onGroupClick('26-05', 'Rayimova.X', '32/32 (100%)')">
+            <div class="v7-card-top">
+              <span class="k-badge k-badge-hamsh">Guruh 26-05</span>
+              <span class="status-completed" style="font-family:var(--font-mono);">100%</span>
+            </div>
+            <strong style="font-size:15px;">Rayimova.X</strong>
+            <div style="font-size:12px; color:var(--text-muted); margin:4px 0 10px;">Hamshiralik ishi</div>
+            <div style="font-size:12px; border-top:1px solid var(--border-color); padding-top:8px; display:flex; justify-content:space-between;">
+              <span>32 talaba</span>
+              <span style="color:#10b981; font-weight:700;">32/32 tasdiq</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Col 2: 95%-99% Almost Done -->
+        <div class="v7-col">
+          <div class="v7-col-header">
+            <div class="v7-col-title" style="color:#38bdf8;">
+              <span>⚡ Deyarli Tayyor (95%+)</span>
+            </div>
+            <span class="v7-col-count" style="color:#38bdf8;">3 ta guruh</span>
+          </div>
+
+          <div class="v7-card" onclick="onGroupClick('26-02', 'Ochilov.D', '29/30 (96.7%)')">
+            <div class="v7-card-top">
+              <span class="k-badge k-badge-hamsh">Guruh 26-02</span>
+              <span class="status-near" style="font-family:var(--font-mono);">96.7%</span>
+            </div>
+            <strong style="font-size:15px;">Ochilov.D</strong>
+            <div style="font-size:12px; color:var(--text-muted); margin:4px 0 10px;">Hamshiralik ishi</div>
+            <div style="font-size:12px; border-top:1px solid var(--border-color); padding-top:8px; display:flex; justify-content:space-between;">
+              <span>30 talaba</span>
+              <span style="color:#38bdf8; font-weight:700;">29/30 tasdiq</span>
+            </div>
+          </div>
+
+          <div class="v7-card" onclick="onGroupClick('26-03', 'To\'rayeva.S', '28/29 (96.6%)')">
+            <div class="v7-card-top">
+              <span class="k-badge k-badge-hamsh">Guruh 26-03</span>
+              <span class="status-near" style="font-family:var(--font-mono);">96.6%</span>
+            </div>
+            <strong style="font-size:15px;">To'rayeva.S</strong>
+            <div style="font-size:12px; color:var(--text-muted); margin:4px 0 10px;">Hamshiralik ishi</div>
+            <div style="font-size:12px; border-top:1px solid var(--border-color); padding-top:8px; display:flex; justify-content:space-between;">
+              <span>29 talaba</span>
+              <span style="color:#38bdf8; font-weight:700;">28/29 tasdiq</span>
+            </div>
+          </div>
+
+          <div class="v7-card" onclick="onGroupClick('26-06', 'Yuldashev.O', '26/27 (96.3%)')">
+            <div class="v7-card-top">
+              <span class="k-badge k-badge-hamsh">Guruh 26-06</span>
+              <span class="status-near" style="font-family:var(--font-mono);">96.3%</span>
+            </div>
+            <strong style="font-size:15px;">Yuldashev.O</strong>
+            <div style="font-size:12px; color:var(--text-muted); margin:4px 0 10px;">Hamshiralik ishi</div>
+            <div style="font-size:12px; border-top:1px solid var(--border-color); padding-top:8px; display:flex; justify-content:space-between;">
+              <span>27 talaba</span>
+              <span style="color:#38bdf8; font-weight:700;">26/27 tasdiq</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Col 3: In Progress (<90%) -->
+        <div class="v7-col">
+          <div class="v7-col-header">
+            <div class="v7-col-title" style="color:#f59e0b;">
+              <span>⏳ Qayta Tekshiruvda (&lt;90%)</span>
+            </div>
+            <span class="v7-col-count" style="color:#f59e0b;">2 ta guruh</span>
+          </div>
+
+          <div class="v7-card" onclick="onGroupClick('26-04', 'Hamdamova.M', '25/29 (86.2%)')">
+            <div class="v7-card-top">
+              <span class="k-badge k-badge-hamsh">Guruh 26-04</span>
+              <span class="status-progress" style="font-family:var(--font-mono);">86.2%</span>
+            </div>
+            <strong style="font-size:15px;">Hamdamova.M</strong>
+            <div style="font-size:12px; color:var(--text-muted); margin:4px 0 10px;">Hamshiralik ishi</div>
+            <div style="font-size:12px; border-top:1px solid var(--border-color); padding-top:8px; display:flex; justify-content:space-between;">
+              <span>29 talaba</span>
+              <span style="color:#f59e0b; font-weight:700;">25/29 tasdiq (4 ta kutilmoqda)</span>
+            </div>
+          </div>
+
+          <div class="v7-card" onclick="onGroupClick('26-07', 'Asraliyev.A', '5/6 (83.3%)')">
+            <div class="v7-card-top">
+              <span class="k-badge k-badge-hamsh">Guruh 26-07</span>
+              <span class="status-progress" style="font-family:var(--font-mono);">83.3%</span>
+            </div>
+            <strong style="font-size:15px;">Asraliyev.A</strong>
+            <div style="font-size:12px; color:var(--text-muted); margin:4px 0 10px;">Hamshiralik ishi</div>
+            <div style="font-size:12px; border-top:1px solid var(--border-color); padding-top:8px; display:flex; justify-content:space-between;">
+              <span>6 talaba</span>
+              <span style="color:#f59e0b; font-weight:700;">5/6 tasdiq (1 ta kutilmoqda)</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- =====================================================================
+         VARIANT 8: CYBERPUNK HUD
+         ===================================================================== -->
+    <section class="variant-card" id="section-v8">
+      <div class="variant-header">
+        <div class="variant-info">
+          <span class="variant-num">VARIANT 08</span>
+          <div>
+            <h2 class="variant-title">Cyberpunk High-Tech Neon HUD</h2>
+            <p class="variant-desc">Kelajak texnologik terminali, neon chiziqlar, HUD ko'rsatkichlari va qora kiber estetika</p>
+          </div>
+        </div>
+        <button class="variant-select-btn" onclick="selectVariant(8, 'Cyberpunk HUD')">
+          <svg class="icon-inline" viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="20 6 9 17 4 12"></polyline></svg>
+          Ushbu variantni tanlash
+        </button>
+      </div>
+
+      <div class="v8-cyber-wrap">
+        <div class="v8-hud-line">
+          <span>// ACADEMIC_TELEMETRY_SYSTEM_V3.8</span>
+          <span>ONLINE • 167 NODES • 95.2% VERIFIED</span>
+          <span>SYS_ID: 26_MED</span>
+        </div>
+
+        <table class="v8-table">
+          <thead>
+            <tr>
+              <th>[INDEX]</th>
+              <th>[LEADER_CALLSIGN]</th>
+              <th>[SECTOR]</th>
+              <th>[DISCIPLINE]</th>
+              <th>[CAPACITY]</th>
+              <th>[INTEGRITY]</th>
+              <th>[EXECUTE]</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr class="v8-tr" onclick="onGroupClick('26-01', 'Mirzayeva.D', '14/14 (100%)')">
+              <td>#01</td>
+              <td style="color:#00f0ff; font-weight:800;">MIRZAYEVA.D</td>
+              <td><span class="v8-pill">SEC-26-01</span></td>
+              <td>PHARM_SCI</td>
+              <td>14 / 8.3%</td>
+              <td style="color:#00ff66; font-weight:800;">100.0% [SYNCED]</td>
+              <td><span style="color:#00f0ff; font-weight:800;">[FILTER]</span></td>
+            </tr>
+
+            <tr class="v8-tr" onclick="onGroupClick('26-02', 'Ochilov.D', '29/30 (96.7%)')">
+              <td>#02</td>
+              <td style="color:#00f0ff; font-weight:800;">OCHILOV.D</td>
+              <td><span class="v8-pill">SEC-26-02</span></td>
+              <td>NURSE_SCI</td>
+              <td>30 / 17.8%</td>
+              <td style="color:#00f0ff; font-weight:800;">96.7% [STABLE]</td>
+              <td><span style="color:#00f0ff; font-weight:800;">[FILTER]</span></td>
+            </tr>
+
+            <tr class="v8-tr" onclick="onGroupClick('26-03', 'To\'rayeva.S', '28/29 (96.6%)')">
+              <td>#03</td>
+              <td style="color:#00f0ff; font-weight:800;">TO'RAYEVA.S</td>
+              <td><span class="v8-pill">SEC-26-03</span></td>
+              <td>NURSE_SCI</td>
+              <td>29 / 17.2%</td>
+              <td style="color:#00f0ff; font-weight:800;">96.6% [STABLE]</td>
+              <td><span style="color:#00f0ff; font-weight:800;">[FILTER]</span></td>
+            </tr>
+
+            <tr class="v8-tr" onclick="onGroupClick('26-04', 'Hamdamova.M', '25/29 (86.2%)')">
+              <td>#04</td>
+              <td style="color:#00f0ff; font-weight:800;">HAMDAMOVA.M</td>
+              <td><span class="v8-pill">SEC-26-04</span></td>
+              <td>NURSE_SCI</td>
+              <td>29 / 17.2%</td>
+              <td style="color:#ffb700; font-weight:800;">86.2% [PENDING]</td>
+              <td><span style="color:#00f0ff; font-weight:800;">[FILTER]</span></td>
+            </tr>
+
+            <tr class="v8-tr" onclick="onGroupClick('26-05', 'Rayimova.X', '32/32 (100%)')">
+              <td>#05</td>
+              <td style="color:#00f0ff; font-weight:800;">RAYIMOVA.X</td>
+              <td><span class="v8-pill">SEC-26-05</span></td>
+              <td>NURSE_SCI</td>
+              <td>32 / 18.9%</td>
+              <td style="color:#00ff66; font-weight:800;">100.0% [SYNCED]</td>
+              <td><span style="color:#00f0ff; font-weight:800;">[FILTER]</span></td>
+            </tr>
+
+            <tr class="v8-tr" onclick="onGroupClick('26-06', 'Yuldashev.O', '26/27 (96.3%)')">
+              <td>#06</td>
+              <td style="color:#00f0ff; font-weight:800;">YULDASHEV.O</td>
+              <td><span class="v8-pill">SEC-26-06</span></td>
+              <td>NURSE_SCI</td>
+              <td>27 / 16.0%</td>
+              <td style="color:#00f0ff; font-weight:800;">96.3% [STABLE]</td>
+              <td><span style="color:#00f0ff; font-weight:800;">[FILTER]</span></td>
+            </tr>
+
+            <tr class="v8-tr" onclick="onGroupClick('26-07', 'Asraliyev.A', '5/6 (83.3%)')">
+              <td>#07</td>
+              <td style="color:#00f0ff; font-weight:800;">ASRALIYEV.A</td>
+              <td><span class="v8-pill">SEC-26-07</span></td>
+              <td>NURSE_SCI</td>
+              <td>6 / 3.6%</td>
+              <td style="color:#ffb700; font-weight:800;">83.3% [PENDING]</td>
+              <td><span style="color:#00f0ff; font-weight:800;">[FILTER]</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- =====================================================================
+         VARIANT 9: ACCORDION MASTER-DETAIL
+         ===================================================================== -->
+    <section class="variant-card" id="section-v9">
+      <div class="variant-header">
+        <div class="variant-info">
+          <span class="variant-num">VARIANT 09</span>
+          <div>
+            <h2 class="variant-title">Expandable Master-Detail Accordion</h2>
+            <p class="variant-desc">Har bir qator bosilganda chuqur statistikalar va qo'shimcha amallarni ochib beradi</p>
+          </div>
+        </div>
+        <button class="variant-select-btn" onclick="selectVariant(9, 'Accordion')">
+          <svg class="icon-inline" viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="20 6 9 17 4 12"></polyline></svg>
+          Ushbu variantni tanlash
+        </button>
+      </div>
+
+      <div class="v9-acc-list">
+        <div class="v9-item open">
+          <div class="v9-header-row" onclick="toggleAcc(this.parentElement)">
+            <div style="display:flex; align-items:center; gap:14px;">
+              <span class="k-badge k-badge-farm">26-01</span>
+              <div>
+                <strong style="font-size:15px;">Mirzayeva.D</strong>
+                <div style="font-size:12px; color:var(--text-muted);">Farmatsiya ishi &bull; 14 talaba</div>
+              </div>
+            </div>
+            <div style="display:flex; align-items:center; gap:20px;">
+              <span class="status-completed" style="font-family:var(--font-mono); font-size:14px;">14/14 (100%)</span>
+              <svg class="v9-chevron" style="width:20px;height:20px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"></polyline></svg>
+            </div>
+          </div>
+          <div class="v9-body">
+            <div class="v9-details-grid">
+              <div class="v9-stat-mini">
+                <div style="font-size:11.5px; color:var(--text-muted);">To'liq Tasdiqlangan</div>
+                <strong style="color:#10b981; font-size:16px;">14 nafar (100%)</strong>
+              </div>
+              <div class="v9-stat-mini">
+                <div style="font-size:11.5px; color:var(--text-muted);">Umumiy Ta'lim Ulushi</div>
+                <strong style="font-size:16px;">8.3% kontingent</strong>
+              </div>
+              <div class="v9-stat-mini">
+                <div style="font-size:11.5px; color:var(--text-muted);">PDF Jurnal</div>
+                <strong style="color:#38bdf8; font-size:14px; cursor:pointer;" onclick="showToast('26-01 PDF jurnali ochilmoqda...')">Jurnalni ko'rish ↗</strong>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="v9-item">
+          <div class="v9-header-row" onclick="toggleAcc(this.parentElement)">
+            <div style="display:flex; align-items:center; gap:14px;">
+              <span class="k-badge k-badge-hamsh">26-02</span>
+              <div>
+                <strong style="font-size:15px;">Ochilov.D</strong>
+                <div style="font-size:12px; color:var(--text-muted);">Hamshiralik ishi &bull; 30 talaba</div>
+              </div>
+            </div>
+            <div style="display:flex; align-items:center; gap:20px;">
+              <span class="status-near" style="font-family:var(--font-mono); font-size:14px;">29/30 (96.7%)</span>
+              <svg class="v9-chevron" style="width:20px;height:20px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"></polyline></svg>
+            </div>
+          </div>
+          <div class="v9-body">
+            <div class="v9-details-grid">
+              <div class="v9-stat-mini">
+                <div style="font-size:11.5px; color:var(--text-muted);">Tasdiqlangan / Kutilmoqda</div>
+                <strong style="color:#38bdf8; font-size:16px;">29 ta / 1 ta</strong>
+              </div>
+              <div class="v9-stat-mini">
+                <div style="font-size:11.5px; color:var(--text-muted);">Umumiy Ta'lim Ulushi</div>
+                <strong style="font-size:16px;">17.8% kontingent</strong>
+              </div>
+              <div class="v9-stat-mini">
+                <div style="font-size:11.5px; color:var(--text-muted);">PDF Jurnal</div>
+                <strong style="color:#38bdf8; font-size:14px; cursor:pointer;" onclick="showToast('26-02 PDF jurnali ochilmoqda...')">Jurnalni ko'rish ↗</strong>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="v9-item">
+          <div class="v9-header-row" onclick="toggleAcc(this.parentElement)">
+            <div style="display:flex; align-items:center; gap:14px;">
+              <span class="k-badge k-badge-hamsh">26-05</span>
+              <div>
+                <strong style="font-size:15px;">Rayimova.X</strong>
+                <div style="font-size:12px; color:var(--text-muted);">Hamshiralik ishi &bull; 32 talaba (Eng katta guruh)</div>
+              </div>
+            </div>
+            <div style="display:flex; align-items:center; gap:20px;">
+              <span class="status-completed" style="font-family:var(--font-mono); font-size:14px;">32/32 (100%)</span>
+              <svg class="v9-chevron" style="width:20px;height:20px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"></polyline></svg>
+            </div>
+          </div>
+          <div class="v9-body">
+            <div class="v9-details-grid">
+              <div class="v9-stat-mini">
+                <div style="font-size:11.5px; color:var(--text-muted);">To'liq Tasdiqlangan</div>
+                <strong style="color:#10b981; font-size:16px;">32 nafar (100%)</strong>
+              </div>
+              <div class="v9-stat-mini">
+                <div style="font-size:11.5px; color:var(--text-muted);">Umumiy Ta'lim Ulushi</div>
+                <strong style="font-size:16px;">18.9% kontingent</strong>
+              </div>
+              <div class="v9-stat-mini">
+                <div style="font-size:11.5px; color:var(--text-muted);">PDF Jurnal</div>
+                <strong style="color:#38bdf8; font-size:14px; cursor:pointer;" onclick="showToast('26-05 PDF jurnali ochilmoqda...')">Jurnalni ko'rish ↗</strong>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- =====================================================================
+         VARIANT 10: 3D INTERACTIVE CARDS MATRIX
+         ===================================================================== -->
+    <section class="variant-card" id="section-v10">
+      <div class="variant-header">
+        <div class="variant-info">
+          <span class="variant-num">VARIANT 10</span>
+          <div>
+            <h2 class="variant-title">3D Interactive Cards Matritsasi</h2>
+            <p class="variant-desc">Vizual boy 3D kartalar, gradient bannerlar, radial progress va to'g'ridan-to'g'ri tanlash tugmasi</p>
+          </div>
+        </div>
+        <button class="variant-select-btn" onclick="selectVariant(10, '3D Cards')">
+          <svg class="icon-inline" viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="20 6 9 17 4 12"></polyline></svg>
+          Ushbu variantni tanlash
+        </button>
+      </div>
+
+      <div class="v10-cards-grid">
+        <div class="v10-card" onclick="onGroupClick('26-01', 'Mirzayeva.D', '14/14 (100%)')">
+          <div class="v10-card-header" style="background:linear-gradient(90deg, #10b981, #059669);"></div>
+          <div class="v10-card-content">
+            <div>
+              <div class="v10-group-big">
+                <span>26-01</span>
+                <span style="font-size:14px; color:#10b981;">100%</span>
+              </div>
+              <div style="font-size:15px; font-weight:800;">Mirzayeva.D</div>
+              <div style="font-size:12px; color:var(--text-muted);">Farmatsiya ishi</div>
+            </div>
+            <div class="v10-radial-wrap">
+              <span style="font-size:20px;">💊</span>
+              <div>
+                <strong style="font-size:14px;">14 nafar talaba</strong>
+                <div style="font-size:11.5px; color:#10b981; font-weight:700;">14 / 14 tasdiqlandi</div>
+              </div>
+            </div>
+            <button class="v10-btn">Guruhni Tanlash →</button>
+          </div>
+        </div>
+
+        <div class="v10-card" onclick="onGroupClick('26-02', 'Ochilov.D', '29/30 (96.7%)')">
+          <div class="v10-card-header" style="background:linear-gradient(90deg, #0284c7, #38bdf8);"></div>
+          <div class="v10-card-content">
+            <div>
+              <div class="v10-group-big">
+                <span>26-02</span>
+                <span style="font-size:14px; color:#38bdf8;">96.7%</span>
+              </div>
+              <div style="font-size:15px; font-weight:800;">Ochilov.D</div>
+              <div style="font-size:12px; color:var(--text-muted);">Hamshiralik ishi</div>
+            </div>
+            <div class="v10-radial-wrap">
+              <span style="font-size:20px;">🩺</span>
+              <div>
+                <strong style="font-size:14px;">30 nafar talaba</strong>
+                <div style="font-size:11.5px; color:#38bdf8; font-weight:700;">29 / 30 tasdiqlandi</div>
+              </div>
+            </div>
+            <button class="v10-btn">Guruhni Tanlash →</button>
+          </div>
+        </div>
+
+        <div class="v10-card" onclick="onGroupClick('26-03', 'To\'rayeva.S', '28/29 (96.6%)')">
+          <div class="v10-card-header" style="background:linear-gradient(90deg, #3b82f6, #60a5fa);"></div>
+          <div class="v10-card-content">
+            <div>
+              <div class="v10-group-big">
+                <span>26-03</span>
+                <span style="font-size:14px; color:#38bdf8;">96.6%</span>
+              </div>
+              <div style="font-size:15px; font-weight:800;">To'rayeva.S</div>
+              <div style="font-size:12px; color:var(--text-muted);">Hamshiralik ishi</div>
+            </div>
+            <div class="v10-radial-wrap">
+              <span style="font-size:20px;">🩺</span>
+              <div>
+                <strong style="font-size:14px;">29 nafar talaba</strong>
+                <div style="font-size:11.5px; color:#38bdf8; font-weight:700;">28 / 29 tasdiqlandi</div>
+              </div>
+            </div>
+            <button class="v10-btn">Guruhni Tanlash →</button>
+          </div>
+        </div>
+
+        <div class="v10-card" onclick="onGroupClick('26-04', 'Hamdamova.M', '25/29 (86.2%)')">
+          <div class="v10-card-header" style="background:linear-gradient(90deg, #8b5cf6, #a78bfa);"></div>
+          <div class="v10-card-content">
+            <div>
+              <div class="v10-group-big">
+                <span>26-04</span>
+                <span style="font-size:14px; color:#f59e0b;">86.2%</span>
+              </div>
+              <div style="font-size:15px; font-weight:800;">Hamdamova.M</div>
+              <div style="font-size:12px; color:var(--text-muted);">Hamshiralik ishi</div>
+            </div>
+            <div class="v10-radial-wrap">
+              <span style="font-size:20px;">🩺</span>
+              <div>
+                <strong style="font-size:14px;">29 nafar talaba</strong>
+                <div style="font-size:11.5px; color:#f59e0b; font-weight:700;">25 / 29 tasdiqlandi</div>
+              </div>
+            </div>
+            <button class="v10-btn">Guruhni Tanlash →</button>
+          </div>
+        </div>
+
+        <div class="v10-card" onclick="onGroupClick('26-05', 'Rayimova.X', '32/32 (100%)')">
+          <div class="v10-card-header" style="background:linear-gradient(90deg, #10b981, #34d399);"></div>
+          <div class="v10-card-content">
+            <div>
+              <div class="v10-group-big">
+                <span>26-05</span>
+                <span style="font-size:14px; color:#10b981;">100%</span>
+              </div>
+              <div style="font-size:15px; font-weight:800;">Rayimova.X</div>
+              <div style="font-size:12px; color:var(--text-muted);">Hamshiralik ishi</div>
+            </div>
+            <div class="v10-radial-wrap">
+              <span style="font-size:20px;">🩺</span>
+              <div>
+                <strong style="font-size:14px;">32 nafar talaba</strong>
+                <div style="font-size:11.5px; color:#10b981; font-weight:700;">32 / 32 tasdiqlandi</div>
+              </div>
+            </div>
+            <button class="v10-btn">Guruhni Tanlash →</button>
+          </div>
+        </div>
+
+        <div class="v10-card" onclick="onGroupClick('26-06', 'Yuldashev.O', '26/27 (96.3%)')">
+          <div class="v10-card-header" style="background:linear-gradient(90deg, #06b6d4, #22d3ee);"></div>
+          <div class="v10-card-content">
+            <div>
+              <div class="v10-group-big">
+                <span>26-06</span>
+                <span style="font-size:14px; color:#38bdf8;">96.3%</span>
+              </div>
+              <div style="font-size:15px; font-weight:800;">Yuldashev.O</div>
+              <div style="font-size:12px; color:var(--text-muted);">Hamshiralik ishi</div>
+            </div>
+            <div class="v10-radial-wrap">
+              <span style="font-size:20px;">🩺</span>
+              <div>
+                <strong style="font-size:14px;">27 nafar talaba</strong>
+                <div style="font-size:11.5px; color:#38bdf8; font-weight:700;">26 / 27 tasdiqlandi</div>
+              </div>
+            </div>
+            <button class="v10-btn">Guruhni Tanlash →</button>
+          </div>
+        </div>
+
+        <div class="v10-card" onclick="onGroupClick('26-07', 'Asraliyev.A', '5/6 (83.3%)')">
+          <div class="v10-card-header" style="background:linear-gradient(90deg, #f59e0b, #fbbf24);"></div>
+          <div class="v10-card-content">
+            <div>
+              <div class="v10-group-big">
+                <span>26-07</span>
+                <span style="font-size:14px; color:#f59e0b;">83.3%</span>
+              </div>
+              <div style="font-size:15px; font-weight:800;">Asraliyev.A</div>
+              <div style="font-size:12px; color:var(--text-muted);">Hamshiralik ishi</div>
+            </div>
+            <div class="v10-radial-wrap">
+              <span style="font-size:20px;">🩺</span>
+              <div>
+                <strong style="font-size:14px;">6 nafar talaba</strong>
+                <div style="font-size:11.5px; color:#f59e0b; font-weight:700;">5 / 6 tasdiqlandi</div>
+              </div>
+            </div>
+            <button class="v10-btn">Guruhni Tanlash →</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Floating Toast System -->
+  <div class="toast-box" id="toastBox"></div>
+
+  <!-- Interactive JavaScript -->
+  <script>
+    // Toast xabarlari
+    function showToast(msg) {
+      const box = document.getElementById('toastBox');
+      const item = document.createElement('div');
+      item.className = 'toast-item';
+      item.innerHTML = '<span>⚡</span> ' + msg;
+      box.appendChild(item);
+      setTimeout(() => {
+        if (item.parentNode) item.parentNode.removeChild(item);
+      }, 3000);
+    }
+
+    // Guruh bosilganda
+    function onGroupClick(g, leader, stats) {
+      showToast(`Guruh ${g} tanlandi: ${leader} (${stats})`);
+    }
+
+    // Variantni almashtirish
+    function switchVariant(vId, btn) {
+      document.querySelectorAll('.v-pill').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+
+      const allSections = document.querySelectorAll('.variant-card');
+      if (vId === 'all') {
+        allSections.forEach(s => s.style.display = 'block');
+        showToast('Barcha 10 ta variant ketma-ket ochildi');
+      } else {
+        allSections.forEach(s => {
+          if (s.id === 'section-' + vId) {
+            s.style.display = 'block';
+            s.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          } else {
+            s.style.display = 'none';
+          }
+        });
+      }
+    }
+
+    // Variantni tanlash tugmasi
+    function selectVariant(num, name) {
+      showToast(`✅ VARIANT ${num} (${name}) tanlandi! Ushbu kod asosiy tizimga kiritilishi mumkin.`);
+    }
+
+    // Accordion ochish/yopish
+    function toggleAcc(item) {
+      item.classList.toggle('open');
+    }
+
+    // Dark/Light Theme Toggle
+    function toggleTheme() {
+      document.body.classList.toggle('light-mode');
+      const isLight = document.body.classList.contains('light-mode');
+      document.getElementById('themeLabel').innerText = isLight ? 'Qorong\'u rejim' : 'Yorug\' rejim';
+      showToast(isLight ? 'Yorug\' rejim faollashtirildi' : 'Qorong\'u rejim faollashtirildi');
+    }
+
+    // Dastlabki rejim: Faqat 1-variantni ko'rsatish
+    document.addEventListener('DOMContentLoaded', () => {
+      const allSections = document.querySelectorAll('.variant-card');
+      allSections.forEach(s => {
+        if (s.id !== 'section-v1') s.style.display = 'none';
+      });
+    });
+  </script>
+</body>
+</html>
