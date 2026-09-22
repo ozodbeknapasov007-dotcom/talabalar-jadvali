@@ -24,8 +24,13 @@ window.imgPanX = 0;
 window.imgPanY = 0;
 window.isDragging = false;
 window.dragStartX = 0;
-window.dragStartY = 0;
 window.isEditMode = false;
+
+window.isWithdrawnGroup = function(g) {
+  if (!g) return false;
+  const gl = String(g).trim().toLowerCase();
+  return gl === 'talabalar safidan chiqarilganlar' || gl === 'safdan chiqarilganlar' || gl === 'safdan chiqarilgan' || gl === 'n' || gl.includes('chiqaril');
+};
 
 // SVG ICON KUTUBXONASI
 const ICONS = {
@@ -471,7 +476,7 @@ function renderInfoCards(s, isEditing) {
           </div>
           <div class="data-row"><span class="lbl">Hujjat turi:</span><span class="val" id="val_doctur" style="color:#6ee7b7;font-weight:700;">${s.doc_tur || 'Shahodatnoma'}</span></div>
           <div class="data-row"><span class="lbl">Hujjat seriya va №:</span><span class="val mono val-large-doc" id="val_shdoc">${s.sh_doc || '—'}</span></div>
-          <div class="data-row"><span class="lbl">Guruh:</span><span class="val" style="color:#60a5fa;font-weight:800;background:rgba(37,99,235,0.15);padding:3px 10px;border-radius:6px;border:1px solid rgba(37,99,235,0.3);">${s.group ? s.group : '<span style="color:#f59e0b;font-weight:700;">Belgilanmagan</span>'}</span></div>
+          <div class="data-row"><span class="lbl">Guruh:</span><span class="val" style="color:#60a5fa;font-weight:800;background:rgba(37,99,235,0.15);padding:3px 10px;border-radius:6px;border:1px solid rgba(37,99,235,0.3);">${s.group ? (isWithdrawnGroup(s.group) ? '<span style="color:#ef4444;font-weight:800;background:rgba(239,68,68,0.15);padding:2px 8px;border-radius:6px;border:1px solid rgba(239,68,68,0.35);">Talabalar safidan chiqarilganlar (Maxsus)</span>' : s.group) : '<span style="color:#f59e0b;font-weight:700;">Belgilanmagan</span>'}</span></div>
           <div class="data-row"><span class="lbl">Tugatgan muassasasi:</span><span class="val" id="val_mak" style="max-width:65%;font-size:13px;color:#e2e8f0;">${s.mak || '—'}</span></div>
           <div class="data-row"><span class="lbl">Bitirgan yili:</span><span class="val" id="val_yil" style="font-weight:700;">${s.yil || '—'}</span></div>
           <div class="data-row"><span class="lbl">Yo'nalishi:</span><span class="val" style="color:#38bdf8;font-weight:700;">${s.yon || '—'}</span></div>
@@ -502,7 +507,7 @@ function renderInfoCards(s, isEditing) {
             <span class="lbl">Guruh:</span>
             <select id="edit_group" class="edit-input edit-input-lg">
               <option value="" ${!s.group ? 'selected' : ''}>Guruh belgilanmagan</option>
-              <option value="N" ${s.group === 'N' || s.group === 'n' ? 'selected' : ''}>N (Noma'lum / Taqsimlanmagan)</option>
+              <option value="Talabalar safidan chiqarilganlar" ${isWithdrawnGroup(s.group) ? 'selected' : ''}>Talabalar safidan chiqarilganlar (Maxsus)</option>
               <option value="26-01" ${s.group === '26-01' ? 'selected' : ''}>26-01 (Farmatsiya)</option>
               <option value="26-02" ${s.group === '26-02' ? 'selected' : ''}>26-02 (Hamshiralik)</option>
               <option value="26-03" ${s.group === '26-03' ? 'selected' : ''}>26-03 (Hamshiralik)</option>
@@ -1376,8 +1381,9 @@ window.filterRows = function(skipSave = false) {
 
     if (visible && fGroup) {
       const fgLower = fGroup.toLowerCase();
-      if (fgLower === 'belgilanmagan' || fgLower === 'unassigned' || fgLower === 'n') {
-        if (dGroup !== '' && dGroup !== 'belgilanmagan' && dGroup !== 'none' && dGroup !== 'n') visible = false;
+      const isWithdrawnFilter = (fgLower === 'talabalar safidan chiqarilganlar' || fgLower === 'safdan chiqarilganlar' || fgLower === 'safdan' || fgLower === 'belgilanmagan' || fgLower === 'unassigned' || fgLower === 'n' || fgLower.includes('chiqaril'));
+      if (isWithdrawnFilter) {
+        if (!dGroup.includes('chiqaril') && dGroup !== '' && dGroup !== 'belgilanmagan' && dGroup !== 'none' && dGroup !== 'n') visible = false;
       } else if (dGroup !== fgLower) {
         visible = false;
       }
@@ -1608,10 +1614,21 @@ window.filterByGroup = function(groupName) {
     if (card) card.classList.add('active');
   }
 
+  // Safdan chiqarilganlar filtr tugmasi holatini sinxronlash
+  const btnWithdrawn = document.getElementById('btn_filter_withdrawn');
+  if (btnWithdrawn) {
+    const isW = (groupName === 'Talabalar safidan chiqarilganlar' || groupName === 'Safdan chiqarilganlar' || groupName === 'safdan' || groupName === 'n');
+    if (isW) {
+      btnWithdrawn.classList.add('active');
+    } else {
+      btnWithdrawn.classList.remove('active');
+    }
+  }
+
   // 2. Kontingent jadvalidagi tegishli qatorni faollashtirish
   document.querySelectorAll('.kontingent-row').forEach(function(r) { r.classList.remove('active'); });
   if (groupName) {
-    const kId = (groupName === 'belgilanmagan' || groupName === 'unassigned' || groupName.toLowerCase() === 'n') ? 'kontingent-row-unassigned' : ('kontingent-row-' + groupName);
+    const kId = (groupName === 'belgilanmagan' || groupName === 'unassigned' || groupName.toLowerCase() === 'n' || groupName === 'Talabalar safidan chiqarilganlar') ? 'kontingent-row-unassigned' : ('kontingent-row-' + groupName);
     const kRow = document.getElementById(kId);
     if (kRow) kRow.classList.add('active');
   }
@@ -1714,10 +1731,15 @@ window.changeStudentGroup = function(studentIdx, newGroup, rowIdx) {
     cardEl.setAttribute('data-group', newGroup.toLowerCase());
     const cardBadge = cardEl.querySelector('.card-group-badge');
     if (cardBadge) {
-      const grpClean = (newGroup || '').replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
-      cardBadge.className = 'card-group-badge grp-' + (grpClean || 'n');
-      const svg = cardBadge.querySelector('svg');
-      cardBadge.innerHTML = (svg ? svg.outerHTML + ' ' : '') + (newGroup || '—');
+      if (isWithdrawnGroup(newGroup)) {
+        cardBadge.className = 'card-group-badge grp-withdrawn';
+        cardBadge.innerHTML = 'Safdan chiqarilgan';
+      } else {
+        const grpClean = (newGroup || '').replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
+        cardBadge.className = 'card-group-badge grp-' + (grpClean || 'n');
+        const svg = cardBadge.querySelector('svg');
+        cardBadge.innerHTML = (svg ? svg.outerHTML + ' ' : '') + (newGroup || '—');
+      }
     }
     const cardSel = cardEl.querySelector('.card-group-select');
     if (cardSel && cardSel.value !== newGroup) cardSel.value = newGroup;
@@ -1891,32 +1913,36 @@ window.renderGroupsJournalTab = function() {
     `;
   });
 
-  const unassignedStudents = RAW_STUDENTS.filter(function(st) { return !st.group || !groups.includes(st.group); });
+  const unassignedStudents = RAW_STUDENTS.filter(function(st) { 
+    return isWithdrawnGroup(st.group) || (!st.group || !groups.includes(st.group)); 
+  });
   if (unassignedStudents.length > 0) {
     unassignedStudents.sort(function(a, b) { return (a.ism || '').localeCompare(b.ism || '', 'uz'); });
     html += `
-      <div class="group-grid-card group-grid-card-n">
-        <div class="group-card-header" style="background:#78350f;">
+      <div class="group-grid-card group-grid-card-withdrawn" style="border: 1.5px solid #ef4444; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 14px rgba(239, 68, 68, 0.08); margin-top: 12px;">
+        <div class="group-card-header" style="background: linear-gradient(135deg, #7f1d1d, #991b1b); padding: 12px 18px; display: flex; justify-content: space-between; align-items: center;">
           <div>
             <div style="display:flex; align-items:center; gap:8px;">
-              <span style="background:#d97706; color:#fff; font-weight:800; font-size:12.5px; padding:3px 9px; border-radius:6px;">N-Guruh</span>
-              <h3 style="font-size:14.5px; font-weight:800; margin:0; letter-spacing:-0.2px; color:#fff;">N-Guruh (Taqsimlanmagan / Noma'lumlar)</h3>
+              <span style="background:#dc2626; color:#fff; font-weight:800; font-size:11.5px; padding:3px 9px; border-radius:6px; box-shadow:0 2px 6px rgba(0,0,0,0.25);">Maxsus Guruh</span>
+              <h3 style="font-size:14.5px; font-weight:800; margin:0; letter-spacing:-0.2px; color:#fff;">Talabalar safidan chiqarilganlar</h3>
             </div>
-            <p style="font-size:11.5px; color:#fef08a; margin-top:3px; display:flex; align-items:center; gap:5px;">
-              ${ICONS.infoSm} Holati: <strong>Guruh tayinlanishi kutilmoqda</strong> &nbsp;&bull;&nbsp; Jami: <strong style="color:#fff;">${unassignedStudents.length} nafar</strong>
+            <p style="font-size:11.5px; color:#fecaca; margin-top:3px; display:flex; align-items:center; gap:5px;">
+              ${ICONS.infoSm} Holati: <strong>Texnikum buyrug'iga asosan safdan chiqarilgan</strong> &nbsp;&bull;&nbsp; Jami: <strong style="color:#fff;">${unassignedStudents.length} nafar</strong> &nbsp;&bull;&nbsp; <em>(Rasmiy kontingentga kirmaydi)</em>
             </p>
           </div>
-          <button type="button" class="btn btn-export" style="padding:4px 14px; font-size:11.5px; background:#d97706; border-color:#b45309;" onclick="exportSingleGroupExcel('N')">
-            <svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg> .xlsx
+          <button type="button" class="btn btn-export" style="padding:5px 14px; font-size:11.5px; background:#dc2626; border-color:#b91c1c; color:#fff; border-radius:8px; font-weight:700; cursor:pointer;" onclick="exportSingleGroupExcel('Talabalar safidan chiqarilganlar')">
+            <svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px;vertical-align:-2px;margin-right:4px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg> Excel (.xlsx)
           </button>
         </div>
         <div style="width:100%; overflow:hidden;">
-          <table class="group-journal-table group-journal-table-n">
+          <table class="group-journal-table group-journal-table-withdrawn">
             <thead>
               <tr>
-                <th style="width:40px; text-align:center;">T/R</th>
+                <th style="width:45px; text-align:center;">T/R</th>
                 <th>F.I.SH (Talaba Ism Sharif)</th>
-                <th style="width:120px; text-align:center;">Tug'ilgan Sana</th>
+                <th style="width:120px; text-align:center;">Shartnoma</th>
+                <th style="width:125px; text-align:center;">Tug'ilgan Sana</th>
+                <th style="text-align:left; min-width:180px;">Mutaxassislik</th>
               </tr>
             </thead>
             <tbody>
@@ -1924,13 +1950,19 @@ window.renderGroupsJournalTab = function() {
     unassignedStudents.forEach(function(st, idx) {
       const fullFish = st.fish || `${st.ism} ${st.ota}`.trim();
       html += `
-        <tr class="group-journal-row" onclick="openStudentByRow(${st.row})">
-          <td style="text-align:center; font-weight:700; font-size:11.5px;">${idx + 1}</td>
-          <td class="td-st-name" title="${fullFish}">
+        <tr class="group-journal-row" onclick="openStudentByRow(${st.row})" style="cursor:pointer;">
+          <td style="text-align:center; font-weight:700; font-size:11.5px; color:#94a3b8;">${idx + 1}</td>
+          <td class="td-st-name" title="${fullFish}" style="font-weight:700; color:#ef4444;">
             ${fullFish}
+          </td>
+          <td style="text-align:center; font-size:12px; font-family:'JetBrains Mono', monospace; font-weight:700;">
+            #${st.shnum || '—'}
           </td>
           <td class="td-st-dob" style="text-align:center; font-size:12px;">
             ${st.dob || '—'}
+          </td>
+          <td style="font-size:12px; color:#64748b;">
+            ${st.yon || '—'}
           </td>
         </tr>
       `;
@@ -2076,19 +2108,28 @@ window._buildStyledSheet = function(students) {
 /* 1 TA ALOHIDA GURUHNI FORMATLANGAN EXCEL QILIB YUKLASH */
 window.exportSingleGroupExcel = function(groupName) {
   var isRemote = (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1');
+  var isWithdrawn = isWithdrawnGroup(groupName);
+
   if (isRemote && typeof XLSX !== 'undefined') {
-    var gStudents = RAW_STUDENTS.filter(function(st) { return (st.group || '') === groupName; });
+    var gStudents = RAW_STUDENTS.filter(function(st) { 
+      if (isWithdrawn) {
+        return isWithdrawnGroup(st.group) || (!st.group || !groups.includes(st.group));
+      }
+      return (st.group || '') === groupName; 
+    });
     gStudents.sort(function(a, b) { return (a.ism || '').localeCompare(b.ism || '', 'uz'); });
     var ws = window._buildStyledSheet(gStudents);
     var wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, 'Guruh ' + groupName);
-    XLSX.writeFile(wb, 'Guruh_' + groupName + '_Talabalar_Royxati.xlsx', { cellStyles: true, bookSST: false });
-    showToast('Guruh ' + groupName + ' Excel yuklab olindi!', 'success');
+    var sheetName = isWithdrawn ? 'Safdan chiqarilganlar' : ('Guruh ' + groupName);
+    var fileName = isWithdrawn ? 'Talabalar_Safidan_Chiqarilganlar.xlsx' : ('Guruh_' + groupName + '_Talabalar_Royxati.xlsx');
+    XLSX.utils.book_append_sheet(wb, ws, sheetName);
+    XLSX.writeFile(wb, fileName, { cellStyles: true, bookSST: false });
+    showToast((isWithdrawn ? 'Safdan chiqarilganlar' : ('Guruh ' + groupName)) + ' Excel yuklab olindi!', 'success');
     return;
   }
   var apiHost = (window.location.protocol === 'http:' || window.location.protocol === 'https:') ? '' : 'http://localhost:8080';
   window.location.href = apiHost + '/api/export_group_excel?group=' + encodeURIComponent(groupName);
-  showToast('Guruh ' + groupName + ' ning rasmiy sarlavhali jurnali yuklanmoqda...', 'success');
+  showToast((isWithdrawn ? 'Safdan chiqarilganlar' : ('Guruh ' + groupName)) + ' jurnali yuklanmoqda...', 'success');
 };
 
 /* GURUH JURNALINI PDF / PRINT UCHUN OCHISH — TOZA A4, BO'SH SAHIFA YO'Q */
@@ -3233,15 +3274,21 @@ window.updateGroupsVerificationStats = function() {
       groupCounts[g]++;
       if (isVer) { groupVerified[g]++; overallVerified++; }
     } else {
-      /* N-Guruh yoki guruhsiz — rasmiy kontingentga kirmaydi */
+      /* Talabalar safidan chiqarilganlar yoki guruhsiz — rasmiy kontingentga kirmaydi */
       unassignedTotal++;
       if (isVer) unassignedVerified++;
     }
   });
 
-  /* officialTotal = faqat 7 ta rasmiy guruh talabalar soni (N-guruhsiz) */
+  /* officialTotal = faqat 7 ta rasmiy guruh talabalar soni (safdan chiqarilganlarsiz) */
   const officialTotal = total - unassignedTotal;
   const vPctAll = officialTotal > 0 ? Math.round((overallVerified / officialTotal) * 100) : 0;
+
+  // Safdan chiqarilganlar tugmasi va sonini yangilash
+  const withdrawnBtn = document.getElementById('btn_filter_withdrawn');
+  const withdrawnBadge = document.getElementById('withdrawn_count_badge');
+  if (withdrawnBadge) withdrawnBadge.innerText = unassignedTotal;
+  if (withdrawnBtn) withdrawnBtn.style.display = unassignedTotal > 0 ? 'inline-flex' : 'none';
 
   // Barcha guruhlar kartasi (All Card) - officialTotal bilan
   const vCountAllEl = document.getElementById('grp-vcount-all');
@@ -3299,11 +3346,11 @@ window.updateGroupsVerificationStats = function() {
     if (distBarEl) distBarEl.style.width = pctShare + '%';
   });
 
-  // N-Guruh qatori kontingent jadvalida DOIM YASHIRILGAN (rasmiy emas)
+  // Safdan chiqarilganlar qatori kontingent jadvalida DOIM YASHIRILGAN (rasmiy emas, alohida maxsus guruh)
   const kUnassignedRow = document.getElementById('kontingent-row-unassigned');
   if (kUnassignedRow) kUnassignedRow.style.display = 'none';
 
-  // Kontingent jami soni va tasdiqlash — faqat rasmiy (N-guruhsiz)
+  // Kontingent jami soni va tasdiqlash — faqat rasmiy 7 ta akademik guruh
   const kJamiEl = document.getElementById('kontingent-count-total');
   if (kJamiEl) kJamiEl.innerText = officialTotal;
   const kJamiVerEl = document.getElementById('kontingent-ver-total');

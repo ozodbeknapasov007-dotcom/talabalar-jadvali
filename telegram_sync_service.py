@@ -1052,7 +1052,8 @@ def apply_full_excel_styling(wb, ws):
     cell_border = Border(left=thin_gray, right=thin_gray, top=thin_gray, bottom=thin_gray)
     header_border = Border(left=thin_gray, right=thin_gray, top=header_side, bottom=header_side)
 
-    header_fill = PatternFill(start_color='1E3A8A', end_color='1E3A8A', fill_type='solid')
+    header_bg = '991B1B' if (getattr(ws, 'title', '') == 'Safdan chiqarilganlar') else '1E3A8A'
+    header_fill = PatternFill(start_color=header_bg, end_color=header_bg, fill_type='solid')
     header_font = Font(name='Segoe UI', size=10.5, bold=True, color='FFFFFF')
 
     row_fill_white = PatternFill(start_color='FFFFFF', end_color='FFFFFF', fill_type='solid')
@@ -1162,7 +1163,8 @@ def build_full_multisheet_excel(source_ws, filter_status=None):
         ("26-04 (Hamdamova.M)", "26-04"),
         ("26-05 (Rayimova.X)", "26-05"),
         ("26-06 (Yuldashev.O)", "26-06"),
-        ("26-07 (Asraliyev.A)", "26-07")
+        ("26-07 (Asraliyev.A)", "26-07"),
+        ("Safdan chiqarilganlar", "WITHDRAWN")
     ]
 
     NEW_HEADERS = [
@@ -1209,7 +1211,11 @@ def build_full_multisheet_excel(source_ws, filter_status=None):
         ws.append(NEW_HEADERS)
 
         # Qatorlarni saralash va filtrlash
-        if grp_filter:
+        if grp_filter == "WITHDRAWN":
+            # Safdan chiqarilganlar: maxsus guruh
+            sheet_rows = [r for r in all_rows if str(r[22] or '').strip() in ["Talabalar safidan chiqarilganlar", "Safdan chiqarilganlar", "N", "n"] or "chiqaril" in str(r[22] or '').strip().lower()]
+            sheet_rows.sort(key=lambda x: str(x[1] or '').strip().lower())
+        elif grp_filter:
             # Faqat shu guruh talabalari, familiyasi bo'yicha alifbo (A-Z) tartibida
             sheet_rows = [r for r in all_rows if str(r[22] or '').strip() == grp_filter]
             sheet_rows.sort(key=lambda x: str(x[1] or '').strip().lower())
@@ -2724,6 +2730,9 @@ def update_student_data(st):
     ws.cell(row=target_row, column=19, value=yil)
     ws.cell(row=target_row, column=21, value="TOPILDI")
     ws.cell(row=target_row, column=22, value="Tahrirlandi")
+    grp_val = str(st.get('group', '')).strip()
+    if grp_val:
+        ws.cell(row=target_row, column=23, value=grp_val)
     
     wb.save(EXCEL_PATH)
     trigger_report_rebuild()

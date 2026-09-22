@@ -236,11 +236,16 @@ for r in range(2, ws.max_row + 1):
 
 total = len(students)
 
-# N-Guruh (ketganlar / chiqarilganlar) — rasmiy kontingentga kirmaydi
-# Lekin bazada qoladi, qidirilib topiladi
+# Talabalar safidan chiqarilganlar (maxsus guruh) — rasmiy kontingentga kirmaydi
+def is_withdrawn_group(g):
+    g_clean = str(g or '').strip().lower()
+    return g_clean in ['talabalar safidan chiqarilganlar', 'safdan chiqarilganlar', 'safdan chiqarilgan', 'n', 'belgilanmagan'] or 'chiqaril' in g_clean
+
 GROUPS_LIST_OFFICIAL = ["26-01", "26-02", "26-03", "26-04", "26-05", "26-06", "26-07"]
 official_students = [s for s in students if s['group'] in GROUPS_LIST_OFFICIAL]
-official_total = len(official_students)   # rasmiy kontingent soni (N-guruhsiz)
+official_total = len(official_students)   # rasmiy kontingent soni (safdan chiqarilganlarsiz)
+withdrawn_students = [s for s in students if is_withdrawn_group(s['group']) or s['group'] not in GROUPS_LIST_OFFICIAL]
+withdrawn_count = len(withdrawn_students)
 
 full  = sum(1 for s in official_students if s['status'] == 'full')
 chala = sum(1 for s in official_students if s['status'] == 'chala')
@@ -270,7 +275,7 @@ GROUP_LEADERS = {
     "26-07": "Asraliyev.A"
 }
 groups_count = {g: sum(1 for s in students if s['group'] == g) for g in GROUPS_LIST}
-unassigned_count = sum(1 for s in students if not s['group'] or s['group'] not in GROUPS_LIST)
+unassigned_count = withdrawn_count
 
 # Guruhlar bo'yicha tasdiqlash monitoringi kartalari
 group_titles_short = {
@@ -579,9 +584,15 @@ for idx, s in enumerate(students, 1):
     sh_html = format_doc_display(s['sh_doc'])
 
     clean_fish = s['fish'] or f"{s['ism']} {s['ota']}".strip()
-    grp_name = s['group'] or "Noma'lum"
-    grp_clean = s['group'].replace('-', '').lower() if s['group'] else 'n'
-    grp_class = f"grp-{grp_clean}"
+    is_withdrawn = is_withdrawn_group(s['group']) or (s['group'] not in GROUPS_LIST)
+    if is_withdrawn:
+        grp_name = "Safdan chiqarilgan"
+        grp_clean = "withdrawn"
+        grp_class = "grp-withdrawn"
+    else:
+        grp_name = s['group'] or "Noma'lum"
+        grp_clean = s['group'].replace('-', '').lower() if s['group'] else 'n'
+        grp_class = f"grp-{grp_clean}"
 
     # Operator Tasdig'i (Ixcham tugmalar)
     if s['verified'] == 'TASDIQLANDI':
@@ -2227,6 +2238,11 @@ html = f"""<!DOCTYPE html>
   .card-group-badge.grp-2606 {{ background: #ffe4e6; color: #9f1239; border: 1.5px solid #fecdd3; }}
   .card-group-badge.grp-2607 {{ background: #ede9fe; color: #5b21b6; border: 1.5px solid #ddd6fe; }}
   .card-group-badge.grp-n {{ background: #f1f5f9; color: #475569; border: 1.5px solid #cbd5e1; }}
+  .card-group-badge.grp-withdrawn {{
+    background: rgba(239, 68, 68, 0.12) !important;
+    color: #dc2626 !important;
+    border: 1.5px solid rgba(239, 68, 68, 0.35) !important;
+  }}
 
   .table-group-badge {{
     display: inline-block;
@@ -2243,6 +2259,36 @@ html = f"""<!DOCTYPE html>
   .table-group-badge.grp-2606 {{ background: #ffe4e6; color: #9f1239; }}
   .table-group-badge.grp-2607 {{ background: #ede9fe; color: #5b21b6; }}
   .table-group-badge.grp-n {{ background: #f1f5f9; color: #475569; }}
+  .table-group-badge.grp-withdrawn {{
+    background: rgba(239, 68, 68, 0.12) !important;
+    color: #dc2626 !important;
+    border: 1px solid rgba(239, 68, 68, 0.3) !important;
+  }}
+
+  .btn-filter-withdrawn {{
+    padding: 7px 15px;
+    font-size: 12px;
+    font-weight: 700;
+    border-radius: 8px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(239, 68, 68, 0.1);
+    color: #ef4444;
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }}
+  .btn-filter-withdrawn:hover {{
+    background: rgba(239, 68, 68, 0.18);
+    border-color: #ef4444;
+  }}
+  .btn-filter-withdrawn.active {{
+    background: #dc2626 !important;
+    color: #ffffff !important;
+    border-color: #dc2626 !important;
+    box-shadow: 0 2px 8px rgba(220, 38, 38, 0.35);
+  }}
 
   /* Card Main Info */
   .card-main-info {{
@@ -3020,6 +3066,25 @@ html = f"""<!DOCTYPE html>
   body.dark-mode .k-header-pill.k-header-pill-export:hover {{
     background: #1d4ed8 !important;
     box-shadow: 0 4px 14px rgba(37, 99, 235, 0.4) !important;
+  }}
+  body.dark-mode .card-group-badge.grp-withdrawn,
+  body.dark-mode .table-group-badge.grp-withdrawn {{
+    background: rgba(239, 68, 68, 0.2) !important;
+    color: #f87171 !important;
+    border-color: rgba(239, 68, 68, 0.45) !important;
+  }}
+  body.dark-mode .btn-filter-withdrawn {{
+    background: rgba(239, 68, 68, 0.15);
+    color: #f87171;
+    border-color: rgba(239, 68, 68, 0.35);
+  }}
+  body.dark-mode .btn-filter-withdrawn:hover {{
+    background: rgba(239, 68, 68, 0.25);
+    color: #fca5a5;
+  }}
+  body.dark-mode .btn-filter-withdrawn.active {{
+    background: #dc2626 !important;
+    color: #ffffff !important;
   }}
   .grp-stat-top {{
     display: flex;
@@ -4857,6 +4922,7 @@ var RAW_STUDENTS = {students_json};
                 <option value="26-05">26-05</option>
                 <option value="26-06">26-06</option>
                 <option value="26-07">26-07</option>
+                <option value="Talabalar safidan chiqarilganlar">Talabalar safidan chiqarilganlar (Maxsus)</option>
               </select>
             </div>
 
@@ -5063,6 +5129,10 @@ var RAW_STUDENTS = {students_json};
           <button type="button" class="btn" onclick="resetAllFilters()" style="padding:7px 15px; font-size:12px; font-weight:700; border-radius:8px; display:inline-flex; align-items:center; gap:6px; background:#f1f5f9; color:#475569; border:1px solid #cbd5e1; cursor:pointer;" title="Barcha guruh va qidiruv filtrlarini dastlabki holatga qaytarish">
             <svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
             Filtrlarni Tozalash
+          </button>
+          <button type="button" class="btn btn-filter-withdrawn" id="btn_filter_withdrawn" onclick="filterByGroup('Talabalar safidan chiqarilganlar')" title="Talabalar safidan chiqarilganlar maxsus guruhini ko'rish / filtrlash" style="{ 'display:inline-flex;' if withdrawn_count > 0 else 'display:none;' }">
+            <svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px;margin-right:4px;"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>
+            Safdan chiqarilganlar (<strong id="withdrawn_count_badge">{withdrawn_count}</strong>)
           </button>
         </div>
 
