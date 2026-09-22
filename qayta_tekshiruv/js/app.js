@@ -2071,99 +2071,115 @@ window.printGroupJournal = function(groupCode) {
 
 /* BARCHA GURUHLAR VA JAMI TALABALARNI MULTI-SHEET FORMATLANGAN EXCEL QILIB YUKLASH */
 window.exportAllGroupsMultiSheetExcel = function() {
-  showToast("Barcha guruhlar jurnali (Ko'p sahifali Excel) yuklanmoqda...", "success");
+  showToast("Barcha guruhlar jurnali (Ko'p sahifali Excel) tayyorlanmoqda...", "success");
 
-  // 1. Agar HTTP / HTTPS server orqali ochilgan bo'lsa (http://localhost:8080)
-  if (window.location.protocol === 'http:' || window.location.protocol === 'https:') {
-    const a = document.createElement('a');
-    a.href = '/api/export_all_groups_excel';
-    a.download = 'Talabalar_Barcha_Guruhlar_2026-2027.xlsx';
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
+  const isRemote = (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1');
+
+  // Vercel yoki boshqa remote host: SheetJS orqali brauzerda to'g'ridan-to'g'ri yaratish
+  if (isRemote && typeof XLSX !== 'undefined') {
+    const wb = XLSX.utils.book_new();
+    const groups = ['26-01','26-02','26-03','26-04','26-05','26-06','26-07'];
+
+    // 1-sheet: Jami barcha talabalar
+    const allRows = RAW_STUDENTS.map(function(st, i) {
+      return {
+        "T/R": i + 1,
+        "Guruh": st.group || '',
+        "Shartnoma #": st.shnum || '',
+        "F.I.SH (Talaba)": st.fish || ((st.ism || '') + ' ' + (st.ota || '')).trim(),
+        "Pasport": st.pv || '',
+        "JSHSHIR": st.pinfl || '',
+        "Tug'ilgan sana": st.dob || '',
+        "Hujjat raqami": st.sh_doc || '',
+        "Muassasa": st.mak || '',
+        "Bitirgan yili": st.yil || '',
+        "Yo'nalish": st.yon || '',
+        "Telefon": st.tel || '',
+        "Holati": st.verified || 'KUTILMOQDA'
+      };
+    });
+    const wsAll = XLSX.utils.json_to_sheet(allRows);
+    XLSX.utils.book_append_sheet(wb, wsAll, "Jami talabalar");
+
+    // Har bir guruh uchun alohida sheet
+    groups.forEach(function(g) {
+      const gStudents = RAW_STUDENTS.filter(function(st) { return (st.group || '') === g; });
+      gStudents.sort(function(a, b) { return (a.ism || '').localeCompare(b.ism || '', 'uz'); });
+      const rows = gStudents.map(function(st, i) {
+        return {
+          "T/R": i + 1,
+          "Guruh": st.group || g,
+          "Shartnoma #": st.shnum || '',
+          "F.I.SH (Talaba)": st.fish || ((st.ism || '') + ' ' + (st.ota || '')).trim(),
+          "Pasport": st.pv || '',
+          "JSHSHIR": st.pinfl || '',
+          "Tug'ilgan sana": st.dob || '',
+          "Hujjat raqami": st.sh_doc || '',
+          "Muassasa": st.mak || '',
+          "Bitirgan yili": st.yil || '',
+          "Yo'nalish": st.yon || '',
+          "Telefon": st.tel || '',
+          "Holati": st.verified || 'KUTILMOQDA'
+        };
+      });
+      const ws = XLSX.utils.json_to_sheet(rows);
+      XLSX.utils.book_append_sheet(wb, ws, "Guruh " + g);
+    });
+
+    // N guruh (guruhsizlar)
+    const nStudents = RAW_STUDENTS.filter(function(st) {
+      return !st.group || st.group === 'N' || st.group === '';
+    });
+    if (nStudents.length > 0) {
+      const nRows = nStudents.map(function(st, i) {
+        return {
+          "T/R": i + 1, "Guruh": "Guruhsiz",
+          "Shartnoma #": st.shnum || '',
+          "F.I.SH (Talaba)": st.fish || ((st.ism || '') + ' ' + (st.ota || '')).trim(),
+          "Pasport": st.pv || '', "JSHSHIR": st.pinfl || '',
+          "Tug'ilgan sana": st.dob || '', "Telefon": st.tel || ''
+        };
+      });
+      const wsN = XLSX.utils.json_to_sheet(nRows);
+      XLSX.utils.book_append_sheet(wb, wsN, "Guruhsizlar");
+    }
+
+    XLSX.writeFile(wb, 'Talabalar_Barcha_Guruhlar_2026-2027.xlsx');
+    showToast("Barcha guruhlar jurnali (8 sahifa) muvaffaqiyatli yuklab olindi!", "success");
     return;
   }
 
-  // 2. Agar file:/// orqali ochilgan bo'lsa:
-  const relPath = window.location.pathname.includes('qayta_tekshiruv') ? 'Talabalar_Yangilangan_Royxat.xlsx' : 'Talabalar_Yangilangan_Royxat.xlsx';
-  const fallbackA = document.createElement('a');
-  fallbackA.href = relPath;
-  fallbackA.download = 'Talabalar_Barcha_Guruhlar_2026-2027.xlsx';
-
-  const controller = new AbortController();
-  const timeoutId = setTimeout(function() { controller.abort(); }, 1200);
-
-  fetch('http://localhost:8080/api/export_all_groups_excel', { signal: controller.signal })
-    .then(function(res) {
-      clearTimeout(timeoutId);
-      if (res.ok) return res.blob();
-      throw new Error("Server oflayn");
-    })
-    .then(function(blob) {
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = 'Talabalar_Barcha_Guruhlar_2026-2027.xlsx';
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      window.URL.revokeObjectURL(url);
-      showToast("Barcha guruhlar jurnali muvaffaqiyatli yuklandi!", "success");
-    })
-    .catch(function() {
-      clearTimeout(timeoutId);
-      document.body.appendChild(fallbackA);
-      fallbackA.click();
-      fallbackA.remove();
-      showToast("Barcha guruhlar jurnali yuklandi!", "success");
-    });
+  // Localhost: server API orqali
+  const a = document.createElement('a');
+  a.href = '/api/export_all_groups_excel';
+  a.download = 'Talabalar_Barcha_Guruhlar_2026-2027.xlsx';
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  showToast("Barcha guruhlar jurnali yuklanmoqda...", "success");
 };
 
 /* GURUHLAR JURNALI: 1-list Jami (Guruhi ustuni), 2-8 listlar har guruh alohida */
 window.exportGroupJournal = function() {
-  showToast("Guruhlar jurnali yuklanmoqda...", "success");
+  showToast("Guruhlar jurnali tayyorlanmoqda...", "success");
 
-  if (window.location.protocol === 'http:' || window.location.protocol === 'https:') {
-    const a = document.createElement('a');
-    a.href = '/api/export_group_journal';
-    a.download = 'Talabalar_Guruh_Jurnali_2026-2027.xlsx';
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
+  const isRemote = (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1');
+
+  // Vercel: SheetJS orqali brauzerda yaratish
+  if (isRemote && typeof XLSX !== 'undefined') {
+    // exportAllGroupsMultiSheetExcel bilan bir xil mantig
+    window.exportAllGroupsMultiSheetExcel();
     return;
   }
 
-  const fallbackA = document.createElement('a');
-  fallbackA.href = 'Talabalar_Guruh_Jurnali_2026-2027.xlsx';
-  fallbackA.download = 'Talabalar_Guruh_Jurnali_2026-2027.xlsx';
-
-  const controller = new AbortController();
-  const timeoutId = setTimeout(function() { controller.abort(); }, 1200);
-
-  fetch('http://localhost:8080/api/export_group_journal', { signal: controller.signal })
-    .then(function(res) {
-      clearTimeout(timeoutId);
-      if (res.ok) return res.blob();
-      throw new Error("Server oflayn");
-    })
-    .then(function(blob) {
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = 'Talabalar_Guruh_Jurnali_2026-2027.xlsx';
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      window.URL.revokeObjectURL(url);
-      showToast("Guruhlar jurnali muvaffaqiyatli yuklandi!", "success");
-    })
-    .catch(function() {
-      clearTimeout(timeoutId);
-      document.body.appendChild(fallbackA);
-      fallbackA.click();
-      fallbackA.remove();
-      showToast("Guruhlar jurnali yuklandi!", "success");
-    });
+  // Localhost: server API
+  const a = document.createElement('a');
+  a.href = '/api/export_group_journal';
+  a.download = 'Talabalar_Guruh_Jurnali_2026-2027.xlsx';
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  showToast("Guruhlar jurnali yuklanmoqda...", "success");
 };
 
 /* TOAST BILDIRISHNOMA */
