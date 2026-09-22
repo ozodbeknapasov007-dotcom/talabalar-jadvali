@@ -2415,24 +2415,6 @@ window.analyzeUploadedNewDoc = function(usePro = false) {
   reader.readAsDataURL(file);
 };
 
-/* YANGI TALABANI EXCEL BAZAGA SAQLASH */
-window.saveNewStudentData = function() {
-  const ism = document.getElementById('add_ism').value.trim();
-  const group = document.getElementById('add_group') ? document.getElementById('add_group').value.trim() : '26-02';
-  const ota = document.getElementById('add_ota').value.trim();
-  const shnum = document.getElementById('add_shnum').value.trim();
-  const pv = document.getElementById('add_pv').value.trim();
-  const pinfl = document.getElementById('add_pinfl').value.replace(/\s+/g, '').trim();
-  const dob = document.getElementById('add_dob').value.trim();
-  const ber = document.getElementById('add_ber').value.trim(); // Faqat pasport berilgan sana
-  const doctur = document.getElementById('add_doctur').value.trim();
-  const shdoc = document.getElementById('add_shdoc').value.trim();
-  const mak = document.getElementById('add_mak').value.trim();
-  const yil = document.getElementById('add_yil').value.trim();
-  const yon = document.getElementById('add_yon').value.trim();
-  const tel = document.getElementById('add_tel').value.trim();
-  const docfile = document.getElementById('add_docfile').value.trim();
-
 // Yangi qo'shilgan talabalarni darhol DOMga kiritish (Optimistik yangilash)
 window.savePendingStudentToStorage = function(s) {
   try {
