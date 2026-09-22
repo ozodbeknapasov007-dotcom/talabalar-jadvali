@@ -1,6 +1,36 @@
-const AdmZip = require('adm-zip');
-const path = require('path');
 const fs = require('fs');
+const path = require('path');
+const zlib = require('zlib');
+
+function extractImagesFromDocxBuffer(buf) {
+  const images = [];
+  let offset = 0;
+  while (offset < buf.length - 30) {
+    if (buf.readUInt32LE(offset) === 0x04034b50) {
+      const compMethod = buf.readUInt16LE(offset + 8);
+      const compSize = buf.readUInt32LE(offset + 18);
+      const fnLen = buf.readUInt16LE(offset + 26);
+      const extraLen = buf.readUInt16LE(offset + 28);
+      const fn = buf.toString('utf8', offset + 30, offset + 30 + fnLen);
+      const dataStart = offset + 30 + fnLen + extraLen;
+      const dataEnd = dataStart + compSize;
+
+      if (fn.startsWith('word/media/') && !fn.endsWith('/')) {
+        try {
+          const rawData = buf.slice(dataStart, dataEnd);
+          const imgData = compMethod === 8 ? zlib.inflateRawSync(rawData) : rawData;
+          const ext = path.extname(fn).toLowerCase().replace('.', '');
+          const mime = ext === 'png' ? 'image/png' : (ext === 'gif' ? 'image/gif' : 'image/jpeg');
+          images.push(`data:${mime};base64,${imgData.toString('base64')}`);
+        } catch (e) {}
+      }
+      offset = dataEnd;
+    } else {
+      offset++;
+    }
+  }
+  return images;
+}
 
 module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -70,21 +100,7 @@ module.exports = async function handler(req, res) {
     });
   }
 
-  const images = [];
-  try {
-    const zip = new AdmZip(buffer);
-    const entries = zip.getEntries();
-    for (const entry of entries) {
-      if (entry.entryName.startsWith('word/media/') && !entry.isDirectory) {
-        const imgBuf = entry.getData();
-        const ext = path.extname(entry.entryName).toLowerCase().replace('.', '');
-        const mime = ext === 'png' ? 'image/png' : (ext === 'gif' ? 'image/gif' : 'image/jpeg');
-        images.push(`data:${mime};base64,${imgBuf.toString('base64')}`);
-      }
-    }
-  } catch (err) {
-    return res.status(500).json({ success: false, error: err.message });
-  }
+  const images = extractImagesFromDocxBuffer(buffer);
 
   res.setHeader('Cache-Control', 'public, max-age=86400, stale-while-revalidate=43200');
   return res.status(200).json({
