@@ -212,18 +212,20 @@ def process_remote_github_changes():
                             ws.cell(row=r_idx, column=2, value=clean_uz_name(fields['ism']))
                         if 'ota' in fields and fields['ota']:
                             ws.cell(row=r_idx, column=7, value=clean_uz_name(fields['ota']))
-                        if 'pass_val' in fields:
-                            ws.cell(row=r_idx, column=10, value=str(fields['pass_val']).strip())
+                        if 'pv' in fields:
+                            ws.cell(row=r_idx, column=10, value=str(fields['pv']).strip())
                         if 'pinfl' in fields:
                             ws.cell(row=r_idx, column=11, value=str(fields['pinfl']).strip())
+                        if 'ber' in fields:
+                            ws.cell(row=r_idx, column=12, value=str(fields['ber']).strip())
                         if 'dob' in fields:
                             ws.cell(row=r_idx, column=13, value=str(fields['dob']).strip())
-                        if 'cert_val' in fields:
-                            ws.cell(row=r_idx, column=15, value=str(fields['cert_val']).strip())
-                        if 'maktab' in fields:
-                            ws.cell(row=r_idx, column=17, value=str(fields['maktab']).strip())
-                        if 'cert_tur' in fields:
-                            ws.cell(row=r_idx, column=18, value=str(fields['cert_tur']).strip())
+                        if 'sh_doc' in fields:
+                            ws.cell(row=r_idx, column=15, value=str(fields['sh_doc']).strip())
+                        if 'mak' in fields:
+                            ws.cell(row=r_idx, column=17, value=str(fields['mak']).strip())
+                        if 'doc_tur' in fields:
+                            ws.cell(row=r_idx, column=18, value=str(fields['doc_tur']).strip())
                         if 'yil' in fields:
                             ws.cell(row=r_idx, column=19, value=str(fields['yil']).strip())
                         if 'yon' in fields:
