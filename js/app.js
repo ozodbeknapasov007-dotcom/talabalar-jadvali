@@ -246,6 +246,28 @@ window.uploadAndAttachForCurrentStudent = function(file) {
         if (d.maktab) s.mak = d.maktab;
         if (d.yil) s.yil = String(d.yil);
 
+        // EDIT INPUTLARNI DARHOL YANGILASH (keyingi "Saqlash" bosilganda eski ma'lumotlar qaytib qolmasligi uchun)
+        const editIsm = document.getElementById('edit_ism');
+        if (editIsm) editIsm.value = s.ism || '';
+        const editOta = document.getElementById('edit_ota');
+        if (editOta) editOta.value = s.ota || '';
+        const editPv = document.getElementById('edit_pv');
+        if (editPv) editPv.value = s.pv || '';
+        const editPinfl = document.getElementById('edit_pinfl');
+        if (editPinfl) editPinfl.value = s.pinfl || '';
+        const editDob = document.getElementById('edit_dob');
+        if (editDob) editDob.value = s.dob || '';
+        const editBer = document.getElementById('edit_ber');
+        if (editBer) editBer.value = s.ber || '';
+        const editShDoc = document.getElementById('edit_shdoc');
+        if (editShDoc) editShDoc.value = s.sh_doc || '';
+        const editMak = document.getElementById('edit_mak');
+        if (editMak) editMak.value = s.mak || '';
+        const editYil = document.getElementById('edit_yil');
+        if (editYil) editYil.value = s.yil || '';
+        const editDocTur = document.getElementById('edit_doctur');
+        if (editDocTur) editDocTur.value = s.doc_tur || 'Shahodatnoma';
+
         // Modal sarlavhasini yangilash
         const modalTitle = document.getElementById('modalTitle');
         if (modalTitle) {
@@ -294,11 +316,11 @@ window.uploadAndAttachForCurrentStudent = function(file) {
           if (cells.length >= 10) {
             cells[2].innerHTML = '<div class="student-name">' + s.ism + '</div>' +
                                   '<div class="student-patronymic">' + (s.ota || '—') + '</div>';
-            cells[3].innerHTML = '<div><span class="mono pass-text">' + (s.pv || '—') + '</span></div>';
-            cells[4].innerHTML = '<span class="mono pinfl-text">' + (s.pinfl || '—') + '</span>';
+            cells[3].innerHTML = '<div><span class="mono-pass">' + (s.pv || '—') + '</span></div>';
+            cells[4].innerHTML = '<span class="mono-pinfl" style="font-weight:700;letter-spacing:0.5px;">' + (s.pinfl || '—') + '</span>';
             cells[5].innerHTML = '<div class="student-dob" style="font-size:12px;">DOB: <strong>' + (s.dob || '—') + '</strong></div>' +
                                   '<div style="font-size:11.5px;color:#a855f7;margin-top:2px;">Berilgan: <strong>' + (s.ber || '—') + '</strong></div>';
-            cells[6].innerHTML = '<div><span class="mono doc-text">' + (s.sh_doc || '—') + '</span></div>' +
+            cells[6].innerHTML = '<div><span class="mono-doc">' + (s.sh_doc || '—') + '</span></div>' +
                                   '<div style="font-size:11px;color:var(--text-muted);margin-top:1px;">' + (s.doc_tur || '—') + '</div>';
             cells[7].innerHTML = '<div style="font-size:12px;line-height:1.3;">' + (s.mak || '—') + '</div>' +
                                   '<div class="yon-badge">' + (s.yon || '—') + '</div>';

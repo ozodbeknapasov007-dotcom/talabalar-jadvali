@@ -1002,6 +1002,44 @@ def extract_doc_images_with_crop(target_path):
 
     return images, blobs_raw, full_text
 
+def extract_and_save_student_images(docx_path, folder_slug=None):
+    """
+    Word (.docx) faylidan rasmlarni ajratib oladi va uni
+    files/extracted/<folder_slug>/ papkasiga saqlaydi.
+    rasm_1.jpg, rasm_2.jpg, ... formatida yuqori sifatda yozadi.
+    """
+    if not folder_slug:
+        base_name = os.path.splitext(os.path.basename(docx_path))[0]
+        folder_slug = re.sub(r'[^a-zA-Z0-9_-]+', '_', base_name).strip('_')
+        if not folder_slug:
+            folder_slug = "student_extracted"
+
+    extract_dir = os.path.join(FILES_DIR, 'extracted', folder_slug)
+    os.makedirs(extract_dir, exist_ok=True)
+
+    images, blobs_raw, full_text = extract_doc_images_with_crop(docx_path)
+
+    saved_urls = []
+    for idx, b in enumerate(blobs_raw, start=1):
+        try:
+            img_filename = f"rasm_{idx}.jpg"
+            img_path = os.path.join(extract_dir, img_filename)
+            
+            if idx <= len(images) and images[idx-1].startswith('data:image'):
+                b64_part = images[idx-1].split(',')[1]
+                raw_bytes = base64.b64decode(b64_part)
+                with open(img_path, 'wb') as img_f:
+                    img_f.write(raw_bytes)
+            else:
+                im = Image.open(io.BytesIO(b)).convert('RGB')
+                im.save(img_path, format='JPEG', quality=95)
+            
+            saved_urls.append(f"/files/extracted/{folder_slug}/{img_filename}")
+        except Exception as e_save:
+            print(f"Rasm saqlash xatosi ({folder_slug}/{idx}): {e_save}")
+
+    return images, blobs_raw, full_text, saved_urls
+
 def apply_full_excel_styling(wb, ws):
     from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
     from openpyxl.utils import get_column_letter
@@ -1301,7 +1339,26 @@ class WebServerHandler(BaseHTTPRequestHandler):
                         break
             if os.path.exists(target_path) and os.path.isfile(target_path):
                 try:
-                    images, _, doc_text = extract_doc_images_with_crop(target_path)
+                    base_name = os.path.splitext(os.path.basename(target_path))[0]
+                    folder_slug = re.sub(r'[^a-zA-Z0-9_-]+', '_', base_name).strip('_')
+                    extract_dir = os.path.join(FILES_DIR, 'extracted', folder_slug)
+
+                    images = []
+                    doc_text = ""
+                    # Agar avval ajratilgan papka mavjud bo'lsa va unda rasmlar bo'lsa
+                    if os.path.exists(extract_dir):
+                        existing_imgs = sorted([f for f in os.listdir(extract_dir) if f.lower().endswith(('.jpg', '.jpeg', '.png'))])
+                        if existing_imgs:
+                            for img_f in existing_imgs:
+                                img_p = os.path.join(extract_dir, img_f)
+                                with open(img_p, 'rb') as f_im:
+                                    b64 = base64.b64encode(f_im.read()).decode('utf-8')
+                                    images.append(f"data:image/jpeg;base64,{b64}")
+
+                    # Agar papka bo'lmasa yoki rasm topilmasa, Word faylidan ajratib saqlaymiz
+                    if not images:
+                        images, _, doc_text, _ = extract_and_save_student_images(target_path, folder_slug)
+
                     self.send_response(200)
                     self.send_header('Content-Type', 'application/json; charset=utf-8')
                     self.send_header('Access-Control-Allow-Origin', '*')
@@ -1310,6 +1367,7 @@ class WebServerHandler(BaseHTTPRequestHandler):
                         "success": True,
                         "filename": os.path.basename(target_path),
                         "filepath": os.path.abspath(target_path),
+                        "extracted_folder": f"files/extracted/{folder_slug}",
                         "text": doc_text,
                         "images": images
                     }).encode('utf-8'))
@@ -1999,9 +2057,23 @@ Aniq JSON formatda qaytar:
             fname = parsed_path[7:]
             target_path = os.path.join(FILES_DIR, fname)
             if os.path.exists(target_path) and os.path.isfile(target_path):
+                mime, _ = mimetypes.guess_type(target_path)
+                if not mime:
+                    if target_path.endswith('.docx'):
+                        mime = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+                    elif target_path.endswith('.jpg') or target_path.endswith('.jpeg'):
+                        mime = 'image/jpeg'
+                    elif target_path.endswith('.png'):
+                        mime = 'image/png'
+                    else:
+                        mime = 'application/octet-stream'
+
+                disp = 'inline' if (mime.startswith('image/') or mime.startswith('text/')) else f'attachment; filename="{os.path.basename(target_path)}"'
+
                 self.send_response(200)
-                self.send_header('Content-Type', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document')
-                self.send_header('Content-Disposition', f'attachment; filename="{os.path.basename(target_path)}"')
+                self.send_header('Content-Type', mime)
+                self.send_header('Content-Disposition', disp)
+                self.send_header('Access-Control-Allow-Origin', '*')
                 self.end_headers()
                 with open(target_path, 'rb') as f:
                     self.wfile.write(f.read())
@@ -2308,8 +2380,12 @@ Aniq JSON formatda qaytar:
                 with open(saved_path, 'wb') as f:
                     f.write(docx_bytes)
 
-                # 1. Rasmlarni ajratib olish (Crop qilingan holda)
-                images, blobs_raw, full_text = extract_doc_images_with_crop(saved_path)
+                safe_slug = re.sub(r'[^a-zA-Z0-9_-]+', '_', os.path.splitext(filename)[0]).strip('_')
+                if not safe_slug:
+                    safe_slug = f"student_row_{row_idx}"
+
+                # 1. Rasmlarni ajratib olish va o'zining maxsus papkasiga (files/extracted/<slug>/) saqlash
+                images, blobs_raw, full_text, saved_img_urls = extract_and_save_student_images(saved_path, safe_slug)
 
                 # 2. AVVAL QR KODLARNI TEKSHIRISH (100% RASMIY VA ANIQ!)
                 qr_extracted = scan_all_qrs(blobs_raw)
@@ -2389,40 +2465,67 @@ Aniq JSON formatda qaytar:
 
                 # 3. Excelga yozish
                 if row_idx >= 2:
-                    wb = openpyxl.load_workbook(os.path.join(BASE_DIR, 'Talabalar_Toliq_Royxati.xlsx'))
-                    ws = wb.active
+                    with EXCEL_LOCK:
+                        wb = openpyxl.load_workbook(os.path.join(BASE_DIR, 'Talabalar_Toliq_Royxati.xlsx'))
+                        ws = wb.active
 
-                    clean_ism = clean_uz_name(ai_data.get('ism', ''))
-                    clean_ota = clean_uz_name(ai_data.get('ota', ''))
+                        clean_ism = clean_uz_name(ai_data.get('ism', ''))
+                        clean_ota = clean_uz_name(ai_data.get('ota', ''))
 
-                    # ASL RO'YXAT HIMOYASI — faqat bo'sh bo'lsa to'ldiriladi
-                    if clean_ism:
-                        if not str(ws.cell(row=row_idx, column=2).value or '').strip():
+                        # Foydalanuvchi biriktirgan yangi fayldagi ism va ota to'liq yoziladi
+                        if clean_ism:
                             ws.cell(row=row_idx, column=2, value=clean_ism)
-                        ai_data['ism'] = clean_ism
-                    if clean_ota:
-                        if not str(ws.cell(row=row_idx, column=7).value or '').strip():
+                            ai_data['ism'] = clean_ism
+                        if clean_ota:
                             ws.cell(row=row_idx, column=7, value=clean_ota)
-                        ai_data['ota'] = clean_ota
-                    
-                    cur_ism = clean_ism or str(ws.cell(row=row_idx, column=2).value or '')
-                    cur_ota = clean_ota or str(ws.cell(row=row_idx, column=7).value or '')
-                    ws.cell(row=row_idx, column=8, value=f"{cur_ism} {cur_ota}".strip())
-                    # 9-ustun (Passport bo'yicha F.I.SH) — bu yerda yozilmaydi,
-                    # uni scripts/verify_passport_names.py boshqaradi.
+                            ai_data['ota'] = clean_ota
+                        
+                        cur_ism = clean_ism or str(ws.cell(row=row_idx, column=2).value or '')
+                        cur_ota = clean_ota or str(ws.cell(row=row_idx, column=7).value or '')
+                        full_fish = f"{cur_ism} {cur_ota}".strip()
+                        ws.cell(row=row_idx, column=8, value=full_fish)
 
-                    if ai_data.get('pass_ser'): ws.cell(row=row_idx, column=10, value=ai_data['pass_ser'])
-                    if ai_data.get('pinfl'): ws.cell(row=row_idx, column=11, value=str(ai_data['pinfl']))
-                    if ai_data.get('pass_ber'): ws.cell(row=row_idx, column=12, value=ai_data['pass_ber'])
-                    if ai_data.get('dob'): ws.cell(row=row_idx, column=13, value=ai_data['dob'])
-                    ws.cell(row=row_idx, column=14, value="Mavjud")
-                    if ai_data.get('sh_doc'): ws.cell(row=row_idx, column=15, value=ai_data['sh_doc'])
-                    if ai_data.get('maktab'): ws.cell(row=row_idx, column=17, value=ai_data['maktab'])
-                    if ai_data.get('doc_tur'): ws.cell(row=row_idx, column=18, value=ai_data['doc_tur'])
-                    if ai_data.get('yil'): ws.cell(row=row_idx, column=19, value=str(ai_data['yil']))
+                        if ai_data.get('pass_ser'): ws.cell(row=row_idx, column=10, value=ai_data['pass_ser'])
+                        if ai_data.get('pinfl'): ws.cell(row=row_idx, column=11, value=str(ai_data['pinfl']))
+                        if ai_data.get('pass_ber'): ws.cell(row=row_idx, column=12, value=ai_data['pass_ber'])
+                        if ai_data.get('dob'): ws.cell(row=row_idx, column=13, value=ai_data['dob'])
+                        ws.cell(row=row_idx, column=14, value="Mavjud")
+                        if ai_data.get('sh_doc'): ws.cell(row=row_idx, column=15, value=ai_data['sh_doc'])
+                        if ai_data.get('maktab'): ws.cell(row=row_idx, column=17, value=ai_data['maktab'])
+                        if ai_data.get('doc_tur'): ws.cell(row=row_idx, column=18, value=ai_data['doc_tur'])
+                        if ai_data.get('yil'): ws.cell(row=row_idx, column=19, value=str(ai_data['yil']))
 
-                    wb.save(os.path.join(BASE_DIR, 'Talabalar_Toliq_Royxati.xlsx'))
-                    wb.save(os.path.join(BASE_DIR, 'Talabalar_Yangilangan_Royxat.xlsx'))
+                        group_val = str(ws.cell(row=row_idx, column=23).value or '').strip()
+
+                        wb.save(os.path.join(BASE_DIR, 'Talabalar_Toliq_Royxati.xlsx'))
+                        wb.save(os.path.join(BASE_DIR, 'Talabalar_Yangilangan_Royxat.xlsx'))
+                        wb.save(os.path.join(BASE_DIR, 'qayta_tekshiruv', 'Talabalar_Yangilangan_Royxat.xlsx'))
+
+                    # 4. manual_file_map.json ga saqlash va qulflash
+                    try:
+                        manual_map_path = os.path.join(BASE_DIR, 'scripts', 'manual_file_map.json')
+                        if os.path.exists(manual_map_path):
+                            with open(manual_map_path, 'r', encoding='utf-8') as mf:
+                                mdata = json.load(mf)
+                        else:
+                            mdata = {"fayllar": {}, "qulflangan": {}}
+
+                        keys_to_lock = []
+                        if cur_ism and group_val: keys_to_lock.append(f"{cur_ism}|{group_val}")
+                        if full_fish and group_val: keys_to_lock.append(f"{full_fish}|{group_val}")
+                        if clean_ism and group_val: keys_to_lock.append(f"{clean_ism}|{group_val}")
+
+                        for k in keys_to_lock:
+                            mdata.setdefault('fayllar', {})[k] = {
+                                "file": filename,
+                                "sabab": f"Foydalanuvchi biriktirdi (extracted/{safe_slug})"
+                            }
+                            mdata.setdefault('qulflangan', {})[k] = f"Foydalanuvchi biriktirgan {filename} fayli bilan tasdiqlandi"
+
+                        with open(manual_map_path, 'w', encoding='utf-8') as mf:
+                            json.dump(mdata, mf, ensure_ascii=False, indent=2)
+                    except Exception as e_map:
+                        print(f"manual_file_map yangilash xatosi: {e_map}")
 
                     # Fondada hisobot HTML larini ham yangilash
                     trigger_report_rebuild()
@@ -2435,8 +2538,9 @@ Aniq JSON formatda qaytar:
                 self.end_headers()
                 self.wfile.write(json.dumps({
                     "success": True,
-                    "message": "Fayl muvaffaqiyatli yuklandi va AI orqali to'liq o'qilib Excelga saqlandi!",
+                    "message": "Fayl muvaffaqiyatli yuklandi, o'z papkasiga ajratildi va Excelga saqlandi!",
                     "filename": filename,
+                    "extracted_folder": f"files/extracted/{safe_slug}",
                     "images": images,
                     "data": ai_data
                 }).encode('utf-8'))

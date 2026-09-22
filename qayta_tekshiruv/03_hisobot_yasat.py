@@ -1294,7 +1294,7 @@ html = f"""<!DOCTYPE html>
 
   .mono {{ font-family: 'JetBrains Mono', monospace; font-weight: 600; }}
   .pass-text {{ color: #1e3c72; font-weight: 700; font-size: 13px; }}
-  .pinfl-text {{ color: #0f172a; font-size: 12.5px; letter-spacing: 0.5px; }}
+  .pinfl-text {{ color: #7c3aed; font-weight: 700; font-size: 12.5px; letter-spacing: 0.5px; }}
   .doc-text {{ color: #059669; font-weight: 700; }}
 
   .btn-action {{
@@ -1918,12 +1918,12 @@ html = f"""<!DOCTYPE html>
 
   .mono-pinfl {{
     font-family: 'JetBrains Mono', monospace;
-    font-weight: 600;
-    font-size: 11.5px;
-    color: #0f172a;
+    font-weight: 700;
+    font-size: 12px;
+    color: #7c3aed;
     letter-spacing: 0.5px;
   }}
-  body.dark-mode .mono-pinfl {{ color: #94a3b8; }}
+  body.dark-mode .mono-pinfl {{ color: #c084fc !important; font-weight: 700; }}
 
   .mono-doc {{
     font-family: 'JetBrains Mono', monospace;
@@ -3838,7 +3838,8 @@ html = f"""<!DOCTYPE html>
     color: #60a5fa !important;
   }}
   body.dark-mode .pinfl-text {{
-    color: #38bdf8 !important;
+    color: #c084fc !important;
+    font-weight: 700 !important;
   }}
   body.dark-mode .doc-text {{
     color: #34d399 !important;
