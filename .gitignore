@@ -9,6 +9,10 @@ __pycache__/
 *.pyd
 .Python
 
+# Node modullari
+node_modules/
+package-lock.json
+
 # Vaqtinchalik fayllar
 *.tmp
 *.temp

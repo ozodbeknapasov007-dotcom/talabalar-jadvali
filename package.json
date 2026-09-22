@@ -1,0 +1,24 @@
+{
+  "name": "tg-shartnomalar",
+  "version": "1.0.0",
+  "description": "Ushbu dastur **Word (.docx)** shartnomalari/arizalari va **Excel (.xlsx)** talabalar ro'yxati o'rtasida aqlli tahlil (NLP, RegEx va Fuzzy Matching) o'tkazib, bo'sh qolgan \"Otasining ismi\" (Sharifi) ustunini avtomatik ravishda to'ldiradi va yangi to'liq shakllangan Excel fayli hamda interaktiv HTML hisobotini yaratadi.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/OzodbekNapasov/Talabalar-ro-yhati.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/OzodbekNapasov/Talabalar-ro-yhati/issues"
+  },
+  "homepage": "https://github.com/OzodbekNapasov/Talabalar-ro-yhati#readme",
+  "dependencies": {
+    "adm-zip": "^0.6.1"
+  }
+}
