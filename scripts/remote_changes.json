@@ -43,6 +43,28 @@
     },
     "id": "chg_1790093244699",
     "created_at": "2026-09-22T16:07:24.699Z"
+  },
+  {
+    "type": "update_student",
+    "data": {
+      "row": 91,
+      "fields": {
+        "ism": "Qodirova Sabina",
+        "ota": "Suxrob qizi",
+        "group": "26-04",
+        "pv": "",
+        "pinfl": "",
+        "dob": "",
+        "ber": "",
+        "doc_tur": "Shahodatnoma",
+        "sh_doc": "",
+        "mak": "",
+        "yil": "",
+        "yon": "Hamshiralik ishi"
+      }
+    },
+    "id": "chg_1790093388113",
+    "created_at": "2026-09-22T16:09:48.113Z"
   }
 ]
 =======
