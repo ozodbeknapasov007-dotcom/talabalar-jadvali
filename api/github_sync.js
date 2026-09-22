@@ -17,6 +17,10 @@ export default async function handler(req, res) {
   const REPO_NAME = 'Talabalar-ro-yhati';
   const FILE_PATH = 'scripts/remote_changes.json';
 
+  if (!GITHUB_TOKEN) {
+    return res.status(500).json({ error: 'GITHUB_TOKEN muhit o\'zgaruvchisi topilmadi' });
+  }
+
   try {
     const change = req.body;
     if (!change || !change.type) {
