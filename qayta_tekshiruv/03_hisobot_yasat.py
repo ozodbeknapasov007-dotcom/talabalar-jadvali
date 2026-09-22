@@ -4462,43 +4462,47 @@ html = f"""<!DOCTYPE html>
     to {{ transform: rotate(360deg); }}
   }}
 
-  /* Katta ekrandagi suzuvchi (Floating) yuklanish bildirishnomasi */
+  /* Ixcham, zamonaviy va pastki o'ng burchakdagi suzuvchi GitHub bildirishnomasi */
   .git-sync-floating-overlay {{
     position: fixed;
-    top: 24px;
+    bottom: 24px;
     right: 24px;
     z-index: 99999;
     display: flex;
     align-items: center;
-    gap: 14px;
-    padding: 13px 20px;
-    border-radius: 14px;
-    background: rgba(15, 23, 42, 0.95);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    box-shadow: 0 12px 30px -5px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.12);
+    gap: 12px;
+    padding: 10px 14px 10px 12px;
+    border-radius: 12px;
+    background: rgba(15, 23, 42, 0.92);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    box-shadow: 0 10px 28px -4px rgba(0, 0, 0, 0.45), 0 0 0 1px rgba(255, 255, 255, 0.1);
     color: #ffffff;
-    font-size: 13px;
-    transform: translateY(-90px);
+    transform: translateY(30px) scale(0.96);
     opacity: 0;
     pointer-events: none;
-    transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+    transition: all 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+    max-width: 380px;
   }}
   .git-sync-floating-overlay.active {{
-    transform: translateY(0);
+    transform: translateY(0) scale(1);
     opacity: 1;
     pointer-events: auto;
   }}
-  .git-sync-floating-overlay.syncing {{
-    border-left: 4px solid #3b82f6;
+  .git-sync-floating-overlay.syncing,
+  .git-sync-floating-overlay.pending {{
+    border-left: 3.5px solid #38bdf8;
+    box-shadow: 0 10px 28px -4px rgba(0, 0, 0, 0.5), 0 0 16px -2px rgba(56, 189, 248, 0.3), 0 0 0 1px rgba(56, 189, 248, 0.2);
   }}
   .git-sync-floating-overlay.synced {{
-    border-left: 4px solid #10b981;
+    border-left: 3.5px solid #10b981;
+    box-shadow: 0 10px 28px -4px rgba(0, 0, 0, 0.5), 0 0 16px -2px rgba(16, 185, 129, 0.3), 0 0 0 1px rgba(16, 185, 129, 0.2);
   }}
   .git-sync-floating-overlay.error {{
-    border-left: 4px solid #ef4444;
+    border-left: 3.5px solid #ef4444;
+    box-shadow: 0 10px 28px -4px rgba(0, 0, 0, 0.5), 0 0 16px -2px rgba(239, 68, 68, 0.3), 0 0 0 1px rgba(239, 68, 68, 0.2);
   }}
-  .git-pulse-ring {{
+  .git-overlay-icon-wrap {{
     position: relative;
     width: 26px;
     height: 26px;
@@ -4507,14 +4511,92 @@ html = f"""<!DOCTYPE html>
     justify-content: center;
     flex-shrink: 0;
   }}
-  .git-pulse-ring .ring-anim {{
+  .git-overlay-spinner {{
     position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    border: 2px solid rgba(56, 189, 248, 0.25);
+    border-top-color: #38bdf8;
+    animation: ghSpinAnim 0.75s linear infinite;
+    display: none;
+  }}
+  .git-overlay-icon {{
+    display: flex;
+    align-items: center;
+    justify-content: center;
     width: 100%;
     height: 100%;
-    border-radius: 50%;
-    border: 2.5px solid #3b82f6;
-    border-top-color: transparent;
-    animation: ghSpinAnim 0.8s linear infinite;
+  }}
+  .git-overlay-content {{
+    flex: 1;
+    min-width: 0;
+  }}
+  .git-overlay-header {{
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }}
+  .git-overlay-title {{
+    font-weight: 700;
+    font-size: 12.5px;
+    color: #f8fafc;
+    letter-spacing: -0.01em;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }}
+  .git-overlay-link {{
+    font-size: 10.5px;
+    font-weight: 600;
+    color: #38bdf8;
+    text-decoration: none;
+    padding: 1px 6px;
+    border-radius: 4px;
+    background: rgba(56, 189, 248, 0.12);
+    border: 1px solid rgba(56, 189, 248, 0.25);
+    transition: all 0.15s ease;
+    white-space: nowrap;
+  }}
+  .git-overlay-link:hover {{
+    background: rgba(56, 189, 248, 0.22);
+    color: #7dd3fc;
+  }}
+  .git-overlay-subtitle {{
+    font-size: 11px;
+    color: #94a3b8;
+    margin-top: 1.5px;
+    line-height: 1.35;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 250px;
+  }}
+  .git-overlay-close {{
+    background: transparent;
+    border: none;
+    color: #64748b;
+    padding: 4px;
+    border-radius: 6px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-left: 2px;
+    transition: all 0.15s ease;
+    flex-shrink: 0;
+  }}
+  .git-overlay-close:hover {{
+    background: rgba(255, 255, 255, 0.1);
+    color: #f1f5f9;
+  }}
+  @media (max-width: 640px) {{
+    .git-sync-floating-overlay {{
+      bottom: 16px;
+      right: 16px;
+      left: 16px;
+      max-width: none;
+    }}
   }}
 </style>
 
@@ -4737,16 +4819,26 @@ var RAW_STUDENTS = {students_json};
   </div>
 </div>
 
-<!-- Katta ekrandagi suzuvchi GitHub yuklanish bildirishnomasi -->
-<div id="gitSyncFloatingOverlay" class="git-sync-floating-overlay" onclick="window.open('https://github.com/OzodbekNapasov/Talabalar-ro-yhati', '_blank')" title="GitHub repozitoriyasini ochish">
-  <div class="git-pulse-ring">
-    <span id="gitOverlaySpinner" class="ring-anim"></span>
-    <span id="gitOverlayIcon" style="font-size:14px;">🔄</span>
+<!-- Suzuvchi GitHub yuklanish bildirishnomasi (Pastki o'ng burchakda) -->
+<div id="gitSyncFloatingOverlay" class="git-sync-floating-overlay" role="alert" aria-live="polite">
+  <div class="git-overlay-icon-wrap" id="gitOverlayIconWrap">
+    <div id="gitOverlaySpinner" class="git-overlay-spinner"></div>
+    <div id="gitOverlayIcon" class="git-overlay-icon">
+      <svg viewBox="0 0 24 24" fill="#38bdf8" width="16" height="16"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+    </div>
   </div>
-  <div>
-    <div id="gitOverlayTitle" style="font-weight:800; font-size:13px; color:#ffffff;">GitHub'ga yuklanmoqda...</div>
-    <div id="gitOverlaySubtitle" style="font-size:11.5px; color:#94a3b8; margin-top:2px;">O'zgarishlar 2 soniyada GitHub repozitoriyasiga yuboriladi</div>
+  <div class="git-overlay-content">
+    <div class="git-overlay-header">
+      <div id="gitOverlayTitle" class="git-overlay-title">GitHub: Sinxronlandi</div>
+      <a href="https://github.com/OzodbekNapasov/Talabalar-ro-yhati" target="_blank" class="git-overlay-link" title="GitHub repozitoriyasini ochish">
+        Repozitoriy ↗
+      </a>
+    </div>
+    <div id="gitOverlaySubtitle" class="git-overlay-subtitle">Barcha ma'lumotlar saqlandi</div>
   </div>
+  <button type="button" class="git-overlay-close" onclick="GitSyncManager.dismiss(event)" title="Yopish">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+  </button>
 </div>
 
 <div class="container">

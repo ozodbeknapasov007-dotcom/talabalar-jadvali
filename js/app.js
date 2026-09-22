@@ -3358,20 +3358,29 @@ window.GitSyncManager = {
   pollTimer: null,
   hideOverlayTimer: null,
   currentStatus: 'synced',
+  isUserInitiated: false,
 
   init: function() {
-    this.checkStatus();
+    this.checkStatus(null, true);
     // Har 10 soniyada fonda tekshirib turish
     setInterval(() => {
-      if (this.currentStatus === 'synced') {
-        this.checkStatus();
-      }
+      this.checkStatus(null, false);
     }, 10000);
+  },
+
+  dismiss: function(e) {
+    if (e) e.stopPropagation();
+    const overlay = document.getElementById('gitSyncFloatingOverlay');
+    if (overlay) {
+      overlay.classList.remove('active');
+    }
+    if (this.hideOverlayTimer) clearTimeout(this.hideOverlayTimer);
   },
 
   notifyChange: function() {
     // Foydalanuvchi biror amal bajarganda darhol ekranda yuklanishni ko'rsatish
-    this.updateUI('pending', "GitHub'ga yuklanmoqda...", "O'zgarishlar 2 soniyada GitHub repozitoriyasiga yuboriladi");
+    this.isUserInitiated = true;
+    this.updateUI('pending', "GitHub'ga yuklanmoqda...", "O'zgarishlar 2 soniyada GitHub repozitoriyasiga yuboriladi", true);
     this.startFastPolling();
   },
 
@@ -3384,12 +3393,13 @@ window.GitSyncManager = {
         if (status === 'synced' || attempts > 30) {
           clearInterval(this.pollTimer);
           this.pollTimer = null;
+          this.isUserInitiated = false;
         }
-      });
+      }, false);
     }, 1200);
   },
 
-  checkStatus: function(callback) {
+  checkStatus: function(callback, isInitialCheck) {
     const apiHost = (window.location.protocol === 'http:' || window.location.protocol === 'https:') ? '' : 'http://localhost:8080';
     fetch(apiHost + '/api/git_sync_status?t=' + Date.now())
       .then(res => {
@@ -3400,16 +3410,20 @@ window.GitSyncManager = {
         const state = data.state || 'synced';
         const msg = data.message || 'Sinxronlangan';
         const lastSync = data.last_sync ? ` (${data.last_sync})` : '';
+        const prevStatus = this.currentStatus;
         this.currentStatus = state;
 
+        // Toast faqat amal bajarilganda yoki sinxronizatsiya vaqtida ko'rsatiladi
+        const showToast = !isInitialCheck && (this.isUserInitiated || state === 'syncing' || state === 'pending' || state === 'error' || (state === 'synced' && (prevStatus === 'syncing' || prevStatus === 'pending')));
+
         if (state === 'syncing') {
-          this.updateUI('syncing', "GitHub'ga yuklanmoqda...", "O'zgarishlar GitHub repozitoriyasiga yuborilmoqda...");
+          this.updateUI('syncing', "GitHub'ga yuklanmoqda...", "O'zgarishlar GitHub repozitoriyasiga yuborilmoqda...", showToast);
         } else if (state === 'pending') {
-          this.updateUI('pending', "GitHub'ga tayyorlanmoqda...", "2-3 soniya ichida yuklash boshlanadi");
+          this.updateUI('pending', "GitHub'ga tayyorlanmoqda...", "2-3 soniya ichida yuklash boshlanadi", showToast);
         } else if (state === 'error') {
-          this.updateUI('error', "GitHub xatosi", data.detail || msg);
+          this.updateUI('error', "GitHub xatosi", data.detail || msg, true);
         } else {
-          this.updateUI('synced', "GitHub: Sinxronlangan" + lastSync, "Barcha ma'lumotlar saqlandi");
+          this.updateUI('synced', "GitHub: Sinxronlangan" + lastSync, "Barcha ma'lumotlar saqlandi", showToast);
         }
 
         if (typeof callback === 'function') callback(state);
@@ -3419,7 +3433,7 @@ window.GitSyncManager = {
       });
   },
 
-  updateUI: function(state, title, subtitle) {
+  updateUI: function(state, title, subtitle, showToast) {
     const badge = document.getElementById('githubSyncBadge');
     const badgeText = document.getElementById('ghSyncText');
     const badgeSpinner = document.getElementById('ghSyncSpinner');
@@ -3443,27 +3457,33 @@ window.GitSyncManager = {
       overlayTitle.innerText = title;
       overlaySub.innerText = subtitle;
 
-      if (state === 'syncing' || state === 'pending') {
-        if (this.hideOverlayTimer) clearTimeout(this.hideOverlayTimer);
-        overlay.classList.add('active');
-        if (overlaySpinner) overlaySpinner.style.display = 'block';
-        if (overlayIcon) overlayIcon.innerText = '🔄';
-      } else if (state === 'synced') {
-        if (overlaySpinner) overlaySpinner.style.display = 'none';
-        if (overlayIcon) overlayIcon.innerText = '✅';
-        overlay.classList.add('active');
-        if (this.hideOverlayTimer) clearTimeout(this.hideOverlayTimer);
-        this.hideOverlayTimer = setTimeout(() => {
-          overlay.classList.remove('active');
-        }, 3500);
-      } else if (state === 'error') {
-        if (overlaySpinner) overlaySpinner.style.display = 'none';
-        if (overlayIcon) overlayIcon.innerText = '⚠️';
-        overlay.classList.add('active');
-        if (this.hideOverlayTimer) clearTimeout(this.hideOverlayTimer);
-        this.hideOverlayTimer = setTimeout(() => {
-          overlay.classList.remove('active');
-        }, 6000);
+      const SVG_SPINNER = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2.5" class="gh-spin"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>';
+      const SVG_CHECK = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>';
+      const SVG_WARN = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2.5"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>';
+
+      if (showToast) {
+        if (state === 'syncing' || state === 'pending') {
+          if (this.hideOverlayTimer) clearTimeout(this.hideOverlayTimer);
+          overlay.classList.add('active');
+          if (overlaySpinner) overlaySpinner.style.display = 'block';
+          if (overlayIcon) overlayIcon.innerHTML = SVG_SPINNER;
+        } else if (state === 'synced') {
+          if (overlaySpinner) overlaySpinner.style.display = 'none';
+          if (overlayIcon) overlayIcon.innerHTML = SVG_CHECK;
+          overlay.classList.add('active');
+          if (this.hideOverlayTimer) clearTimeout(this.hideOverlayTimer);
+          this.hideOverlayTimer = setTimeout(() => {
+            overlay.classList.remove('active');
+          }, 3200);
+        } else if (state === 'error') {
+          if (overlaySpinner) overlaySpinner.style.display = 'none';
+          if (overlayIcon) overlayIcon.innerHTML = SVG_WARN;
+          overlay.classList.add('active');
+          if (this.hideOverlayTimer) clearTimeout(this.hideOverlayTimer);
+          this.hideOverlayTimer = setTimeout(() => {
+            overlay.classList.remove('active');
+          }, 5000);
+        }
       }
     }
   }
