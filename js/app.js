@@ -2161,13 +2161,12 @@ window._buildStyledSheet = function(students) {
     { header: 'Shartnoma #',     key: 'shnum',  wch: 11 },
     { header: "F.I.SH (Talaba)", key: '__fish', wch: 32 },
     { header: 'Pasport',         key: 'pv',     wch: 12 },
+    { header: 'Berilgan sana',   key: 'ber',    wch: 14 },
     { header: 'JSHSHIR',         key: 'pinfl',  wch: 16 },
     { header: "Tug'ilgan sana",  key: 'dob',    wch: 14 },
     { header: 'Hujjat raqami',   key: 'sh_doc', wch: 13 },
     { header: 'Muassasa',        key: 'mak',    wch: 36 },
     { header: 'Bitirgan yili',   key: 'yil',    wch: 13 },
-    { header: "Yo'nalish",       key: 'yon',    wch: 18 },
-    { header: 'Telefon',         key: 'tel',    wch: 14 },
     { header: 'Holati',          key: '__ver',  wch: 13 }
   ];
 
@@ -2212,13 +2211,12 @@ window._buildStyledSheet = function(students) {
       st.shnum  || '',
       fish,
       st.pv     || '',
+      st.ber    || '',
       st.pinfl  || '',
       st.dob    || '',
       st.sh_doc || '',
       st.mak    || '',
       st.yil    || '',
-      st.yon    || '',
-      st.tel    || '',
       st.verified || 'KUTILMOQDA'
     ]);
   });

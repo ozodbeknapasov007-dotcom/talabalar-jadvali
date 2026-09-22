@@ -391,8 +391,11 @@ def send_backup_to_telegram(reason='kunlik'):
 
     import requests
 
+    # Faqat chiroyli, guruhlarga bo'lingan fayl yuboriladi — bu aynan
+    # "Jadvalni Eksport" tugmasi beradigan fayl (/api/export_full_excel
+    # ham shu build_full_multisheet_excel natijasini qaytaradi).
+    # Xom ichki baza (Talabalar_Toliq_Royxati.xlsx) yuborilmaydi.
     files_to_send = [
-        os.path.join(BASE_DIR, 'Talabalar_Toliq_Royxati.xlsx'),
         os.path.join(BASE_DIR, 'Talabalar_Yangilangan_Royxat.xlsx'),
     ]
     stamp = time.strftime('%Y-%m-%d %H:%M')
@@ -1363,7 +1366,6 @@ def build_full_multisheet_excel(source_ws, filter_status=None):
         "T/R",
         "Guruh",
         "I.F.O",
-        "Yo'nalishi",
         "To'lov statusi",
         "Shartnoma raqami",
         "Sanasi",
@@ -1424,13 +1426,13 @@ def build_full_multisheet_excel(source_ws, filter_status=None):
                 if filter_status in ['CHALA'] and 'CHALA' not in stat_val: continue
                 if filter_status in ['YOQ', 'FAYL_YOQ', 'TOPILMADI'] and ('FAYL_YOQ' not in stat_val and 'YOQ' not in stat_val): continue
 
-            # 24 ustunli yangi qator (Telefon raqami (20-ustun) chiqarib tashlangan, Guruh 2-ustunda joylashtirilgan)
+            # 23 ustunli yangi qator. Chiqarib tashlanganlar: Telefon raqami
+            # (manba 20-ustun) va Yo'nalishi (manba 3-ustun). Guruh 2-ustunda.
             new_row = [
                 out_tr,                                         # 1: T/R
                 str(row_vals[22] or '').strip(),                # 2: Guruh (Boshida, filterlash uchun)
                 row_vals[1] or '',                              # 3: I.F.O
-                row_vals[2] or '',                              # 4: Yo'nalishi
-                row_vals[3] or '',                              # 5: To'lov statusi
+                row_vals[3] or '',                              # 4: To'lov statusi
                 row_vals[4] or '',                              # 6: Shartnoma raqami
                 row_vals[5] or '',                              # 7: Sanasi
                 row_vals[6] or '',                              # 8: Otasining ismi
