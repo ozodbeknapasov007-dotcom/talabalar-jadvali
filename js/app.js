@@ -2114,6 +2114,46 @@ window.openStudentByRow = function(rowNum) {
 /* =========================================================================
    CHIROYLI EXCEL YARATISH HELPER (14pt font, rangli header, alternating rows)
    ========================================================================= */
+/* TO'LIQ KO'P SAHIFALI KITOB: 1-sahifa "Jami", keyin har bir guruh alohida.
+   Guruhlar ro'yxati MA'LUMOTDAN olinadi — avval qo'lda '26-01'...'26-07' deb
+   yozilgani uchun "Talabalar safidan chiqarilganlar" kabi guruhlar eksportga
+   umuman tushmay qolardi. Yangi guruh qo'shilsa ham o'zi ilinadi. */
+window._buildFullWorkbook = function(students) {
+  var wb = XLSX.utils.book_new();
+
+  XLSX.utils.book_append_sheet(wb, window._buildStyledSheet(students), "Jami talabalar");
+
+  // Guruhlarni ma'lumotdan yig'amiz: raqamli guruhlar oldin, maxsus guruhlar keyin
+  var groups = [];
+  students.forEach(function(s) {
+    var g = (s.group || '').trim();
+    if (g && groups.indexOf(g) === -1) groups.push(g);
+  });
+  groups.sort(function(a, b) {
+    var na = /^\d/.test(a), nb = /^\d/.test(b);
+    if (na !== nb) return na ? -1 : 1;
+    return a.localeCompare(b, 'uz');
+  });
+
+  groups.forEach(function(g) {
+    var gSt = students.filter(function(s) { return (s.group || '').trim() === g; });
+    gSt.sort(function(a, b) { return (a.ism || '').localeCompare(b.ism || '', 'uz'); });
+    // Excel sahifa nomi 31 belgidan oshmasligi va : \ / ? * [ ] bo'lmasligi kerak.
+    // Raqamli guruhga "Guruh " prefiksi qo'yamiz, uzun nomli maxsus guruhga esa
+    // qo'ymaymiz — aks holda nom kesilib "Guruh Talabalar safidan chiqari" bo'lib qoladi
+    var name = (/^\d/.test(g) ? 'Guruh ' + g : g).replace(/[:\\\/\?\*\[\]]/g, ' ').slice(0, 31);
+    XLSX.utils.book_append_sheet(wb, window._buildStyledSheet(gSt), name);
+  });
+
+  // Guruhi ko'rsatilmaganlar (agar bo'lsa)
+  var noG = students.filter(function(s) { return !(s.group || '').trim(); });
+  if (noG.length > 0) {
+    XLSX.utils.book_append_sheet(wb, window._buildStyledSheet(noG), "Guruhsizlar");
+  }
+
+  return wb;
+};
+
 window._buildStyledSheet = function(students) {
   var COLS = [
     { header: 'T/R',             key: '__tr',   wch: 5  },
@@ -2390,26 +2430,16 @@ window.exportAllGroupsMultiSheetExcel = function() {
   var isRemote = (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1');
 
   if (isRemote && typeof XLSX !== 'undefined') {
-    var wb = XLSX.utils.book_new();
-    var groups = ['26-01','26-02','26-03','26-04','26-05','26-06','26-07'];
-
-    /* 1-sheet: Jami barcha talabalar */
-    var wsAll = window._buildStyledSheet(RAW_STUDENTS);
-    XLSX.utils.book_append_sheet(wb, wsAll, "Jami talabalar");
-
-    /* Har bir guruh alohida sheet */
-    groups.forEach(function(g) {
-      var gSt = RAW_STUDENTS.filter(function(s) { return (s.group || '') === g; });
-      gSt.sort(function(a, b) { return (a.ism || '').localeCompare(b.ism || '', 'uz'); });
-      XLSX.utils.book_append_sheet(wb, window._buildStyledSheet(gSt), "Guruh " + g);
-    });
-
-    /* Guruhsizlar (agar bor bo'lsa) */
-    var nSt = RAW_STUDENTS.filter(function(s) { return !s.group || s.group === 'N' || s.group === ''; });
-    if (nSt.length > 0) XLSX.utils.book_append_sheet(wb, window._buildStyledSheet(nSt), "Guruhsizlar");
-
+    var wb = window._buildFullWorkbook(RAW_STUDENTS);
     XLSX.writeFile(wb, 'Talabalar_Barcha_Guruhlar_2026-2027.xlsx', { cellStyles: true, bookSST: false });
-    showToast("Chiroyli formatlangan 8 sahifali Excel yuklab olindi!", "success");
+    showToast("Chiroyli formatlangan " + wb.SheetNames.length + " sahifali Excel yuklab olindi!", "success");
+    return;
+  }
+
+  // Vercel'da server endpointlari yo'q — XLSX yuklanmagan bo'lsa jim
+  // 404 ga borib qolmaslik uchun aniq xabar beramiz
+  if (isRemote) {
+    showToast("Excel kutubxonasi yuklanmadi. Sahifani yangilab qayta urinib ko'ring.", 'danger');
     return;
   }
 
@@ -2490,20 +2520,31 @@ window.exportFilteredToExcel = function() {
     var students = RAW_STUDENTS.slice();
     if (groupFilter) students = students.filter(function(s) { return (s.group || '') === groupFilter; });
     if (statusFilter) students = students.filter(function(s) { return (s.verified || '') === statusFilter; });
-    var ws = window._buildStyledSheet(students);
-    var wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Talabalar");
-    var fname = groupFilter ? 'Guruh_' + groupFilter + '_Royxati.xlsx' : 'Talabalar_Toliq_Royxati.xlsx';
+
+    var wb, fname;
+    if (groupFilter || statusFilter) {
+      // Filtr qo'yilgan — faqat tanlanganlar, bitta sahifada
+      wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, window._buildStyledSheet(students), "Talabalar");
+      fname = groupFilter ? 'Guruh_' + groupFilter + '_Royxati.xlsx' : 'Talabalar_Royxati.xlsx';
+    } else {
+      // Filtrsiz "to'liq ro'yxat" — guruhlarga bo'lingan to'liq kitob
+      wb = window._buildFullWorkbook(students);
+      fname = 'Talabalar_Toliq_Royxati.xlsx';
+    }
     XLSX.writeFile(wb, fname, { cellStyles: true, bookSST: false });
-    showToast("Chiroyli Excel yuklab olindi (" + students.length + " nafar)!", "success");
+    showToast("Chiroyli Excel yuklab olindi (" + students.length + " nafar, " + wb.SheetNames.length + " sahifa)!", "success");
+    return;
+  }
+
+  if (isRemote) {
+    showToast("Excel kutubxonasi yuklanmadi. Sahifani yangilab qayta urinib ko'ring.", 'danger');
     return;
   }
 
   /* Localhost: server API */
-  var gf = (document.getElementById('groupFilter') || {}).value || groupFilter;
-  var sf = (document.getElementById('statusFilter') || {}).value || statusFilter;
   showToast("To'liq Excel fayl yuklanmoqda...", "success");
-  window.location.href = '/api/export_full_excel?group=' + encodeURIComponent(gf) + '&status=' + encodeURIComponent(sf);
+  window.location.href = '/api/export_full_excel?group=' + encodeURIComponent(groupFilter) + '&status=' + encodeURIComponent(statusFilter);
 };
 
 /* =========================================================================

@@ -433,20 +433,63 @@ def _run_rebuild_worker():
         with REBUILD_LOCK:
             IS_REBUILDING = False
 
-def trigger_report_rebuild(delay=1.5, async_mode=True):
-    """Barcha hisobotlar va yangilangan Excel fayllarini xavfsiz, debounced sinxronlashtirish"""
-    global REBUILD_TIMER
+# === GURUHLANGAN (BATCHED) SAQLASH ===
+# Har bir tahrirda hisobotni qayta yaratib GitHub'ga push qilish qimmat:
+# bitta sikl ~15 soniya. Shuning uchun tahrir darhol Excelga yoziladi
+# (ma'lumot yo'qolmaydi), og'ir qism esa guruhlanadi:
+#   - oxirgi tahrirdan 30 soniya o'tgach avtomatik yuboriladi
+#   - yoki "GitHub'ga yuborish" tugmasi bosilganda darhol
+# 10 ta tahrir = 1 ta commit (avval 10 ta bo'lardi).
+BATCH_DELAY = 30.0      # tahrirlar tinchigandan keyin qancha kutish
+BATCH_MAX_WAIT = 90.0   # uzluksiz tahrirlanganda ham shundan ko'p kutmaslik
+PENDING_SINCE = None    # birinchi yuborilmagan tahrir vaqti
+
+
+def has_pending_changes():
+    return PENDING_SINCE is not None
+
+
+def flush_to_git_now():
+    """Kutayotgan o'zgarishlarni darhol yuborish ("Saqlash" tugmasi)."""
+    trigger_report_rebuild(delay=0.1)
+
+
+def trigger_report_rebuild(delay=None, async_mode=True):
+    """Barcha hisobotlar va yangilangan Excel fayllarini xavfsiz, debounced sinxronlashtirish.
+
+    delay berilmasa BATCH_DELAY ishlatiladi. Har chaqiruv oldingi taymerni
+    bekor qilib qayta rejalashtiradi, lekin BATCH_MAX_WAIT dan oshib ketsa
+    (uzluksiz tahrir holati) kutmasdan darhol ishga tushiriladi.
+    """
+    global REBUILD_TIMER, PENDING_SINCE
     if not async_mode:
+        PENDING_SINCE = None
         _run_rebuild_worker()
         return
 
+    if delay is None:
+        delay = BATCH_DELAY
+
     with REBUILD_LOCK:
+        now = time.time()
+        if PENDING_SINCE is None:
+            PENDING_SINCE = now
+        elif (now - PENDING_SINCE) >= BATCH_MAX_WAIT:
+            # Juda uzoq kutib qoldi — boshqa kechiktirmaymiz
+            delay = 0.1
+
         if REBUILD_TIMER is not None:
             try:
                 REBUILD_TIMER.cancel()
             except Exception:
                 pass
-        REBUILD_TIMER = threading.Timer(delay, _run_rebuild_worker)
+
+        def _worker():
+            global PENDING_SINCE
+            PENDING_SINCE = None
+            _run_rebuild_worker()
+
+        REBUILD_TIMER = threading.Timer(delay, _worker)
         REBUILD_TIMER.daemon = True
         REBUILD_TIMER.start()
 
@@ -1355,7 +1398,27 @@ class WebServerHandler(BaseHTTPRequestHandler):
             self.end_headers()
             with GIT_PUSH_LOCK:
                 st = dict(GIT_SYNC_STATUS)
+            # "Saqlash" tugmasi holatini ko'rsatish uchun: hali yuborilmagan
+            # o'zgarish bormi va u qancha vaqtdan beri kutyapti
+            st['pending'] = has_pending_changes()
+            st['pending_seconds'] = round(time.time() - PENDING_SINCE) if PENDING_SINCE else 0
             self.wfile.write(json.dumps(st).encode('utf-8'))
+            return
+
+        # "GitHub'ga yuborish" tugmasi — kutayotgan o'zgarishlarni darhol yuborish
+        if parsed_path.startswith('/api/flush_to_git'):
+            had = has_pending_changes()
+            flush_to_git_now()
+            self.send_response(200)
+            self.send_header('Content-Type', 'application/json; charset=utf-8')
+            self.send_header('Access-Control-Allow-Origin', '*')
+            self.send_header('Cache-Control', 'no-cache, no-store, must-revalidate')
+            self.end_headers()
+            self.wfile.write(json.dumps({
+                "success": True,
+                "had_pending": had,
+                "message": "GitHub'ga yuborilmoqda..." if had else "Yuboriladigan o'zgarish yo'q edi"
+            }).encode('utf-8'))
             return
 
         if parsed_path.startswith('/api/doc_preview'):
@@ -1854,8 +1917,9 @@ Aniq JSON formatda qaytar:
                     wb.save(excel_path)
                     wb.save(os.path.join(BASE_DIR, 'Talabalar_Yangilangan_Royxat.xlsx'))
 
-                # Debounced hisobot qayta generatsiya
-                trigger_report_rebuild(delay=1.5)
+                # Guruhlangan qayta generatsiya: 30 soniyada yoki "GitHub'ga
+                # yuborish" tugmasi bosilganda (BATCH_DELAY ga qarang)
+                trigger_report_rebuild()
 
                 self.send_response(200)
                 self.send_header('Content-Type', 'application/json; charset=utf-8')
@@ -1951,8 +2015,9 @@ Aniq JSON formatda qaytar:
             if not excel_saved:
                 print(f"[OGOHLANTIRISH] Excel saqlashda vaqtinchalik ogohlantirish ({excel_err}), lekin JSON keshda 100% saqlandi!")
 
-            # 3. Debounced qayta hisobot yasash (1.5s ichida yangi kliklar kutiladi)
-            trigger_report_rebuild(delay=1.5)
+            # 3. Guruhlangan qayta hisobot yasash (ketma-ket kliklar bitta
+            #    commit ga birlashadi — BATCH_DELAY ga qarang)
+            trigger_report_rebuild()
 
             self.send_response(200)
             self.send_header('Content-Type', 'application/json; charset=utf-8')
