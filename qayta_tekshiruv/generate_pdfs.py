@@ -1,7 +1,7 @@
 import os
 import openpyxl
 from reportlab.lib.pagesizes import A4
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Table, TableStyle
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Table, TableStyle, PageBreak
 from reportlab.lib.styles import ParagraphStyle
 from reportlab.lib import colors
 from reportlab.pdfbase import pdfmetrics
@@ -41,27 +41,14 @@ GROUP_TITLES = {
     "26-07": "Hamshiralik ishi"
 }
 
-def create_single_group_pdf(group_code, students, output_pdf_path):
-    os.makedirs(os.path.dirname(output_pdf_path), exist_ok=True)
-
+def build_group_flowables(group_code, students, avail_width):
     g_students = [s for s in students if s.get('group') == group_code]
     g_students.sort(key=lambda x: str(x.get('ism', '')).lower())
 
     leader = GROUP_LEADERS.get(group_code, "—")
     g_title = GROUP_TITLES.get(group_code, "")
 
-    doc = SimpleDocTemplate(
-        output_pdf_path,
-        pagesize=A4,
-        leftMargin=28,
-        rightMargin=28,
-        topMargin=25,
-        bottomMargin=20
-    )
-
     elements = []
-    avail_width = A4[0] - 56
-
     count = len(g_students)
     if count <= 25:
         row_height = 20
@@ -202,7 +189,44 @@ def create_single_group_pdf(group_code, students, output_pdf_path):
 
     t.setStyle(TableStyle(t_style))
     elements.append(t)
+    return elements
 
+def create_single_group_pdf(group_code, students, output_pdf_path):
+    os.makedirs(os.path.dirname(output_pdf_path), exist_ok=True)
+    doc = SimpleDocTemplate(
+        output_pdf_path,
+        pagesize=A4,
+        leftMargin=28,
+        rightMargin=28,
+        topMargin=25,
+        bottomMargin=20
+    )
+    avail_width = A4[0] - 56
+    elements = build_group_flowables(group_code, students, avail_width)
+    doc.build(elements)
+    return output_pdf_path
+
+def create_all_groups_combined_pdf(groups, students, output_pdf_path):
+    """
+    Barcha guruhlarni 1 ta umumiy PDF hujjatga birlashtiradi.
+    Har bir guruh navbati bilan alohida-alohida A4 varoqda chiqadi (PageBreak orqali).
+    """
+    os.makedirs(os.path.dirname(output_pdf_path), exist_ok=True)
+    doc = SimpleDocTemplate(
+        output_pdf_path,
+        pagesize=A4,
+        leftMargin=28,
+        rightMargin=28,
+        topMargin=25,
+        bottomMargin=20
+    )
+    avail_width = A4[0] - 56
+    elements = []
+    for idx, g in enumerate(groups):
+        g_elements = build_group_flowables(g, students, avail_width)
+        elements.extend(g_elements)
+        if idx < len(groups) - 1:
+            elements.append(PageBreak())
     doc.build(elements)
     return output_pdf_path
 
@@ -234,14 +258,20 @@ def build_all_group_pdfs():
         os.path.join(BASE_DIR, 'qayta_tekshiruv', 'pdf_jurnallar')
     ]
 
-    for g in groups:
-        for tdir in target_dirs:
-            os.makedirs(tdir, exist_ok=True)
+    for tdir in target_dirs:
+        os.makedirs(tdir, exist_ok=True)
+        # 1. Alohida guruh PDF lari
+        for g in groups:
             out_file = os.path.join(tdir, f"Guruh_{g}.pdf")
             create_single_group_pdf(g, students, out_file)
             generated_files[g] = out_file
 
-    print(f"[OK] Barcha {len(groups)} ta guruh uchun toza A4 PDF jurnallar yaratildi!")
+        # 2. Barcha 7 ta guruhni birlashtirgan YAGONA 1 ta A4 PDF (har bir guruh alohida varoqda)
+        combined_file = os.path.join(tdir, "Barcha_Guruhlar_Jurnali.pdf")
+        create_all_groups_combined_pdf(groups, students, combined_file)
+        generated_files["ALL"] = combined_file
+
+    print(f"[OK] Barcha {len(groups)} ta guruh uchun alohida va 1 ta yagona umumiy A4 PDF jurnallar yaratildi!")
     return generated_files
 
 if __name__ == '__main__':

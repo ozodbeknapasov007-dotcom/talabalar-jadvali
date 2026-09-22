@@ -1906,15 +1906,10 @@ window.renderGroupsJournalTab = function() {
   container.innerHTML = html;
 };
 
-/* BARCHA GURUH PDF JURNALLARINI KETMA-KET OCHISH */
+/* BARCHA 7 TA GURUH JURNALINI 1 TA YAGONA PDF HUJJATDA OCHISH (HAR BIR GURUH ALOHIDA VAROQDA) */
 window.downloadAllGroupPdfs = function() {
-  const groups = ['26-01','26-02','26-03','26-04','26-05','26-06','26-07'];
-  showToast('Barcha 7 guruh PDF jurnallari ochilmoqda...', 'success');
-  groups.forEach(function(g, i) {
-    setTimeout(function() {
-      window.open('pdf_jurnallar/Guruh_' + encodeURIComponent(g) + '.pdf', '_blank');
-    }, i * 600); /* har biri 600ms oraliqda — brauzer bloklamasin */
-  });
+  showToast('Barcha 7 ta guruh jurnali bitta PDF hujjatda ochilmoqda...', 'success');
+  window.open('pdf_jurnallar/Barcha_Guruhlar_Jurnali.pdf', '_blank');
 };
 
 /* GURUH JURNALINI TOZA PDF BO'LIB OCHISH (YUKLAB OLMASDAN, BRAUZERDA BEVOSITA KO'RISH VA CHOP ETISH) */
