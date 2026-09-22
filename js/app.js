@@ -1751,7 +1751,32 @@ window.renderGroupsJournalTab = function() {
   };
 
   // Guruhlar aniq 2 ta ustunli GRID ko'rinishida joylashadi
-  let html = `<div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(480px, 1fr)); gap:20px;">`;
+  let html = `
+    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;
+                background:#fff; border:1px solid #e2e8f0; border-radius:10px; padding:10px 16px;
+                margin-bottom:16px; box-shadow:0 1px 4px rgba(0,0,0,0.03);">
+      <div style="font-size:13px; font-weight:600; color:#24292f; display:flex; align-items:center; gap:8px;">
+        <svg style="width:16px;height:16px;stroke:#0969da;fill:none;stroke-width:2;" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        Barcha guruhlar (<strong>${RAW_STUDENTS.length} nafar talaba</strong>)
+      </div>
+      <div style="display:flex; gap:8px; flex-wrap:wrap;">
+        <button type="button" class="btn btn-export"
+          style="font-size:12px; padding:5px 14px;"
+          onclick="exportAllGroupsMultiSheetExcel()"
+          title="Barcha 7 guruh bitta ko'p sahifali Excel faylda">
+          <svg style="width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2;" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Barcha .xlsx
+        </button>
+        <button type="button" class="btn"
+          style="font-size:12px; padding:5px 14px; background:#dc2626; color:#fff; border-color:rgba(27,31,36,0.15);"
+          onclick="downloadAllGroupPdfs()"
+          title="Barcha 7 guruh PDF jurnallarini yangi tabda ochish">
+          <svg style="width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2;" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          Barcha PDF
+        </button>
+      </div>
+    </div>
+    <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(480px, 1fr)); gap:20px;">`;
 
   groups.forEach(function(g) {
     const gStudents = RAW_STUDENTS.filter(function(st) { return (st.group || '') === g; });
@@ -1762,25 +1787,25 @@ window.renderGroupsJournalTab = function() {
     const leaderName = groupLeaders[g] || '—';
 
     html += `
-      <div class="group-grid-card" style="background:#fff; border:1px solid #e2e8f0; border-radius:16px; box-shadow:0 4px 16px -2px rgba(15,23,42,0.04); overflow:hidden; display:flex; flex-direction:column;">
+      <div class="group-grid-card" style="background:#fff; border:1px solid #e2e8f0; border-radius:12px; box-shadow:0 1px 4px rgba(0,0,0,0.04); overflow:hidden; display:flex; flex-direction:column;">
         
-        <!-- Guruh Card Header -->
-        <div style="background:linear-gradient(135deg, #0f172a 0%, #1e293b 100%); color:#fff; padding:12px 18px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+        <!-- Guruh Card Header (flat, minimalist) -->
+        <div style="background:#0f172a; color:#fff; padding:10px 16px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
           <div>
             <div style="display:flex; align-items:center; gap:8px;">
-              <span style="background:${badgeBg}; color:#fff; font-weight:800; font-size:12.5px; padding:3px 9px; border-radius:6px;">Guruh ${g}</span>
-              <h3 style="font-size:14.5px; font-weight:800; margin:0; letter-spacing:-0.2px;">${groupTitles[g]}</h3>
+              <span style="background:${badgeBg}; color:#fff; font-weight:600; font-size:12px; padding:2px 9px; border-radius:5px; letter-spacing:0.2px;">Guruh ${g}</span>
+              <h3 style="font-size:13.5px; font-weight:600; margin:0; color:#e2e8f0;">${groupTitles[g]}</h3>
             </div>
             <p style="font-size:11.5px; color:#94a3b8; margin-top:3px; display:flex; align-items:center; gap:5px;">
               ${ICONS.user} Guruh rahbari: <strong style="color:#60a5fa;">${leaderName}</strong> &nbsp;&bull;&nbsp; Jami: <strong style="color:#fff;">${gStudents.length} nafar</strong>
             </p>
           </div>
           <div style="display:flex; gap:6px; align-items:center;">
-            <button type="button" class="btn" style="padding:6px 14px; font-size:12px; border-radius:8px; background:#dc2626; color:#fff; border:none; cursor:pointer; font-weight:700; display:inline-flex; align-items:center; gap:6px; box-shadow:0 2px 6px rgba(220,38,38,0.3);" onclick="openGroupPdf('${g}')" title="Guruh jurnalini toza A4 PDF formatda ochish va to'g'ridan-to'g'ri chop etish">
-              <svg style="width:14px;height:14px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg> PDF Ochish
+            <button type="button" class="btn" style="padding:4px 12px; font-size:11.5px; background:#dc2626; color:#fff; border-color:rgba(27,31,36,0.15);" onclick="openGroupPdf('${g}')" title="Guruh jurnalini toza A4 PDF formatda ochish">
+              <svg style="width:13px;height:13px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg> PDF
             </button>
-            <button type="button" class="btn btn-export" style="padding:6px 12px; font-size:12px; border-radius:8px;" onclick="exportSingleGroupExcel('${g}')" title="Excel (.xlsx) formatda yuklab olish">
-              <svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg> .xlsx
+            <button type="button" class="btn btn-export" style="padding:4px 12px; font-size:11.5px;" onclick="exportSingleGroupExcel('${g}')" title="Excel (.xlsx) formatda yuklab olish">
+              <svg style="width:13px;height:13px;fill:none;stroke:currentColor;stroke-width:2;" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> .xlsx
             </button>
           </div>
         </div>
@@ -1879,8 +1904,19 @@ window.renderGroupsJournalTab = function() {
     `;
   }
 
-  html += `</div>`;
+  html += `</div></div>`; /* inner grid + outer wrapper */
   container.innerHTML = html;
+};
+
+/* BARCHA GURUH PDF JURNALLARINI KETMA-KET OCHISH */
+window.downloadAllGroupPdfs = function() {
+  const groups = ['26-01','26-02','26-03','26-04','26-05','26-06','26-07'];
+  showToast('Barcha 7 guruh PDF jurnallari ochilmoqda...', 'success');
+  groups.forEach(function(g, i) {
+    setTimeout(function() {
+      window.open('pdf_jurnallar/Guruh_' + encodeURIComponent(g) + '.pdf', '_blank');
+    }, i * 600); /* har biri 600ms oraliqda — brauzer bloklamasin */
+  });
 };
 
 /* GURUH JURNALINI TOZA PDF BO'LIB OCHISH (YUKLAB OLMASDAN, BRAUZERDA BEVOSITA KO'RISH VA CHOP ETISH) */
@@ -2216,50 +2252,52 @@ window.showToast = function(msg, type) {
 
 /* EXCEL EKSPORT - TO'LIQ, JADVALLI CHIZIQLI VA RANGLI */
 window.exportFilteredToExcel = function() {
-  const apiHost = (window.location.protocol === 'http:' || window.location.protocol === 'https:') ? '' : 'http://localhost:8080';
-  
-  // Faol filtr qiymatlari
-  const groupSelect = document.getElementById('groupFilter') || document.querySelector('.group-select') || {};
-  const statusSelect = document.getElementById('statusFilter') || {};
-  const groupFilter = groupSelect.value || '';
-  const statusFilter = statusSelect.value || '';
+  const isRemote = (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1');
 
-  // 1. Agar server orqali ochilgan bo'lsa (http://localhost:8080)
-  if (window.location.protocol === 'http:' || window.location.protocol === 'https:') {
-    const downloadUrl = apiHost + '/api/export_full_excel?group=' + encodeURIComponent(groupFilter) + '&status=' + encodeURIComponent(statusFilter);
-    showToast("To'liq, rangli va jadvalli Excel fayl yuklanmoqda...", "success");
-    window.location.href = downloadUrl;
+  // Faol filtr qiymatlari
+  const groupFilter = (document.getElementById('filterGroup') || {}).value || '';
+  const statusFilter = (document.getElementById('filterStatus') || {}).value || '';
+
+  // Vercel: SheetJS orqali brauzerda yaratish
+  if (isRemote && typeof XLSX !== 'undefined') {
+    let students = RAW_STUDENTS.slice();
+    if (groupFilter) students = students.filter(function(s) { return (s.group || '') === groupFilter; });
+    if (statusFilter) students = students.filter(function(s) { return (s.verified || '') === statusFilter; });
+
+    const rows = students.map(function(st, i) {
+      return {
+        "T/R": i + 1,
+        "Guruh": st.group || '',
+        "Shartnoma #": st.shnum || '',
+        "F.I.SH (Talaba)": st.fish || ((st.ism || '') + ' ' + (st.ota || '')).trim(),
+        "Pasport": st.pv || '',
+        "JSHSHIR": st.pinfl || '',
+        "Tug'ilgan sana": st.dob || '',
+        "Hujjat raqami": st.sh_doc || '',
+        "Muassasa": st.mak || '',
+        "Bitirgan yili": st.yil || '',
+        "Yo'nalish": st.yon || '',
+        "Telefon": st.tel || '',
+        "Holati": st.verified || 'KUTILMOQDA'
+      };
+    });
+    const ws = XLSX.utils.json_to_sheet(rows);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Talabalar");
+    const fname = groupFilter ? `Guruh_${groupFilter}_Royxati.xlsx` : 'Talabalar_Toliq_Royxati.xlsx';
+    XLSX.writeFile(wb, fname);
+    showToast("Excel fayl yuklab olindi (" + students.length + " nafar)!", "success");
     return;
   }
 
-  // 2. Agar mahalliy diskdan (file:///) ochilgan bo'lsa
-  fetch('http://localhost:8080/api/export_full_excel?group=' + encodeURIComponent(groupFilter) + '&status=' + encodeURIComponent(statusFilter))
-    .then(res => {
-      if (res.ok) {
-        return res.blob().then(blob => {
-          const url = window.URL.createObjectURL(blob);
-          const a = document.createElement('a');
-          a.href = url;
-          a.download = `Talabalar_Toliq_Royxati_${groupFilter || '2026-2027'}.xlsx`;
-          document.body.appendChild(a);
-          a.click();
-          a.remove();
-          showToast("To'liq, rangli va jadvalli Excel yuklab olindi!", "success");
-        });
-      } else {
-        throw new Error("Server oflayn");
-      }
-    })
-    .catch(() => {
-      // 3. Fallback: papkadagi to'liq formatlangan faylni to'g'ridan-to'g'ri yuklash
-      const a = document.createElement('a');
-      a.href = 'Talabalar_Toliq_Royxati.xlsx';
-      a.download = 'Talabalar_Toliq_Royxati.xlsx';
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      showToast("To'liq formatlangan Excel yuklab olindi!", "success");
-    });
+  // Localhost: server API
+  const apiHost = '';
+  const groupSelect = document.getElementById('groupFilter') || document.querySelector('.group-select') || {};
+  const gf = groupSelect.value || groupFilter;
+  const sf = (document.getElementById('statusFilter') || {}).value || statusFilter;
+  const downloadUrl = apiHost + '/api/export_full_excel?group=' + encodeURIComponent(gf) + '&status=' + encodeURIComponent(sf);
+  showToast("To'liq, rangli va jadvalli Excel fayl yuklanmoqda...", "success");
+  window.location.href = downloadUrl;
 };
 
 /* =========================================================================
