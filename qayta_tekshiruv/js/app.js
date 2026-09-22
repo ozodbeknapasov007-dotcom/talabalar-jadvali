@@ -2666,29 +2666,79 @@ window.saveNewStudentData = function() {
 
   // Majburiy maydonlar: Ismi va familiyasi, Otasining ismi, Guruh
   if (!ism) {
-    alert("Iltimos, talabaning Ism va Familiyasini kiriting!");
+    if (typeof showToast === 'function') showToast("Iltimos, talabaning Ism va Familiyasini kiriting!", "error");
+    else alert("Iltimos, talabaning Ism va Familiyasini kiriting!");
     document.getElementById('add_ism').focus();
     return;
   }
 
   if (!ota) {
-    alert("Iltimos, talabaning Otasining ismini (Sharifini) kiriting!");
+    if (typeof showToast === 'function') showToast("Iltimos, talabaning Otasining ismini (Sharifini) kiriting!", "error");
+    else alert("Iltimos, talabaning Otasining ismini (Sharifini) kiriting!");
     document.getElementById('add_ota').focus();
     return;
   }
 
   if (!group) {
-    alert("Iltimos, talabaning Guruhini tanlang!");
+    if (typeof showToast === 'function') showToast("Iltimos, talabaning Guruhini tanlang!", "error");
+    else alert("Iltimos, talabaning Guruhini tanlang!");
     if (document.getElementById('add_group')) document.getElementById('add_group').focus();
     return;
   }
 
-  const btnSave = document.getElementById('btnSaveNewStudent');
-  if (btnSave) {
-    btnSave.disabled = true;
-    btnSave.innerHTML = 'Excel bazaga yozilmoqda...';
+  const fullFish = (ism + ' ' + ota).trim();
+
+  // 1. BIR ZUMDA (0 SONIYADA) EKRANGA VA BAZAGA QO'SHISH (INSTANT OPTIMISTIC UI)
+  const newStudent = {
+    row: (typeof RAW_STUDENTS !== 'undefined' ? RAW_STUDENTS.length + 2 : 100),
+    tr: (typeof RAW_STUDENTS !== 'undefined' ? RAW_STUDENTS.length + 1 : 1),
+    shnum: shnum || '—',
+    sana: new Date().toLocaleDateString('ru-RU'),
+    ism: ism,
+    ota: ota,
+    fish: fullFish,
+    yon: yon || "Hamshiralik ishi - 3 yillik",
+    group: group,
+    pv: pv,
+    pass_type: (pv && pv.toUpperCase().startsWith('A')) ? 'Biometrik Pasport' : 'ID-karta',
+    pinfl: pinfl,
+    dob: dob,
+    ber: ber,
+    sh_doc: shdoc,
+    sh_qr: '',
+    mak: mak,
+    doc_tur: doctur || "Shahodatnoma",
+    yil: yil || "2024",
+    tel: tel,
+    doc_file: docfile || (fullFish + ' ' + (shnum || '') + '.docx'),
+    status: (pv && pinfl) ? 'full' : 'chala',
+    pass_fish: '',
+    cert_fish: (shdoc ? 'Mavjud' : ''),
+    name_match: '',
+    name_flag: '',
+    verified: 'KUTILMOQDA'
+  };
+
+  // Ekranga darhol kiritish
+  window.insertStudentToDOM(newStudent);
+  window.savePendingStudentToStorage(newStudent);
+
+  // Modalni darhol yopish
+  window.closeAddStudentModal();
+
+  // Formani tozalash
+  const formFields = ['add_ism', 'add_ota', 'add_shnum', 'add_pv', 'add_pinfl', 'add_dob', 'add_ber', 'add_shdoc', 'add_mak', 'add_yil', 'add_yon', 'add_tel', 'add_docfile'];
+  formFields.forEach(function(fid) {
+    const el = document.getElementById(fid);
+    if (el) el.value = '';
+  });
+
+  // Chiroyli, tezkor bildirishnoma
+  if (typeof showToast === 'function') {
+    showToast(`✅ ${fullFish} guruh ${group} ga qo'shildi!`, 'success');
   }
 
+  // 2. FONDA SERVER VA GITHUB BILAN BOG'LANIB SAQLAYMIZ (Foydalanuvchi kutib o'tirmaydi)
   const apiHost = (window.location.protocol === 'http:' || window.location.protocol === 'https:') ? '' : 'http://localhost:8080';
   const url = apiHost + '/api/add_new_student?' +
     'ism=' + encodeURIComponent(ism) +
@@ -2710,67 +2760,18 @@ window.saveNewStudentData = function() {
   fetch(url)
     .then(function(r) { return r.json(); })
     .then(function(res) {
-      if (btnSave) {
-        btnSave.disabled = false;
-        btnSave.innerHTML = '<svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg> Bazaga Qo\'shish (Excelga Saqlash)';
-      }
-
       if (res.success) {
-        const fullFish = (ism + ' ' + ota).trim();
-        const newStudent = {
-          row: (typeof RAW_STUDENTS !== 'undefined' ? RAW_STUDENTS.length + 2 : 100),
-          tr: (typeof RAW_STUDENTS !== 'undefined' ? RAW_STUDENTS.length + 1 : 1),
-          shnum: shnum || '—',
-          sana: new Date().toLocaleDateString('ru-RU'),
-          ism: ism,
-          ota: ota,
-          fish: fullFish,
-          yon: yon || "Hamshiralik ishi - 3 yillik",
-          group: group,
-          pv: pv,
-          pass_type: (pv && pv.toUpperCase().startsWith('A')) ? 'Biometrik Pasport' : 'ID-karta',
-          pinfl: pinfl,
-          dob: dob,
-          ber: ber,
-          sh_doc: shdoc,
-          sh_qr: '',
-          mak: mak,
-          doc_tur: doctur || "Shahodatnoma",
-          yil: yil || "2024",
-          tel: tel,
-          doc_file: docfile || (fullFish + ' ' + (shnum || '') + '.docx'),
-          status: (pv && pinfl) ? 'full' : 'chala',
-          pass_fish: '',
-          cert_fish: (shdoc ? 'Mavjud' : ''),
-          name_match: '',
-          name_flag: '',
-          verified: 'KUTILMOQDA'
-        };
-
-        window.insertStudentToDOM(newStudent);
-        window.savePendingStudentToStorage(newStudent);
-        window.closeAddStudentModal();
-
-        // Formani tozalash
-        const formFields = ['add_ism', 'add_ota', 'add_shnum', 'add_pv', 'add_pinfl', 'add_dob', 'add_ber', 'add_shdoc', 'add_mak', 'add_yil', 'add_yon', 'add_tel', 'add_docfile'];
-        formFields.forEach(function(fid) {
-          const el = document.getElementById(fid);
-          if (el) el.value = '';
-        });
-
-        alert("✅ " + fullFish + " muvaffaqiyatli qo'shildi!\n\n" +
-              "Talaba " + group + " guruhiga darhol biriktirildi va ro'yxatda paydo bo'ldi.\n" +
-              "Server bazasi fonga yuborildi (~30 soniyada to'liq sinxronlanadi).");
+        if (typeof showToast === 'function') {
+          showToast(`☁️ ${fullFish} server bazasiga muvaffaqiyatli saqlandi!`, 'success');
+        }
       } else {
-        alert("Xatolik: " + (res.error || 'Qo\'shib bo\'lmadi'));
+        if (typeof showToast === 'function') {
+          showToast("⚠️ Serverda saqlashda xatolik: " + (res.error || 'Noma\'lum xato'), 'error');
+        }
       }
     })
     .catch(function(err) {
-      if (btnSave) {
-        btnSave.disabled = false;
-        btnSave.innerHTML = '<svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg> Bazaga Qo\'shish (Excelga Saqlash)';
-      }
-      alert("Server bilan ulanishda xatolik: " + err);
+      console.warn("Serverga fon saqlash xatosi:", err);
     });
 };
 

@@ -272,10 +272,10 @@ def process_remote_github_changes():
         print(f"[SYNC] Masofaviy o'zgarishlarni qo'llashda xato: {e}")
 
 def _start_remote_sync_listener():
-    """Fonda har 12 soniyada GitHub'dan yangi o'zgarishlar bor-yo'qligini tekshirib turadi."""
+    """Fonda har 4 soniyada GitHub'dan yangi o'zgarishlar bor-yo'qligini tezkor tekshirib turadi."""
     def listener_loop():
         while True:
-            time.sleep(12)
+            time.sleep(4)
             try:
                 process_remote_github_changes()
             except Exception:
