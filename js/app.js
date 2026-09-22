@@ -1886,11 +1886,7 @@ window.renderGroupsJournalTab = function() {
 /* GURUH JURNALINI TOZA PDF BO'LIB OCHISH (YUKLAB OLMASDAN, BRAUZERDA BEVOSITA KO'RISH VA CHOP ETISH) */
 window.openGroupPdf = function(groupCode) {
   showToast("Guruh " + groupCode + " ning toza PDF jurnali ochilmoqda...", "success");
-  const isHttp = (window.location.protocol === 'http:' || window.location.protocol === 'https:');
-  const pdfUrl = isHttp 
-    ? ('/api/view_group_pdf?group=' + encodeURIComponent(groupCode))
-    : ('pdf_jurnallar/Guruh_' + groupCode + '.pdf');
-  
+  const pdfUrl = 'pdf_jurnallar/Guruh_' + encodeURIComponent(groupCode) + '.pdf';
   window.open(pdfUrl, '_blank');
 };
 
@@ -1901,6 +1897,36 @@ window.openStudentByRow = function(rowNum) {
 
 /* 1 TA ALOHIDA GURUHNI FORMATLANGAN EXCEL QILIB YUKLASH */
 window.exportSingleGroupExcel = function(groupName) {
+  const isRemote = (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1');
+  if (isRemote && typeof XLSX !== 'undefined') {
+    // Vercel'da: SheetJS orqali guruh ma'lumotlarini darhol Excel (.xlsx) qilib yuklab berish
+    const gStudents = RAW_STUDENTS.filter(function(st) { return (st.group || '') === groupName; });
+    gStudents.sort(function(a, b) { return (a.ism || '').localeCompare(b.ism || '', 'uz'); });
+    const rows = gStudents.map(function(st, i) {
+      return {
+        "T/R": i + 1,
+        "Guruh": st.group || groupName,
+        "Shartnoma #": st.shnum || '',
+        "F.I.SH (Talaba)": st.fish || ((st.ism || '') + ' ' + (st.ota || '')).trim(),
+        "Pasport": st.pv || '',
+        "JSHSHIR": st.pinfl || '',
+        "Tug'ilgan sana": st.dob || '',
+        "Hujjat raqami": st.sh_doc || '',
+        "Muassasa": st.mak || '',
+        "Bitirgan yili": st.yil || '',
+        "Yo'nalish": st.yon || '',
+        "Telefon": st.tel || '',
+        "Holati": st.verified || 'KUTILMOQDA'
+      };
+    });
+    const ws = XLSX.utils.json_to_sheet(rows);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Guruh " + groupName);
+    XLSX.writeFile(wb, `Guruh_${groupName}_Talabalar_Royxati.xlsx`);
+    showToast(`Guruh ${groupName} ning Excel jurnali yuklab olindi!`, "success");
+    return;
+  }
+
   const apiHost = (window.location.protocol === 'http:' || window.location.protocol === 'https:') ? '' : 'http://localhost:8080';
   window.location.href = apiHost + '/api/export_group_excel?group=' + encodeURIComponent(groupName);
   showToast(`Guruh ${groupName} ning rasmiy sarlavhali jurnali yuklanmoqda...`, "success");
