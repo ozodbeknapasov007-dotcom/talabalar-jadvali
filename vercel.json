@@ -13,11 +13,22 @@
   ],
   "rewrites": [
     {
+      "source": "/api/view_group_pdf",
+      "has": [
+        {
+          "type": "query",
+          "key": "group",
+          "value": "(?<group>.*)"
+        }
+      ],
+      "destination": "/pdf_jurnallar/Guruh_:group.pdf"
+    },
+    {
       "source": "/api/(.*)",
       "destination": "/api/$1"
     },
     {
-      "source": "/((?!api/).*)",
+      "source": "/((?!api/|pdf_jurnallar/).*)",
       "destination": "/index.html"
     }
   ]
