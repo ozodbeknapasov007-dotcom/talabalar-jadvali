@@ -7,7 +7,9 @@ from reportlab.lib import colors
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+# qayta_tekshiruv ichida bo'lsa, asosiy loyiha papkasi bir pog'ona yuqorida:
+CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
+BASE_DIR = os.path.dirname(CURRENT_DIR) if os.path.basename(CURRENT_DIR) == 'qayta_tekshiruv' else CURRENT_DIR
 
 # Fontlarni ro'yxatdan o'tkazish
 try:
@@ -40,10 +42,6 @@ GROUP_TITLES = {
 }
 
 def create_single_group_pdf(group_code, students, output_pdf_path):
-    """
-    Har bir guruh uchun toza, professional A4 formatli PDF jurnal yaratish.
-    Tagida about:blank yoki brauzer sarlavhalari bo'lmaydi.
-    """
     os.makedirs(os.path.dirname(output_pdf_path), exist_ok=True)
 
     g_students = [s for s in students if s.get('group') == group_code]
@@ -52,81 +50,145 @@ def create_single_group_pdf(group_code, students, output_pdf_path):
     leader = GROUP_LEADERS.get(group_code, "—")
     g_title = GROUP_TITLES.get(group_code, "")
 
-    # A4: 595.27 x 841.89 pt. 28pt = ~10mm margin
     doc = SimpleDocTemplate(
         output_pdf_path,
         pagesize=A4,
         leftMargin=28,
         rightMargin=28,
-        topMargin=26,
-        bottomMargin=24
+        topMargin=25,
+        bottomMargin=20
     )
 
     elements = []
+    avail_width = A4[0] - 56
+
+    count = len(g_students)
+    if count <= 25:
+        row_height = 20
+        font_size = 9.5
+        header_font_size = 9.5
+        padding_size = 3
+    elif count <= 30:
+        row_height = 18
+        font_size = 9.0
+        header_font_size = 9.0
+        padding_size = 2.5
+    else:
+        row_height = 16
+        font_size = 8.5
+        header_font_size = 8.5
+        padding_size = 2
 
     title_style = ParagraphStyle(
-        'MainTitle',
+        'DocTitle',
         fontName=FONT_BOLD,
-        fontSize=12.5,
+        fontSize=13,
         leading=16,
-        alignment=1, # Center
-        spaceAfter=3,
+        alignment=1,
         textColor=colors.HexColor('#0f172a')
     )
 
-    sub_style = ParagraphStyle(
-        'SubTitle',
-        fontName=FONT_NORMAL,
-        fontSize=9,
-        leading=12,
-        alignment=1,
-        textColor=colors.HexColor('#475569'),
-        spaceAfter=9
+    info_left_style = ParagraphStyle(
+        'InfoLeft',
+        fontName=FONT_BOLD,
+        fontSize=10,
+        leading=13,
+        alignment=0,
+        textColor=colors.HexColor('#1e293b')
     )
 
-    title_text = f"2026-2027 O'QUV YILI | {group_code} - GURUH TALABALARI RO'YXATI"
-    elements.append(Paragraph(title_text, title_style))
+    info_right_style = ParagraphStyle(
+        'InfoRight',
+        fontName=FONT_BOLD,
+        fontSize=10,
+        leading=13,
+        alignment=2,
+        textColor=colors.HexColor('#1e293b')
+    )
 
-    sub_text = f"Yo'nalish: <b>{g_title}</b> &nbsp;&bull;&nbsp; Guruh rahbari: <b>{leader}</b> &nbsp;&bull;&nbsp; Jami: <b>{len(g_students)} nafar</b>"
-    elements.append(Paragraph(sub_text, sub_style))
+    header_para_style = ParagraphStyle(
+        'HeaderCell',
+        fontName=FONT_BOLD,
+        fontSize=header_font_size,
+        leading=header_font_size + 2,
+        alignment=1,
+        textColor=colors.HexColor('#0f172a')
+    )
 
-    # Jadval stillari
-    # 30 talaba 1 sahifada to'liq sig'ishi uchun satr balandligini ixcham qilamiz
-    row_count = len(g_students)
-    font_size = 9 if row_count > 25 else 9.5
-    leading_size = 11 if row_count > 25 else 12
-    padding_size = 2.8 if row_count > 25 else 3.5
+    cell_name_style = ParagraphStyle(
+        'CellName',
+        fontName=FONT_BOLD,
+        fontSize=font_size,
+        leading=font_size + 2,
+        alignment=0,
+        textColor=colors.HexColor('#0f172a')
+    )
 
-    header_style_tr = ParagraphStyle('HTR', fontName=FONT_BOLD, fontSize=font_size, leading=leading_size, alignment=1, textColor=colors.white)
-    header_style_left = ParagraphStyle('HTL', fontName=FONT_BOLD, fontSize=font_size, leading=leading_size, alignment=0, textColor=colors.white)
-    header_style_center = ParagraphStyle('HTC', fontName=FONT_BOLD, fontSize=font_size, leading=leading_size, alignment=1, textColor=colors.white)
+    cell_center_style = ParagraphStyle(
+        'CellCenter',
+        fontName=FONT_NORMAL,
+        fontSize=font_size,
+        leading=font_size + 2,
+        alignment=1,
+        textColor=colors.HexColor('#334155')
+    )
 
-    cell_style_tr = ParagraphStyle('CTR', fontName=FONT_BOLD, fontSize=font_size, leading=leading_size, alignment=1, textColor=colors.HexColor('#334155'))
-    cell_style_left = ParagraphStyle('CTL', fontName=FONT_NORMAL, fontSize=font_size, leading=leading_size, alignment=0, textColor=colors.HexColor('#0f172a'))
-    cell_style_center = ParagraphStyle('CTC', fontName=FONT_NORMAL, fontSize=font_size, leading=leading_size, alignment=1, textColor=colors.HexColor('#1e293b'))
-
-    data = [
+    header_table_data = [
         [
-            Paragraph("T/R", header_style_tr),
-            Paragraph("Talabaning To'liq F.I.SH (Familiya Ism Sharif)", header_style_left),
-            Paragraph("Tug'ilgan Sana", header_style_center)
+            Paragraph("Abu Ali ibn Sino nomidagi Jamoat salomatligi texnikumi", title_style),
+            ""
+        ],
+        [
+            Paragraph(f"Yo'nalish: <b>{g_title}</b> | Guruh: <b>{group_code}</b>", info_left_style),
+            Paragraph(f"Guruh rahbari: <b>{leader}</b>", info_right_style)
         ]
     ]
 
-    for idx, st in enumerate(g_students, 1):
-        fio = st.get('fio') or f"{st.get('ism', '')} {st.get('ota', '')}".strip()
-        dob = st.get('dob') or "—"
-        data.append([
-            Paragraph(str(idx), cell_style_tr),
-            Paragraph(fio, cell_style_left),
-            Paragraph(dob, cell_style_center)
-        ])
+    ht = Table(header_table_data, colWidths=[avail_width * 0.65, avail_width * 0.35])
+    ht.setStyle(TableStyle([
+        ('SPAN', (0, 0), (1, 0)),
+        ('ALIGN', (0, 0), (1, 0), 'CENTER'),
+        ('BOTTOMPADDING', (0, 0), (1, 0), 6),
+        ('TOPPADDING', (0, 0), (-1, -1), 0),
+        ('BOTTOMPADDING', (0, 1), (-1, 1), 6),
+        ('LEFTPADDING', (0, 0), (-1, -1), 0),
+        ('RIGHTPADDING', (0, 0), (-1, -1), 0),
+    ]))
+    elements.append(ht)
 
-    # Kenglik: T/R=36pt, F.I.SH=403pt, Sana=100pt -> Jami 539pt (A4 595 - 56 = 539pt)
-    t = Table(data, colWidths=[36, 403, 100], repeatRows=1)
+    w_no = 28
+    w_sh = 45
+    w_dob = 72
+    w_imzo = 75
+    w_name = avail_width - (w_no + w_sh + w_dob + w_imzo)
 
+    col_widths = [w_no, w_sh, w_name, w_dob, w_imzo]
+
+    headers = [
+        Paragraph("№", header_para_style),
+        Paragraph("Shartnoma", header_para_style),
+        Paragraph("F.I.SH (To'liq)", header_para_style),
+        Paragraph("Tug'ilgan sana", header_para_style),
+        Paragraph("Imzo", header_para_style)
+    ]
+
+    data = [headers]
+
+    for idx, st in enumerate(g_students, start=1):
+        sh_num = f"#{st.get('shnum', '')}" if st.get('shnum') else "—"
+        row = [
+            Paragraph(str(idx), cell_center_style),
+            Paragraph(sh_num, cell_center_style),
+            Paragraph(st.get('fio', st.get('ism', '')), cell_name_style),
+            Paragraph(st.get('dob') or "—", cell_center_style),
+            Paragraph("", cell_center_style)
+        ]
+        data.append(row)
+
+    t = Table(data, colWidths=col_widths, rowHeights=[row_height + 2] + [row_height] * len(g_students))
     t_style = [
-        ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#0f172a')),
+        ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#f1f5f9')),
+        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
         ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
         ('TOPPADDING', (0, 0), (-1, -1), padding_size),
         ('BOTTOMPADDING', (0, 0), (-1, -1), padding_size),
@@ -145,7 +207,6 @@ def create_single_group_pdf(group_code, students, output_pdf_path):
     return output_pdf_path
 
 def build_all_group_pdfs():
-    """Barcha 7 ta guruh uchun PDF larni generatsiya qiladi"""
     excel_path = os.path.join(BASE_DIR, 'Talabalar_Toliq_Royxati.xlsx')
     if not os.path.exists(excel_path):
         return {}

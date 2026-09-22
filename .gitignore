@@ -18,8 +18,10 @@ package-lock.json
 *.temp
 $null
 
-# Scratch papkasi (vaqtinchalik ishchi fayllar)
+# Scratch va Arxiv papkalari
 scratch/
+arxiv/
+backup/
 
 # Juda katta HTML fayllar (har safar qayta generatsiya qilinadi)
 hisobot.html

@@ -4458,7 +4458,10 @@ except Exception as e_style:
 
 # Guruhlar uchun toza A4 PDF jurnallarini yangilash
 try:
-    from generate_pdfs import build_all_group_pdfs
+    try:
+        from generate_pdfs import build_all_group_pdfs
+    except ImportError:
+        from qayta_tekshiruv.generate_pdfs import build_all_group_pdfs
     build_all_group_pdfs()
     print("[OK] Guruh PDF jurnallari muvaffaqiyatli yangilandi!")
 except Exception as e_pdf:

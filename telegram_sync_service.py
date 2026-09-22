@@ -1182,8 +1182,8 @@ class WebServerHandler(BaseHTTPRequestHandler):
         if parsed_path in ('/', '/index.html', '/hisobot.html', '/natijalar_hisoboti.html', '/qayta_tekshiruv/hisobot.html'):
             target_html = None
             for candidate in [
+                os.path.join(BASE_DIR, 'index.html'),
                 os.path.join(BASE_DIR, 'hisobot.html'),
-                os.path.join(BASE_DIR, 'natijalar_hisoboti.html'),
                 os.path.join(BASE_DIR, 'qayta_tekshiruv', 'hisobot.html')
             ]:
                 if os.path.exists(candidate):

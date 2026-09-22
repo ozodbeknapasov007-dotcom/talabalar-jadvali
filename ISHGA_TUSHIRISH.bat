@@ -21,11 +21,15 @@ echo [3/3] Veb-server ishga tushirilmoqda...
 echo.
 echo ======================================================================
 echo   ✅ TIZIM MUVAFFAQIYATLI ISHGA TUSHDI!
-echo   🌐 Dashboard: http://localhost:8080/hisobot.html
+echo.
+echo   🌐 Lokal Portal: http://localhost:8080
+echo   ☁️  Onlayn Portal: https://talabalar-ro-yhati.vercel.app
 echo.
 echo   Serverni to'xtatish uchun: Ctrl+C bosing yoki ushbu oynani yoping.
 echo ======================================================================
 echo.
+
+start http://localhost:8080
 
 python telegram_sync_service.py 8080
 
