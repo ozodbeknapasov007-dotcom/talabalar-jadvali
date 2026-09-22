@@ -507,6 +507,11 @@ def format_pinfl_display(val):
     if not val:
         return '<span style="color:#ef4444;font-weight:700;">—</span>'
     s = re.sub(r'\D', '', str(val).strip())
+    if len(s) == 14:
+        p1, p2, p3 = s[0:6], s[6:10], s[10:14]
+        return (f'<span class="pinfl-group">{p1}</span>'
+                f'<span class="pinfl-group">{p2}</span>'
+                f'<span class="pinfl-group pinfl-end">{p3}</span>')
     return f'<span class="mono-pinfl">{s}</span>'
 
 def format_doc_display(val):
@@ -4278,7 +4283,7 @@ html = f"""<!DOCTYPE html>
     font-size: 16.5px !important; font-weight: 900 !important; color: #38bdf8 !important; letter-spacing: 1.5px !important;
   }}
   .val-large-pinfl {{
-    font-size: 16.5px !important; font-weight: 900 !important; color: #a78bfa !important; letter-spacing: 2px !important;
+    font-size: 13.5px !important; font-weight: 700 !important; color: #e2e8f0 !important; letter-spacing: 0.5px !important; font-family: 'JetBrains Mono', monospace;
   }}
   .val-large-dob {{
     font-size: 15.5px !important; font-weight: 800 !important; color: #facc15 !important;

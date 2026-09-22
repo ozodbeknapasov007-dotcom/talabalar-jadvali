@@ -585,6 +585,10 @@ function formatPassDisplayJS(val) {
 function formatPinflDisplayJS(val) {
   if (!val) return '<span style="color:#ef4444;font-weight:700;">—</span>';
   const s = String(val).replace(/\D/g, '').trim();
+  if (s.length === 14) {
+    const p1 = s.slice(0,6), p2 = s.slice(6,10), p3 = s.slice(10,14);
+    return `<span class="pinfl-group">${p1}</span><span class="pinfl-group">${p2}</span><span class="pinfl-group pinfl-end">${p3}</span>`;
+  }
   return '<span class="mono-pinfl">' + s + '</span>';
 }
 
