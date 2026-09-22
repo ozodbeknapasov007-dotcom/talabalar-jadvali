@@ -91,20 +91,20 @@ window.openStudentModal = function(studentIdx, startInEditMode = false) {
         ${qrBtn}
         <!-- Fayl biriktirish / almashtirish inputi -->
         <input type="file" id="attachFileInput" accept=".docx,image/*" style="display:none;" onchange="if(this.files.length) uploadAndAttachForCurrentStudent(this.files[0])">
-        <button type="button" class="btn" style="background:#0284c7;color:#fff;padding:6px 12px;font-weight:700;display:inline-flex;align-items:center;gap:6px;" onclick="document.getElementById('attachFileInput').click()">
+        <button type="button" class="btn btn-export" style="padding:6px 16px; font-size:12px;" onclick="document.getElementById('attachFileInput').click()">
           ${ICONS.file} Fayl Biriktirish
         </button>
-        <button type="button" id="btnScanQR" class="btn" style="background:#059669;color:#fff;padding:6px 14px;font-weight:800;display:inline-flex;align-items:center;gap:6px;box-shadow:0 2px 6px rgba(5,150,105,0.25);" onclick="scanStudentQROnly()">
+        <button type="button" id="btnScanQR" class="btn btn-add" style="padding:6px 16px; font-size:12px;" onclick="scanStudentQROnly()">
           <svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
           QR Skaner (Avtomatik)
         </button>
         <button type="button" id="btnToggleEditTop" class="btn btn-edit-main" onclick="toggleEditMode(!window.isEditMode)">
           ${ICONS.edit} Tahrirlash
         </button>
-        <button type="button" id="btnReanalyze" class="btn btn-ai-reanalyze" style="background:linear-gradient(135deg, #7c3aed 0%, #4f46e5 100%); color:#fff; font-weight:800; border:none; box-shadow:0 2px 8px rgba(124,58,237,0.3);" onclick="reanalyzeCurrentStudent()">
+        <button type="button" id="btnReanalyze" class="btn btn-multi-export" style="padding:6px 16px; font-size:12px;" onclick="reanalyzeCurrentStudent()">
           ${ICONS.zap} AI Pro Qayta Tekshirish
         </button>
-        <button type="button" id="btnDeleteStudentTop" class="btn" style="background:#dc2626; color:#fff; padding:6px 12px; font-weight:700; display:inline-flex; align-items:center; gap:6px; box-shadow:0 2px 6px rgba(220,38,38,0.25);" onclick="deleteCurrentStudent()">
+        <button type="button" id="btnDeleteStudentTop" class="btn btn-danger" style="padding:6px 16px; font-size:12px;" onclick="deleteCurrentStudent()">
           <svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
           Talabani O'chirish
         </button>
@@ -1759,14 +1759,14 @@ window.renderGroupsJournalTab = function() {
       </div>
       <div style="display:flex; gap:8px; flex-wrap:wrap;">
         <button type="button" class="btn btn-export"
-          style="font-size:12px; padding:5px 14px;"
+          style="font-size:12px; padding:6px 18px;"
           onclick="exportAllGroupsMultiSheetExcel()"
           title="Barcha 7 guruh bitta ko'p sahifali Excel faylda">
           <svg style="width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2;" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
           Barcha .xlsx
         </button>
-        <button type="button" class="btn"
-          style="font-size:12px; padding:5px 14px; background:#dc2626; color:#fff; border-color:rgba(27,31,36,0.15);"
+        <button type="button" class="btn btn-danger"
+          style="font-size:12px; padding:6px 18px;"
           onclick="downloadAllGroupPdfs()"
           title="Barcha 7 guruh PDF jurnallarini yangi tabda ochish">
           <svg style="width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2;" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
@@ -1799,10 +1799,10 @@ window.renderGroupsJournalTab = function() {
             </p>
           </div>
           <div style="display:flex; gap:6px; align-items:center;">
-            <button type="button" class="btn" style="padding:4px 12px; font-size:11.5px; background:#dc2626; color:#fff; border-color:rgba(27,31,36,0.15);" onclick="openGroupPdf('${g}')" title="Guruh jurnalini toza A4 PDF formatda ochish">
+            <button type="button" class="btn btn-danger" style="padding:4px 14px; font-size:11.5px;" onclick="openGroupPdf('${g}')" title="Guruh jurnalini toza A4 PDF formatda ochish">
               <svg style="width:13px;height:13px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg> PDF
             </button>
-            <button type="button" class="btn btn-export" style="padding:4px 12px; font-size:11.5px;" onclick="exportSingleGroupExcel('${g}')" title="Excel (.xlsx) formatda yuklab olish">
+            <button type="button" class="btn btn-export" style="padding:4px 14px; font-size:11.5px;" onclick="exportSingleGroupExcel('${g}')" title="Excel (.xlsx) formatda yuklab olish">
               <svg style="width:13px;height:13px;fill:none;stroke:currentColor;stroke-width:2;" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> .xlsx
             </button>
           </div>
@@ -1865,7 +1865,7 @@ window.renderGroupsJournalTab = function() {
               ${ICONS.infoSm} Holati: <strong>Guruh tayinlanishi kutilmoqda</strong> &nbsp;&bull;&nbsp; Jami: <strong style="color:#fff;">${unassignedStudents.length} nafar</strong>
             </p>
           </div>
-          <button type="button" class="btn btn-export" style="padding:4px 12px; font-size:11.5px; background:#d97706; border-color:#b45309;" onclick="exportSingleGroupExcel('N')">
+          <button type="button" class="btn btn-export" style="padding:4px 14px; font-size:11.5px; background:#d97706; border-color:#b45309;" onclick="exportSingleGroupExcel('N')">
             <svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg> .xlsx
           </button>
         </div>

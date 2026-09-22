@@ -125,52 +125,165 @@
   .header-actions { display: flex; gap: 10px; align-items: center; z-index: 2; }
   
   /* =========================================================================
-     GITHUB USLUBIDAGI TUGMALAR TIZIMI (YAGONA STIL)
+     ZAMONAVIY PILL BUTTONS DIZAYN TIZIMI (Primary, Secondary, Tertiary, Ghost)
      ========================================================================= */
   .btn {
-    display: inline-flex; align-items: center; gap: 7px;
-    padding: 5px 16px; border-radius: 6px; font-weight: 500; font-size: 13px;
-    line-height: 20px; cursor: pointer;
-    border: 1px solid rgba(27,31,36,0.15);
-    transition: background 80ms, border-color 80ms, box-shadow 80ms;
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    padding: 7px 20px; border-radius: 9999px; font-weight: 600; font-size: 13px;
+    line-height: 1.3; cursor: pointer;
     text-decoration: none; user-select: none;
-    background: #f6f8fa; color: #24292f;
-    box-shadow: 0 1px 0 rgba(27,31,36,0.04), inset 0 1px 0 rgba(255,255,255,0.25);
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    outline: none;
+    /* Standart: Secondary (Oq fon, to'q matn, nozik chegara, yumshoq soya) */
+    background: #ffffff; color: #0f172a;
+    border: 1.5px solid #e2e8f0;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
   }
   .btn:hover {
-    background: #f3f4f6; border-color: rgba(27,31,36,0.2);
+    background: #ffffff;
+    border-color: #cbd5e1;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.12);
+    transform: translateY(-1.5px);
   }
   .btn:active {
-    background: #ebecf0; box-shadow: inset 0 1px 0 rgba(27,31,36,0.1);
+    transform: scale(0.97);
+    border-color: #2563eb;
+    color: #2563eb;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  }
+  .btn:disabled, .btn[disabled] {
+    opacity: 0.45; cursor: not-allowed; pointer-events: none;
+    box-shadow: none !important; transform: none !important;
   }
 
-  .btn-add {
-    background: #2da44e; color: #fff;
-    border-color: rgba(27,31,36,0.15);
-    box-shadow: 0 1px 0 rgba(27,31,36,0.1), inset 0 1px 0 rgba(255,255,255,0.2);
+  /* 1. PRIMARY BUTTONS (Yorqin rang, yumshoq pastki soya, oq matn) */
+  .btn-primary, .btn-export {
+    background: #2563eb; color: #ffffff !important;
+    border: 1.5px solid #2563eb;
+    box-shadow: 0 2px 6px rgba(37, 99, 235, 0.25);
   }
-  .btn-add:hover { background: #2c974b; border-color: rgba(27,31,36,0.15); }
-  .btn-add:active { background: #298e46; box-shadow: inset 0 1px 0 rgba(27,31,36,0.15); }
+  .btn-primary:hover, .btn-export:hover {
+    background: #1d4ed8; border-color: #1d4ed8;
+    box-shadow: 0 6px 20px rgba(37, 99, 235, 0.42);
+    transform: translateY(-1.5px);
+  }
+  .btn-primary:active, .btn-export:active {
+    background: #1e40af; border-color: #1e40af;
+    transform: scale(0.97);
+  }
 
-  .btn-multi-export {
-    background: #8250df; color: #fff;
-    border-color: rgba(27,31,36,0.15);
-    box-shadow: 0 1px 0 rgba(27,31,36,0.1), inset 0 1px 0 rgba(255,255,255,0.15);
+  /* Primary Green: Talaba qo'shish va Saqlash */
+  .btn-add, .btn-save-data, .btn-modal-save {
+    background: #10b981; color: #ffffff !important;
+    border: 1.5px solid #10b981;
+    box-shadow: 0 2px 6px rgba(16, 185, 129, 0.25);
   }
-  .btn-multi-export:hover { background: #7539d1; }
+  .btn-add:hover, .btn-save-data:hover, .btn-modal-save:hover {
+    background: #059669; border-color: #059669;
+    box-shadow: 0 6px 20px rgba(16, 185, 129, 0.42);
+    transform: translateY(-1.5px);
+  }
+  .btn-add:active, .btn-save-data:active, .btn-modal-save:active {
+    background: #047857; border-color: #047857;
+    transform: scale(0.97);
+  }
 
-  .btn-export {
-    background: #0969da; color: #fff;
-    border-color: rgba(27,31,36,0.15);
-    box-shadow: 0 1px 0 rgba(27,31,36,0.1), inset 0 1px 0 rgba(255,255,255,0.15);
+  /* Primary Purple: Barcha .xlsx va AI tahlil */
+  .btn-multi-export, .btn-ai-purple, .btn-ai-reanalyze {
+    background: #8b5cf6; color: #ffffff !important;
+    border: 1.5px solid #8b5cf6;
+    box-shadow: 0 2px 6px rgba(139, 92, 246, 0.25);
   }
-  .btn-export:hover { background: #0860ca; }
+  .btn-multi-export:hover, .btn-ai-purple:hover, .btn-ai-reanalyze:hover {
+    background: #7c3aed; border-color: #7c3aed;
+    box-shadow: 0 6px 20px rgba(139, 92, 246, 0.42);
+    transform: translateY(-1.5px);
+  }
+  .btn-multi-export:active, .btn-ai-purple:active, .btn-ai-reanalyze:active {
+    background: #6d28d9; border-color: #6d28d9;
+    transform: scale(0.97);
+  }
 
-  .btn-refresh {
-    background: rgba(255,255,255,0.1); color: #e2e8f0;
-    border: 1px solid rgba(255,255,255,0.2);
+  /* Primary Blue (AI) */
+  .btn-ai-blue {
+    background: #0ea5e9; color: #ffffff !important;
+    border: 1.5px solid #0ea5e9;
+    box-shadow: 0 2px 6px rgba(14, 165, 233, 0.25);
   }
-  .btn-refresh:hover { background: rgba(255,255,255,0.18); color: #fff; }
+  .btn-ai-blue:hover {
+    background: #0284c7; border-color: #0284c7;
+    box-shadow: 0 6px 20px rgba(14, 165, 233, 0.42);
+    transform: translateY(-1.5px);
+  }
+  .btn-ai-blue:active {
+    background: #0369a1; border-color: #0369a1;
+    transform: scale(0.97);
+  }
+
+  /* Primary Red: PDF va O'chirish */
+  .btn-danger, .btn-pdf {
+    background: #ef4444; color: #ffffff !important;
+    border: 1.5px solid #ef4444;
+    box-shadow: 0 2px 6px rgba(239, 68, 68, 0.25);
+  }
+  .btn-danger:hover, .btn-pdf:hover {
+    background: #dc2626; border-color: #dc2626;
+    box-shadow: 0 6px 20px rgba(239, 68, 68, 0.42);
+    transform: translateY(-1.5px);
+  }
+  .btn-danger:active, .btn-pdf:active {
+    background: #b91c1c; border-color: #b91c1c;
+    transform: scale(0.97);
+  }
+
+  /* 2. GHOST BUTTONS (Outline, transparent fon, yorqin chegara) */
+  .btn-ghost {
+    background: transparent; color: #2563eb;
+    border: 1.5px solid #2563eb;
+  }
+  .btn-ghost:hover {
+    background: rgba(37, 99, 235, 0.08);
+    box-shadow: 0 4px 14px rgba(37, 99, 235, 0.2);
+    transform: translateY(-1.5px);
+  }
+  .btn-ghost:active {
+    background: rgba(37, 99, 235, 0.16);
+    border-color: #1d4ed8; color: #1d4ed8;
+    transform: scale(0.97);
+  }
+
+  /* Header ichidagi tugmalar (Refresh & Theme Toggle) */
+  .btn-refresh, .btn-theme {
+    background: rgba(255, 255, 255, 0.12); color: #ffffff !important;
+    border: 1.5px solid rgba(255, 255, 255, 0.25);
+    backdrop-filter: blur(8px);
+  }
+  .btn-refresh:hover, .btn-theme:hover {
+    background: rgba(255, 255, 255, 0.24);
+    border-color: rgba(255, 255, 255, 0.45);
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
+    transform: translateY(-1.5px);
+  }
+  .btn-refresh:active, .btn-theme:active {
+    background: rgba(255, 255, 255, 0.35);
+    transform: scale(0.97);
+  }
+
+  /* 3. TERTIARY BUTTONS (Faqat matn va belgi) */
+  .btn-tertiary {
+    background: transparent; color: #2563eb;
+    border: 1.5px solid transparent; padding: 6px 14px;
+    box-shadow: none;
+  }
+  .btn-tertiary:hover {
+    background: rgba(37, 99, 235, 0.08);
+    color: #1d4ed8; transform: translateY(-1px);
+    box-shadow: none;
+  }
+  .btn-tertiary:active {
+    background: rgba(37, 99, 235, 0.15);
+    transform: scale(0.97);
+  }
 
   /* ASOSIY 2 TA REJIM SWITCH TABS */
   .view-switcher-bar {
@@ -187,16 +300,22 @@
     display: flex; gap: 8px;
   }
   .view-btn {
-    padding: 10px 22px; border-radius: 10px; font-weight: 800; font-size: 13.5px;
-    border: 1px solid #cbd5e1; background: #f8fafc; color: #475569; cursor: pointer;
-    transition: all 0.2s ease; display: inline-flex; align-items: center; gap: 8px;
+    padding: 8px 22px; border-radius: 9999px; font-weight: 700; font-size: 13px;
+    border: 1.5px solid #cbd5e1; background: #ffffff; color: #475569; cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1); display: inline-flex; align-items: center; gap: 8px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
   }
   .view-btn.active {
-    background: #0f172a; color: #fff; border-color: #0f172a;
-    box-shadow: 0 4px 14px rgba(15, 23, 42, 0.25);
+    background: #2563eb; color: #fff; border-color: #2563eb;
+    box-shadow: 0 4px 14px rgba(37, 99, 235, 0.35);
   }
   .view-btn:hover:not(.active) {
-    background: #e2e8f0; color: #0f172a;
+    background: #ffffff; border-color: #94a3b8; color: #0f172a;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.1);
+    transform: translateY(-1px);
+  }
+  .view-btn:active {
+    transform: scale(0.97);
   }
 
   /* Guruh Dropdown (Select) Jadval Ichida */
@@ -405,23 +524,41 @@
   .doc-text { color: #059669; font-weight: 700; }
 
   .btn-action {
-    padding: 6px 12px; border-radius: 8px; font-size: 12px;
-    font-weight: 700; border: none; cursor: pointer; display: inline-flex;
-    align-items: center; gap: 6px; text-decoration: none; transition: all 0.15s;
+    padding: 5px 14px; border-radius: 9999px; font-size: 11.5px;
+    font-weight: 600; border: 1.5px solid transparent; cursor: pointer; display: inline-flex;
+    align-items: center; gap: 6px; text-decoration: none; transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
     user-select: none;
   }
-  .btn-view-doc {
-    background: #eff6ff; color: #2563eb; border: 1px solid #bfdbfe;
+  .btn-action:active {
+    transform: scale(0.97);
   }
-  .btn-view-doc:hover { background: #2563eb; color: #fff; transform: translateY(-1px); }
+  .btn-view-doc {
+    background: transparent; color: #2563eb; border-color: #2563eb;
+  }
+  .btn-view-doc:hover {
+    background: rgba(37, 99, 235, 0.08); color: #1d4ed8;
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
+    transform: translateY(-1px);
+  }
   
   .btn-attach-doc {
-    background: #f0fdf4; color: #16a34a; border: 1.5px dashed #86efac;
+    background: transparent; color: #10b981; border: 1.5px dashed #10b981;
   }
-  .btn-attach-doc:hover { background: #16a34a; color: #fff; transform: translateY(-1px); }
+  .btn-attach-doc:hover {
+    background: rgba(16, 185, 129, 0.08); color: #059669;
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25);
+    transform: translateY(-1px);
+  }
 
-  .btn-qr { background: #10b981; color: #fff; }
-  .btn-qr:hover { background: #059669; }
+  .btn-qr {
+    background: #10b981; color: #fff; border-color: #10b981;
+    box-shadow: 0 2px 6px rgba(16, 185, 129, 0.25);
+  }
+  .btn-qr:hover {
+    background: #059669; border-color: #059669;
+    box-shadow: 0 4px 14px rgba(16, 185, 129, 0.4);
+    transform: translateY(-1px);
+  }
 
   /* Modern MODAL */
   .modal-backdrop {
@@ -498,17 +635,22 @@
     font-size: 11.5px; font-weight: 700; color: #e2e8f0; display: flex; align-items: center; gap: 6px;
   }
   .btn-zoom-mini {
-    background: #3b82f6; color: #fff; padding: 4px 10px; font-size: 11px;
-    border-radius: 6px; font-weight: 700; border: none; cursor: pointer;
-    display: inline-flex; align-items: center; gap: 4px;
+    background: #2563eb; color: #fff; padding: 4px 12px; font-size: 11.5px;
+    border-radius: 9999px; font-weight: 600; border: none; cursor: pointer;
+    display: inline-flex; align-items: center; gap: 5px;
+    box-shadow: 0 2px 6px rgba(37, 99, 235, 0.3); transition: all 0.2s;
+  }
+  .btn-zoom-mini:hover {
+    background: #1d4ed8; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.4);
+    transform: translateY(-1px);
   }
 
   /* Olingan Ma'lumotlar Kartalari */
   .data-wrapper { flex: 0 0 auto; }
   .data-cards-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
   .data-card {
-    background: #fff; border: 1px solid var(--border); border-radius: 12px; padding: 10px 16px;
-    box-shadow: 0 1px 4px rgba(0,0,0,0.02);
+    background: #fff; border: 1px solid var(--border); border-radius: 14px; padding: 12px 16px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.03);
   }
   .data-card h4 {
     font-size: 12.5px; font-weight: 800; color: #0f172a; margin-bottom: 6px;
@@ -516,22 +658,41 @@
   }
 
   .btn-edit-mini {
-    background: #eff6ff; color: #1d4ed8; padding: 3px 10px; font-size: 11.5px;
-    border-radius: 6px; font-weight: 700; border: 1px solid #bfdbfe; cursor: pointer;
-    display: inline-flex; align-items: center; gap: 4px;
+    background: transparent; color: #2563eb; padding: 3px 12px; font-size: 11.5px;
+    border-radius: 9999px; font-weight: 600; border: 1.5px solid #2563eb; cursor: pointer;
+    display: inline-flex; align-items: center; gap: 4px; transition: all 0.2s;
+  }
+  .btn-edit-mini:hover {
+    background: rgba(37, 99, 235, 0.08); box-shadow: 0 2px 8px rgba(37, 99, 235, 0.25);
+    transform: translateY(-1px);
   }
   .btn-edit-main {
-    background: #f8fafc; color: #334155; padding: 6px 14px; font-size: 12px;
-    border-radius: 8px; font-weight: 700; border: 1px solid #cbd5e1; cursor: pointer;
-    display: inline-flex; align-items: center; gap: 6px;
+    background: #ffffff; color: #0f172a; padding: 6px 18px; font-size: 12px;
+    border-radius: 9999px; font-weight: 600; border: 1.5px solid #cbd5e1; cursor: pointer;
+    display: inline-flex; align-items: center; gap: 6px; transition: all 0.2s;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+  }
+  .btn-edit-main:hover {
+    border-color: #94a3b8; box-shadow: 0 4px 14px rgba(0,0,0,0.1);
+    transform: translateY(-1px);
   }
   .btn-save-data {
-    background: #10b981; color: #fff; padding: 4px 12px; font-size: 11.5px;
-    border-radius: 6px; font-weight: 700; border: none; cursor: pointer;
+    background: #10b981; color: #fff; padding: 6px 18px; font-size: 12px;
+    border-radius: 9999px; font-weight: 600; border: 1.5px solid #10b981; cursor: pointer;
+    box-shadow: 0 2px 6px rgba(16, 185, 129, 0.3); transition: all 0.2s;
+  }
+  .btn-save-data:hover {
+    background: #059669; border-color: #059669;
+    box-shadow: 0 4px 14px rgba(16, 185, 129, 0.4); transform: translateY(-1px);
   }
   .btn-cancel-edit {
-    background: #94a3b8; color: #fff; padding: 4px 10px; font-size: 11.5px;
-    border-radius: 6px; font-weight: 700; border: none; cursor: pointer;
+    background: #ffffff; color: #475569; padding: 6px 16px; font-size: 12px;
+    border-radius: 9999px; font-weight: 600; border: 1.5px solid #cbd5e1; cursor: pointer;
+    transition: all 0.2s;
+  }
+  .btn-cancel-edit:hover {
+    border-color: #94a3b8; box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    transform: translateY(-1px);
   }
 
   .data-row-edit {
@@ -684,21 +845,34 @@
 
   .btn-ai-action {
     display: inline-flex; align-items: center; gap: 6px;
-    padding: 5px 14px; border-radius: 6px; font-size: 12px; font-weight: 500;
-    cursor: pointer; border: 1px solid rgba(27,31,36,0.15);
-    transition: background 80ms; white-space: nowrap;
-    box-shadow: 0 1px 0 rgba(27,31,36,0.04);
+    padding: 6px 18px; border-radius: 9999px; font-size: 12px; font-weight: 600;
+    cursor: pointer; border: 1.5px solid transparent;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1); white-space: nowrap;
+    text-decoration: none; user-select: none;
+  }
+  .btn-ai-action:active {
+    transform: scale(0.97);
   }
   .btn-ai-purple {
-    background: #8250df; color: #ffffff;
-    border-color: rgba(27,31,36,0.15);
+    background: #8b5cf6; color: #ffffff;
+    border-color: #8b5cf6;
+    box-shadow: 0 2px 6px rgba(139, 92, 246, 0.25);
   }
-  .btn-ai-purple:hover { background: #7539d1; }
+  .btn-ai-purple:hover {
+    background: #7c3aed; border-color: #7c3aed;
+    box-shadow: 0 4px 14px rgba(139, 92, 246, 0.4);
+    transform: translateY(-1px);
+  }
   .btn-ai-blue {
-    background: #0969da; color: #ffffff;
-    border-color: rgba(27,31,36,0.15);
+    background: #0ea5e9; color: #ffffff;
+    border-color: #0ea5e9;
+    box-shadow: 0 2px 6px rgba(14, 165, 233, 0.25);
   }
-  .btn-ai-blue:hover { background: #0860ca; }
+  .btn-ai-blue:hover {
+    background: #0284c7; border-color: #0284c7;
+    box-shadow: 0 4px 14px rgba(14, 165, 233, 0.4);
+    transform: translateY(-1px);
+  }
 
   .ai-status-msg {
     padding: 8px 12px;
@@ -872,41 +1046,58 @@
   }
 
   .btn-modal-cancel {
-    padding: 5px 16px;
-    background: #f6f8fa;
-    border: 1px solid rgba(27,31,36,0.15);
-    border-radius: 6px;
+    padding: 7px 20px;
+    background: #ffffff;
+    border: 1.5px solid #cbd5e1;
+    border-radius: 9999px;
     font-size: 13px;
-    font-weight: 500;
-    color: #24292f;
+    font-weight: 600;
+    color: #1e293b;
     cursor: pointer;
-    transition: background 80ms;
-    box-shadow: 0 1px 0 rgba(27,31,36,0.04);
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
   }
   body.dark-mode .btn-modal-cancel {
-    background: #21262d;
-    border-color: #30363d;
-    color: #c9d1d9;
+    background: #111e38;
+    border-color: #23385e;
+    color: #cbd5e1;
   }
   .btn-modal-cancel:hover {
-    background: #f3f4f6; border-color: rgba(27,31,36,0.2);
+    background: #ffffff; border-color: #94a3b8;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.1);
+    transform: translateY(-1px);
+  }
+  body.dark-mode .btn-modal-cancel:hover {
+    background: #162444; border-color: #3b82f6;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3);
+  }
+  .btn-modal-cancel:active {
+    transform: scale(0.97);
+    border-color: #2563eb; color: #2563eb;
   }
 
   .btn-modal-save {
-    display: inline-flex; align-items: center; gap: 6px;
-    padding: 5px 16px;
-    background: #2da44e;
-    border: 1px solid rgba(27,31,36,0.15);
-    border-radius: 6px;
+    display: inline-flex; align-items: center; gap: 7px;
+    padding: 7px 22px;
+    background: #10b981;
+    border: 1.5px solid #10b981;
+    border-radius: 9999px;
     font-size: 13px;
-    font-weight: 500;
+    font-weight: 600;
     color: #ffffff;
     cursor: pointer;
-    box-shadow: 0 1px 0 rgba(27,31,36,0.1), inset 0 1px 0 rgba(255,255,255,0.2);
-    transition: background 80ms;
+    box-shadow: 0 2px 6px rgba(16, 185, 129, 0.25);
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
   }
-  .btn-modal-save:hover { background: #2c974b; }
-  .btn-modal-save:active { background: #298e46; }
+  .btn-modal-save:hover {
+    background: #059669; border-color: #059669;
+    box-shadow: 0 4px 16px rgba(16, 185, 129, 0.4);
+    transform: translateY(-1.5px);
+  }
+  .btn-modal-save:active {
+    background: #047857; border-color: #047857;
+    transform: scale(0.97);
+  }
 
   /* =========================================================================
      MINIMALIST VA BIR OYNAGA TO'LIQ SIG'ADIGAN JADVAL STILLARI
@@ -1057,20 +1248,29 @@
   .btn-v-mini {
     display: inline-flex;
     align-items: center;
-    gap: 3px;
-    padding: 3px 7px;
-    border-radius: 6px;
+    gap: 4px;
+    padding: 3px 10px;
+    border-radius: 9999px;
     font-size: 11px;
-    font-weight: 700;
+    font-weight: 600;
     cursor: pointer;
-    border: 1px solid transparent;
-    transition: all 0.15s;
+    border: 1.5px solid transparent;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
     white-space: nowrap;
+    user-select: none;
+  }
+  .btn-v-mini:active {
+    transform: scale(0.97);
   }
   .btn-v-ok {
     background: #dcfce7;
     color: #166534;
     border-color: #bbf7d0;
+  }
+  .btn-v-ok:hover {
+    background: #bbf7d0;
+    box-shadow: 0 2px 8px rgba(16, 185, 129, 0.25);
+    transform: translateY(-1px);
   }
   body.dark-mode .btn-v-ok {
     background: rgba(16,185,129,0.15);
@@ -1081,6 +1281,11 @@
     background: #fef3c7;
     color: #92400e;
     border-color: #fde68a;
+  }
+  .btn-v-wait:hover {
+    background: #fde68a;
+    box-shadow: 0 2px 8px rgba(245, 158, 11, 0.25);
+    transform: translateY(-1px);
   }
   body.dark-mode .btn-v-wait {
     background: rgba(245,158,11,0.15);
@@ -2175,14 +2380,23 @@
   }
 
   .btn-card-action {
-    background: #0969da;
-    color: #ffffff; font-weight: 500; font-size: 13px; padding: 5px 16px;
-    border-radius: 6px; border: 1px solid rgba(27,31,36,0.15); cursor: pointer;
+    background: #2563eb;
+    color: #ffffff !important; font-weight: 600; font-size: 13px; padding: 7px 20px;
+    border-radius: 9999px; border: 1.5px solid #2563eb; cursor: pointer;
     display: inline-flex; align-items: center; gap: 6px;
-    box-shadow: 0 1px 0 rgba(27,31,36,0.1), inset 0 1px 0 rgba(255,255,255,0.15);
-    transition: background 80ms;
+    box-shadow: 0 2px 6px rgba(37, 99, 235, 0.25);
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    text-decoration: none; user-select: none;
   }
-  .btn-card-action:hover { background: #0860ca; }
+  .btn-card-action:hover {
+    background: #1d4ed8; border-color: #1d4ed8;
+    box-shadow: 0 6px 20px rgba(37, 99, 235, 0.42);
+    transform: translateY(-1.5px);
+  }
+  .btn-card-action:active {
+    background: #1e40af; border-color: #1e40af;
+    transform: scale(0.97);
+  }
 
   /* =========================================================================
      TUNGI REJIM (DARK MODE) - KO'ZNI TOLIQTIMAYDIGAN PROFESSIONAL DIZAYN
@@ -2430,16 +2644,99 @@
     background: #0b111e !important;
   }
 
+  /* Tugmalar Tizimi (Dark Mode Moslashuvi) */
+  body.dark-mode .btn {
+    background: #111e38 !important;
+    color: #f8fafc !important;
+    border-color: #23385e !important;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25) !important;
+  }
+  body.dark-mode .btn:hover {
+    background: #162444 !important;
+    border-color: #3b82f6 !important;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.4) !important;
+  }
+  body.dark-mode .btn:active {
+    border-color: #3b82f6 !important;
+    color: #93c5fd !important;
+  }
+  body.dark-mode .btn-primary,
+  body.dark-mode .btn-export {
+    background: #2563eb !important;
+    color: #ffffff !important;
+    border-color: #2563eb !important;
+  }
+  body.dark-mode .btn-primary:hover,
+  body.dark-mode .btn-export:hover {
+    background: #1d4ed8 !important;
+    border-color: #1d4ed8 !important;
+    box-shadow: 0 6px 20px rgba(37, 99, 235, 0.45) !important;
+  }
+  body.dark-mode .btn-add,
+  body.dark-mode .btn-save-data,
+  body.dark-mode .btn-modal-save {
+    background: #10b981 !important;
+    color: #ffffff !important;
+    border-color: #10b981 !important;
+  }
+  body.dark-mode .btn-add:hover,
+  body.dark-mode .btn-save-data:hover,
+  body.dark-mode .btn-modal-save:hover {
+    background: #059669 !important;
+    border-color: #059669 !important;
+    box-shadow: 0 6px 20px rgba(16, 185, 129, 0.45) !important;
+  }
+  body.dark-mode .btn-multi-export,
+  body.dark-mode .btn-ai-purple,
+  body.dark-mode .btn-ai-reanalyze {
+    background: #8b5cf6 !important;
+    color: #ffffff !important;
+    border-color: #8b5cf6 !important;
+  }
+  body.dark-mode .btn-danger,
+  body.dark-mode .btn-pdf {
+    background: #ef4444 !important;
+    color: #ffffff !important;
+    border-color: #ef4444 !important;
+  }
+  body.dark-mode .btn-ghost {
+    background: transparent !important;
+    color: #60a5fa !important;
+    border-color: #3b82f6 !important;
+  }
+  body.dark-mode .btn-ghost:hover {
+    background: rgba(59, 130, 246, 0.15) !important;
+    box-shadow: 0 4px 14px rgba(59, 130, 246, 0.3) !important;
+  }
+  body.dark-mode .view-btn {
+    background: #0b1329 !important;
+    color: #cbd5e1 !important;
+    border-color: #23385e !important;
+  }
+  body.dark-mode .view-btn.active {
+    background: #2563eb !important;
+    color: #ffffff !important;
+    border-color: #2563eb !important;
+    box-shadow: 0 4px 16px rgba(37, 99, 235, 0.4) !important;
+  }
+  body.dark-mode .view-btn:hover:not(.active) {
+    background: #162444 !important;
+    border-color: #3b82f6 !important;
+    color: #ffffff !important;
+  }
+
   /* Tozalash Tugmasi */
   body.dark-mode .btn-reset-filters,
   body.dark-mode .filter-panel button[onclick="resetAllFilters()"] {
-    background: #1e293b !important;
+    background: #111e38 !important;
     color: #f1f5f9 !important;
-    border: 1.5px solid #334155 !important;
+    border: 1.5px solid #23385e !important;
+    border-radius: 9999px !important;
   }
   body.dark-mode .btn-reset-filters:hover,
   body.dark-mode .filter-panel button[onclick="resetAllFilters()"]:hover {
-    background: #334155 !important;
+    background: #162444 !important;
+    border-color: #3b82f6 !important;
     color: #ffffff !important;
   }
 
@@ -3244,67 +3541,82 @@
     gap: 5px;
   }
   .btn-verify {
-    padding: 8px 18px;
-    border-radius: 9px;
-    font-size: 12.5px;
-    font-weight: 800;
+    padding: 7px 18px;
+    border-radius: 9999px;
+    font-size: 12px;
+    font-weight: 600;
     cursor: pointer;
     display: inline-flex;
     align-items: center;
     gap: 6px;
     transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
     user-select: none;
-    border: none;
+    border: 1.5px solid transparent;
+  }
+  .btn-verify:active {
+    transform: scale(0.97);
   }
   .btn-verify-action {
-    background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+    background: #10b981;
     color: #ffffff;
-    box-shadow: 0 4px 14px rgba(16, 185, 129, 0.35);
+    border-color: #10b981;
+    box-shadow: 0 2px 6px rgba(16, 185, 129, 0.25);
   }
   .btn-verify-action:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(16, 185, 129, 0.5);
-    background: linear-gradient(135deg, #047857 0%, #059669 100%);
+    background: #059669;
+    border-color: #059669;
+    box-shadow: 0 4px 14px rgba(16, 185, 129, 0.4);
+    transform: translateY(-1.5px);
   }
   .btn-verified {
-    background: rgba(16, 185, 129, 0.15);
-    color: #34d399;
+    background: rgba(16, 185, 129, 0.12);
+    color: #10b981;
     border: 1.5px solid #10b981;
   }
   .btn-verified:hover {
-    background: rgba(239, 68, 68, 0.15);
-    color: #f87171;
+    background: rgba(239, 68, 68, 0.12);
+    color: #ef4444;
     border-color: #ef4444;
+    box-shadow: 0 2px 8px rgba(239, 68, 68, 0.25);
+    transform: translateY(-1px);
   }
   .btn-verify-table {
-    padding: 4px 10px;
-    border-radius: 6px;
+    padding: 4px 12px;
+    border-radius: 9999px;
     font-size: 11.5px;
-    font-weight: 700;
+    font-weight: 600;
     cursor: pointer;
-    border: none;
-    transition: all 0.15s;
+    border: 1.5px solid transparent;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
     white-space: nowrap;
+    user-select: none;
+  }
+  .btn-verify-table:active {
+    transform: scale(0.97);
   }
   .btn-verify-table.btn-verify-action {
     background: #fef3c7;
     color: #b45309;
-    border: 1px solid #fde68a;
+    border: 1.5px solid #fde68a;
   }
   .btn-verify-table.btn-verify-action:hover {
     background: #10b981;
     color: #ffffff;
     border-color: #10b981;
+    box-shadow: 0 2px 8px rgba(16, 185, 129, 0.35);
+    transform: translateY(-1px);
   }
   .btn-verify-table.btn-verified {
     background: #dcfce7;
     color: #15803d;
-    border: 1px solid #bbf7d0;
+    border: 1.5px solid #bbf7d0;
   }
   .btn-verify-table.btn-verified:hover {
     background: #fee2e2;
     color: #b91c1c;
     border-color: #fecaca;
+    box-shadow: 0 2px 8px rgba(239, 68, 68, 0.25);
+    transform: translateY(-1px);
   }
   .stat-verified::before { background: #10b981; }
   .stat-verified .val { color: #10b981; }
@@ -3530,20 +3842,20 @@ window.openStudentModal = function(studentIdx, startInEditMode = false) {
         ${qrBtn}
         <!-- Fayl biriktirish / almashtirish inputi -->
         <input type="file" id="attachFileInput" accept=".docx,image/*" style="display:none;" onchange="if(this.files.length) uploadAndAttachForCurrentStudent(this.files[0])">
-        <button type="button" class="btn" style="background:#0284c7;color:#fff;padding:6px 12px;font-weight:700;display:inline-flex;align-items:center;gap:6px;" onclick="document.getElementById('attachFileInput').click()">
+        <button type="button" class="btn btn-export" style="padding:6px 16px; font-size:12px;" onclick="document.getElementById('attachFileInput').click()">
           ${ICONS.file} Fayl Biriktirish
         </button>
-        <button type="button" id="btnScanQR" class="btn" style="background:#059669;color:#fff;padding:6px 14px;font-weight:800;display:inline-flex;align-items:center;gap:6px;box-shadow:0 2px 6px rgba(5,150,105,0.25);" onclick="scanStudentQROnly()">
+        <button type="button" id="btnScanQR" class="btn btn-add" style="padding:6px 16px; font-size:12px;" onclick="scanStudentQROnly()">
           <svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
           QR Skaner (Avtomatik)
         </button>
         <button type="button" id="btnToggleEditTop" class="btn btn-edit-main" onclick="toggleEditMode(!window.isEditMode)">
           ${ICONS.edit} Tahrirlash
         </button>
-        <button type="button" id="btnReanalyze" class="btn btn-ai-reanalyze" style="background:linear-gradient(135deg, #7c3aed 0%, #4f46e5 100%); color:#fff; font-weight:800; border:none; box-shadow:0 2px 8px rgba(124,58,237,0.3);" onclick="reanalyzeCurrentStudent()">
+        <button type="button" id="btnReanalyze" class="btn btn-multi-export" style="padding:6px 16px; font-size:12px;" onclick="reanalyzeCurrentStudent()">
           ${ICONS.zap} AI Pro Qayta Tekshirish
         </button>
-        <button type="button" id="btnDeleteStudentTop" class="btn" style="background:#dc2626; color:#fff; padding:6px 12px; font-weight:700; display:inline-flex; align-items:center; gap:6px; box-shadow:0 2px 6px rgba(220,38,38,0.25);" onclick="deleteCurrentStudent()">
+        <button type="button" id="btnDeleteStudentTop" class="btn btn-danger" style="padding:6px 16px; font-size:12px;" onclick="deleteCurrentStudent()">
           <svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
           Talabani O'chirish
         </button>
@@ -5198,14 +5510,14 @@ window.renderGroupsJournalTab = function() {
       </div>
       <div style="display:flex; gap:8px; flex-wrap:wrap;">
         <button type="button" class="btn btn-export"
-          style="font-size:12px; padding:5px 14px;"
+          style="font-size:12px; padding:6px 18px;"
           onclick="exportAllGroupsMultiSheetExcel()"
           title="Barcha 7 guruh bitta ko'p sahifali Excel faylda">
           <svg style="width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2;" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
           Barcha .xlsx
         </button>
-        <button type="button" class="btn"
-          style="font-size:12px; padding:5px 14px; background:#dc2626; color:#fff; border-color:rgba(27,31,36,0.15);"
+        <button type="button" class="btn btn-danger"
+          style="font-size:12px; padding:6px 18px;"
           onclick="downloadAllGroupPdfs()"
           title="Barcha 7 guruh PDF jurnallarini yangi tabda ochish">
           <svg style="width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2;" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
@@ -5238,10 +5550,10 @@ window.renderGroupsJournalTab = function() {
             </p>
           </div>
           <div style="display:flex; gap:6px; align-items:center;">
-            <button type="button" class="btn" style="padding:4px 12px; font-size:11.5px; background:#dc2626; color:#fff; border-color:rgba(27,31,36,0.15);" onclick="openGroupPdf('${g}')" title="Guruh jurnalini toza A4 PDF formatda ochish">
+            <button type="button" class="btn btn-danger" style="padding:4px 14px; font-size:11.5px;" onclick="openGroupPdf('${g}')" title="Guruh jurnalini toza A4 PDF formatda ochish">
               <svg style="width:13px;height:13px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg> PDF
             </button>
-            <button type="button" class="btn btn-export" style="padding:4px 12px; font-size:11.5px;" onclick="exportSingleGroupExcel('${g}')" title="Excel (.xlsx) formatda yuklab olish">
+            <button type="button" class="btn btn-export" style="padding:4px 14px; font-size:11.5px;" onclick="exportSingleGroupExcel('${g}')" title="Excel (.xlsx) formatda yuklab olish">
               <svg style="width:13px;height:13px;fill:none;stroke:currentColor;stroke-width:2;" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> .xlsx
             </button>
           </div>
@@ -5304,7 +5616,7 @@ window.renderGroupsJournalTab = function() {
               ${ICONS.infoSm} Holati: <strong>Guruh tayinlanishi kutilmoqda</strong> &nbsp;&bull;&nbsp; Jami: <strong style="color:#fff;">${unassignedStudents.length} nafar</strong>
             </p>
           </div>
-          <button type="button" class="btn btn-export" style="padding:4px 12px; font-size:11.5px; background:#d97706; border-color:#b45309;" onclick="exportSingleGroupExcel('N')">
+          <button type="button" class="btn btn-export" style="padding:4px 14px; font-size:11.5px; background:#d97706; border-color:#b45309;" onclick="exportSingleGroupExcel('N')">
             <svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg> .xlsx
           </button>
         </div>
@@ -7584,7 +7896,7 @@ if (document.readyState === 'loading') {
           </select>
         </div>
         <div style="flex-shrink: 0; margin-top: 18px;">
-          <button type="button" class="btn btn-reset-filters" style="background:#f1f5f9; color:#475569; border:1px solid #cbd5e1; padding:8px 14px;" onclick="resetAllFilters()">
+          <button type="button" class="btn btn-reset-filters" onclick="resetAllFilters()">
             Tozalash
           </button>
         </div>
