@@ -739,6 +739,148 @@ window.updateStudentCardDOM = function(idx, s) {
   }, 2500);
 };
 
+/* =========================================================================
+   TAHRIRLARNI LOKAL KESHDA SAQLASH
+   Hisobot (index.html) qayta generatsiya bo'lguncha ~7 soniya ketadi. Shu
+   oraliqda F5 yoki Ctrl+Shift+R bosilsa, sahifadagi RAW_STUDENTS eski
+   holatga qaytadi va tahrir "yo'qolgandek" ko'rinadi. Tasdiq holatlari
+   (student_portal_verified_map) uchun ishlatilgan andozaning aynan o'zi:
+   tahrir darhol localStorage ga yoziladi va yuklanishda qayta qo'llanadi.
+   ========================================================================= */
+window.STUDENT_EDITS_KEY = 'student_portal_edits_map';
+window.STUDENT_EDIT_FIELDS = ['ism','ota','group','pv','pinfl','dob','ber','doc_tur','sh_doc','mak','yil','yon'];
+// Tasdiqlanmagan tahrir 7 kundan ortiq yashamasin (eskirib qolmasligi uchun)
+window.STUDENT_EDIT_TTL_MS = 7 * 24 * 60 * 60 * 1000;
+
+window.readStudentEditsCache = function() {
+  try {
+    const raw = JSON.parse(localStorage.getItem(window.STUDENT_EDITS_KEY) || '{}');
+    return (raw && typeof raw === 'object') ? raw : {};
+  } catch(e) { return {}; }
+};
+
+window.writeStudentEditsCache = function(map) {
+  try { localStorage.setItem(window.STUDENT_EDITS_KEY, JSON.stringify(map)); } catch(e) {}
+};
+
+/* Bitta tahrirni keshga yozish. shnum ham saqlanadi — talaba o'chirilib
+   qatorlar surilib ketsa, tahrir boshqa talabaga noto'g'ri qo'llanmasligi uchun. */
+window.cacheStudentEdit = function(s, fields) {
+  if (!s || !s.row) return;
+  const map = window.readStudentEditsCache();
+  const key = String(s.row);
+  const prev = (map[key] && map[key].fields) ? map[key].fields : {};
+  map[key] = {
+    shnum: s.shnum ? String(s.shnum).trim() : '',
+    fields: Object.assign({}, prev, fields),
+    ts: Date.now()
+  };
+  window.writeStudentEditsCache(map);
+};
+
+window.clearStudentEditCache = function(row) {
+  const map = window.readStudentEditsCache();
+  if (map[String(row)]) {
+    delete map[String(row)];
+    window.writeStudentEditsCache(map);
+  }
+};
+
+/* Jadval qatorini yangilash (avval saveStudentData ichida inline edi —
+   yuklanishda ham qayta ishlatish uchun alohida funksiyaga ajratildi) */
+window.applyStudentRowToDOM = function(idx, s) {
+  const rows = document.querySelectorAll('.student-row');
+  if (!rows[idx]) return;
+  const rEl = rows[idx];
+
+  rEl.setAttribute('data-name', (s.fish || '').toLowerCase());
+  rEl.setAttribute('data-pass', (s.pv || '').toLowerCase());
+  rEl.setAttribute('data-pinfl', s.pinfl || '');
+  rEl.setAttribute('data-dob', (s.dob || '') + ' ' + (s.ber || ''));
+  rEl.setAttribute('data-doc', (s.sh_doc || '').toLowerCase());
+  rEl.setAttribute('data-doctype', s.doc_tur || '');
+  rEl.setAttribute('data-mak', (s.mak || '').toLowerCase());
+  rEl.setAttribute('data-yil', s.yil || '');
+  rEl.setAttribute('data-yon', (s.yon || '').toLowerCase());
+
+  const cells = rEl.querySelectorAll('td');
+  if (cells.length >= 10) {
+    cells[2].innerHTML = '<div class="student-name">' + s.ism + '</div>' +
+                          '<div class="student-patronymic">' + (s.ota || '—') + '</div>';
+    cells[3].innerHTML = '<div><span class="mono pass-text">' + (s.pv || '—') + '</span></div>';
+    cells[4].innerHTML = '<span class="mono pinfl-text">' + (s.pinfl || '—') + '</span>';
+    cells[5].innerHTML = '<div class="student-dob" style="font-size:12px;">DOB: <strong>' + (s.dob || '—') + '</strong></div>' +
+                          '<div style="font-size:11.5px;color:#a855f7;margin-top:2px;">Berilgan: <strong>' + (s.ber || '—') + '</strong></div>';
+    cells[6].innerHTML = '<div><span class="mono doc-text">' + (s.sh_doc || '—') + '</span></div>' +
+                          '<div style="font-size:11px;color:var(--text-muted);margin-top:1px;">' + (s.doc_tur || '—') + '</div>';
+    cells[7].innerHTML = '<div style="font-size:12px;line-height:1.3;">' + (s.mak || '—') + '</div>' +
+                          '<div class="yon-badge">' + (s.yon || '—') + '</div>';
+    cells[8].innerText = s.yil || '—';
+  }
+};
+
+/* Talaba ob'ektiga maydonlarni yozish va karta + jadvalni birdaniga yangilash */
+window.applyStudentFields = function(idx, s, fields) {
+  window.STUDENT_EDIT_FIELDS.forEach(function(f) {
+    if (fields[f] !== undefined) s[f] = fields[f];
+  });
+  s.fish = (s.ism + ' ' + (s.ota || '')).trim();
+  window.updateStudentCardDOM(idx, s);
+  window.applyStudentRowToDOM(idx, s);
+};
+
+/* Yuklanishda: serverga yetib bormagan tahrirlarni qayta qo'llash.
+   Agar hisobot allaqachon yangilangan bo'lsa (qiymatlar mos) — kesh tozalanadi. */
+window.syncStudentEditsState = function() {
+  if (typeof RAW_STUDENTS === 'undefined' || !Array.isArray(RAW_STUDENTS)) return;
+
+  // Serverdan kelgan asl qiymatlarni bir marta suratga olamiz. Keyin keshni
+  // shu surat bilan solishtiramiz: aks holda funksiya o'zi yozib qo'ygan
+  // qiymat bilan solishtirib, server yetib olganini hech qachon sezmaydi.
+  if (!window.__serverStudentSnapshot) {
+    window.__serverStudentSnapshot = {};
+    RAW_STUDENTS.forEach(function(s) {
+      const orig = {};
+      window.STUDENT_EDIT_FIELDS.forEach(function(f) { orig[f] = s[f]; });
+      window.__serverStudentSnapshot[String(s.row)] = orig;
+    });
+  }
+
+  const map = window.readStudentEditsCache();
+  if (!map || !Object.keys(map).length) return;
+
+  const now = Date.now();
+  let dirty = false;
+
+  RAW_STUDENTS.forEach(function(s, idx) {
+    const entry = map[String(s.row)];
+    if (!entry || !entry.fields) return;
+
+    // Eskirgan yozuvni tashlab yuborish
+    if (entry.ts && (now - entry.ts) > window.STUDENT_EDIT_TTL_MS) {
+      delete map[String(s.row)]; dirty = true; return;
+    }
+    // Qatorlar surilgan bo'lsa (talaba o'chirilgan) — noto'g'ri qo'llamaymiz
+    if (entry.shnum && s.shnum && String(s.shnum).trim() !== entry.shnum) {
+      delete map[String(s.row)]; dirty = true; return;
+    }
+
+    // Hisobot yetib olganmi? Serverning asl qiymati bilan solishtiramiz.
+    const serverVals = window.__serverStudentSnapshot[String(s.row)] || {};
+    const stillPending = window.STUDENT_EDIT_FIELDS.some(function(f) {
+      return entry.fields[f] !== undefined && (serverVals[f] || '') !== entry.fields[f];
+    });
+
+    if (!stillPending) {
+      delete map[String(s.row)]; dirty = true; return;
+    }
+
+    window.applyStudentFields(idx, s, entry.fields);
+  });
+
+  if (dirty) window.writeStudentEditsCache(map);
+};
+
 /* QO'LDA TAHRIRLANGAN MA'LUMOTLARNI SAQLASH (EXCELGA YOZISH) */
 window.saveStudentData = function() {
   if (window.currentStudentIdx === null || !RAW_STUDENTS[window.currentStudentIdx]) return;
@@ -756,6 +898,31 @@ window.saveStudentData = function() {
   const mak = (document.getElementById('edit_mak') ? document.getElementById('edit_mak').value : s.mak).trim();
   const yil = (document.getElementById('edit_yil') ? document.getElementById('edit_yil').value : s.yil).trim();
   const yon = (document.getElementById('edit_yon') ? document.getElementById('edit_yon').value : s.yon).trim();
+
+  const idx = window.currentStudentIdx;
+  const fields = {
+    ism: ism, ota: ota, group: group, pv: pv, pinfl: pinfl, dob: dob,
+    ber: ber, doc_tur: doctur, sh_doc: shdoc, mak: mak, yil: yil, yon: yon
+  };
+
+  // Xatolik bo'lsa qaytarish uchun oldingi holatni eslab qolamiz
+  const prevFields = {};
+  window.STUDENT_EDIT_FIELDS.forEach(function(f) { prevFields[f] = s[f]; });
+
+  // 1-QADAM: darhol (0ms) qo'llaymiz — server javobini kutib turmaymiz
+  window.applyStudentFields(idx, s, fields);
+
+  // 2-QADAM: localStorage ga yozamiz — F5/Ctrl+Shift+R da tahrir yo'qolmaydi
+  window.cacheStudentEdit(s, fields);
+
+  // Modal sarlavhasini ham yangilash
+  const modalTitle = document.getElementById('modalTitle');
+  if (modalTitle) {
+    modalTitle.innerHTML = ICONS.user + " <strong>" + s.fish + "</strong> &nbsp;|&nbsp; Shartnoma: #" + s.shnum;
+  }
+
+  // Oddiy ko'rish rejimiga qaytarish
+  window.toggleEditMode(false);
 
   const statusBox = document.getElementById('reanalyzeStatus');
   if (statusBox) {
@@ -782,96 +949,43 @@ window.saveStudentData = function() {
     '&yil=' + encodeURIComponent(yil) +
     '&yon=' + encodeURIComponent(yon);
 
+  // 3-QADAM: fonda serverga yuboramiz (interfeys allaqachon yangilangan)
   fetch(url)
     .then(function(r) { return r.json(); })
     .then(function(res) {
       if (res.success) {
-        // Ma'lumotlarni JavaScript obyektida yangilash
-        s.ism = ism;
-        s.ota = ota;
-        s.fish = (ism + ' ' + (ota || '')).trim();
-        s.pv = pv;
-        s.pinfl = pinfl;
-        s.dob = dob;
-        s.ber = ber;
-        s.doc_tur = doctur;
-        s.sh_doc = shdoc;
-        s.mak = mak;
-        s.yil = yil;
-        s.yon = yon;
-
-        s.group = group;
-
-        // Modal sarlavhasini ham yangilash
-        const modalTitle = document.getElementById('modalTitle');
-        if (modalTitle) {
-          modalTitle.innerHTML = ICONS.user + " <strong>" + s.fish + "</strong> &nbsp;|&nbsp; Shartnoma: #" + s.shnum;
-        }
-
-        // KARTANI DARHOL BIR ZUMDA YANGILASH (DOM)
-        updateStudentCardDOM(window.currentStudentIdx, s);
-
-        // Jadvaldagi qatorni darhol yangilash
-        const rows = document.querySelectorAll('.student-row');
-        if (rows[window.currentStudentIdx]) {
-          const rEl = rows[window.currentStudentIdx];
-          
-          rEl.setAttribute('data-name', (s.fish || '').toLowerCase());
-          rEl.setAttribute('data-pass', (s.pv || '').toLowerCase());
-          rEl.setAttribute('data-pinfl', s.pinfl || '');
-          rEl.setAttribute('data-dob', (s.dob || '') + ' ' + (s.ber || ''));
-          rEl.setAttribute('data-doc', (s.sh_doc || '').toLowerCase());
-          rEl.setAttribute('data-doctype', s.doc_tur || '');
-          rEl.setAttribute('data-mak', (s.mak || '').toLowerCase());
-          rEl.setAttribute('data-yil', s.yil || '');
-          rEl.setAttribute('data-yon', (s.yon || '').toLowerCase());
-
-          const cells = rEl.querySelectorAll('td');
-          if (cells.length >= 10) {
-            cells[2].innerHTML = '<div class="student-name">' + s.ism + '</div>' +
-                                  '<div class="student-patronymic">' + (s.ota || '—') + '</div>';
-            cells[3].innerHTML = '<div><span class="mono pass-text">' + (s.pv || '—') + '</span></div>';
-            cells[4].innerHTML = '<span class="mono pinfl-text">' + (s.pinfl || '—') + '</span>';
-            cells[5].innerHTML = '<div class="student-dob" style="font-size:12px;">DOB: <strong>' + (s.dob || '—') + '</strong></div>' +
-                                  '<div style="font-size:11.5px;color:#a855f7;margin-top:2px;">Berilgan: <strong>' + (s.ber || '—') + '</strong></div>';
-            cells[6].innerHTML = '<div><span class="mono doc-text">' + (s.sh_doc || '—') + '</span></div>' +
-                                  '<div style="font-size:11px;color:var(--text-muted);margin-top:1px;">' + (s.doc_tur || '—') + '</div>';
-            cells[7].innerHTML = '<div style="font-size:12px;line-height:1.3;">' + (s.mak || '—') + '</div>' +
-                                  '<div class="yon-badge">' + (s.yon || '—') + '</div>';
-            cells[8].innerText = s.yil || '—';
-          }
-        }
-
-        // Oddiy ko'rish rejimiga qaytarish
-        window.toggleEditMode(false);
-
         const newStatusBox = document.getElementById('reanalyzeStatus');
         if (newStatusBox) {
           newStatusBox.style.display = 'block';
           newStatusBox.style.background = '#dcfce7';
           newStatusBox.style.color = '#15803d';
           newStatusBox.style.border = '1px solid #86efac';
-          newStatusBox.innerHTML = 'Barcha ma\'lumotlar muvaffaqiyatli saqlandi va Excel bazaga yozildi!';
+          newStatusBox.innerHTML = 'Excel bazaga yozildi. Hisobot fonda yangilanmoqda...';
         }
-        alert("Ma'lumotlar muvaffaqiyatli saqlandi va Excel bazaga yozildi!");
+        showToast(s.ism + " ma'lumotlari saqlandi!", 'success');
       } else {
+        // Server rad etdi — o'zgarishni orqaga qaytaramiz
+        window.applyStudentFields(idx, s, prevFields);
+        window.clearStudentEditCache(s.row);
         if (statusBox) {
           statusBox.style.background = '#fee2e2';
           statusBox.style.color = '#991b1b';
           statusBox.style.border = '1px solid #f87171';
           statusBox.innerHTML = 'Saqlashda xatolik: ' + (res.error || 'Noma\'lum xatolik');
         }
-        alert("Saqlashda xatolik: " + (res.error || 'Noma\'lum'));
+        showToast("Saqlashda xatolik: " + (res.error || 'Noma\'lum'), 'danger');
       }
     })
     .catch(function(e) {
+      // Tarmoq uzilishi bo'lishi mumkin — tahrirni ORQAGA QAYTARMAYMIZ.
+      // U localStorage da turadi va sahifa yangilansa ham ko'rinaveradi.
       if (statusBox) {
-        statusBox.style.background = '#fee2e2';
-        statusBox.style.color = '#991b1b';
-        statusBox.style.border = '1px solid #f87171';
-        statusBox.innerHTML = 'Server bilan ulanishda xatolik: ' + e;
+        statusBox.style.background = '#fef9c3';
+        statusBox.style.color = '#854d0e';
+        statusBox.style.border = '1px solid #fde047';
+        statusBox.innerHTML = 'Serverga ulanib bo\'lmadi — tahrir brauzerda saqlanib turibdi.';
       }
-      alert("Server bilan ulanishda xatolik: " + e + "\nIltimos http://localhost:8080 orqali ochilganini tekshiring.");
+      showToast("Serverga ulanib bo'lmadi. Tahrir brauzerda saqlandi.", 'warning');
     });
 };
 
@@ -3734,6 +3848,12 @@ function initPortalState() {
   // 3.5. Operator tasdiqlagan talabalarni tiklash va server bilan sinxronlash (F5 da saqlanishi uchun)
   if (typeof window.syncVerificationsState === 'function') {
     window.syncVerificationsState();
+  }
+
+  // 3.6. Hisobot hali qayta generatsiya bo'lmagan tahrirlarni tiklash
+  //      (F5 yoki Ctrl+Shift+R bosilganda ma'lumot eski holatga qaytmasligi uchun)
+  if (typeof window.syncStudentEditsState === 'function') {
+    window.syncStudentEditsState();
   }
 
   // 4. Guruhlar tasdiqlash monitoringi statistikasini yangilash

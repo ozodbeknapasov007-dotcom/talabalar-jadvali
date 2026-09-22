@@ -5344,8 +5344,38 @@ try:
     source_wb = openpyxl.load_workbook(EXCEL_PATH, data_only=True)
     source_ws = source_wb.worksheets[0]
     multisheet_wb = build_full_multisheet_excel(source_ws)
-    multisheet_wb.save(os.path.join(BASE_DIR, 'Talabalar_Yangilangan_Royxat.xlsx'))
-    multisheet_wb.save(os.path.join(BASE_DIR, 'qayta_tekshiruv', 'Talabalar_Yangilangan_Royxat.xlsx'))
+    # Vaqt tamg'asini qotirib qo'yamiz: aks holda openpyxl har safar
+    # docProps/core.xml ga yangi sana yozadi va ma'lumot umuman o'zgarmagan
+    # bo'lsa ham fayl "o'zgargan" bo'lib har bir commit ga tushaveradi.
+    import datetime as _dt
+    _fixed = _dt.datetime(2026, 1, 1, 0, 0, 0)
+    multisheet_wb.properties.created = _fixed
+    multisheet_wb.properties.modified = _fixed
+
+    def _pin_xlsx_timestamp(path):
+        """openpyxl saqlash paytida properties.modified ni joriy vaqtga
+        majburan almashtiradi, shuning uchun uni fayl yozilgandan keyin
+        qayta qotiramiz. Shunda ma'lumot o'zgarmasa fayl bayt-ma-bayt
+        bir xil bo'ladi va git ga keraksiz commit tushmaydi."""
+        import zipfile, re, shutil
+        tmp = path + '.tmp'
+        with zipfile.ZipFile(path) as zin:
+            items = [(i.filename, i.external_attr, zin.read(i.filename)) for i in zin.infolist()]
+        with zipfile.ZipFile(tmp, 'w', zipfile.ZIP_DEFLATED) as zout:
+            for name, attr, data in items:
+                if name == 'docProps/core.xml':
+                    data = re.sub(rb'(<dcterms:modified[^>]*>)[^<]*(</dcterms:modified>)',
+                                  rb'\g<1>2026-01-01T00:00:00Z\g<2>', data)
+                info = zipfile.ZipInfo(name, date_time=(2026, 1, 1, 0, 0, 0))
+                info.compress_type = zipfile.ZIP_DEFLATED
+                info.external_attr = attr
+                zout.writestr(info, data)
+        shutil.move(tmp, path)
+
+    for _xlsx_path in (os.path.join(BASE_DIR, 'Talabalar_Yangilangan_Royxat.xlsx'),
+                       os.path.join(BASE_DIR, 'qayta_tekshiruv', 'Talabalar_Yangilangan_Royxat.xlsx')):
+        multisheet_wb.save(_xlsx_path)
+        _pin_xlsx_timestamp(_xlsx_path)
     print("[OK] Yangilangan Excel fayli (8 ta sahifali) saqlandi!")
 except Exception as e_style:
     print(f"Excel stilini qo'llashda xatolik: {e_style}")

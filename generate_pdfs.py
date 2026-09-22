@@ -1,5 +1,11 @@
 import os
 import openpyxl
+from reportlab import rl_config
+# Ma'lumot o'zgarmagan bo'lsa PDF baytlari ham o'zgarmasligi shart.
+# Aks holda ReportLab har safar yangi CreationDate/ModDate va /ID yozadi,
+# natijada har bir qayta generatsiyada 16 ta PDF "o'zgargan" bo'lib
+# git ga tushadi va har bir commit ~800 KB keraksiz ma'lumot bilan shishadi.
+rl_config.invariant = 1
 from reportlab.lib.pagesizes import A4
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Table, TableStyle, PageBreak
 from reportlab.lib.styles import ParagraphStyle

@@ -83,11 +83,17 @@ def _do_git_push():
              'scripts/manual_file_map.json'],
             cwd=BASE_DIR, capture_output=True, text=True, timeout=30
         )
+        # DIQQAT: 'git status --porcelain' kuzatilmayotgan (??) fayllarni ham
+        # sanaydi. Loyiha papkasida doimo shunday fayllar bor (backup, hisobot
+        # va h.k.), shuning uchun u hech qachon bo'sh bo'lmaydi va stage da
+        # hech narsa bo'lmasa ham commit urinib, "Commit xatosi" holatini
+        # ko'rsatib qolardi. Faqat stage qilingan o'zgarishni tekshiramiz:
+        # --quiet farq bo'lsa 1, bo'lmasa 0 qaytaradi.
         result_status = subprocess.run(
-            ['git', 'status', '--porcelain'],
+            ['git', 'diff', '--cached', '--quiet'],
             cwd=BASE_DIR, capture_output=True, text=True, timeout=10
         )
-        if result_status.stdout.strip():
+        if result_status.returncode != 0:
             result_commit = subprocess.run(
                 ['git', 'commit', '-m', f"Auto: talaba ma'lumotlari yangilandi ({time.strftime('%Y-%m-%d %H:%M:%S')})"],
                 cwd=BASE_DIR, capture_output=True, text=True, timeout=30
@@ -95,7 +101,7 @@ def _do_git_push():
             if result_commit.returncode == 0:
                 # Masofaviy o'zgarishlar bilan ziddiyat bo'lmasligi uchun oldin rebase bilan tortib olamiz
                 subprocess.run(
-                    ['git', 'pull', '--rebase', 'origin', 'main', '--quiet'],
+                    ['git', 'pull', '--rebase', '--autostash', 'origin', 'main', '--quiet'],
                     cwd=BASE_DIR, capture_output=True, text=True, timeout=30
                 )
                 result_push = subprocess.run(
@@ -110,7 +116,7 @@ def _do_git_push():
                         GIT_SYNC_STATUS["last_sync"] = time.strftime("%H:%M:%S")
                 else:
                     # Agar birinchi urinish o'tmasa, yana bir bor rebase qilib ko'rish
-                    subprocess.run(['git', 'pull', '--rebase', 'origin', 'main', '--quiet'], cwd=BASE_DIR, capture_output=True, text=True, timeout=30)
+                    subprocess.run(['git', 'pull', '--rebase', '--autostash', 'origin', 'main', '--quiet'], cwd=BASE_DIR, capture_output=True, text=True, timeout=30)
                     retry_push = subprocess.run(['git', 'push', 'origin', 'main'], cwd=BASE_DIR, capture_output=True, text=True, timeout=60)
                     if retry_push.returncode == 0:
                         print("[GIT] ✅ GitHub'ga qayta urinishda push qilindi")
@@ -170,7 +176,9 @@ def process_remote_github_changes():
     try:
         # 1. GitHub'dan eng yangi o'zgarishlarni tortib olish
         pull_res = subprocess.run(
-            ['git', 'pull', 'origin', 'main', '--quiet'],
+            # --autostash: saqlanmagan kod o'zgarishi bo'lsa ham pull to'xtab
+            # qolmasin (aks holda sinxronizatsiya butunlay ishlamay qoladi)
+            ['git', 'pull', '--rebase', '--autostash', 'origin', 'main', '--quiet'],
             cwd=BASE_DIR, capture_output=True, text=True, timeout=30
         )
         if not os.path.exists(changes_file):
@@ -212,6 +220,12 @@ def process_remote_github_changes():
                             ws.cell(row=r_idx, column=2, value=clean_uz_name(fields['ism']))
                         if 'ota' in fields and fields['ota']:
                             ws.cell(row=r_idx, column=7, value=clean_uz_name(fields['ota']))
+                        # To'liq F.I.Sh (8-ustun) ham yangilanishi shart — aks holda
+                        # ism/ota o'zgargach ro'yxatda eski to'liq ism qolib ketadi
+                        if ('ism' in fields and fields['ism']) or ('ota' in fields and fields['ota']):
+                            cur_ism = str(ws.cell(row=r_idx, column=2).value or '')
+                            cur_ota = str(ws.cell(row=r_idx, column=7).value or '')
+                            ws.cell(row=r_idx, column=8, value=f"{cur_ism} {cur_ota}".strip())
                         if 'pv' in fields:
                             ws.cell(row=r_idx, column=10, value=str(fields['pv']).strip())
                         if 'pinfl' in fields:
