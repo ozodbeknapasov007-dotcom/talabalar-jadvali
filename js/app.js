@@ -1931,41 +1931,129 @@ window.openStudentByRow = function(rowNum) {
   if (idx !== -1) openStudentModal(idx);
 };
 
-/* 1 TA ALOHIDA GURUHNI FORMATLANGAN EXCEL QILIB YUKLASH */
-window.exportSingleGroupExcel = function(groupName) {
-  const isRemote = (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1');
-  if (isRemote && typeof XLSX !== 'undefined') {
-    // Vercel'da: SheetJS orqali guruh ma'lumotlarini darhol Excel (.xlsx) qilib yuklab berish
-    const gStudents = RAW_STUDENTS.filter(function(st) { return (st.group || '') === groupName; });
-    gStudents.sort(function(a, b) { return (a.ism || '').localeCompare(b.ism || '', 'uz'); });
-    const rows = gStudents.map(function(st, i) {
-      return {
-        "T/R": i + 1,
-        "Guruh": st.group || groupName,
-        "Shartnoma #": st.shnum || '',
-        "F.I.SH (Talaba)": st.fish || ((st.ism || '') + ' ' + (st.ota || '')).trim(),
-        "Pasport": st.pv || '',
-        "JSHSHIR": st.pinfl || '',
-        "Tug'ilgan sana": st.dob || '',
-        "Hujjat raqami": st.sh_doc || '',
-        "Muassasa": st.mak || '',
-        "Bitirgan yili": st.yil || '',
-        "Yo'nalish": st.yon || '',
-        "Telefon": st.tel || '',
-        "Holati": st.verified || 'KUTILMOQDA'
-      };
-    });
-    const ws = XLSX.utils.json_to_sheet(rows);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Guruh " + groupName);
-    XLSX.writeFile(wb, `Guruh_${groupName}_Talabalar_Royxati.xlsx`);
-    showToast(`Guruh ${groupName} ning Excel jurnali yuklab olindi!`, "success");
-    return;
+/* =========================================================================
+   CHIROYLI EXCEL YARATISH HELPER (14pt font, rangli header, alternating rows)
+   ========================================================================= */
+window._buildStyledSheet = function(students) {
+  var COLS = [
+    { header: 'T/R',             key: '__tr',   wch: 5  },
+    { header: 'Guruh',           key: 'group',  wch: 8  },
+    { header: 'Shartnoma #',     key: 'shnum',  wch: 11 },
+    { header: "F.I.SH (Talaba)", key: '__fish', wch: 32 },
+    { header: 'Pasport',         key: 'pv',     wch: 12 },
+    { header: 'JSHSHIR',         key: 'pinfl',  wch: 16 },
+    { header: "Tug'ilgan sana",  key: 'dob',    wch: 14 },
+    { header: 'Hujjat raqami',   key: 'sh_doc', wch: 13 },
+    { header: 'Muassasa',        key: 'mak',    wch: 36 },
+    { header: 'Bitirgan yili',   key: 'yil',    wch: 13 },
+    { header: "Yo'nalish",       key: 'yon',    wch: 18 },
+    { header: 'Telefon',         key: 'tel',    wch: 14 },
+    { header: 'Holati',          key: '__ver',  wch: 13 }
+  ];
+
+  /* ---- Stillar ---- */
+  var hSt = {
+    font: { bold: true, sz: 14, color: { rgb: 'FFFFFF' }, name: 'Calibri' },
+    fill: { fgColor: { rgb: '0F172A' }, patternType: 'solid' },
+    alignment: { horizontal: 'center', vertical: 'center', wrapText: false },
+    border: {
+      top:    { style: 'thin', color: { rgb: '334155' } },
+      bottom: { style: 'thin', color: { rgb: '334155' } },
+      left:   { style: 'thin', color: { rgb: '334155' } },
+      right:  { style: 'thin', color: { rgb: '334155' } }
+    }
+  };
+  var dSt = function(alt, bold) { return {
+    font: { sz: 13, name: 'Calibri', bold: !!bold, color: { rgb: '0F172A' } },
+    fill: { fgColor: { rgb: alt ? 'F1F5F9' : 'FFFFFF' }, patternType: 'solid' },
+    alignment: { vertical: 'center', wrapText: false },
+    border: {
+      top:    { style: 'thin', color: { rgb: 'E2E8F0' } },
+      bottom: { style: 'thin', color: { rgb: 'E2E8F0' } },
+      left:   { style: 'thin', color: { rgb: 'E2E8F0' } },
+      right:  { style: 'thin', color: { rgb: 'E2E8F0' } }
+    }
+  }; };
+  var trSt = function(alt) { return {
+    font: { sz: 13, name: 'Calibri', color: { rgb: '64748B' } },
+    fill: { fgColor: { rgb: alt ? 'F1F5F9' : 'FFFFFF' }, patternType: 'solid' },
+    alignment: { horizontal: 'center', vertical: 'center' },
+    border: dSt(alt).border
+  }; };
+
+  /* ---- Ma'lumotlardan sheet yaratish ---- */
+  var aoa = [COLS.map(function(c) { return c.header; })];
+  students.forEach(function(st, i) {
+    var fish = st.fish || ((st.ism || '') + ' ' + (st.ota || '')).trim();
+    aoa.push([
+      i + 1,
+      st.group  || '',
+      st.shnum  || '',
+      fish,
+      st.pv     || '',
+      st.pinfl  || '',
+      st.dob    || '',
+      st.sh_doc || '',
+      st.mak    || '',
+      st.yil    || '',
+      st.yon    || '',
+      st.tel    || '',
+      st.verified || 'KUTILMOQDA'
+    ]);
+  });
+
+  var ws = XLSX.utils.aoa_to_sheet(aoa);
+
+  /* ---- Har bir katakka stil qo'shish ---- */
+  var range = XLSX.utils.decode_range(ws['!ref'] || 'A1');
+  for (var R = range.s.r; R <= range.e.r; R++) {
+    for (var C = range.s.c; C <= range.e.c; C++) {
+      var addr = XLSX.utils.encode_cell({ r: R, c: C });
+      if (!ws[addr]) continue;
+      var alt = R % 2 === 0;
+      if (R === 0) {
+        ws[addr].s = hSt;
+      } else if (C === 0) {
+        ws[addr].s = trSt(alt); /* T/R */
+      } else if (C === 3) {
+        ws[addr].s = dSt(alt, true); /* FISH - bold */
+      } else {
+        ws[addr].s = dSt(alt, false);
+      }
+    }
   }
 
-  const apiHost = (window.location.protocol === 'http:' || window.location.protocol === 'https:') ? '' : 'http://localhost:8080';
+  /* ---- Ustun kengliklari ---- */
+  ws['!cols'] = COLS.map(function(c) { return { wch: c.wch }; });
+
+  /* ---- Qator balandliklari ---- */
+  var rows = [{ hpt: 26 }]; /* header */
+  for (var i = 0; i < students.length; i++) rows.push({ hpt: 22 });
+  ws['!rows'] = rows;
+
+  /* ---- Muzlatish (freeze) va avtofil'tr ---- */
+  ws['!freeze'] = { xSplit: 0, ySplit: 1 };
+  ws['!autofilter'] = { ref: 'A1:M1' };
+
+  return ws;
+};
+
+/* 1 TA ALOHIDA GURUHNI FORMATLANGAN EXCEL QILIB YUKLASH */
+window.exportSingleGroupExcel = function(groupName) {
+  var isRemote = (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1');
+  if (isRemote && typeof XLSX !== 'undefined') {
+    var gStudents = RAW_STUDENTS.filter(function(st) { return (st.group || '') === groupName; });
+    gStudents.sort(function(a, b) { return (a.ism || '').localeCompare(b.ism || '', 'uz'); });
+    var ws = window._buildStyledSheet(gStudents);
+    var wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Guruh ' + groupName);
+    XLSX.writeFile(wb, 'Guruh_' + groupName + '_Talabalar_Royxati.xlsx', { cellStyles: true, bookSST: false });
+    showToast('Guruh ' + groupName + ' Excel yuklab olindi!', 'success');
+    return;
+  }
+  var apiHost = (window.location.protocol === 'http:' || window.location.protocol === 'https:') ? '' : 'http://localhost:8080';
   window.location.href = apiHost + '/api/export_group_excel?group=' + encodeURIComponent(groupName);
-  showToast(`Guruh ${groupName} ning rasmiy sarlavhali jurnali yuklanmoqda...`, "success");
+  showToast('Guruh ' + groupName + ' ning rasmiy sarlavhali jurnali yuklanmoqda...', 'success');
 };
 
 /* GURUH JURNALINI PDF / PRINT UCHUN OCHISH — TOZA A4, BO'SH SAHIFA YO'Q */
@@ -2107,91 +2195,39 @@ window.printGroupJournal = function(groupCode) {
 
 /* BARCHA GURUHLAR VA JAMI TALABALARNI MULTI-SHEET FORMATLANGAN EXCEL QILIB YUKLASH */
 window.exportAllGroupsMultiSheetExcel = function() {
-  showToast("Barcha guruhlar jurnali (Ko'p sahifali Excel) tayyorlanmoqda...", "success");
+  showToast("Barcha guruhlar chiroyli Excel tayyorlanmoqda...", "success");
 
-  const isRemote = (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1');
+  var isRemote = (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1');
 
-  // Vercel yoki boshqa remote host: SheetJS orqali brauzerda to'g'ridan-to'g'ri yaratish
   if (isRemote && typeof XLSX !== 'undefined') {
-    const wb = XLSX.utils.book_new();
-    const groups = ['26-01','26-02','26-03','26-04','26-05','26-06','26-07'];
+    var wb = XLSX.utils.book_new();
+    var groups = ['26-01','26-02','26-03','26-04','26-05','26-06','26-07'];
 
-    // 1-sheet: Jami barcha talabalar
-    const allRows = RAW_STUDENTS.map(function(st, i) {
-      return {
-        "T/R": i + 1,
-        "Guruh": st.group || '',
-        "Shartnoma #": st.shnum || '',
-        "F.I.SH (Talaba)": st.fish || ((st.ism || '') + ' ' + (st.ota || '')).trim(),
-        "Pasport": st.pv || '',
-        "JSHSHIR": st.pinfl || '',
-        "Tug'ilgan sana": st.dob || '',
-        "Hujjat raqami": st.sh_doc || '',
-        "Muassasa": st.mak || '',
-        "Bitirgan yili": st.yil || '',
-        "Yo'nalish": st.yon || '',
-        "Telefon": st.tel || '',
-        "Holati": st.verified || 'KUTILMOQDA'
-      };
-    });
-    const wsAll = XLSX.utils.json_to_sheet(allRows);
+    /* 1-sheet: Jami barcha talabalar */
+    var wsAll = window._buildStyledSheet(RAW_STUDENTS);
     XLSX.utils.book_append_sheet(wb, wsAll, "Jami talabalar");
 
-    // Har bir guruh uchun alohida sheet
+    /* Har bir guruh alohida sheet */
     groups.forEach(function(g) {
-      const gStudents = RAW_STUDENTS.filter(function(st) { return (st.group || '') === g; });
-      gStudents.sort(function(a, b) { return (a.ism || '').localeCompare(b.ism || '', 'uz'); });
-      const rows = gStudents.map(function(st, i) {
-        return {
-          "T/R": i + 1,
-          "Guruh": st.group || g,
-          "Shartnoma #": st.shnum || '',
-          "F.I.SH (Talaba)": st.fish || ((st.ism || '') + ' ' + (st.ota || '')).trim(),
-          "Pasport": st.pv || '',
-          "JSHSHIR": st.pinfl || '',
-          "Tug'ilgan sana": st.dob || '',
-          "Hujjat raqami": st.sh_doc || '',
-          "Muassasa": st.mak || '',
-          "Bitirgan yili": st.yil || '',
-          "Yo'nalish": st.yon || '',
-          "Telefon": st.tel || '',
-          "Holati": st.verified || 'KUTILMOQDA'
-        };
-      });
-      const ws = XLSX.utils.json_to_sheet(rows);
-      XLSX.utils.book_append_sheet(wb, ws, "Guruh " + g);
+      var gSt = RAW_STUDENTS.filter(function(s) { return (s.group || '') === g; });
+      gSt.sort(function(a, b) { return (a.ism || '').localeCompare(b.ism || '', 'uz'); });
+      XLSX.utils.book_append_sheet(wb, window._buildStyledSheet(gSt), "Guruh " + g);
     });
 
-    // N guruh (guruhsizlar)
-    const nStudents = RAW_STUDENTS.filter(function(st) {
-      return !st.group || st.group === 'N' || st.group === '';
-    });
-    if (nStudents.length > 0) {
-      const nRows = nStudents.map(function(st, i) {
-        return {
-          "T/R": i + 1, "Guruh": "Guruhsiz",
-          "Shartnoma #": st.shnum || '',
-          "F.I.SH (Talaba)": st.fish || ((st.ism || '') + ' ' + (st.ota || '')).trim(),
-          "Pasport": st.pv || '', "JSHSHIR": st.pinfl || '',
-          "Tug'ilgan sana": st.dob || '', "Telefon": st.tel || ''
-        };
-      });
-      const wsN = XLSX.utils.json_to_sheet(nRows);
-      XLSX.utils.book_append_sheet(wb, wsN, "Guruhsizlar");
-    }
+    /* Guruhsizlar (agar bor bo'lsa) */
+    var nSt = RAW_STUDENTS.filter(function(s) { return !s.group || s.group === 'N' || s.group === ''; });
+    if (nSt.length > 0) XLSX.utils.book_append_sheet(wb, window._buildStyledSheet(nSt), "Guruhsizlar");
 
-    XLSX.writeFile(wb, 'Talabalar_Barcha_Guruhlar_2026-2027.xlsx');
-    showToast("Barcha guruhlar jurnali (8 sahifa) muvaffaqiyatli yuklab olindi!", "success");
+    XLSX.writeFile(wb, 'Talabalar_Barcha_Guruhlar_2026-2027.xlsx', { cellStyles: true, bookSST: false });
+    showToast("Chiroyli formatlangan 8 sahifali Excel yuklab olindi!", "success");
     return;
   }
 
-  // Localhost: server API orqali
-  const a = document.createElement('a');
+  /* Localhost: server API */
+  var a = document.createElement('a');
   a.href = '/api/export_all_groups_excel';
   a.download = 'Talabalar_Barcha_Guruhlar_2026-2027.xlsx';
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
+  document.body.appendChild(a); a.click(); a.remove();
   showToast("Barcha guruhlar jurnali yuklanmoqda...", "success");
 };
 
@@ -2252,52 +2288,28 @@ window.showToast = function(msg, type) {
 
 /* EXCEL EKSPORT - TO'LIQ, JADVALLI CHIZIQLI VA RANGLI */
 window.exportFilteredToExcel = function() {
-  const isRemote = (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1');
+  var isRemote = (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1');
+  var groupFilter = (document.getElementById('filterGroup') || {}).value || '';
+  var statusFilter = (document.getElementById('filterStatus') || {}).value || '';
 
-  // Faol filtr qiymatlari
-  const groupFilter = (document.getElementById('filterGroup') || {}).value || '';
-  const statusFilter = (document.getElementById('filterStatus') || {}).value || '';
-
-  // Vercel: SheetJS orqali brauzerda yaratish
   if (isRemote && typeof XLSX !== 'undefined') {
-    let students = RAW_STUDENTS.slice();
+    var students = RAW_STUDENTS.slice();
     if (groupFilter) students = students.filter(function(s) { return (s.group || '') === groupFilter; });
     if (statusFilter) students = students.filter(function(s) { return (s.verified || '') === statusFilter; });
-
-    const rows = students.map(function(st, i) {
-      return {
-        "T/R": i + 1,
-        "Guruh": st.group || '',
-        "Shartnoma #": st.shnum || '',
-        "F.I.SH (Talaba)": st.fish || ((st.ism || '') + ' ' + (st.ota || '')).trim(),
-        "Pasport": st.pv || '',
-        "JSHSHIR": st.pinfl || '',
-        "Tug'ilgan sana": st.dob || '',
-        "Hujjat raqami": st.sh_doc || '',
-        "Muassasa": st.mak || '',
-        "Bitirgan yili": st.yil || '',
-        "Yo'nalish": st.yon || '',
-        "Telefon": st.tel || '',
-        "Holati": st.verified || 'KUTILMOQDA'
-      };
-    });
-    const ws = XLSX.utils.json_to_sheet(rows);
-    const wb = XLSX.utils.book_new();
+    var ws = window._buildStyledSheet(students);
+    var wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Talabalar");
-    const fname = groupFilter ? `Guruh_${groupFilter}_Royxati.xlsx` : 'Talabalar_Toliq_Royxati.xlsx';
-    XLSX.writeFile(wb, fname);
-    showToast("Excel fayl yuklab olindi (" + students.length + " nafar)!", "success");
+    var fname = groupFilter ? 'Guruh_' + groupFilter + '_Royxati.xlsx' : 'Talabalar_Toliq_Royxati.xlsx';
+    XLSX.writeFile(wb, fname, { cellStyles: true, bookSST: false });
+    showToast("Chiroyli Excel yuklab olindi (" + students.length + " nafar)!", "success");
     return;
   }
 
-  // Localhost: server API
-  const apiHost = '';
-  const groupSelect = document.getElementById('groupFilter') || document.querySelector('.group-select') || {};
-  const gf = groupSelect.value || groupFilter;
-  const sf = (document.getElementById('statusFilter') || {}).value || statusFilter;
-  const downloadUrl = apiHost + '/api/export_full_excel?group=' + encodeURIComponent(gf) + '&status=' + encodeURIComponent(sf);
-  showToast("To'liq, rangli va jadvalli Excel fayl yuklanmoqda...", "success");
-  window.location.href = downloadUrl;
+  /* Localhost: server API */
+  var gf = (document.getElementById('groupFilter') || {}).value || groupFilter;
+  var sf = (document.getElementById('statusFilter') || {}).value || statusFilter;
+  showToast("To'liq Excel fayl yuklanmoqda...", "success");
+  window.location.href = '/api/export_full_excel?group=' + encodeURIComponent(gf) + '&status=' + encodeURIComponent(sf);
 };
 
 /* =========================================================================
