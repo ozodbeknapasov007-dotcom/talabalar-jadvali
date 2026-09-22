@@ -53,6 +53,61 @@ REBUILD_LOCK = threading.Lock()
 IS_REBUILDING = False
 REBUILD_PENDING = False
 
+# ===== GIT AUTO-PUSH SOZLAMALARI =====
+GIT_AUTO_PUSH = True   # False qilib qo'ying agar push kerak bo'lmasa
+GIT_PUSH_LOCK = threading.Lock()
+_git_push_timer = None
+
+def _do_git_push():
+    """Fonda git add + commit + push bajaradi (bloklamaydi)."""
+    try:
+        result_add = subprocess.run(
+            ['git', 'add',
+             'Talabalar_Toliq_Royxati.xlsx',
+             'scripts/verifications.json',
+             'scripts/manual_file_map.json'],
+            cwd=BASE_DIR, capture_output=True, text=True, timeout=30
+        )
+        result_status = subprocess.run(
+            ['git', 'status', '--porcelain'],
+            cwd=BASE_DIR, capture_output=True, text=True, timeout=10
+        )
+        if result_status.stdout.strip():
+            result_commit = subprocess.run(
+                ['git', 'commit', '-m', 'Auto: talaba ma\'lumotlari yangilandi'],
+                cwd=BASE_DIR, capture_output=True, text=True, timeout=30
+            )
+            if result_commit.returncode == 0:
+                result_push = subprocess.run(
+                    ['git', 'push'],
+                    cwd=BASE_DIR, capture_output=True, text=True, timeout=60
+                )
+                if result_push.returncode == 0:
+                    print("[GIT] ✅ GitHub'ga muvaffaqiyatli push qilindi")
+                else:
+                    print(f"[GIT] ⚠️ Push xatosi: {result_push.stderr.strip()}")
+            else:
+                print(f"[GIT] ℹ️ Commit xatosi: {result_commit.stderr.strip()}")
+        else:
+            print("[GIT] ℹ️ O'zgarmagan fayl yo'q — push o'tkazib yuborildi")
+    except subprocess.TimeoutExpired:
+        print("[GIT] ⚠️ Git operatsiyasi vaqt tugashi bilan bekor qilindi")
+    except Exception as e:
+        print(f"[GIT] ❌ Git xatosi: {e}")
+
+def schedule_git_push():
+    """Ma'lumot saqlangandan so'ng 5 soniyadan keyin git push qiladi.
+    Bir necha ketma-ket o'zgarish bo'lsa, faqat bitta push qiladi."""
+    global _git_push_timer
+    if not GIT_AUTO_PUSH:
+        return
+    with GIT_PUSH_LOCK:
+        if _git_push_timer is not None:
+            _git_push_timer.cancel()
+        _git_push_timer = threading.Timer(5.0, _do_git_push)
+        _git_push_timer.daemon = True
+        _git_push_timer.start()
+
 def load_verifications_map():
     with VERIFICATIONS_LOCK:
         if os.path.exists(VERIFICATIONS_FILE):
@@ -130,6 +185,7 @@ def _run_rebuild_worker():
 def trigger_report_rebuild(delay=1.5, async_mode=True):
     """Barcha hisobotlar va yangilangan Excel fayllarini xavfsiz, debounced sinxronlashtirish"""
     global REBUILD_TIMER
+    schedule_git_push()   # Git push ham shu payt rejalashtirilib qo'yiladi
     if not async_mode:
         _run_rebuild_worker()
         return
@@ -143,6 +199,7 @@ def trigger_report_rebuild(delay=1.5, async_mode=True):
         REBUILD_TIMER = threading.Timer(delay, _run_rebuild_worker)
         REBUILD_TIMER.daemon = True
         REBUILD_TIMER.start()
+
 
 OPENROUTER_API_KEY = "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"
 OPENROUTER_MODELS = ["google/gemini-2.5-pro", "google/gemini-2.5-flash", "openai/gpt-4o"]
@@ -591,6 +648,7 @@ def save_manual_students(students_list):
         added += 1
 
     wb.save(EXCEL_PATH)
+    schedule_git_push()
     trigger_report_rebuild()
 def extract_doc_images_with_crop(target_path):
     import docx, xml.etree.ElementTree as ET
