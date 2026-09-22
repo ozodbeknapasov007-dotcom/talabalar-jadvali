@@ -3586,6 +3586,16 @@ try {
 /* =========================================================================
    GITHUB AVTO-SINXRONIZATSIYA VA LOADING KONTROLLERI
    ========================================================================= */
+/* Sarlavhadagi "Saqlash" tugmasi shu funksiyani chaqiradi.
+   O'zgarishlar allaqachon Excelga yozilgan — bu yerda hisobot qayta
+   yaratilib GitHub'ga yuboriladi (30 soniyalik avtomatik saqlashni
+   kutmasdan). O'zgarish bo'lmasa ham hisobotni qayta yaratadi. */
+window.saveAllNow = function() {
+  if (window.GitSyncManager && typeof window.GitSyncManager.flushNow === 'function') {
+    window.GitSyncManager.flushNow();
+  }
+};
+
 window.GitSyncManager = {
   pollTimer: null,
   hideOverlayTimer: null,
@@ -3627,6 +3637,9 @@ window.GitSyncManager = {
     const isLocal = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
     if (!isLocal) return null;
 
+    // Sarlavhadagi asosiy "Saqlash" tugmasi doim ko'rinib turadi.
+    // Quyidagi suzuvchi tugma esa sahifa pastga aylantirilganda ham
+    // saqlanmagan o'zgarish borligini eslatib turish uchun.
     let btn = document.getElementById('gitFlushBtn');
     if (btn) return btn;
 
@@ -3653,24 +3666,50 @@ window.GitSyncManager = {
   },
 
   updateSaveButton: function(data) {
-    const btn = this.ensureSaveButton();
-    if (!btn) return;
     const pending = !!(data && data.pending);
     const secs = (data && data.pending_seconds) ? data.pending_seconds : 0;
+    const saving = !!(data && data.state === 'syncing');
+
+    // 1) Sarlavhadagi asosiy "Saqlash" tugmasi
+    const main = document.getElementById('btnSaveNow');
+    if (main) {
+      const isLocal = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+      if (!isLocal) {
+        // Vercel'da /api/flush_to_git yo'q — tugma ish bermaydi
+        main.style.display = 'none';
+      } else {
+        const txt = document.getElementById('btnSaveNowText');
+        main.classList.toggle('has-pending', pending && !saving);
+        main.classList.toggle('is-saving', saving);
+        main.disabled = saving;
+        if (txt) {
+          txt.innerText = saving ? 'Saqlanmoqda...'
+                        : pending ? 'Saqlash (' + secs + 's)'
+                        : 'Saqlash';
+        }
+        main.title = saving ? "GitHub'ga yuborilmoqda..."
+                   : pending ? "Saqlanmagan o'zgarish bor — bosilsa darhol yuboriladi"
+                   : "Hisobotni qayta yaratib GitHub'ga yuborish";
+      }
+    }
+
+    // 2) Suzuvchi eslatma tugmasi (faqat saqlanmagan o'zgarish bo'lganda)
+    const btn = this.ensureSaveButton();
+    if (!btn) return;
 
     if (pending) {
       btn.style.display = 'block';
       btn.style.background = '#f59e0b';
       btn.disabled = false;
       btn.innerText = secs > 0
-        ? "GitHub'ga yuborish (" + secs + "s kutyapti)"
-        : "GitHub'ga yuborish";
+        ? "Saqlash (" + secs + "s kutyapti)"
+        : "Saqlash";
       btn.title = "Saqlanmagan o'zgarishlar bor. Bosilsa darhol yuboriladi, aks holda 30 soniyada o'zi jo'naydi.";
-    } else if (data && data.state === 'syncing') {
+    } else if (saving) {
       btn.style.display = 'block';
       btn.style.background = '#38bdf8';
       btn.disabled = true;
-      btn.innerText = "Yuborilmoqda...";
+      btn.innerText = "Saqlanmoqda...";
     } else {
       btn.style.display = 'none';
     }
@@ -3678,7 +3717,16 @@ window.GitSyncManager = {
 
   flushNow: function() {
     const btn = document.getElementById('gitFlushBtn');
-    if (btn) { btn.disabled = true; btn.innerText = 'Yuborilmoqda...'; btn.style.background = '#38bdf8'; }
+    if (btn) { btn.disabled = true; btn.innerText = 'Saqlanmoqda...'; btn.style.background = '#38bdf8'; }
+
+    const main = document.getElementById('btnSaveNow');
+    const mainTxt = document.getElementById('btnSaveNowText');
+    if (main) {
+      main.disabled = true;
+      main.classList.remove('has-pending');
+      main.classList.add('is-saving');
+      if (mainTxt) mainTxt.innerText = 'Saqlanmoqda...';
+    }
 
     const apiHost = (window.location.protocol === 'http:' || window.location.protocol === 'https:') ? '' : 'http://localhost:8080';
     fetch(apiHost + '/api/flush_to_git?t=' + Date.now())
@@ -3693,7 +3741,12 @@ window.GitSyncManager = {
       })
       .catch(function() {
         showToast("Serverga ulanib bo'lmadi", 'warning');
-        if (btn) { btn.disabled = false; btn.innerText = "GitHub'ga yuborish"; btn.style.background = '#f59e0b'; }
+        if (btn) { btn.disabled = false; btn.innerText = "Saqlash"; btn.style.background = '#f59e0b'; }
+        if (main) {
+          main.disabled = false;
+          main.classList.remove('is-saving');
+          if (mainTxt) mainTxt.innerText = 'Saqlash';
+        }
       });
   },
 

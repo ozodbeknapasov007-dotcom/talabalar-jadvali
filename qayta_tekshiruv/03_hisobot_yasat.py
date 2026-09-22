@@ -1089,6 +1089,49 @@ html = f"""<!DOCTYPE html>
     transform: scale(0.97);
   }}
 
+  /* QO'LDA SAQLASH TUGMASI
+     Oddiy holatda ko'k, saqlanmagan o'zgarish bo'lsa sariq va
+     "nafas oladi" (diqqatni tortadi), yuborilayotganda ko'k-moviy. */
+  body .btn.btn-save-now,
+  body.dark-mode .btn.btn-save-now {{
+    background: linear-gradient(135deg, #2563eb, #1d4ed8) !important; color: #ffffff !important;
+    border: 1.5px solid rgba(255, 255, 255, 0.25);
+  }}
+  body .btn.btn-save-now:hover,
+  body.dark-mode .btn.btn-save-now:hover {{
+    background: linear-gradient(135deg, #1d4ed8, #1e40af) !important;
+    box-shadow: 0 6px 18px rgba(37, 99, 235, 0.45);
+    transform: translateY(-1.5px);
+  }}
+  body .btn.btn-save-now:active,
+  body.dark-mode .btn.btn-save-now:active {{ transform: scale(0.97); }}
+
+  body .btn.btn-save-now.has-pending,
+  body.dark-mode .btn.btn-save-now.has-pending {{
+    background: linear-gradient(135deg, #f59e0b, #d97706) !important;
+    animation: saveNowPulse 1.8s ease-in-out infinite;
+  }}
+  body .btn.btn-save-now.has-pending:hover,
+  body.dark-mode .btn.btn-save-now.has-pending:hover {{
+    background: linear-gradient(135deg, #d97706, #b45309) !important;
+    box-shadow: 0 6px 18px rgba(245, 158, 11, 0.5);
+  }}
+  body .btn.btn-save-now.is-saving,
+  body.dark-mode .btn.btn-save-now.is-saving {{
+    background: linear-gradient(135deg, #38bdf8, #0284c7) !important;
+    cursor: progress;
+  }}
+  body .btn.btn-save-now:disabled,
+  body.dark-mode .btn.btn-save-now:disabled {{ opacity: 0.85; transform: none; }}
+
+  @keyframes saveNowPulse {{
+    0%, 100% {{ box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.55); }}
+    50% {{ box-shadow: 0 0 0 7px rgba(245, 158, 11, 0); }}
+  }}
+  @media (prefers-reduced-motion: reduce) {{
+    .btn-save-now.has-pending {{ animation: none; }}
+  }}
+
   /* 3. TERTIARY BUTTONS (Faqat matn va belgi) */
   .btn-tertiary {{
     background: transparent; color: #2563eb;
@@ -5124,6 +5167,13 @@ var RAW_STUDENTS = {students_json};
         <span id="ghSyncSpinner" class="gh-spin" style="display:none;"></span>
         <span id="ghSyncText">GitHub: Sinxronlangan</span>
       </a>
+
+      <!-- Qo'lda saqlash: hisobotni qayta yaratib GitHub'ga yuboradi.
+           30 soniyalik avtomatik saqlashni kutmasdan darhol jo'natadi. -->
+      <button type="button" id="btnSaveNow" class="btn btn-save-now" onclick="saveAllNow()" title="O'zgarishlarni darhol saqlab GitHub'ga yuborish">
+        <svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+        <span id="btnSaveNowText">Saqlash</span>
+      </button>
 
       <button type="button" class="btn btn-add" onclick="openAddStudentModal()">
         <svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><line x1="20" y1="8" x2="20" y2="14"></line><line x1="23" y1="11" x2="17" y2="11"></line></svg>
