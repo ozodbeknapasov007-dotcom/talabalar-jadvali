@@ -103,8 +103,12 @@
       "sabab": "ID-karta AE4360739 va Shahodatnoma UM 03756167 rasmlaridan tasdiqlandi (#62)"
     },
     "Nurillayeva Sevinch|26-06": {
-      "file": "Nuraliyeva Sevinch 62.docx",
-      "sabab": "ID-karta AE4360739 va Shahodatnoma UM 03756167 rasmlaridan tasdiqlandi (#62)"
+      "file": "Nurillayeva Sevinch 246.docx",
+      "sabab": "Foydalanuvchi biriktirdi (extracted/Nurillayeva_Sevinch_246)"
+    },
+    "Nurillayeva Sevinch Mashrab qizi|26-06": {
+      "file": "Nurillayeva Sevinch 246.docx",
+      "sabab": "Foydalanuvchi biriktirdi (extracted/Nurillayeva_Sevinch_246)"
     }
   },
   "_qulf_izoh": "qulflangan: bu qatorlarga avtomatik skriptlar YOZMAYDI (qo'lda hujjat rasmidan tasdiqlangan)",
@@ -132,6 +136,7 @@
     "Tuychiyeva Farzona|26-04": "ID-karta AE4114421 va Shahodatnoma UM-O 00064269 rasmlaridan to'liq tasdiqlandi (#280)",
     "Niyozova Komila|26-03": "Pasport AB9205278 va Shahodatnoma dublikati DB 00222382 rasmlari (tg) dan to'liq kiritildi",
     "Nuraliyeva Sevinch|26-06": "ID-karta AE4360739 va Shahodatnoma UM 03756167 rasmlaridan to'liq tasdiqlandi (#62)",
-    "Nurillayeva Sevinch|26-06": "ID-karta AE4360739 va Shahodatnoma UM 03756167 rasmlaridan to'liq tasdiqlandi (#62)"
+    "Nurillayeva Sevinch|26-06": "Foydalanuvchi biriktirgan Nurillayeva Sevinch 246.docx fayli bilan tasdiqlandi",
+    "Nurillayeva Sevinch Mashrab qizi|26-06": "Foydalanuvchi biriktirgan Nurillayeva Sevinch 246.docx fayli bilan tasdiqlandi"
   }
 }
