@@ -2135,7 +2135,7 @@ window.switchDisplayMode = function(mode) {
   } catch(e) {}
 
   if (mode === 'cards') {
-    if (cardsCont) cardsCont.style.display = 'flex';
+    if (cardsCont) cardsCont.style.display = 'grid';
     if (tableCont) tableCont.style.display = 'none';
     if (btnCards) btnCards.classList.add('active');
     if (btnTable) btnTable.classList.remove('active');
@@ -2965,28 +2965,50 @@ window.closeAddModalOnBackdrop = function(e) {
   if (e.target.id === 'addStudentModal') window.closeAddStudentModal();
 };
 
-/* YUKLANGAN WORD/RASMNI AI ORQALI O'QISH */
-window.analyzeUploadedNewDoc = function(usePro = false) {
+/* 4 TURDAGI AI MODELLARINI TANLASH VA BOSHQARISH */
+window.selectedAiModel = 'google/gemini-2.5-flash';
+window.selectedAiModelTitle = 'Gemini 2.5 Flash';
+
+window.selectAiModel = function(cardEl, modelId, modelTitle) {
+  window.selectedAiModel = modelId;
+  window.selectedAiModelTitle = modelTitle || modelId;
+
+  const cards = document.querySelectorAll('.ai-model-card');
+  cards.forEach(function(c) { c.classList.remove('active'); });
+  if (cardEl) cardEl.classList.add('active');
+
+  const btnText = document.getElementById('btnAiAnalyzeText');
+  if (btnText) {
+    btnText.innerText = 'QR & ' + (modelTitle || 'AI') + ' Bilan Tahlil';
+  }
+};
+
+/* YUKLANGAN WORD/RASMNI AI ORQALI O'QISH (4 TA MODEL QO'LLAB-QUVVATLANADI) */
+window.analyzeUploadedNewDoc = function(modelParam) {
   const fileInput = document.getElementById('newDocFileInput');
   if (!fileInput || !fileInput.files || fileInput.files.length === 0) {
     alert("Iltimos, avval Word (.docx) yoki rasm faylini tanlang!");
     return;
   }
 
+  let modelToUse = window.selectedAiModel || 'google/gemini-2.5-flash';
+  let modelTitle = window.selectedAiModelTitle || 'Gemini 2.5 Flash';
+  if (typeof modelParam === 'string' && modelParam) {
+    modelToUse = modelParam;
+  } else if (modelParam === true) {
+    modelToUse = 'google/gemini-2.5-pro';
+    modelTitle = 'Gemini 2.5 Pro';
+  }
+
   const file = fileInput.files[0];
   const statusBox = document.getElementById('newDocStatus');
   const btnPro = document.getElementById('btnAnalyzeNewDocPro');
-  const btnNormal = document.getElementById('btnAnalyzeNewDoc');
+  const btnText = document.getElementById('btnAiAnalyzeText');
 
   if (btnPro) {
     btnPro.disabled = true;
     btnPro.style.opacity = '0.7';
-    if (usePro) btnPro.innerHTML = 'QR & AI Pro tahlil qilmoqda...';
-  }
-  if (btnNormal) {
-    btnNormal.disabled = true;
-    btnNormal.style.opacity = '0.7';
-    if (!usePro) btnNormal.innerHTML = 'AI tahlil qilmoqda...';
+    if (btnText) btnText.innerText = modelTitle + ' tahlil qilmoqda...';
   }
 
   if (statusBox) {
@@ -2994,27 +3016,18 @@ window.analyzeUploadedNewDoc = function(usePro = false) {
     statusBox.style.background = '#eff6ff';
     statusBox.style.color = '#1d4ed8';
     statusBox.style.border = '1px solid #bfdbfe';
-    if (usePro) {
-      statusBox.innerHTML = '<strong>QR-kodlar (e-shahodatnoma & ID-karta)</strong> tekshirilmoqda hamda eng yuqori aniqlikdagi <strong>Gemini 2.5 Pro</strong> modeli orqali sinchiklab o\'qilmoqda...';
-    } else {
-      statusBox.innerHTML = 'Fayl ichidagi pasport/ID va shahodatnoma AI orqali o\'qilmoqda...';
-    }
+    statusBox.innerHTML = '<strong>QR-kodlar (e-shahodatnoma & ID-karta)</strong> tekshirilmoqda hamda <strong>' + modelTitle + '</strong> modeli orqali sinchiklab o\'qilmoqda...';
   }
 
   const reader = new FileReader();
   reader.onload = function(e) {
-    const isRemoteHost = (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1');
+    const isRemoteHost = (window.location.protocol.startsWith('http') && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1');
 
     if (isRemoteHost) {
       if (btnPro) {
         btnPro.disabled = false;
         btnPro.style.opacity = '1';
-        btnPro.innerHTML = '<svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg> QR & AI Pro Bilan Tekshirish';
-      }
-      if (btnNormal) {
-        btnNormal.disabled = false;
-        btnNormal.style.opacity = '1';
-        btnNormal.innerHTML = '<svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg> Oddiy AI';
+        if (btnText) btnText.innerText = 'QR & ' + modelTitle + ' Bilan Tahlil';
       }
       if (statusBox) {
         statusBox.style.display = 'block';
@@ -3036,8 +3049,8 @@ window.analyzeUploadedNewDoc = function(usePro = false) {
       body: JSON.stringify({
         filename: file.name,
         file_base64: b64,
-        model: usePro ? 'pro' : 'flash',
-        use_pro: usePro
+        model: modelToUse,
+        use_pro: (modelToUse.includes('pro'))
       })
     })
     .then(function(r) {
@@ -3050,7 +3063,7 @@ window.analyzeUploadedNewDoc = function(usePro = false) {
       if (btnPro) {
         btnPro.disabled = false;
         btnPro.style.opacity = '1';
-        btnPro.innerHTML = '<svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg> QR & AI Pro Bilan Tekshirish';
+        if (btnText) btnText.innerText = 'QR & ' + modelTitle + ' Bilan Tahlil';
       }
       if (btnNormal) {
         btnNormal.disabled = false;

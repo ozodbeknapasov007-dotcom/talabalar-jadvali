@@ -846,8 +846,17 @@ def trigger_report_rebuild(delay=None, async_mode=True):
         REBUILD_TIMER.start()
 
 
-OPENROUTER_API_KEY = "" # API kalit o'chirilgan, oflayn rejimda ishlaydi
-OPENROUTER_MODELS = ["google/gemini-3.7-flash", "google/gemini-2.5-flash", "openai/gpt-4o"]
+OPENROUTER_API_KEY = os.environ.get("OPENROUTER_API_KEY", "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")
+SUPPORTED_AI_MODELS = {
+    "google/gemini-2.5-flash": "google/gemini-2.5-flash",
+    "google/gemini-2.5-pro": "google/gemini-2.5-pro",
+    "google/gemini-2.0-flash-001": "google/gemini-2.0-flash-001",
+    "google/gemini-2.0-flash": "google/gemini-2.0-flash-001",
+    "openai/gpt-4o": "openai/gpt-4o",
+    "flash": "google/gemini-2.5-flash",
+    "pro": "google/gemini-2.5-pro"
+}
+OPENROUTER_MODELS = ["google/gemini-2.5-flash", "google/gemini-2.5-pro", "google/gemini-2.0-flash-001", "openai/gpt-4o"]
 
 def clean_uz_name(text):
     if not text:
@@ -1107,7 +1116,7 @@ def scan_all_qrs(blobs_raw):
             
     return qr_data
 
-def analyze_docx_content(docx_bytes, filename, default_ism="", default_yon="", use_pro=False):
+def analyze_docx_content(docx_bytes, filename, default_ism="", default_yon="", use_pro=False, model=""):
     result = {
         "success": True,
         "filename": filename,
@@ -1174,8 +1183,13 @@ def analyze_docx_content(docx_bytes, filename, default_ism="", default_yon="", u
             if qr_extracted.get('yil'): result['yil'] = qr_extracted['yil']
             if qr_extracted.get('sh_qr'): result['sh_qr'] = qr_extracted['sh_qr']
 
-        # 2-QADAM: AI VISION TAHLIL (PRO YOKI FLASH)
-        model_to_use = 'google/gemini-3.7-flash' if use_pro else 'google/gemini-3.7-flash'
+        # 2-QADAM: AI VISION TAHLIL (4 TA MODEL QO'LLAB-QUVVATLANADI)
+        if model and model in SUPPORTED_AI_MODELS:
+            model_to_use = SUPPORTED_AI_MODELS[model]
+        elif model:
+            model_to_use = model
+        else:
+            model_to_use = 'google/gemini-2.5-pro' if use_pro else 'google/gemini-2.5-flash'
         print(f"Hujjat AI tahlili: model = {model_to_use}")
 
         content_items = [{'type': 'text', 'text': """Sen professional O'zbekiston ID-karta, Biometrik pasport va Shahodatnoma/Diplom o'quvchisisan.
@@ -3017,10 +3031,13 @@ Aniq JSON formatda qaytar:
                 for b in blobs_raw:
                     b64 = base64.b64encode(b).decode('utf-8')
                     content_items.append({'type': 'image_url', 'image_url': {'url': f'data:image/jpeg;base64,{b64}'}})
-                # 3. AI ORQALI CHUQUR TAHLIL QILISH (GEMINI 3.7 FLASH)
+                # 3. AI ORQALI CHUQUR TAHLIL QILISH
                 ai_data = {}
                 try:
-                    payload = {'model': 'google/gemini-3.7-flash', 'messages': [{'role': 'user', 'content': content_items}], 'temperature': 0.0}
+                    req_model = data.get('model', '')
+                    model_to_use = SUPPORTED_AI_MODELS.get(req_model, req_model or 'google/gemini-2.5-flash')
+                    print(f"upload_and_attach AI modeli: {model_to_use}")
+                    payload = {'model': model_to_use, 'messages': [{'role': 'user', 'content': content_items}], 'temperature': 0.0}
                     req = urllib.request.Request('https://openrouter.ai/api/v1/chat/completions', data=json.dumps(payload).encode('utf-8'), headers={'Authorization': f'Bearer {OPENROUTER_API_KEY}', 'Content-Type': 'application/json'})
                     with urllib.request.urlopen(req, timeout=45) as resp:
                         res_json = json.loads(resp.read().decode('utf-8'))
@@ -3172,14 +3189,15 @@ Aniq JSON formatda qaytar:
                 filename = data.get('filename', 'yangi_shartnoma.docx')
                 default_ism = data.get('ism', '')
                 default_yon = data.get('yonalis', '')
-                use_pro = (data.get('model') == 'pro' or data.get('use_pro') == True or data.get('pro') == '1')
+                req_model = data.get('model', '')
+                use_pro = (req_model == 'pro' or data.get('use_pro') == True or data.get('pro') == '1' or 'pro' in str(req_model))
                 
                 docx_bytes = base64.b64decode(b64_content)
                 saved_path = os.path.join(FILES_DIR, filename)
                 with open(saved_path, 'wb') as f:
                     f.write(docx_bytes)
                     
-                analysis = analyze_docx_content(docx_bytes, filename, default_ism, default_yon, use_pro=use_pro)
+                analysis = analyze_docx_content(docx_bytes, filename, default_ism, default_yon, use_pro=use_pro, model=req_model)
                 
                 self.send_response(200)
                 self.send_header('Content-Type', 'application/json; charset=utf-8')

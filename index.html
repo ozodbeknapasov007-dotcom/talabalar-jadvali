@@ -1624,7 +1624,10 @@
   }
 
   .cards-container {
-    display: flex; flex-direction: column; gap: 18px;
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 18px !important;
+    align-items: start !important;
   }
 
     /* =========================================================================
@@ -1840,7 +1843,7 @@
     box-shadow: 0 4px 18px rgba(15, 23, 42, 0.08);
     transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
     overflow: hidden;
-    margin-bottom: 22px;
+    margin-bottom: 0 !important;
   }
   .student-card:hover {
     border-color: #2563eb;
@@ -2656,7 +2659,7 @@
   }
 
   .card-columns-2 {
-    display: grid; grid-template-columns: repeat(auto-fit, minmax(380px, 1fr)); gap: 14px;
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px;
   }
   .card-box-passport {
     background: #f0fdf4; border: 2px solid #16a34a;
@@ -4242,6 +4245,209 @@
       right: 16px;
       left: 16px;
       max-width: none;
+    }
+  }
+
+  /* =========================================================================
+     4 TURDAGI AI MODELLARINI TANLASH PANELI STILLARI
+     ========================================================================= */
+  .ai-model-selector-wrap {
+    margin: 14px 0 16px 0;
+    width: 100%;
+  }
+  .ai-model-header-title {
+    font-size: 12px;
+    font-weight: 750;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 9px;
+  }
+  body.dark-mode .ai-model-header-title {
+    color: #94a3b8;
+  }
+  .ai-models-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 10px;
+  }
+  .ai-model-card {
+    background: #ffffff;
+    border: 2px solid #cbd5e1;
+    border-radius: 12px;
+    padding: 10px 12px;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 6px;
+    user-select: none;
+    position: relative;
+  }
+  .ai-model-card:hover {
+    border-color: #3b82f6;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(59, 130, 246, 0.15);
+  }
+  .ai-model-card.active {
+    border-color: #2563eb;
+    background: rgba(37, 99, 235, 0.05);
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.2), 0 6px 18px rgba(37, 99, 235, 0.15);
+  }
+  body.dark-mode .ai-model-card {
+    background: #1e293b;
+    border-color: #334155;
+  }
+  body.dark-mode .ai-model-card:hover {
+    border-color: #60a5fa;
+  }
+  body.dark-mode .ai-model-card.active {
+    border-color: #38bdf8;
+    background: rgba(56, 189, 248, 0.12);
+    box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.25), 0 6px 18px rgba(56, 189, 248, 0.2);
+  }
+  .ai-model-card-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px;
+  }
+  .ai-model-name {
+    font-size: 13px;
+    font-weight: 800;
+    color: #0f172a;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  body.dark-mode .ai-model-name {
+    color: #f8fafc;
+  }
+  .ai-model-badge {
+    font-size: 10px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    padding: 2px 7px;
+    border-radius: 6px;
+    white-space: nowrap;
+  }
+  .badge-recommended { background: #dcfce7; color: #166534; border: 1px solid #bbf7d0; }
+  .badge-pro { background: #f3e8ff; color: #6b21a8; border: 1px solid #e9d5ff; }
+  .badge-stable { background: #e0f2fe; color: #0369a1; border: 1px solid #bae6fd; }
+  .badge-openai { background: #ffedd5; color: #9a3412; border: 1px solid #fed7aa; }
+  body.dark-mode .badge-recommended { background: rgba(34, 197, 94, 0.2); color: #86efac; border-color: rgba(34, 197, 94, 0.35); }
+  body.dark-mode .badge-pro { background: rgba(168, 85, 247, 0.2); color: #d8b4fe; border-color: rgba(168, 85, 247, 0.35); }
+  body.dark-mode .badge-stable { background: rgba(14, 165, 233, 0.2); color: #7dd3fc; border-color: rgba(14, 165, 233, 0.35); }
+  body.dark-mode .badge-openai { background: rgba(249, 115, 22, 0.2); color: #fdba74; border-color: rgba(249, 115, 22, 0.35); }
+  .ai-model-desc {
+    font-size: 11px;
+    color: #64748b;
+    line-height: 1.35;
+  }
+  body.dark-mode .ai-model-desc {
+    color: #94a3b8;
+  }
+
+  /* =========================================================================
+     KICHIK VA MOBIL EKRANLAR UCHUN TO'LIQ MOSLASHUV (RESPONSIVE)
+     ========================================================================= */
+  @media (max-width: 1024px) {
+    .cards-container {
+      grid-template-columns: 1fr !important;
+      gap: 14px !important;
+    }
+    .ai-models-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    }
+  }
+
+  @media (max-width: 768px) {
+    .modal-backdrop {
+      padding: 8px !important;
+    }
+    .modal-content {
+      max-width: 100% !important;
+      width: 100% !important;
+      border-radius: 14px !important;
+      max-height: 95vh !important;
+    }
+    .modal-header {
+      padding: 12px 16px !important;
+    }
+    .modal-body, .add-modal-body {
+      padding: 12px 14px !important;
+    }
+    .ai-models-grid {
+      grid-template-columns: 1fr !important;
+      gap: 8px !important;
+    }
+    .ai-upload-row {
+      flex-direction: column !important;
+      align-items: stretch !important;
+      gap: 10px !important;
+    }
+    .ai-upload-row .file-picker-btn,
+    .ai-upload-row .btn-ai-action {
+      width: 100% !important;
+      box-sizing: border-box !important;
+      justify-content: center !important;
+    }
+    .add-form-container {
+      grid-template-columns: 1fr !important;
+      gap: 14px !important;
+    }
+    .form-inputs-grid {
+      grid-template-columns: 1fr !important;
+    }
+    .form-group-item.half-width {
+      grid-column: span 1 !important;
+    }
+    .modal-footer-sticky {
+      padding: 12px 16px !important;
+      flex-direction: column-reverse !important;
+      gap: 8px !important;
+    }
+    .modal-footer-sticky button {
+      width: 100% !important;
+      justify-content: center !important;
+    }
+    .group-tabs {
+      overflow-x: auto !important;
+      flex-wrap: nowrap !important;
+      -webkit-overflow-scrolling: touch !important;
+      padding-bottom: 6px !important;
+      max-width: 100% !important;
+    }
+    .group-tab-btn {
+      white-space: nowrap !important;
+      flex-shrink: 0 !important;
+    }
+    .card-header {
+      flex-wrap: wrap !important;
+      gap: 8px !important;
+    }
+    .card-header-left, .card-header-right {
+      flex-wrap: wrap !important;
+      width: 100% !important;
+      justify-content: space-between !important;
+    }
+    .card-footer {
+      flex-wrap: wrap !important;
+      gap: 8px !important;
+    }
+    .card-footer .card-actions-left,
+    .card-footer .card-actions-right {
+      width: 100% !important;
+      flex-wrap: wrap !important;
+    }
+    .card-footer button {
+      flex: 1 1 auto !important;
+      justify-content: center !important;
     }
   }
 </style>
@@ -6388,7 +6594,7 @@ window.switchDisplayMode = function(mode) {
   } catch(e) {}
 
   if (mode === 'cards') {
-    if (cardsCont) cardsCont.style.display = 'flex';
+    if (cardsCont) cardsCont.style.display = 'grid';
     if (tableCont) tableCont.style.display = 'none';
     if (btnCards) btnCards.classList.add('active');
     if (btnTable) btnTable.classList.remove('active');
@@ -7218,28 +7424,50 @@ window.closeAddModalOnBackdrop = function(e) {
   if (e.target.id === 'addStudentModal') window.closeAddStudentModal();
 };
 
-/* YUKLANGAN WORD/RASMNI AI ORQALI O'QISH */
-window.analyzeUploadedNewDoc = function(usePro = false) {
+/* 4 TURDAGI AI MODELLARINI TANLASH VA BOSHQARISH */
+window.selectedAiModel = 'google/gemini-2.5-flash';
+window.selectedAiModelTitle = 'Gemini 2.5 Flash';
+
+window.selectAiModel = function(cardEl, modelId, modelTitle) {
+  window.selectedAiModel = modelId;
+  window.selectedAiModelTitle = modelTitle || modelId;
+
+  const cards = document.querySelectorAll('.ai-model-card');
+  cards.forEach(function(c) { c.classList.remove('active'); });
+  if (cardEl) cardEl.classList.add('active');
+
+  const btnText = document.getElementById('btnAiAnalyzeText');
+  if (btnText) {
+    btnText.innerText = 'QR & ' + (modelTitle || 'AI') + ' Bilan Tahlil';
+  }
+};
+
+/* YUKLANGAN WORD/RASMNI AI ORQALI O'QISH (4 TA MODEL QO'LLAB-QUVVATLANADI) */
+window.analyzeUploadedNewDoc = function(modelParam) {
   const fileInput = document.getElementById('newDocFileInput');
   if (!fileInput || !fileInput.files || fileInput.files.length === 0) {
     alert("Iltimos, avval Word (.docx) yoki rasm faylini tanlang!");
     return;
   }
 
+  let modelToUse = window.selectedAiModel || 'google/gemini-2.5-flash';
+  let modelTitle = window.selectedAiModelTitle || 'Gemini 2.5 Flash';
+  if (typeof modelParam === 'string' && modelParam) {
+    modelToUse = modelParam;
+  } else if (modelParam === true) {
+    modelToUse = 'google/gemini-2.5-pro';
+    modelTitle = 'Gemini 2.5 Pro';
+  }
+
   const file = fileInput.files[0];
   const statusBox = document.getElementById('newDocStatus');
   const btnPro = document.getElementById('btnAnalyzeNewDocPro');
-  const btnNormal = document.getElementById('btnAnalyzeNewDoc');
+  const btnText = document.getElementById('btnAiAnalyzeText');
 
   if (btnPro) {
     btnPro.disabled = true;
     btnPro.style.opacity = '0.7';
-    if (usePro) btnPro.innerHTML = 'QR & AI Pro tahlil qilmoqda...';
-  }
-  if (btnNormal) {
-    btnNormal.disabled = true;
-    btnNormal.style.opacity = '0.7';
-    if (!usePro) btnNormal.innerHTML = 'AI tahlil qilmoqda...';
+    if (btnText) btnText.innerText = modelTitle + ' tahlil qilmoqda...';
   }
 
   if (statusBox) {
@@ -7247,27 +7475,18 @@ window.analyzeUploadedNewDoc = function(usePro = false) {
     statusBox.style.background = '#eff6ff';
     statusBox.style.color = '#1d4ed8';
     statusBox.style.border = '1px solid #bfdbfe';
-    if (usePro) {
-      statusBox.innerHTML = '<strong>QR-kodlar (e-shahodatnoma & ID-karta)</strong> tekshirilmoqda hamda eng yuqori aniqlikdagi <strong>Gemini 2.5 Pro</strong> modeli orqali sinchiklab o\'qilmoqda...';
-    } else {
-      statusBox.innerHTML = 'Fayl ichidagi pasport/ID va shahodatnoma AI orqali o\'qilmoqda...';
-    }
+    statusBox.innerHTML = '<strong>QR-kodlar (e-shahodatnoma & ID-karta)</strong> tekshirilmoqda hamda <strong>' + modelTitle + '</strong> modeli orqali sinchiklab o\'qilmoqda...';
   }
 
   const reader = new FileReader();
   reader.onload = function(e) {
-    const isRemoteHost = (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1');
+    const isRemoteHost = (window.location.protocol.startsWith('http') && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1');
 
     if (isRemoteHost) {
       if (btnPro) {
         btnPro.disabled = false;
         btnPro.style.opacity = '1';
-        btnPro.innerHTML = '<svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg> QR & AI Pro Bilan Tekshirish';
-      }
-      if (btnNormal) {
-        btnNormal.disabled = false;
-        btnNormal.style.opacity = '1';
-        btnNormal.innerHTML = '<svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg> Oddiy AI';
+        if (btnText) btnText.innerText = 'QR & ' + modelTitle + ' Bilan Tahlil';
       }
       if (statusBox) {
         statusBox.style.display = 'block';
@@ -7289,8 +7508,8 @@ window.analyzeUploadedNewDoc = function(usePro = false) {
       body: JSON.stringify({
         filename: file.name,
         file_base64: b64,
-        model: usePro ? 'pro' : 'flash',
-        use_pro: usePro
+        model: modelToUse,
+        use_pro: (modelToUse.includes('pro'))
       })
     })
     .then(function(r) {
@@ -7303,7 +7522,7 @@ window.analyzeUploadedNewDoc = function(usePro = false) {
       if (btnPro) {
         btnPro.disabled = false;
         btnPro.style.opacity = '1';
-        btnPro.innerHTML = '<svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg> QR & AI Pro Bilan Tekshirish';
+        if (btnText) btnText.innerText = 'QR & ' + modelTitle + ' Bilan Tahlil';
       }
       if (btnNormal) {
         btnNormal.disabled = false;
@@ -9014,7 +9233,64 @@ window.executeSendTelegram = async function() {
           </div>
           <span class="ai-opt-note">Faylni bu yerga sudrab tashlang yoki tanlang</span>
         </div>
-        
+
+        <!-- 4 Turdagi AI Modellarini Tanlash Paneli -->
+        <div class="ai-model-selector-wrap">
+          <div class="ai-model-header-title">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm0 18a8 8 0 1 1 8-8 8 8 0 0 1-8 8z"/><path d="M12 6v6l4 2"/></svg>
+            <span>Qaysi AI Modeli Bilan Tekshirish Kerak? (4 Ta Model):</span>
+          </div>
+          <div class="ai-models-grid" id="aiModelsGrid">
+            <!-- 1. Gemini 2.5 Flash -->
+            <div class="ai-model-card active" data-model="google/gemini-2.5-flash" onclick="selectAiModel(this, 'google/gemini-2.5-flash', 'Gemini 2.5 Flash')">
+              <div class="ai-model-card-top">
+                <span class="ai-model-name">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
+                  Gemini 2.5 Flash
+                </span>
+                <span class="ai-model-badge badge-recommended">Tavsiya</span>
+              </div>
+              <div class="ai-model-desc">Eng tezkor va aniq avtomatik o'qish (Google)</div>
+            </div>
+
+            <!-- 2. Gemini 2.5 Pro -->
+            <div class="ai-model-card" data-model="google/gemini-2.5-pro" onclick="selectAiModel(this, 'google/gemini-2.5-pro', 'Gemini 2.5 Pro')">
+              <div class="ai-model-card-top">
+                <span class="ai-model-name">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path></svg>
+                  Gemini 2.5 Pro
+                </span>
+                <span class="ai-model-badge badge-pro">Eng Kuchli</span>
+              </div>
+              <div class="ai-model-desc">Xira va murakkab hujjatlarni chuqur tahlil qilish</div>
+            </div>
+
+            <!-- 3. Gemini 2.0 Flash -->
+            <div class="ai-model-card" data-model="google/gemini-2.0-flash-001" onclick="selectAiModel(this, 'google/gemini-2.0-flash-001', 'Gemini 2.0 Flash')">
+              <div class="ai-model-card-top">
+                <span class="ai-model-name">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 14 14"></polyline></svg>
+                  Gemini 2.0 Flash
+                </span>
+                <span class="ai-model-badge badge-stable">Barqaror</span>
+              </div>
+              <div class="ai-model-desc">Yuqori tezlikdagi standart barqaror arxitektura</div>
+            </div>
+
+            <!-- 4. GPT-4o Vision -->
+            <div class="ai-model-card" data-model="openai/gpt-4o" onclick="selectAiModel(this, 'openai/gpt-4o', 'GPT-4o Vision')">
+              <div class="ai-model-card-top">
+                <span class="ai-model-name">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+                  GPT-4o Vision
+                </span>
+                <span class="ai-model-badge badge-openai">OpenAI</span>
+              </div>
+              <div class="ai-model-desc">OpenAI flagman multimodal ko'rish modeli</div>
+            </div>
+          </div>
+        </div>
+
         <div class="ai-upload-row">
           <label class="file-picker-btn" for="newDocFileInput" title="Word (.docx) yoki rasm faylini tanlash yoki bu yerga sudrab tashlash">
             <input type="file" id="newDocFileInput" accept=".docx,image/*" style="display:none;" onchange="handleNewDocFileSelected(this)">
@@ -9022,13 +9298,9 @@ window.executeSendTelegram = async function() {
             <span id="selectedFileName">Word (.docx) yoki rasm tashlang / tanlang...</span>
           </label>
 
-          <button type="button" id="btnAnalyzeNewDocPro" class="btn-ai-action btn-ai-purple" onclick="analyzeUploadedNewDoc(true)">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
-            QR & AI Pro Tahlil
-          </button>
-          <button type="button" id="btnAnalyzeNewDoc" class="btn-ai-action btn-ai-blue" onclick="analyzeUploadedNewDoc(false)">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-            Oddiy AI
+          <button type="button" id="btnAnalyzeNewDocPro" class="btn-ai-action btn-ai-purple" onclick="analyzeUploadedNewDoc(window.selectedAiModel)">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
+            <span id="btnAiAnalyzeText">QR & Gemini 2.5 Flash Bilan Tahlil</span>
           </button>
         </div>
         
