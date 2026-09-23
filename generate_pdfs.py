@@ -1,4 +1,5 @@
 import os
+import re
 import openpyxl
 from reportlab import rl_config
 # Ma'lumot o'zgarmagan bo'lsa PDF baytlari ham o'zgarmasligi shart.
@@ -77,7 +78,7 @@ def build_group_flowables(group_code, students, avail_width):
         g_students = [s for s in students if s.get('group') == group_code]
         leader = GROUP_LEADERS.get(group_code, "—")
         g_title = GROUP_TITLES.get(group_code, "")
-    g_students.sort(key=lambda x: str(x.get('ism', '')).lower())
+    g_students.sort(key=lambda x: re.sub(r"['`‘’ʻʼ´\-_.]", "", str(x.get('fio') or x.get('ism', '')).lower()))
 
     elements = []
     count = len(g_students)

@@ -468,7 +468,7 @@ def send_group_lists_to_telegram(target='channel', group_filter=None):
         wb.close()
 
     for g in groups_data:
-        groups_data[g].sort(key=lambda s: s['name'].lower())
+        groups_data[g].sort(key=lambda s: re.sub(r"['`‘’ʻʼ´\-_.]", "", str(s.get('name', '')).lower()))
 
     groups_to_send = []
     if group_filter and str(group_filter).strip().upper() not in ('ALL', 'BARCHASI', ''):
@@ -1648,19 +1648,25 @@ def build_full_multisheet_excel(source_ws, filter_status=None):
         ws = out_wb.create_sheet(title=sheet_title)
         ws.append(NEW_HEADERS)
 
+        def norm_row_name(r):
+            s = str(r[7] or r[1] or '').strip().lower()
+            for ch in ["'", "`", "‘", "’", "ʻ", "ʼ", "´", "-", "_", "."]:
+                s = s.replace(ch, "")
+            return s
+
         # Qatorlarni saralash va filtrlash
         if grp_filter == "WITHDRAWN":
-            # Safdan chiqarilganlar: maxsus guruh
+            # Safdan chiqarilganlar: maxsus guruh (alifbo A-Z)
             sheet_rows = [r for r in all_rows if str(r[22] or '').strip() in ["Talabalar safidan chiqarilganlar", "Safdan chiqarilganlar", "N", "n"] or "chiqaril" in str(r[22] or '').strip().lower()]
-            sheet_rows.sort(key=lambda x: str(x[1] or '').strip().lower())
+            sheet_rows.sort(key=lambda x: norm_row_name(x))
         elif grp_filter:
-            # Faqat shu guruh talabalari, familiyasi bo'yicha alifbo (A-Z) tartibida
+            # Faqat shu guruh talabalari, I.F.O bo'yicha alifbo (A-Z) tartibida
             sheet_rows = [r for r in all_rows if str(r[22] or '').strip() == grp_filter]
-            sheet_rows.sort(key=lambda x: str(x[1] or '').strip().lower())
+            sheet_rows.sort(key=lambda x: norm_row_name(x))
         else:
-            # Jami sahifasi: guruh va alifbo tartibida
+            # Jami sahifasi: 1- I.F.O (alifbo A-Z bo'yicha), 2- Guruh tartibida
             sheet_rows = list(all_rows)
-            sheet_rows.sort(key=lambda x: (str(x[22] or '').strip(), str(x[1] or '').strip().lower()))
+            sheet_rows.sort(key=lambda x: (norm_row_name(x), str(x[22] or '').strip().lower()))
 
         out_tr = 1
         for row_vals in sheet_rows:

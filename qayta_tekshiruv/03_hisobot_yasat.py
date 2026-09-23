@@ -234,6 +234,18 @@ for r in range(2, ws.max_row + 1):
         'verified': verified_status,
     })
 
+# Talabalar ro'yxatini 1- I.F.O (alifbo A-Z bo'yicha), 2- Guruh bo'yicha saralash
+def student_uz_sort_key(s):
+    name = (s.get('fish') or s.get('ism') or '').strip().lower()
+    for ch in ["'", "`", "‘", "’", "ʻ", "ʼ", "´", "-", "_", "."]:
+        name = name.replace(ch, "")
+    grp = str(s.get('group') or '').strip().lower()
+    return (name, grp)
+
+students.sort(key=student_uz_sort_key)
+for idx, s in enumerate(students, 1):
+    s['tr'] = idx
+
 total = len(students)
 
 # Talabalar safidan chiqarilganlar (maxsus guruh) — rasmiy kontingentga kirmaydi

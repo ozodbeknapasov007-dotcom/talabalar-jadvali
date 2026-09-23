@@ -1955,7 +1955,11 @@ window.renderGroupsJournalTab = function() {
 
   groups.forEach(function(g) {
     const gStudents = RAW_STUDENTS.filter(function(st) { return (st.group || '') === g; });
-    gStudents.sort(function(a, b) { return (a.ism || '').localeCompare(b.ism || '', 'uz'); });
+    gStudents.sort(function(a, b) {
+      const nameA = (a.fish || (a.ism + ' ' + (a.ota || ''))).trim();
+      const nameB = (b.fish || (b.ism + ' ' + (b.ota || ''))).trim();
+      return nameA.localeCompare(nameB, 'uz', { sensitivity: 'base' });
+    });
 
     const isFarmat = (g === '26-01');
     const badgeBg = isFarmat ? '#059669' : '#2563eb';
@@ -2031,7 +2035,11 @@ window.renderGroupsJournalTab = function() {
     return isWithdrawnGroup(st.group) || (!st.group || !groups.includes(st.group)); 
   });
   if (unassignedStudents.length > 0) {
-    unassignedStudents.sort(function(a, b) { return (a.ism || '').localeCompare(b.ism || '', 'uz'); });
+    unassignedStudents.sort(function(a, b) {
+      const nameA = (a.fish || (a.ism + ' ' + (a.ota || ''))).trim();
+      const nameB = (b.fish || (b.ism + ' ' + (b.ota || ''))).trim();
+      return nameA.localeCompare(nameB, 'uz', { sensitivity: 'base' });
+    });
     html += `
       <div class="group-grid-card group-grid-card-withdrawn" style="border: 1.5px solid #ef4444; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 14px rgba(239, 68, 68, 0.08); margin-top: 12px;">
         <div class="group-card-header" style="background: linear-gradient(135deg, #7f1d1d, #991b1b); padding: 12px 18px; display: flex; justify-content: space-between; align-items: center;">
@@ -2121,7 +2129,15 @@ window.openStudentByRow = function(rowNum) {
 window._buildFullWorkbook = function(students) {
   var wb = XLSX.utils.book_new();
 
-  XLSX.utils.book_append_sheet(wb, window._buildStyledSheet(students), "Jami talabalar");
+  // Jami talabalar sahifasi: 1- I.F.O (A-Z), 2- Guruh
+  var sortedAll = students.slice().sort(function(a, b) {
+    var nameA = (a.fish || (a.ism + ' ' + (a.ota || ''))).trim();
+    var nameB = (b.fish || (b.ism + ' ' + (b.ota || ''))).trim();
+    var cmpName = nameA.localeCompare(nameB, 'uz', { sensitivity: 'base' });
+    if (cmpName !== 0) return cmpName;
+    return (a.group || '').localeCompare(b.group || '', 'uz');
+  });
+  XLSX.utils.book_append_sheet(wb, window._buildStyledSheet(sortedAll), "Jami talabalar");
 
   // Guruhlarni ma'lumotdan yig'amiz: raqamli guruhlar oldin, maxsus guruhlar keyin
   var groups = [];
@@ -2137,7 +2153,11 @@ window._buildFullWorkbook = function(students) {
 
   groups.forEach(function(g) {
     var gSt = students.filter(function(s) { return (s.group || '').trim() === g; });
-    gSt.sort(function(a, b) { return (a.ism || '').localeCompare(b.ism || '', 'uz'); });
+    gSt.sort(function(a, b) {
+      var nameA = (a.fish || (a.ism + ' ' + (a.ota || ''))).trim();
+      var nameB = (b.fish || (b.ism + ' ' + (b.ota || ''))).trim();
+      return nameA.localeCompare(nameB, 'uz', { sensitivity: 'base' });
+    });
     // Excel sahifa nomi 31 belgidan oshmasligi va : \ / ? * [ ] bo'lmasligi kerak.
     // Raqamli guruhga "Guruh " prefiksi qo'yamiz, uzun nomli maxsus guruhga esa
     // qo'ymaymiz — aks holda nom kesilib "Guruh Talabalar safidan chiqari" bo'lib qoladi
