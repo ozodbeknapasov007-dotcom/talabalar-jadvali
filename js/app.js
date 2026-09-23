@@ -39,11 +39,44 @@ window.isDragging = false;
 window.dragStartX = 0;
 window.isEditMode = false;
 
-window.isWithdrawnGroup = function(g) {
+function isWithdrawnGroup(g) {
   if (!g) return false;
   const gl = String(g).trim().toLowerCase();
   return gl === 'talabalar safidan chiqarilganlar' || gl === 'safdan chiqarilganlar' || gl === 'safdan chiqarilgan' || gl === 'n' || gl.includes('chiqaril');
-};
+}
+window.isWithdrawnGroup = isWithdrawnGroup;
+
+function navigateStudentModal(dir) {
+  if (window.currentStudentIdx === null || typeof RAW_STUDENTS === 'undefined') return;
+  const newIdx = window.currentStudentIdx + dir;
+  if (newIdx >= 0 && newIdx < RAW_STUDENTS.length) {
+    window.openStudentModal(newIdx, window.isEditMode);
+  }
+}
+window.navigateStudentModal = navigateStudentModal;
+
+// Modal klaviatura orqali boshqarish (Chapga/O'ngga strelkalar va Esc)
+window.addEventListener('keydown', function(e) {
+  const lb = document.getElementById('imgLightbox');
+  if (lb && lb.style.display !== 'none' && lb.style.display !== '') return;
+
+  const modal = document.getElementById('viewerModal');
+  if (!modal || modal.style.display === 'none' || modal.style.display === '') return;
+
+  const activeTag = document.activeElement ? document.activeElement.tagName : '';
+  if (activeTag === 'INPUT' || activeTag === 'TEXTAREA' || activeTag === 'SELECT') return;
+
+  if (e.key === 'ArrowLeft') {
+    e.preventDefault();
+    navigateStudentModal(-1);
+  } else if (e.key === 'ArrowRight') {
+    e.preventDefault();
+    navigateStudentModal(1);
+  } else if (e.key === 'Escape') {
+    e.preventDefault();
+    if (typeof window.closeModal === 'function') window.closeModal();
+  }
+});
 
 // SVG ICON KUTUBXONASI
 const ICONS = {
@@ -154,6 +187,11 @@ window.openStudentModal = function(studentIdx, startInEditMode = false) {
   const modal = document.getElementById('viewerModal');
   const modalTitle = document.getElementById('modalTitle');
   const modalBody = document.getElementById('modalBody');
+  const btnPrev = document.getElementById('btnModalPrev');
+  const btnNext = document.getElementById('btnModalNext');
+
+  if (btnPrev) btnPrev.disabled = (studentIdx <= 0);
+  if (btnNext) btnNext.disabled = (studentIdx >= RAW_STUDENTS.length - 1);
 
   if (!modal || !modalTitle || !modalBody) return;
 
@@ -169,30 +207,30 @@ window.openStudentModal = function(studentIdx, startInEditMode = false) {
   modalBody.innerHTML = `
     <!-- Top Bar: Fayl yo'li + Fayl biriktirish + Edit/AI Tugmalari -->
     <div class="modal-top-bar">
-      <div style="display:flex;align-items:center;gap:8px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
-        <span style="font-size:12px;font-weight:700;color:#94a3b8;text-transform:uppercase;display:flex;align-items:center;gap:5px;">${ICONS.folder} Fayl:</span>
-        <code id="modalFilePath" style="font-size:13px;color:#38bdf8;font-weight:800;background:rgba(56,189,248,0.12);padding:3px 10px;border-radius:6px;border:1px solid rgba(56,189,248,0.3);">files/${docFileName}</code>
+      <div style="display:flex;align-items:center;gap:8px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0;flex:1;">
+        <span style="font-size:12px;font-weight:700;color:#94a3b8;text-transform:uppercase;display:flex;align-items:center;gap:5px;flex-shrink:0;">${ICONS.folder} Fayl:</span>
+        <code id="modalFilePath" style="font-size:13px;color:#38bdf8;font-weight:800;background:rgba(56,189,248,0.12);padding:3px 10px;border-radius:6px;border:1px solid rgba(56,189,248,0.3);overflow:hidden;text-overflow:ellipsis;">files/${docFileName}</code>
       </div>
       <div style="display:flex;gap:8px;align-items:center;flex-shrink:0;flex-wrap:wrap;">
         ${qrBtn}
         <!-- Fayl biriktirish / almashtirish inputi -->
         <input type="file" id="attachFileInput" accept=".docx,image/*" style="display:none;" onchange="if(this.files.length) uploadAndAttachForCurrentStudent(this.files[0])">
-        <button type="button" class="btn btn-export" style="padding:6px 16px; font-size:12px;" onclick="document.getElementById('attachFileInput').click()">
+        <button type="button" class="btn btn-export" style="padding:6px 14px; font-size:12px;" onclick="document.getElementById('attachFileInput').click()">
           ${ICONS.file} Fayl Biriktirish
         </button>
-        <button type="button" id="btnScanQR" class="btn btn-add" style="padding:6px 16px; font-size:12px;" onclick="scanStudentQROnly()">
+        <button type="button" id="btnScanQR" class="btn btn-add" style="padding:6px 14px; font-size:12px;" onclick="scanStudentQROnly()">
           <svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
-          QR Skaner (Avtomatik)
+          QR Skaner
         </button>
         <button type="button" id="btnToggleEditTop" class="btn btn-edit-main" onclick="toggleEditMode(!window.isEditMode)">
           ${ICONS.edit} Tahrirlash
         </button>
-        <button type="button" id="btnReanalyze" class="btn btn-multi-export" style="padding:6px 16px; font-size:12px;" onclick="reanalyzeCurrentStudent()">
-          ${ICONS.zap} AI Pro Qayta Tekshirish
+        <button type="button" id="btnReanalyze" class="btn btn-multi-export" style="padding:6px 14px; font-size:12px;" onclick="reanalyzeCurrentStudent()">
+          ${ICONS.zap} AI Pro Tekshirish
         </button>
-        <button type="button" id="btnDeleteStudentTop" class="btn btn-danger" style="padding:6px 16px; font-size:12px;" onclick="deleteCurrentStudent()">
+        <button type="button" id="btnDeleteStudentTop" class="btn btn-danger" style="padding:6px 14px; font-size:12px;" onclick="deleteCurrentStudent()">
           <svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
-          Talabani O'chirish
+          O'chirish
         </button>
       </div>
     </div>
@@ -238,7 +276,7 @@ window.openStudentModal = function(studentIdx, startInEditMode = false) {
   window.currentDocImages = [];
 
   if (!s.doc_file) {
-    renderModalDocImages();
+    window.renderModalDocImages();
     return;
   }
 
@@ -252,15 +290,28 @@ window.openStudentModal = function(studentIdx, startInEditMode = false) {
       }
       if (data.success && data.images && data.images.length > 0) {
         window.currentDocImages = data.images;
+        // Rasmlar o'lchamlarini brauzer xotirasiga olib, so'ng joylashtiramiz
+        let loaded = 0;
+        data.images.forEach(function(src) {
+          const pre = new Image();
+          pre.onload = pre.onerror = function() {
+            loaded++;
+            if (loaded === data.images.length) {
+              window.renderModalDocImages();
+            }
+          };
+          pre.src = src;
+        });
+      } else {
+        window.renderModalDocImages();
       }
-      renderModalDocImages();
     })
     .catch(function(e) {
-      renderModalDocImages();
+      window.renderModalDocImages();
     });
 };
 
-/* HUJJAT RASMLARINI HAR BIR BO'LIMGA JOYLASHTIRISH VA BURISH (tekshiruv.html Uslubi) */
+/* HUJJAT RASMLARINI HAR BIR BO'LIMGA AQLLI VA ANIQ JOYLASHTIRISH (tekshiruv.html Uslubi) */
 window.renderModalDocImages = function() {
   const wrap0 = document.getElementById('modalDocImgWrap_0');
   const wrap1 = document.getElementById('modalDocImgWrap_1');
@@ -269,18 +320,22 @@ window.renderModalDocImages = function() {
 
   const imgs = window.currentDocImages || [];
 
-  function makeImgBlk(i, title, iconHtml, emptyText) {
-    if (!imgs[i]) {
-      return `
-        <div class="imgblk">
-          <div class="imghd"><span class="t">${iconHtml} ${title}</span></div>
-          <div class="imgbox" style="background:rgba(15,23,42,0.4);border:2px dashed #334155;border-radius:10px;padding:30px 20px;text-align:center;cursor:pointer;" onclick="document.getElementById('attachFileInput').click()">
-            <div style="color:#94a3b8;font-size:13px;font-weight:600;">${emptyText}</div>
-            <button type="button" class="btn btn-export" style="margin-top:10px;padding:5px 14px;font-size:11.5px;">${ICONS.file} Fayl Yuklash</button>
-          </div>
-        </div>
-      `;
-    }
+  function renderDropzoneHtml() {
+    return `
+      <div class="sect-card" style="border:2px dashed #3b82f6;background:rgba(37,99,235,0.04);border-radius:12px;padding:16px 20px;text-align:center;cursor:pointer;margin:0;"
+           onclick="document.getElementById('attachFileInput').click()"
+           ondragover="event.preventDefault(); this.style.borderColor='#2563eb'; this.style.background='rgba(37,99,235,0.1)';"
+           ondragleave="this.style.borderColor='#3b82f6'; this.style.background='rgba(37,99,235,0.04)';"
+           ondrop="event.preventDefault(); this.style.borderColor='#3b82f6'; this.style.background='rgba(37,99,235,0.04)'; if(event.dataTransfer.files.length) uploadAndAttachForCurrentStudent(event.dataTransfer.files[0]);">
+        <div style="margin-bottom:6px;">${ICONS.folder}</div>
+        <div style="font-size:13.5px;font-weight:700;color:#2563eb;margin-bottom:3px;">Yangi Word (.docx) yoki rasm yuklash / almashtirish</div>
+        <div style="font-size:12px;color:#64748b;">Faylni bu yerga sudrab olib keling yoki bosib tanlang</div>
+      </div>
+    `;
+  }
+
+  function makeImgBlk(i, title, iconHtml) {
+    if (!imgs[i]) return '';
     const deg = window.modalImgRotations[i] || 0;
     const isRot = (Math.abs(deg) === 90 || Math.abs(deg) === 270) ? 'rotated-90' : '';
     return `
@@ -300,28 +355,70 @@ window.renderModalDocImages = function() {
     `;
   }
 
-  wrap0.innerHTML = makeImgBlk(0, 'Pasport / ID-karta', ICONS.idCard, "Ushbu talaba uchun pasport rasmi topilmadi.");
-  wrap1.innerHTML = makeImgBlk(1, 'Shahodatnoma / Diplom', ICONS.award, "Ushbu talaba uchun shahodatnoma / diplom rasmi topilmadi.");
-
-  // 3-bo'lim o'ng tomoni: Agar 3-rasm (yoki ko'proq) bo'lsa ularni chiqaramiz + Har doim fayl tashlash dropzone!
-  let extraImgsHtml = '';
-  for (let idx = 2; idx < imgs.length; idx++) {
-    extraImgsHtml += makeImgBlk(idx, 'Qo\'shimcha Hujjat #' + (idx + 1), ICONS.file, '');
+  if (!imgs.length) {
+    wrap0.innerHTML = `<div class="sect-card" style="margin:0;"><div class="alert a-ogoh" style="margin:0;padding:12px 14px;background:rgba(245,158,11,0.08);color:#d97706;border:1px solid rgba(245,158,11,0.25);border-radius:8px;font-weight:600;font-size:13px;">Ushbu talaba uchun pasport rasmi mavjud emas.</div></div>`;
+    wrap1.innerHTML = `<div class="sect-card" style="margin:0;"><div class="alert a-ogoh" style="margin:0;padding:12px 14px;background:rgba(245,158,11,0.08);color:#d97706;border:1px solid rgba(245,158,11,0.25);border-radius:8px;font-weight:600;font-size:13px;">Ushbu talaba uchun shahodatnoma / diplom rasmi mavjud emas.</div></div>`;
+    wrap2.innerHTML = renderDropzoneHtml();
+    return;
   }
 
-  const dropzoneHtml = `
-    <div class="sect-card" style="border:2px dashed #3b82f6;background:rgba(37,99,235,0.04);border-radius:12px;padding:16px 20px;text-align:center;cursor:pointer;"
-         onclick="document.getElementById('attachFileInput').click()"
-         ondragover="event.preventDefault(); this.style.borderColor='#2563eb'; this.style.background='rgba(37,99,235,0.1)';"
-         ondragleave="this.style.borderColor='#3b82f6'; this.style.background='rgba(37,99,235,0.04)';"
-         ondrop="event.preventDefault(); this.style.borderColor='#3b82f6'; this.style.background='rgba(37,99,235,0.04)'; if(event.dataTransfer.files.length) uploadAndAttachForCurrentStudent(event.dataTransfer.files[0]);">
-      <div style="margin-bottom:6px;">${ICONS.folder}</div>
-      <div style="font-size:13.5px;font-weight:700;color:#2563eb;margin-bottom:3px;">Yangi Word (.docx) yoki rasm yuklash / almashtirish</div>
-      <div style="font-size:12px;color:#64748b;">Faylni bu yerga sudrab olib keling yoki bosib tanlang</div>
-    </div>
-  `;
+  // Rasmlarni proporsiyasi (en va bo'yi) bo'yicha aniq toifalarga ajratamiz:
+  // A4 diplom / shahodatnoma: balandligi enidan ancha katta (h > w * 1.05)
+  // Pasport / ID-karta: eni balandligidan katta (w >= h * 1.05)
+  const passportItems = [];
+  const diplomaItems = [];
+  const otherItems = [];
 
-  wrap2.innerHTML = extraImgsHtml + dropzoneHtml;
+  imgs.forEach(function(src, i) {
+    const im = new Image();
+    im.src = src;
+    const w = im.naturalWidth || 0;
+    const h = im.naturalHeight || 0;
+    if (h > 0 && w > 0) {
+      if (h > w * 1.05) {
+        diplomaItems.push({ idx: i, title: 'Shahodatnoma / Diplom' });
+      } else {
+        const title = passportItems.length === 0 ? 'Pasport / ID-karta (Old tomoni)' : 'Pasport / ID-karta (Orqa tomoni)';
+        passportItems.push({ idx: i, title: title });
+      }
+    } else {
+      if (i === 0) passportItems.push({ idx: i, title: 'Pasport / ID-karta' });
+      else if (i === 1) diplomaItems.push({ idx: i, title: 'Shahodatnoma / Diplom' });
+      else otherItems.push({ idx: i, title: 'Qo\'shimcha Hujjat #' + (i + 1) });
+    }
+  });
+
+  // Agar barcha rasmlar bir tomonga tushib qolsa, mantiqiy qayta taqsimlaymiz
+  if (passportItems.length === 0 && diplomaItems.length > 0) {
+    passportItems.push(diplomaItems.shift());
+  }
+  if (diplomaItems.length === 0 && passportItems.length > 1) {
+    diplomaItems.push(passportItems.pop());
+  }
+
+  // 1-Bo'lim: Pasport rasmlari
+  if (passportItems.length > 0) {
+    wrap0.innerHTML = passportItems.map(function(item) {
+      return makeImgBlk(item.idx, item.title, ICONS.idCard);
+    }).join('');
+  } else {
+    wrap0.innerHTML = `<div class="sect-card" style="margin:0;"><div class="alert a-ogoh" style="margin:0;padding:12px 14px;background:rgba(245,158,11,0.08);color:#d97706;border:1px solid rgba(245,158,11,0.25);border-radius:8px;font-weight:600;font-size:13px;">Ushbu talaba uchun pasport rasmi mavjud emas.</div></div>`;
+  }
+
+  // 2-Bo'lim: Diplom / Shahodatnoma rasmlari
+  if (diplomaItems.length > 0) {
+    wrap1.innerHTML = diplomaItems.map(function(item) {
+      return makeImgBlk(item.idx, item.title, ICONS.award);
+    }).join('');
+  } else {
+    wrap1.innerHTML = `<div class="sect-card" style="margin:0;"><div class="alert a-ogoh" style="margin:0;padding:12px 14px;background:rgba(245,158,11,0.08);color:#d97706;border:1px solid rgba(245,158,11,0.25);border-radius:8px;font-weight:600;font-size:13px;">Ushbu talaba uchun shahodatnoma / diplom rasmi mavjud emas.</div></div>`;
+  }
+
+  // 3-Bo'lim: Qo'shimcha rasmlar + Dropzone
+  const extraHtml = otherItems.map(function(item) {
+    return makeImgBlk(item.idx, item.title, ICONS.file);
+  }).join('');
+  wrap2.innerHTML = extraHtml + renderDropzoneHtml();
 };
 
 /* USHBU TALABAGA FAYL BIRIKTIRISH VA AI ORQALI TO'LDIRISH */

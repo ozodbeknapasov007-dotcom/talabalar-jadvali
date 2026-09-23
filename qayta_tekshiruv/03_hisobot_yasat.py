@@ -1507,34 +1507,54 @@ html = f"""<!DOCTYPE html>
 
   /* ---- 30tani Tekshirish Uslubidagi Section-Based Detalizatsiya (tekshiruv.html) ---- */
   .tekshiruv-sections-wrap {{
-    display: flex; flex-direction: column; gap: 22px; padding: 4px 2px;
+    display: flex; flex-direction: column; gap: 20px; padding: 4px 2px; width: 100%; box-sizing: border-box;
   }}
   .sect {{
-    display: grid; grid-template-columns: minmax(360px, 450px) 1fr; gap: 22px;
-    align-items: start; border-bottom: 1.5px solid var(--border); padding-bottom: 22px;
+    display: grid !important; grid-template-columns: 410px minmax(0, 1fr) !important; gap: 22px !important;
+    align-items: start !important; border-bottom: 1.5px solid var(--border) !important; padding-bottom: 24px !important;
+    margin-bottom: 8px !important; min-width: 0 !important; width: 100% !important; box-sizing: border-box !important;
   }}
-  .sect:last-child {{ border-bottom: none; padding-bottom: 4px; }}
-  .sect > .side {{ position: sticky; top: 10px; }}
+  .sect:last-child {{ border-bottom: none !important; padding-bottom: 4px !important; margin-bottom: 0 !important; }}
+  .sect > .side {{ position: sticky !important; top: 10px !important; min-width: 0 !important; width: 100% !important; overflow: hidden !important; }}
+  .sect-right {{ min-width: 0 !important; width: 100% !important; display: flex !important; flex-direction: column !important; gap: 14px !important; }}
   .sechd {{
     display: flex; align-items: center; gap: 9px; margin-bottom: 12px;
     font-size: 13px; letter-spacing: .06em; text-transform: uppercase; color: var(--text-muted); font-weight: 750;
   }}
   .sechd .n {{
     display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px;
-    border-radius: 50%; background: var(--accent); color: #fff; font-size: 12px; font-weight: 800; letter-spacing: 0;
+    border-radius: 50%; background: var(--accent); color: #fff; font-size: 12px; font-weight: 800; letter-spacing: 0; flex-shrink: 0;
   }}
   .sect-card {{
     background: var(--card); border: 1px solid var(--border); border-radius: 12px;
     padding: 14px 16px; margin-bottom: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+    min-width: 0 !important; width: 100% !important; box-sizing: border-box !important; overflow: hidden !important;
   }}
   .sect-card h4 {{
     margin: 0 0 10px; font-size: 13px; letter-spacing: .04em; text-transform: uppercase; color: var(--text-muted); font-weight: 700;
   }}
-  table.kv {{ width: 100%; border-collapse: collapse; }}
-  table.kv td {{ padding: 6px 0; vertical-align: top; border-bottom: 1px solid rgba(226, 232, 240, 0.5); }}
-  table.kv tr:last-child td {{ border-bottom: none; }}
-  table.kv td:first-child {{ color: var(--text-muted); width: 44%; padding-right: 10px; font-size: 12.5px; font-weight: 600; }}
-  table.kv td:last-child {{ font-weight: 700; word-break: break-word; color: var(--text-main); font-size: 13px; }}
+
+  /* CRITICAL: Overriding global table min-width: 1000px for .kv tables */
+  table.kv {{
+    min-width: 0 !important; max-width: 100% !important; width: 100% !important;
+    border: none !important; table-layout: fixed !important; margin: 0 !important;
+    border-collapse: collapse !important;
+  }}
+  table.kv tr {{ border: none !important; }}
+  table.kv td {{
+    padding: 6px 0 !important; vertical-align: top !important; line-height: 1.4 !important;
+    border: none !important; border-bottom: 1px solid rgba(226, 232, 240, 0.7) !important;
+    box-sizing: border-box !important;
+  }}
+  table.kv tr:last-child td {{ border-bottom: none !important; }}
+  table.kv td:first-child {{
+    color: var(--text-muted) !important; width: 44% !important; padding-right: 8px !important;
+    font-size: 12px !important; font-weight: 600 !important; white-space: normal !important;
+  }}
+  table.kv td:last-child {{
+    font-weight: 700 !important; color: var(--text-main) !important; font-size: 13px !important;
+    word-break: break-word !important; overflow-wrap: anywhere !important;
+  }}
 
   /* JSHSHIR (PINFL) rangli bo'laklar */
   .pcode {{
@@ -1552,9 +1572,10 @@ html = f"""<!DOCTYPE html>
   .imgblk {{
     background: var(--card); border: 1px solid var(--border); border-radius: 12px;
     padding: 12px; box-shadow: 0 4px 14px rgba(0,0,0,0.04);
+    min-width: 0 !important; width: 100% !important; box-sizing: border-box !important;
   }}
   .imghd {{
-    display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;
+    display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; flex-wrap: wrap; gap: 8px;
   }}
   .imghd .t {{
     font-weight: 700; font-size: 13.5px; color: var(--text-main); display: flex; align-items: center; gap: 6px;
@@ -1569,20 +1590,28 @@ html = f"""<!DOCTYPE html>
     font-size: 12px; cursor: pointer; transition: all 0.15s; font-weight: 700; display: inline-flex; align-items: center; gap: 5px;
   }}
   .btn-zoom-mini:hover {{ background: #0369a1; }}
+  .btn-nav-mini {{
+    background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.25); color: #ffffff;
+    border-radius: 8px; padding: 5px 12px; font-size: 12.5px; font-weight: 700; cursor: pointer;
+    display: inline-flex; align-items: center; gap: 4px; transition: all 0.15s; white-space: nowrap;
+  }}
+  .btn-nav-mini:hover:not(:disabled) {{ background: #2563eb; border-color: #3b82f6; color: #fff; transform: translateY(-1px); }}
+  .btn-nav-mini:disabled {{ opacity: 0.35; cursor: not-allowed; }}
   .imgbox {{
-    background: #070c18; border-radius: 10px; overflow: hidden; display: flex; align-items: center;
-    justify-content: center; min-height: 280px; max-height: 520px; cursor: zoom-in; position: relative;
+    background: #070c18; border-radius: 10px; overflow: auto; display: flex; align-items: center;
+    justify-content: center; min-height: 200px; max-height: 520px; cursor: zoom-in; position: relative;
+    padding: 6px; box-sizing: border-box;
   }}
   .imgbox img.doc-img {{
     display: block; max-width: 100%; max-height: 500px; object-fit: contain;
     transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   }}
   .imgbox img.rotated-90 {{
-    max-width: none; max-height: 85vw;
+    max-width: none; max-height: 480px;
   }}
 
   @media(max-width: 980px) {{
-    .sect {{ grid-template-columns: 1fr; }}
+    .sect {{ grid-template-columns: 1fr !important; }}
     .sect > .side {{ position: static; }}
   }}
 
@@ -5069,8 +5098,12 @@ var RAW_STUDENTS = {students_json};
 <div id="viewerModal" class="modal-backdrop" onclick="closeModalOnBackdrop(event)">
   <div class="modal-content">
     <div class="modal-header">
-      <h3 id="modalTitle">Talaba Hujjatlari Tahlili</h3>
-      <button type="button" class="modal-close" onclick="closeModal()">
+      <div style="display:flex;align-items:center;gap:12px;min-width:0;flex:1;">
+        <button type="button" class="btn-nav-mini" onclick="navigateStudentModal(-1)" id="btnModalPrev" title="Oldingi talaba (← strelka)">← Oldingi</button>
+        <button type="button" class="btn-nav-mini" onclick="navigateStudentModal(1)" id="btnModalNext" title="Keyingi talaba (→ strelka)">Keyingi →</button>
+        <h3 id="modalTitle" style="margin:0;font-size:15.5px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Talaba Hujjatlari Tahlili</h3>
+      </div>
+      <button type="button" class="modal-close" onclick="closeModal()" title="Yopish (Esc)">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
       </button>
     </div>
