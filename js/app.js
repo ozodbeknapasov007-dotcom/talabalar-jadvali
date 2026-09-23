@@ -4083,3 +4083,164 @@ if (document.readyState === 'loading') {
   initPortalState();
 }
 
+/* =========================================================================
+   TELEGRAM GA GURUHLAR RO'YXATINI YUBORISH
+   ========================================================================= */
+
+window.openSendTelegramModal = function() {
+  const m = document.getElementById('telegramSendModal');
+  if (m) {
+    const statusBox = document.getElementById('tgSendStatusBox');
+    if (statusBox) statusBox.style.display = 'none';
+    const btnSend = document.getElementById('btnSubmitTgSend');
+    if (btnSend) {
+      btnSend.disabled = false;
+      btnSend.innerHTML = `
+        <svg class="svg-icon" viewBox="0 0 24 24" fill="currentColor" style="width:15px;height:15px;margin-right:6px;"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69a.2.2 0 00-.05-.18c-.06-.05-.14-.03-.21-.02-.09.02-1.49.95-4.22 2.79-.4.27-.76.41-1.08.4-.36-.01-1.04-.2-1.55-.37-.63-.2-1.12-.31-1.08-.66.02-.18.27-.36.75-.55 2.92-1.27 4.86-2.11 5.83-2.51 2.78-1.16 3.35-1.36 3.73-1.36.08 0 .27.02.39.12.1.08.13.19.14.27-.01.06.01.24 0 .38z"/></svg>
+        Telegramga Yuborish
+      `;
+    }
+    m.style.display = 'flex';
+  }
+};
+
+window.closeSendTelegramModal = function() {
+  const m = document.getElementById('telegramSendModal');
+  if (m) m.style.display = 'none';
+};
+
+window.executeSendTelegram = async function() {
+  const targetRadio = document.querySelector('input[name="tg_target_dest"]:checked');
+  const target = targetRadio ? targetRadio.value : 'channel';
+  const groupSelect = document.getElementById('tg_select_group');
+  const group = groupSelect ? groupSelect.value : 'ALL';
+
+  const btnSend = document.getElementById('btnSubmitTgSend');
+  const statusBox = document.getElementById('tgSendStatusBox');
+  const statusText = document.getElementById('tgSendStatusText');
+
+  if (btnSend) {
+    btnSend.disabled = true;
+    btnSend.innerHTML = `
+      <span class="gh-spin" style="display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,0.3);border-top-color:#fff;border-radius:50%;margin-right:6px;animation:spin 0.8s linear infinite;"></span>
+      Yuborilmoqda...
+    `;
+  }
+  if (statusBox) {
+    statusBox.style.display = 'block';
+    statusBox.style.background = '#f0fdf4';
+    statusBox.style.borderColor = '#bbf7d0';
+    if (statusText) {
+      statusText.innerHTML = "Guruhlar ro'yxati tayyorlanmoqda va Telegramga yuborilmoqda...";
+      statusText.style.color = '#166534';
+    }
+  }
+
+  if (typeof showToast === 'function') {
+    showToast("Telegramga guruhlar ro'yxati yuborilmoqda...", "info");
+  }
+
+  // Brauzerdagi barcha mavjud talabalarni guruhlarga ajratish
+  let groupsData = {};
+  if (typeof RAW_STUDENTS !== 'undefined' && Array.isArray(RAW_STUDENTS)) {
+    for (const s of RAW_STUDENTS) {
+      let g = String(s.group || '').trim();
+      const gl = g.toLowerCase();
+      if (gl.includes('chiqaril') || gl === 'n') {
+        g = "Talabalar safidan chiqarilganlar";
+      } else if (!g) {
+        g = "Guruhsiz";
+      }
+      if (!groupsData[g]) groupsData[g] = [];
+      const name = (s.fish || (s.ism + (s.ota ? ' ' + s.ota : ''))).trim();
+      groupsData[g].push({ name, shnum: s.shnum || '' });
+    }
+  }
+
+  const payload = {
+    target: target,
+    group: group,
+    groupsData: groupsData
+  };
+
+  try {
+    let res = null;
+
+    // 1. POST so'rovi (Mahalliy server yoki Vercel serverless)
+    try {
+      const resp = await fetch('/api/send_groups_to_telegram', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      if (resp.ok || resp.status === 207) {
+        res = await resp.json();
+      } else {
+        const errJson = await resp.json().catch(() => null);
+        if (errJson && errJson.error) {
+          throw new Error(errJson.error);
+        }
+      }
+    } catch (e) {
+      console.warn("POST so'rovi xatosi:", e.message);
+      // 2. GET so'rovi orqali urinib ko'rish
+      try {
+        const getResp = await fetch(`/api/send_groups_to_telegram?target=${encodeURIComponent(target)}&group=${encodeURIComponent(group)}`);
+        if (getResp.ok || getResp.status === 207) {
+          res = await getResp.json();
+        }
+      } catch (e2) {
+        console.warn("GET so'rovi ham xato berdi:", e2.message);
+      }
+    }
+
+    if (res && res.ok) {
+      const count = res.sent_count || (res.results ? res.results.length : 1);
+      if (statusText) {
+        statusText.innerHTML = `Muvaffaqiyatli yakunlandi! <strong>${count} ta</strong> xabar Telegramga yuborildi.`;
+        statusText.style.color = '#10b981';
+      }
+      if (typeof showToast === 'function') {
+        showToast(`Telegramga ${count} ta guruh ro'yxati muvaffaqiyatli yuborildi!`, 'success');
+      }
+      setTimeout(() => {
+        closeSendTelegramModal();
+      }, 1600);
+    } else {
+      const errMsg = (res && res.error) ? res.error : "Telegramga yuborishda xatolik yuz berdi";
+      if (statusBox) {
+        statusBox.style.background = '#fef2f2';
+        statusBox.style.borderColor = '#fecaca';
+      }
+      if (statusText) {
+        statusText.innerText = "Xatolik: " + errMsg;
+        statusText.style.color = '#dc2626';
+      }
+      if (typeof showToast === 'function') {
+        showToast("Xatolik: " + errMsg, 'danger');
+      }
+    }
+  } catch (err) {
+    console.error("Telegram send error:", err);
+    if (statusBox) {
+      statusBox.style.background = '#fef2f2';
+      statusBox.style.borderColor = '#fecaca';
+    }
+    if (statusText) {
+      statusText.innerText = "Ulanishda xatolik: " + err.message;
+      statusText.style.color = '#dc2626';
+    }
+    if (typeof showToast === 'function') {
+      showToast("Serverga ulanish xatosi: " + err.message, 'danger');
+    }
+  } finally {
+    if (btnSend) {
+      btnSend.disabled = false;
+      btnSend.innerHTML = `
+        <svg class="svg-icon" viewBox="0 0 24 24" fill="currentColor" style="width:15px;height:15px;margin-right:6px;"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69a.2.2 0 00-.05-.18c-.06-.05-.14-.03-.21-.02-.09.02-1.49.95-4.22 2.79-.4.27-.76.41-1.08.4-.36-.01-1.04-.2-1.55-.37-.63-.2-1.12-.31-1.08-.66.02-.18.27-.36.75-.55 2.92-1.27 4.86-2.11 5.83-2.51 2.78-1.16 3.35-1.36 3.73-1.36.08 0 .27.02.39.12.1.08.13.19.14.27-.01.06.01.24 0 .38z"/></svg>
+        Telegramga Yuborish
+      `;
+    }
+  }
+};
+

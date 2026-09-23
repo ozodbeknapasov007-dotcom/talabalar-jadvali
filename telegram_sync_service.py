@@ -361,25 +361,205 @@ BACKUP_MINUTE = 0
 
 
 def load_backup_config():
-    """Zahira sozlamalarini o'qiydi. Topilmasa None qaytaradi."""
+    """Zahira va Telegram sozlamalarini o'qiydi. Topilmasa None qaytaradi."""
     token = os.environ.get('TG_BACKUP_TOKEN', '').strip()
     chat_id = os.environ.get('TG_BACKUP_CHAT_ID', '').strip()
+    channel_id = os.environ.get('TG_BACKUP_CHANNEL_ID', '').strip()
 
-    if not (token and chat_id) and os.path.exists(BACKUP_CONFIG_PATH):
+    if os.path.exists(BACKUP_CONFIG_PATH):
         try:
             with open(BACKUP_CONFIG_PATH, 'r', encoding='utf-8') as f:
                 cfg = json.load(f)
             token = token or str(cfg.get('bot_token', '')).strip()
             chat_id = chat_id or str(cfg.get('chat_id', '')).strip()
+            channel_id = channel_id or str(cfg.get('channel_id', '')).strip()
             global BACKUP_HOUR, BACKUP_MINUTE
             BACKUP_HOUR = int(cfg.get('hour', BACKUP_HOUR))
             BACKUP_MINUTE = int(cfg.get('minute', BACKUP_MINUTE))
         except Exception as e:
             print(f"[ZAHIRA] Sozlama faylini o'qishda xato: {e}")
 
-    if not token or not chat_id:
+    if not token or not (chat_id or channel_id):
         return None
-    return {'token': token, 'chat_id': chat_id}
+    return {'token': token, 'chat_id': chat_id, 'channel_id': channel_id}
+
+
+def send_group_lists_to_telegram(target='channel', group_filter=None):
+    """
+    Har bir guruh talabalari ro'yxatini Telegram'ga alohida xabar qilib yuboradi.
+    Har bir guruh alifbo (A-Z) tartibida raqamlangan bo'ladi.
+    """
+    import html
+    import requests
+
+    cfg = load_backup_config()
+    if not cfg:
+        print("[TELEGRAM] Sozlanmagan (scripts/backup_config.json yo'q)")
+        return {'ok': False, 'error': "Telegram bot sozlanmagan (scripts/backup_config.json yo'q)"}
+
+    token = cfg['token']
+    target_str = str(target or 'channel').strip().lower()
+
+    dest_chats = []
+    if target_str == 'channel':
+        dest_chats = [cfg.get('channel_id') or '-1004375713276']
+    elif target_str in ('chat', 'personal', 'private'):
+        dest_chats = [cfg.get('chat_id') or '8135594558']
+    elif target_str in ('both', 'ikkalasi'):
+        dest_chats = list(filter(None, [cfg.get('channel_id'), cfg.get('chat_id')]))
+    elif target:
+        dest_chats = [str(target).strip()]
+
+    if not dest_chats:
+        dest_chats = [cfg.get('channel_id') or '-1004375713276']
+
+    GROUP_META = {
+        "26-01": {"specialty": "Farmatsiya ishi", "leader": "Mirzayeva.D"},
+        "26-02": {"specialty": "Hamshiralik ishi", "leader": "Ochilov.D"},
+        "26-03": {"specialty": "Hamshiralik ishi", "leader": "To'rayeva.S"},
+        "26-04": {"specialty": "Hamshiralik ishi", "leader": "Hamdamova.M"},
+        "26-05": {"specialty": "Hamshiralik ishi", "leader": "Rayimova.X"},
+        "26-06": {"specialty": "Hamshiralik ishi", "leader": "Yuldashev.O"},
+        "26-07": {"specialty": "Hamshiralik ishi", "leader": "Asraliyev.A"},
+        "Talabalar safidan chiqarilganlar": {"specialty": "Maxsus ro'yxat", "leader": "Texnikum ma'muriyati"}
+    }
+
+    OFFICIAL_ORDER = [
+        "26-01", "26-02", "26-03", "26-04", "26-05", "26-06", "26-07",
+        "Talabalar safidan chiqarilganlar"
+    ]
+
+    ex_path = EXCEL_PATH
+    if not os.path.exists(ex_path):
+        ex_path = os.path.join(BASE_DIR, 'Talabalar_Yangilangan_Royxat.xlsx')
+
+    if not os.path.exists(ex_path):
+        return {'ok': False, 'error': "Talabalar bazasi (Excel) topilmadi"}
+
+    with EXCEL_LOCK:
+        wb = openpyxl.load_workbook(ex_path, data_only=True)
+        ws = wb.active
+
+        groups_data = {}
+        for r in range(2, ws.max_row + 1):
+            fio_base = str(ws.cell(row=r, column=2).value or '').strip()
+            shnum = str(ws.cell(row=r, column=5).value or '').strip()
+            ota = str(ws.cell(row=r, column=7).value or '').strip()
+            fish = str(ws.cell(row=r, column=8).value or '').strip()
+            grp_raw = str(ws.cell(row=r, column=23).value or '').strip()
+
+            if not fio_base and not shnum:
+                continue
+
+            if 'chiqaril' in grp_raw.lower() or grp_raw in ['N', 'n', 'WITHDRAWN']:
+                grp = "Talabalar safidan chiqarilganlar"
+            elif grp_raw:
+                grp = grp_raw
+            else:
+                grp = "Guruhsiz"
+
+            full_name = fish if fish else (f"{fio_base} {ota}".strip() if ota else fio_base)
+            full_name = full_name.replace('\u2018', "'").replace('\u2019', "'").replace('\u02bb', "'")
+
+            groups_data.setdefault(grp, []).append({
+                'name': full_name,
+                'shnum': shnum
+            })
+        wb.close()
+
+    for g in groups_data:
+        groups_data[g].sort(key=lambda s: s['name'].lower())
+
+    groups_to_send = []
+    if group_filter and str(group_filter).strip().upper() not in ('ALL', 'BARCHASI', ''):
+        selected = str(group_filter).strip()
+        if selected in groups_data:
+            groups_to_send = [selected]
+        else:
+            matches = [g for g in groups_data if selected.lower() in g.lower()]
+            groups_to_send = matches if matches else [selected]
+    else:
+        for og in OFFICIAL_ORDER:
+            if og in groups_data:
+                groups_to_send.append(og)
+        for g in sorted(groups_data.keys()):
+            if g not in groups_to_send:
+                groups_to_send.append(g)
+
+    sent_reports = []
+    all_success = True
+
+    for grp in groups_to_send:
+        st_list = groups_data.get(grp, [])
+        if not st_list:
+            continue
+
+        meta = GROUP_META.get(grp, {})
+        is_withdrawn = ('chiqaril' in grp.lower())
+
+        lines = []
+        lines.append("<b>Shahrisabz Tibbiyot Texnikumi</b>")
+        if is_withdrawn:
+            lines.append("<b>Talabalar safidan chiqarilganlar ro'yxati</b>")
+            lines.append(f"Talabalar soni: <b>{len(st_list)} nafar</b>")
+        else:
+            lines.append(f"<b>Akademik guruh: {grp}</b>")
+            lines.append(f"Mutaxassislik: <b>{meta.get('specialty', 'Hamshiralik ishi')}</b>")
+            lines.append(f"Mas'ul murabbiy: <b>{meta.get('leader', '—')}</b>")
+            lines.append(f"Talabalar soni: <b>{len(st_list)} nafar</b>")
+        lines.append("")
+
+        for idx, s in enumerate(st_list, 1):
+            esc_name = html.escape(s['name'])
+            lines.append(f"{idx}. {esc_name}")
+
+        msg_text = "\n".join(lines)
+
+        for chat_id in dest_chats:
+            try:
+                resp = requests.post(
+                    f"https://api.telegram.org/bot{token}/sendMessage",
+                    json={
+                        "chat_id": chat_id,
+                        "text": msg_text,
+                        "parse_mode": "HTML"
+                    },
+                    timeout=30
+                )
+                res_data = resp.json()
+                if resp.ok and res_data.get('ok'):
+                    sent_reports.append({
+                        'group': grp,
+                        'chat_id': chat_id,
+                        'message_id': res_data['result']['message_id'],
+                        'count': len(st_list),
+                        'ok': True
+                    })
+                else:
+                    all_success = False
+                    sent_reports.append({
+                        'group': grp,
+                        'chat_id': chat_id,
+                        'error': res_data.get('description', 'Telegram xatosi'),
+                        'ok': False
+                    })
+            except Exception as e:
+                all_success = False
+                sent_reports.append({
+                    'group': grp,
+                    'chat_id': chat_id,
+                    'error': str(e),
+                    'ok': False
+                })
+
+            time.sleep(0.25)
+
+    return {
+        'ok': all_success,
+        'sent_count': sum(1 for r in sent_reports if r.get('ok')),
+        'total_groups': len(groups_to_send),
+        'results': sent_reports
+    }
 
 
 def send_backup_to_telegram(reason='kunlik'):
@@ -1585,6 +1765,22 @@ class WebServerHandler(BaseHTTPRequestHandler):
             }).encode('utf-8'))
             return
 
+        # Guruhlar ro'yxatini Telegram'ga yuborish
+        if parsed_path.startswith('/api/send_groups_to_telegram'):
+            import urllib.parse as urlparse
+            query = {}
+            if '?' in self.path:
+                query = urlparse.parse_qs(self.path.split('?', 1)[1])
+            target = query.get('target', ['channel'])[0]
+            group_filter = query.get('group', ['ALL'])[0]
+            res = send_group_lists_to_telegram(target=target, group_filter=group_filter)
+            self.send_response(200 if res.get('ok') else 500)
+            self.send_header('Content-Type', 'application/json; charset=utf-8')
+            self.send_header('Access-Control-Allow-Origin', '*')
+            self.end_headers()
+            self.wfile.write(json.dumps(res, ensure_ascii=False).encode('utf-8'))
+            return
+
         # "GitHub'ga yuborish" tugmasi — kutayotgan o'zgarishlarni darhol yuborish
         if parsed_path.startswith('/api/flush_to_git'):
             had = has_pending_changes()
@@ -2634,6 +2830,23 @@ Aniq JSON formatda qaytar:
 
     def do_POST(self):
         parsed_path = self.path.split('?')[0]
+
+        if parsed_path == '/api/send_groups_to_telegram':
+            length = int(self.headers.get('Content-Length', 0))
+            body = self.rfile.read(length) if length > 0 else b'{}'
+            try:
+                data = json.loads(body.decode('utf-8'))
+            except Exception:
+                data = {}
+            target = data.get('target', 'channel')
+            group_filter = data.get('group', 'ALL')
+            res = send_group_lists_to_telegram(target=target, group_filter=group_filter)
+            self.send_response(200 if res.get('ok') else 500)
+            self.send_header('Content-Type', 'application/json; charset=utf-8')
+            self.send_header('Access-Control-Allow-Origin', '*')
+            self.end_headers()
+            self.wfile.write(json.dumps(res, ensure_ascii=False).encode('utf-8'))
+            return
 
         if parsed_path == '/api/upload_and_attach_to_student':
             length = int(self.headers.get('Content-Length', 0))
