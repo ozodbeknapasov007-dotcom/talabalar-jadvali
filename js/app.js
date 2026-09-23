@@ -2144,13 +2144,18 @@ window.openStudentByRow = function(rowNum) {
 window._buildFullWorkbook = function(students) {
   var wb = XLSX.utils.book_new();
 
-  // Jami talabalar sahifasi: 1- I.F.O (A-Z), 2- Guruh
+  // Jami talabalar sahifasi: 1- Guruh (26-01...26-07, maxsus guruhlar oxirida), 2- I.F.O (A-Z)
   var sortedAll = students.slice().sort(function(a, b) {
+    var grpA = (a.group || '').trim();
+    var grpB = (b.group || '').trim();
+    var na = /^\d/.test(grpA), nb = /^\d/.test(grpB);
+    if (na !== nb) return na ? -1 : 1;
+    var cmpGrp = grpA.localeCompare(grpB, 'uz');
+    if (cmpGrp !== 0) return cmpGrp;
+
     var nameA = (a.fish || (a.ism + ' ' + (a.ota || ''))).trim();
     var nameB = (b.fish || (b.ism + ' ' + (b.ota || ''))).trim();
-    var cmpName = nameA.localeCompare(nameB, 'uz', { sensitivity: 'base' });
-    if (cmpName !== 0) return cmpName;
-    return (a.group || '').localeCompare(b.group || '', 'uz');
+    return nameA.localeCompare(nameB, 'uz', { sensitivity: 'base' });
   });
   XLSX.utils.book_append_sheet(wb, window._buildStyledSheet(sortedAll), "Jami talabalar");
 

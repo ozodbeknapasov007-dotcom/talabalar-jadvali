@@ -234,24 +234,26 @@ for r in range(2, ws.max_row + 1):
         'verified': verified_status,
     })
 
-# Talabalar ro'yxatini 1- I.F.O (alifbo A-Z bo'yicha), 2- Guruh bo'yicha saralash
+# Talabalar safidan chiqarilganlar (maxsus guruh) — rasmiy kontingentga kirmaydi
+def is_withdrawn_group(g):
+    g_clean = str(g or '').strip().lower()
+    return g_clean in ['talabalar safidan chiqarilganlar', 'safdan chiqarilganlar', 'safdan chiqarilgan', 'n', 'belgilanmagan'] or 'chiqaril' in g_clean
+
+# Talabalar ro'yxatini 1- Guruh (26-01...26-07, safdan chiqarilganlar oxirida), 2- I.F.O (A-Z) bo'yicha saralash
 def student_uz_sort_key(s):
+    grp = str(s.get('group') or '').strip()
+    # 0 = Rasmiy guruhlar (26-01 ... 26-07), 1 = Safdan chiqarilganlar / belgilanmagan
+    grp_rank = 1 if is_withdrawn_group(grp) or not grp else 0
     name = (s.get('fish') or s.get('ism') or '').strip().lower()
     for ch in ["'", "`", "‘", "’", "ʻ", "ʼ", "´", "-", "_", "."]:
         name = name.replace(ch, "")
-    grp = str(s.get('group') or '').strip().lower()
-    return (name, grp)
+    return (grp_rank, grp.lower(), name)
 
 students.sort(key=student_uz_sort_key)
 for idx, s in enumerate(students, 1):
     s['tr'] = idx
 
 total = len(students)
-
-# Talabalar safidan chiqarilganlar (maxsus guruh) — rasmiy kontingentga kirmaydi
-def is_withdrawn_group(g):
-    g_clean = str(g or '').strip().lower()
-    return g_clean in ['talabalar safidan chiqarilganlar', 'safdan chiqarilganlar', 'safdan chiqarilgan', 'n', 'belgilanmagan'] or 'chiqaril' in g_clean
 
 GROUPS_LIST_OFFICIAL = ["26-01", "26-02", "26-03", "26-04", "26-05", "26-06", "26-07"]
 official_students = [s for s in students if s['group'] in GROUPS_LIST_OFFICIAL]
