@@ -1496,22 +1496,95 @@ html = f"""<!DOCTYPE html>
   .modal-close:hover {{ background: rgba(255,255,255,0.2); color: #fff; }}
 
   .modal-body {{
-    padding: 12px 18px; gap: 10px; flex: 1; display: flex; flex-direction: column; overflow: hidden; justify-content: space-between;
+    padding: 16px 20px; gap: 16px; flex: 1; display: flex; flex-direction: column; overflow-y: auto; overflow-x: hidden;
   }}
 
   .modal-top-bar {{
     display: flex; justify-content: space-between; align-items: center;
-    background: #fff; padding: 10px 16px; border-radius: 12px; border: 1px solid var(--border);
-    flex-shrink: 0;
+    background: #fff; padding: 12px 18px; border-radius: 12px; border: 1px solid var(--border);
+    flex-shrink: 0; box-shadow: 0 2px 6px rgba(0,0,0,0.03);
   }}
-  .btn-ai-reanalyze {{
-    background: #8250df; color: #fff; font-weight: 500; font-size: 12px;
-    padding: 5px 14px; border-radius: 6px;
-    border: 1px solid rgba(27,31,36,0.15); cursor: pointer;
-    display: inline-flex; align-items: center; gap: 6px;
-    box-shadow: 0 1px 0 rgba(27,31,36,0.1); transition: background 80ms;
+
+  /* ---- 30tani Tekshirish Uslubidagi Section-Based Detalizatsiya (tekshiruv.html) ---- */
+  .tekshiruv-sections-wrap {{
+    display: flex; flex-direction: column; gap: 22px; padding: 4px 2px;
   }}
-  .btn-ai-reanalyze:hover {{ background: #7539d1; }}
+  .sect {{
+    display: grid; grid-template-columns: minmax(360px, 450px) 1fr; gap: 22px;
+    align-items: start; border-bottom: 1.5px solid var(--border); padding-bottom: 22px;
+  }}
+  .sect:last-child {{ border-bottom: none; padding-bottom: 4px; }}
+  .sect > .side {{ position: sticky; top: 10px; }}
+  .sechd {{
+    display: flex; align-items: center; gap: 9px; margin-bottom: 12px;
+    font-size: 13px; letter-spacing: .06em; text-transform: uppercase; color: var(--text-muted); font-weight: 750;
+  }}
+  .sechd .n {{
+    display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px;
+    border-radius: 50%; background: var(--accent); color: #fff; font-size: 12px; font-weight: 800; letter-spacing: 0;
+  }}
+  .sect-card {{
+    background: var(--card); border: 1px solid var(--border); border-radius: 12px;
+    padding: 14px 16px; margin-bottom: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+  }}
+  .sect-card h4 {{
+    margin: 0 0 10px; font-size: 13px; letter-spacing: .04em; text-transform: uppercase; color: var(--text-muted); font-weight: 700;
+  }}
+  table.kv {{ width: 100%; border-collapse: collapse; }}
+  table.kv td {{ padding: 6px 0; vertical-align: top; border-bottom: 1px solid rgba(226, 232, 240, 0.5); }}
+  table.kv tr:last-child td {{ border-bottom: none; }}
+  table.kv td:first-child {{ color: var(--text-muted); width: 44%; padding-right: 10px; font-size: 12.5px; font-weight: 600; }}
+  table.kv td:last-child {{ font-weight: 700; word-break: break-word; color: var(--text-main); font-size: 13px; }}
+
+  /* JSHSHIR (PINFL) rangli bo'laklar */
+  .pcode {{
+    font-family: 'JetBrains Mono', monospace; font-size: 17px; letter-spacing: .06em;
+    margin: 0 0 10px; display: flex; flex-wrap: wrap; gap: 2px;
+  }}
+  .pcode span {{ padding: 2px 5px; border-radius: 4px; border-bottom: 3px solid transparent; }}
+  .pcode .c1 {{ border-color: #ec4899; color: #f43f5e; font-weight: 800; }}
+  .pcode .c2 {{ border-color: #6366f1; color: #818cf8; font-weight: 700; }}
+  .pcode .c3 {{ border-color: #059669; color: #34d399; font-weight: 700; }}
+  .pcode .c4 {{ border-color: #94a3b8; color: #94a3b8; }}
+  .pcode .c5 {{ border-color: #d97706; color: #fbbf24; font-weight: 800; }}
+
+  /* Rasm Bloki (.imgblk) */
+  .imgblk {{
+    background: var(--card); border: 1px solid var(--border); border-radius: 12px;
+    padding: 12px; box-shadow: 0 4px 14px rgba(0,0,0,0.04);
+  }}
+  .imghd {{
+    display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;
+  }}
+  .imghd .t {{
+    font-weight: 700; font-size: 13.5px; color: var(--text-main); display: flex; align-items: center; gap: 6px;
+  }}
+  .btn-rot-mini {{
+    background: #334155; color: #fff; border: none; border-radius: 6px; padding: 4px 10px;
+    font-size: 13px; cursor: pointer; transition: all 0.15s; font-weight: 700;
+  }}
+  .btn-rot-mini:hover {{ background: #2563eb; transform: scale(1.05); }}
+  .btn-zoom-mini {{
+    background: #0284c7; color: #fff; border: none; border-radius: 6px; padding: 4px 12px;
+    font-size: 12px; cursor: pointer; transition: all 0.15s; font-weight: 700; display: inline-flex; align-items: center; gap: 5px;
+  }}
+  .btn-zoom-mini:hover {{ background: #0369a1; }}
+  .imgbox {{
+    background: #070c18; border-radius: 10px; overflow: hidden; display: flex; align-items: center;
+    justify-content: center; min-height: 280px; max-height: 520px; cursor: zoom-in; position: relative;
+  }}
+  .imgbox img.doc-img {{
+    display: block; max-width: 100%; max-height: 500px; object-fit: contain;
+    transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  }}
+  .imgbox img.rotated-90 {{
+    max-width: none; max-height: 85vw;
+  }}
+
+  @media(max-width: 980px) {{
+    .sect {{ grid-template-columns: 1fr; }}
+    .sect > .side {{ position: static; }}
+  }}
 
   /* Rasmlar Galereyasi */
   .gallery-wrapper {{
@@ -1666,6 +1739,11 @@ html = f"""<!DOCTYPE html>
     flex-direction: column;
     gap: 10px;
     transition: all 0.2s;
+  }}
+  .ai-upload-box.drag-active {{
+    background: #eff6ff !important;
+    border-color: #2563eb !important;
+    box-shadow: 0 0 16px rgba(37, 99, 235, 0.25) !important;
   }}
   body.dark-mode .ai-upload-box {{
     background: #1e293b;
@@ -4460,6 +4538,29 @@ html = f"""<!DOCTYPE html>
     background: #111e38 !important;
     border-color: #23385e !important;
   }}
+  body.dark-mode .sect {{
+    border-bottom-color: #23385e !important;
+  }}
+  body.dark-mode .sechd {{
+    color: #94a3b8 !important;
+  }}
+  body.dark-mode .sect-card,
+  body.dark-mode .imgblk {{
+    background: #111e38 !important;
+    border-color: #23385e !important;
+  }}
+  body.dark-mode table.kv td {{
+    border-bottom-color: rgba(35, 56, 94, 0.6) !important;
+  }}
+  body.dark-mode table.kv td:first-child {{
+    color: #94a3b8 !important;
+  }}
+  body.dark-mode table.kv td:last-child {{
+    color: #f8fafc !important;
+  }}
+  body.dark-mode .imghd .t {{
+    color: #f8fafc !important;
+  }}
   body.dark-mode .gallery-wrapper,
   body.dark-mode #modalGalleryWrapper {{
     background: #0b1329 !important;
@@ -4471,6 +4572,12 @@ html = f"""<!DOCTYPE html>
   body.dark-mode #addStudentModal .ai-upload-box {{
     background: #111e38 !important;
     border: 2px dashed #2563eb !important;
+  }}
+  body.dark-mode .ai-upload-box.drag-active,
+  body.dark-mode #addStudentModal .ai-upload-box.drag-active {{
+    background: rgba(37,99,235,0.25) !important;
+    border-color: #60a5fa !important;
+    box-shadow: 0 0 20px rgba(59, 130, 246, 0.35) !important;
   }}
   body.dark-mode #addStudentModal .form-card-box {{
     background: #111e38 !important;
@@ -5098,22 +5205,25 @@ var RAW_STUDENTS = {students_json};
     <!-- Modal Body (Scrollable) -->
     <div class="add-modal-body">
       
-      <!-- 1. Word Fayl / Rasmni AI orqali avtomatik tahlil qilish -->
-      <div class="ai-upload-box">
+      <!-- 1. Word Fayl / Rasmni AI orqali avtomatik tahlil qilish (Drag & Drop) -->
+      <div class="ai-upload-box" id="addDocDropzone"
+           ondragover="event.preventDefault(); this.classList.add('drag-active');"
+           ondragleave="this.classList.remove('drag-active');"
+           ondrop="event.preventDefault(); this.classList.remove('drag-active'); if(event.dataTransfer.files.length) handleNewDocFileDrop(event.dataTransfer.files[0]);">
         <div class="ai-upload-top">
           <div class="ai-step-title">
             <span class="step-num">1</span>
-            <span>Hujjat faylini yuklash</span>
-            <span class="ai-pill-tag">AI Avtomatik To'ldiradi</span>
+            <span>Hujjat faylini yuklash (Word .docx yoki Rasm)</span>
+            <span class="ai-pill-tag">Drag & Drop / AI Avtomatik</span>
           </div>
-          <span class="ai-opt-note">(Ixtiyoriy — to'g'ridan-to'g'ri qo'lda ham yozishingiz mumkin)</span>
+          <span class="ai-opt-note">Faylni bu yerga sudrab tashlang yoki tanlang</span>
         </div>
         
         <div class="ai-upload-row">
-          <label class="file-picker-btn" for="newDocFileInput" title="Word (.docx) yoki rasm faylini tanlash">
+          <label class="file-picker-btn" for="newDocFileInput" title="Word (.docx) yoki rasm faylini tanlash yoki bu yerga sudrab tashlash">
             <input type="file" id="newDocFileInput" accept=".docx,image/*" style="display:none;" onchange="handleNewDocFileSelected(this)">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
-            <span id="selectedFileName">Word (.docx) yoki rasm tanlang...</span>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+            <span id="selectedFileName">Word (.docx) yoki rasm tashlang / tanlang...</span>
           </label>
 
           <button type="button" id="btnAnalyzeNewDocPro" class="btn-ai-action btn-ai-purple" onclick="analyzeUploadedNewDoc(true)">
@@ -5151,15 +5261,16 @@ var RAW_STUDENTS = {students_json};
             </div>
 
             <div class="form-group-item half-width">
-              <label for="add_group">Guruh <span class="req-star">*</span></label>
+              <label for="add_group">Guruh (Tanlang)</label>
               <select id="add_group" class="form-ctrl">
-                <option value="26-01">26-01</option>
-                <option value="26-02" selected>26-02</option>
-                <option value="26-03">26-03</option>
-                <option value="26-04">26-04</option>
-                <option value="26-05">26-05</option>
-                <option value="26-06">26-06</option>
-                <option value="26-07">26-07</option>
+                <option value="" selected>Guruh belgilanmagan</option>
+                <option value="26-01">26-01 (Farmatsiya)</option>
+                <option value="26-02">26-02 (Hamshiralik)</option>
+                <option value="26-03">26-03 (Hamshiralik)</option>
+                <option value="26-04">26-04 (Hamshiralik)</option>
+                <option value="26-05">26-05 (Hamshiralik)</option>
+                <option value="26-06">26-06 (Hamshiralik)</option>
+                <option value="26-07">26-07 (Hamshiralik)</option>
                 <option value="Talabalar safidan chiqarilganlar">Talabalar safidan chiqarilganlar (Maxsus)</option>
               </select>
             </div>

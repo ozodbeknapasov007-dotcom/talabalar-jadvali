@@ -13,6 +13,19 @@ window.handleNewDocFileSelected = function(input) {
   }
 };
 
+window.handleNewDocFileDrop = function(file) {
+  if (!file) return;
+  const input = document.getElementById('newDocFileInput');
+  if (input) {
+    try {
+      const dt = new DataTransfer();
+      dt.items.add(file);
+      input.files = dt.files;
+    } catch (e) {}
+    window.handleNewDocFileSelected(input);
+  }
+};
+
 /* Talabalar Tizimi - Asosiy JavaScript (V8 - Direct Alert Confirmation + Live Edit + Live Row Update) */
 
 window.currentStudentIdx = null;
@@ -61,6 +74,73 @@ const ICONS = {
   infoSm: '<svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px;display:inline-block;vertical-align:-2px;margin-right:3px;"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>'
 };
 
+/* =========================================================================
+   30TANI TEKSHIRISH (tekshiruv.html) USLUBIDAGI JSHSHIR & AYLANMA RASM FUNKSIYALARI
+   ========================================================================= */
+
+window.modalImgRotations = {};
+
+window.rotateModalImg = function(imgIdx, deg) {
+  const current = window.modalImgRotations[imgIdx] || 0;
+  const newDeg = (current + deg) % 360;
+  window.modalImgRotations[imgIdx] = newDeg;
+  const img = document.getElementById('modalDocImg_' + imgIdx);
+  if (img) {
+    img.style.transform = `rotate(${newDeg}deg)`;
+    if (Math.abs(newDeg) === 90 || Math.abs(newDeg) === 270) {
+      img.classList.add('rotated-90');
+    } else {
+      img.classList.remove('rotated-90');
+    }
+  }
+};
+
+const PINFL_WEIGHTS = [7, 3, 1, 7, 3, 1, 7, 3, 1, 7, 3, 1, 7];
+const PINFL_REGIONS = {
+  "001": "Toshkent shahri", "002": "Andijon viloyati", "003": "Buxoro viloyati",
+  "004": "Jizzax viloyati", "005": "Qashqadaryo viloyati", "006": "Navoiy viloyati",
+  "007": "Namangan viloyati", "008": "Samarqand viloyati", "009": "Surxondaryo viloyati",
+  "010": "Sirdaryo viloyati", "011": "Toshkent viloyati", "012": "Farg'ona viloyati",
+  "013": "Xorazm viloyati", "014": "Qoraqalpog'iston Respublikasi"
+};
+
+window.decodePinfl = function(s) {
+  if (!s) return null;
+  const digits = String(s).replace(/\D/g, '');
+  if (digits.length !== 14) return null;
+
+  const F = {
+    "1": [1800, "Erkak"], "2": [1800, "Ayol"],
+    "3": [1900, "Erkak"], "4": [1900, "Ayol"],
+    "5": [2000, "Erkak"], "6": [2000, "Ayol"]
+  }[digits[0]];
+
+  const kod = digits.slice(7, 10);
+  const joy = PINFL_REGIONS[kod] || ("Hudud kodi: " + kod);
+  const dd = digits.slice(1, 3);
+  const mm = digits.slice(3, 5);
+  const yy = digits.slice(5, 7);
+  const sana = F ? `${dd}.${mm}.${F[0] + parseInt(yy, 10)}` : `${dd}.${mm}.20${yy}`;
+
+  const checksum = PINFL_WEIGHTS.reduce((acc, w, i) => acc + w * parseInt(digits[i], 10), 0) % 10;
+  const nazoratOk = (checksum === parseInt(digits[13], 10));
+
+  return {
+    raw: digits,
+    jins: F ? F[1] : "Noma'lum",
+    asr: F ? (F[0] + "-yillar") : "Noma'lum",
+    sana: sana,
+    kod: kod,
+    joy: joy,
+    tartib: digits.slice(10, 13),
+    nazorat: nazoratOk
+  };
+};
+
+/* =========================================================================
+   ASOSIY TALABA OYNASI (MODAL) — 3 BO'LIMLI SEKSIYA USLUBIDA (tekshiruv.html)
+   ========================================================================= */
+
 window.openStudentModal = function(studentIdx, startInEditMode = false) {
   if (typeof RAW_STUDENTS === 'undefined' || !RAW_STUDENTS[studentIdx]) {
     alert("Talaba ma'lumotlari topilmadi: " + studentIdx);
@@ -68,6 +148,7 @@ window.openStudentModal = function(studentIdx, startInEditMode = false) {
   }
   window.currentStudentIdx = studentIdx;
   window.isEditMode = !!startInEditMode;
+  window.modalImgRotations = {};
   const s = RAW_STUDENTS[studentIdx];
 
   const modal = document.getElementById('viewerModal');
@@ -77,14 +158,14 @@ window.openStudentModal = function(studentIdx, startInEditMode = false) {
   if (!modal || !modalTitle || !modalBody) return;
 
   const docFileName = s.doc_file ? s.doc_file : "Mavjud emas";
-  modalTitle.innerHTML = ICONS.user + " <strong>" + s.fish + "</strong> &nbsp;|&nbsp; Shartnoma: #" + s.shnum;
+  modalTitle.innerHTML = ICONS.user + " <strong>" + s.fish + "</strong> &nbsp;|&nbsp; Shartnoma: #" + (s.shnum || '—');
 
   let qrBtn = '';
   if (s.sh_qr) {
     qrBtn = `<a href="${s.sh_qr}" target="_blank" class="btn btn-export" style="padding:5px 12px;font-size:11.5px;display:inline-flex;align-items:center;gap:6px;">${ICONS.link} QR PDF</a>`;
   }
 
-  // Asosiy Modal Strukturasi (Faqat 1 marta chiziladi)
+  // 3-Bo'limli Asosiy Modal Strukturasi (tekshiruv.html Uslubi)
   modalBody.innerHTML = `
     <!-- Top Bar: Fayl yo'li + Fayl biriktirish + Edit/AI Tugmalari -->
     <div class="modal-top-bar">
@@ -118,39 +199,46 @@ window.openStudentModal = function(studentIdx, startInEditMode = false) {
 
     <div id="reanalyzeStatus" style="display:none;padding:8px 14px;border-radius:6px;font-weight:600;font-size:12px;"></div>
 
-    <!-- 1. Rasmlar Galereyasi / Drag & Drop Dropzone -->
-    <div class="gallery-wrapper" id="modalGalleryWrapper"
-         ondragover="event.preventDefault(); this.style.border='2px dashed #2563eb'; this.style.background='#eff6ff';"
-         ondragleave="this.style.border='none'; this.style.background='#f8fafc';"
-         ondrop="event.preventDefault(); this.style.border='none'; this.style.background='#f8fafc'; if(event.dataTransfer.files.length) uploadAndAttachForCurrentStudent(event.dataTransfer.files[0]);">
-      <div id="modalImagesContainer" style="text-align:center;padding:20px;color:#64748b;height:100%;display:flex;align-items:center;justify-content:center;">
-        Rasmlar yuklanmoqda, iltimos kuting...
+    <!-- 3 Bo'limli Detalizatsiya (tekshiruv.html Uslubida) -->
+    <div class="tekshiruv-sections-wrap">
+      <!-- 1-BO'LIM: PASPORT / SHAXS GUVOHNOMASI -->
+      <div class="sect" id="modalSect1">
+        <div class="side" id="modalSect1Side"></div>
+        <div class="sect-right" id="modalDocImgWrap_0">
+          <div class="imgblk">
+            <div class="imghd"><span class="t">${ICONS.idCard} Pasport / ID-karta</span></div>
+            <div class="imgbox" style="color:#94a3b8;font-size:13px;padding:30px;">Hujjat rasmi yuklanmoqda...</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 2-BO'LIM: DIPLOM / SHAHODATNOMA -->
+      <div class="sect" id="modalSect2">
+        <div class="side" id="modalSect2Side"></div>
+        <div class="sect-right" id="modalDocImgWrap_1">
+          <div class="imgblk">
+            <div class="imghd"><span class="t">${ICONS.award} Shahodatnoma / Diplom</span></div>
+            <div class="imgbox" style="color:#94a3b8;font-size:13px;padding:30px;">Hujjat rasmi yuklanmoqda...</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 3-BO'LIM: SHARTNOMA & ALOQA -->
+      <div class="sect" id="modalSect3">
+        <div class="side" id="modalSect3Side"></div>
+        <div class="sect-right" id="modalDocImgWrap_2"></div>
       </div>
     </div>
-    
-    <!-- 2. Olingan Aniq Ma'lumotlar Kartalari -->
-    <div class="data-wrapper" id="modalDataWrapper"></div>
   `;
 
   // Kartalarni chizamiz
-  renderInfoCards(s, false);
+  renderInfoCards(s, window.isEditMode);
   modal.style.display = 'flex';
 
-  // Parallel tarzda rasmlarni yuklaymiz
-  const imgBox = document.getElementById('modalImagesContainer');
   window.currentDocImages = [];
 
   if (!s.doc_file) {
-    imgBox.innerHTML = `
-      <div style="padding:24px 16px; width:100%; border:2px dashed #cbd5e1; border-radius:12px; background:#f8fafc; text-align:center; cursor:pointer;" onclick="document.getElementById('attachFileInput').click()">
-        <div style="margin-bottom:8px;"><svg class="svg-icon" style="width:38px;height:38px;color:#94a3b8;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg></div>
-        <div style="font-size:14px; font-weight:800; color:#1e3c72; margin-bottom:4px;">Ushbu talaba uchun Word fayli (.docx) yoki rasm tashlang</div>
-        <div style="font-size:12px; color:#64748b; margin-bottom:12px;">Faylni bu yerga sudrab olib keling yoki bosib tanlang</div>
-        <button type="button" class="btn" style="background:#2563eb; color:#fff; padding:7px 18px; font-weight:700; display:inline-flex; align-items:center; gap:6px;">
-          ${ICONS.file} Faylni Tanlash & AI O'qitish
-        </button>
-      </div>
-    `;
+    renderModalDocImages();
     return;
   }
 
@@ -162,39 +250,78 @@ window.openStudentModal = function(studentIdx, startInEditMode = false) {
         const fpEl = document.getElementById('modalFilePath');
         if (fpEl) fpEl.innerText = data.filepath;
       }
-
       if (data.success && data.images && data.images.length > 0) {
         window.currentDocImages = data.images;
-        let imgGrid = '<div class="gallery-grid">';
-        data.images.forEach(function(imgSrc, i) {
-          const cap = 'Hujjat Rasmi #' + (i + 1);
-          imgGrid += '<div class="gallery-item">' +
-            '<div class="gallery-img-wrap" onclick="openLightbox(' + i + ')" title="Kattalashtirish uchun bosing">' +
-              '<img src="' + imgSrc + '" alt="' + cap + '">' +
-            '</div>' +
-            '<div class="gallery-bar">' +
-              '<span class="gallery-cap">' + ICONS.file + ' ' + cap + '</span>' +
-              '<button type="button" class="btn btn-zoom-mini" onclick="openLightbox(' + i + ')">' + ICONS.search + ' Zoom</button>' +
-            '</div>' +
-          '</div>';
-        });
-        imgGrid += '</div>';
-        imgBox.innerHTML = imgGrid;
-      } else {
-        imgBox.innerHTML = `
-          <div style="padding:20px; width:100%; border:2px dashed #cbd5e1; border-radius:12px; background:#f8fafc; text-align:center; cursor:pointer;" onclick="document.getElementById('attachFileInput').click()">
-            <div style="font-size:13px; color:#64748b; margin-bottom:8px;">Ushbu Word faylida rasm topilmadi. Yangi fayl biriktirmoqchimisiz?</div>
-            <button type="button" class="btn" style="background:#0284c7; color:#fff; padding:6px 14px; font-weight:700;">Yangi Fayl Yuklash</button>
-          </div>
-        `;
       }
+      renderModalDocImages();
     })
     .catch(function(e) {
-      imgBox.innerHTML = '<div style="padding:16px;background:#fee2e2;border:1px solid #f87171;border-radius:8px;color:#991b1b;line-height:1.6;">' +
-        '<strong>Rasmlarni yuklash uchun serverga ulanish:</strong><br>' +
-        'Iltimos sahifani to\'g\'ridan-to\'g\'ri <strong><a href="http://localhost:8080/hisobot.html" style="color:#2563eb;text-decoration:underline;font-weight:bold;">http://localhost:8080/hisobot.html</a></strong> orqali oching.' +
-      '</div>';
+      renderModalDocImages();
     });
+};
+
+/* HUJJAT RASMLARINI HAR BIR BO'LIMGA JOYLASHTIRISH VA BURISH (tekshiruv.html Uslubi) */
+window.renderModalDocImages = function() {
+  const wrap0 = document.getElementById('modalDocImgWrap_0');
+  const wrap1 = document.getElementById('modalDocImgWrap_1');
+  const wrap2 = document.getElementById('modalDocImgWrap_2');
+  if (!wrap0 || !wrap1 || !wrap2) return;
+
+  const imgs = window.currentDocImages || [];
+
+  function makeImgBlk(i, title, iconHtml, emptyText) {
+    if (!imgs[i]) {
+      return `
+        <div class="imgblk">
+          <div class="imghd"><span class="t">${iconHtml} ${title}</span></div>
+          <div class="imgbox" style="background:rgba(15,23,42,0.4);border:2px dashed #334155;border-radius:10px;padding:30px 20px;text-align:center;cursor:pointer;" onclick="document.getElementById('attachFileInput').click()">
+            <div style="color:#94a3b8;font-size:13px;font-weight:600;">${emptyText}</div>
+            <button type="button" class="btn btn-export" style="margin-top:10px;padding:5px 14px;font-size:11.5px;">${ICONS.file} Fayl Yuklash</button>
+          </div>
+        </div>
+      `;
+    }
+    const deg = window.modalImgRotations[i] || 0;
+    const isRot = (Math.abs(deg) === 90 || Math.abs(deg) === 270) ? 'rotated-90' : '';
+    return `
+      <div class="imgblk">
+        <div class="imghd">
+          <span class="t">${iconHtml} ${title}</span>
+          <div style="display:flex;gap:6px;align-items:center;">
+            <button type="button" class="btn-rot-mini" onclick="rotateModalImg(${i}, -90)" title="Chapga 90° burish">↺</button>
+            <button type="button" class="btn-rot-mini" onclick="rotateModalImg(${i}, 90)" title="O'ngga 90° burish">↻</button>
+            <button type="button" class="btn-zoom-mini" onclick="openLightbox(${i})" title="To'liq ekranda ko'rish">${ICONS.search} Kattalashtirish</button>
+          </div>
+        </div>
+        <div class="imgbox">
+          <img id="modalDocImg_${i}" class="doc-img ${isRot}" src="${imgs[i]}" alt="${title}" onclick="openLightbox(${i})" style="transform: rotate(${deg}deg);">
+        </div>
+      </div>
+    `;
+  }
+
+  wrap0.innerHTML = makeImgBlk(0, 'Pasport / ID-karta', ICONS.idCard, "Ushbu talaba uchun pasport rasmi topilmadi.");
+  wrap1.innerHTML = makeImgBlk(1, 'Shahodatnoma / Diplom', ICONS.award, "Ushbu talaba uchun shahodatnoma / diplom rasmi topilmadi.");
+
+  // 3-bo'lim o'ng tomoni: Agar 3-rasm (yoki ko'proq) bo'lsa ularni chiqaramiz + Har doim fayl tashlash dropzone!
+  let extraImgsHtml = '';
+  for (let idx = 2; idx < imgs.length; idx++) {
+    extraImgsHtml += makeImgBlk(idx, 'Qo\'shimcha Hujjat #' + (idx + 1), ICONS.file, '');
+  }
+
+  const dropzoneHtml = `
+    <div class="sect-card" style="border:2px dashed #3b82f6;background:rgba(37,99,235,0.04);border-radius:12px;padding:16px 20px;text-align:center;cursor:pointer;"
+         onclick="document.getElementById('attachFileInput').click()"
+         ondragover="event.preventDefault(); this.style.borderColor='#2563eb'; this.style.background='rgba(37,99,235,0.1)';"
+         ondragleave="this.style.borderColor='#3b82f6'; this.style.background='rgba(37,99,235,0.04)';"
+         ondrop="event.preventDefault(); this.style.borderColor='#3b82f6'; this.style.background='rgba(37,99,235,0.04)'; if(event.dataTransfer.files.length) uploadAndAttachForCurrentStudent(event.dataTransfer.files[0]);">
+      <div style="margin-bottom:6px;">${ICONS.folder}</div>
+      <div style="font-size:13.5px;font-weight:700;color:#2563eb;margin-bottom:3px;">Yangi Word (.docx) yoki rasm yuklash / almashtirish</div>
+      <div style="font-size:12px;color:#64748b;">Faylni bu yerga sudrab olib keling yoki bosib tanlang</div>
+    </div>
+  `;
+
+  wrap2.innerHTML = extraImgsHtml + dropzoneHtml;
 };
 
 /* USHBU TALABAGA FAYL BIRIKTIRISH VA AI ORQALI TO'LDIRISH */
@@ -203,7 +330,6 @@ window.uploadAndAttachForCurrentStudent = function(file) {
   const s = RAW_STUDENTS[window.currentStudentIdx];
 
   const statusBox = document.getElementById('reanalyzeStatus');
-  const imgBox = document.getElementById('modalImagesContainer');
 
   if (statusBox) {
     statusBox.style.display = 'block';
@@ -211,10 +337,6 @@ window.uploadAndAttachForCurrentStudent = function(file) {
     statusBox.style.color = '#1d4ed8';
     statusBox.style.border = '1px solid #bfdbfe';
     statusBox.innerHTML = '<strong>' + file.name + '</strong> yuklanmoqda va eng kuchli Gemini AI modeli orqali sinchiklab tahlil qilinmoqda...';
-  }
-
-  if (imgBox) {
-    imgBox.innerHTML = '<div style="padding:30px; text-align:center; color:#2563eb; font-weight:700;">AI fayl ichidagi pasport/ID va shahodatnomani tahlil qilmoqda...</div>';
   }
 
   const reader = new FileReader();
@@ -250,8 +372,10 @@ window.uploadAndAttachForCurrentStudent = function(file) {
         if (d.doc_tur) s.doc_tur = d.doc_tur;
         if (d.maktab) s.mak = d.maktab;
         if (d.yil) s.yil = String(d.yil);
+        if (d.tel) s.tel = d.tel;
+        if (d.shnum) s.shnum = d.shnum;
 
-        // EDIT INPUTLARNI DARHOL YANGILASH (keyingi "Saqlash" bosilganda eski ma'lumotlar qaytib qolmasligi uchun)
+        // EDIT INPUTLARNI DARHOL YANGILASH
         const editIsm = document.getElementById('edit_ism');
         if (editIsm) editIsm.value = s.ism || '';
         const editOta = document.getElementById('edit_ota');
@@ -272,32 +396,22 @@ window.uploadAndAttachForCurrentStudent = function(file) {
         if (editYil) editYil.value = s.yil || '';
         const editDocTur = document.getElementById('edit_doctur');
         if (editDocTur) editDocTur.value = s.doc_tur || 'Shahodatnoma';
+        const editShnum = document.getElementById('edit_shnum');
+        if (editShnum) editShnum.value = s.shnum || '';
+        const editTel = document.getElementById('edit_tel');
+        if (editTel) editTel.value = s.tel || '';
 
         // Modal sarlavhasini yangilash
         const modalTitle = document.getElementById('modalTitle');
         if (modalTitle) {
-          modalTitle.innerHTML = ICONS.user + " <strong>" + s.fish + "</strong> &nbsp;|&nbsp; Shartnoma: #" + s.shnum;
+          modalTitle.innerHTML = ICONS.user + " <strong>" + s.fish + "</strong> &nbsp;|&nbsp; Shartnoma: #" + (s.shnum || '—');
         }
 
         // Rasmlar galereyasini chizish
         if (res.images && res.images.length > 0) {
           window.currentDocImages = res.images;
-          let imgGrid = '<div class="gallery-grid">';
-          res.images.forEach(function(imgSrc, i) {
-            const cap = (i === 0) ? 'Pasport / ID' : 'Shahodatnoma / Diplom';
-            const icon = (i === 0) ? ICONS.idCard : ICONS.award;
-            imgGrid += '<div class="gallery-item">' +
-              '<div class="gallery-img-wrap" onclick="openLightbox(' + i + ')" title="Kattalashtirish uchun bosing">' +
-                '<img src="' + imgSrc + '" alt="' + cap + '">' +
-              '</div>' +
-              '<div class="gallery-bar">' +
-                '<span class="gallery-cap">' + icon + ' ' + cap + ' #' + (i+1) + '</span>' +
-                '<button type="button" class="btn btn-zoom-mini" onclick="openLightbox(' + i + ')">' + ICONS.search + ' Zoom</button>' +
-              '</div>' +
-            '</div>';
-          });
-          imgGrid += '</div>';
-          imgBox.innerHTML = imgGrid;
+          window.modalImgRotations = {};
+          renderModalDocImages();
         }
 
         // Kartalarni yangilash
@@ -398,12 +512,14 @@ window.handlePinflAutoDob = function(inputEl, targetDobId) {
   }
 };
 
-/* FAQAT MA'LUMOTLAR KARTALARINI CHIZISH */
+/* 3 BO'LIMLI MA'LUMOTLAR KARTALARINI CHIZISH (tekshiruv.html Uslubi) */
 function renderInfoCards(s, isEditing) {
-  const container = document.getElementById('modalDataWrapper');
+  const sect1Side = document.getElementById('modalSect1Side');
+  const sect2Side = document.getElementById('modalSect2Side');
+  const sect3Side = document.getElementById('modalSect3Side');
   const topBtn = document.getElementById('btnToggleEditTop');
 
-  if (!container) return;
+  if (!sect1Side || !sect2Side || !sect3Side) return;
 
   if (topBtn) {
     topBtn.innerHTML = isEditing ? (ICONS.close + ' Tahrirni Yopish') : (ICONS.edit + ' Ma\'lumotlarni Tahrirlash');
@@ -421,129 +537,216 @@ function renderInfoCards(s, isEditing) {
   };
   const nm = NAME_COLORS[s.name_flag] || { c: '#94a3b8', t: 'Tekshirilmagan' };
   const nameRow = (label, val) => val
-    ? `<div class="data-row"><span class="lbl">${label}:</span>`
-      + `<span class="val" style="color:${nm.c};font-weight:800;font-size:13.5px;max-width:62%;text-align:right;" `
-      + `title="${nm.t}">${val}</span></div>`
+    ? `<tr class="data-row"><td>${label}:</td><td style="color:${nm.c};font-weight:800;" title="${nm.t}">${val}</td></tr>`
     : '';
 
   if (!isEditing) {
-    // 1. ODDIY KO'RISH REJIMI (TINIQ VA YUQORI KONTRASTLI)
-    container.innerHTML = `
-      <div class="data-cards-grid">
-        <!-- Pasport kartasi -->
-        <div class="data-card data-card-pass">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;border-bottom:1.5px solid rgba(255,255,255,0.1);padding-bottom:6px;">
-            <h4 style="margin:0;border:none;padding:0;color:#38bdf8;font-size:15px;font-weight:800;">${ICONS.idCard} Pasport / ID-karta Ma'lumotlari</h4>
-            <button type="button" class="btn btn-edit-mini" onclick="toggleEditMode(true)">${ICONS.edit} Tahrirlash</button>
+    // -------------------------------------------------------------
+    // ODDIY KO'RISH REJIMI (tekshiruv.html)
+    // -------------------------------------------------------------
+    
+    // 1-BO'LIM CHAP TOMONI: Pasport jadvali + JSHSHIR decoder
+    const pinflDecoded = window.decodePinfl(s.pinfl);
+    let pinflDecoderHtml = '';
+    if (s.pinfl && pinflDecoded) {
+      const p = pinflDecoded.raw;
+      pinflDecoderHtml = `
+        <div class="sect-card">
+          <h4>JSHSHIR (PINFL) Tahlili</h4>
+          <div class="pcode">
+            <span class="c1" title="Jinsi va asr">${p[0]}</span><span
+              class="c2" title="Tug'ilgan sana KKOOYY">${p.slice(1,7)}</span><span
+              class="c3" title="Tug'ilgan joy kodi">${p.slice(7,10)}</span><span
+              class="c4" title="Kunlik tartib raqami">${p.slice(10,13)}</span><span
+              class="c5" title="Nazorat raqami">${p[13]}</span>
           </div>
-          <div class="data-row"><span class="lbl">Hujjat turi:</span><span class="val">${s.pass_type || '—'}</span></div>
-          <div class="data-row"><span class="lbl">Pasport seriya va №:</span><span class="val mono val-large-pass" id="val_pv">${s.pv || '—'}</span></div>
-          <div class="data-row"><span class="lbl">JSHSHIR (PINFL):</span><span class="val mono val-large-pinfl" id="val_pinfl">${formatPinflDisplayJS(s.pinfl)}</span></div>
-          <div class="data-row"><span class="lbl">Tug'ilgan sana (DOB):</span><span class="val val-large-dob" id="val_dob">${s.dob || '—'}</span></div>
-          <div class="data-row"><span class="lbl">Pasport Berilgan:</span><span class="val val-large-ber" id="val_ber">${s.ber || '—'}</span></div>
-          <div class="data-row"><span class="lbl">Otasining ismi:</span><span class="val" id="val_ota" style="font-weight:800;color:#f8fafc;">${s.ota || '—'}</span></div>
-          ${nameRow('Pasportdagi F.I.SH', s.pass_fish)}
+          <table class="kv">
+            <tr><td>Jinsi + Asr:</td><td>${pinflDecoded.jins} · ${pinflDecoded.asr}</td></tr>
+            <tr><td>Tug'ilgan sana:</td><td><strong>${pinflDecoded.sana}</strong></td></tr>
+            <tr><td>Hudud kodi:</td><td>${pinflDecoded.kod} = ${pinflDecoded.joy}</td></tr>
+            <tr><td>Tartib raqami:</td><td class="mono">${pinflDecoded.tartib}</td></tr>
+            <tr><td>Nazorat raqami:</td><td>${pinflDecoded.nazorat ? '<span style="color:#10b981;font-weight:800;">To‘g‘ri ✓</span>' : '<span style="color:#ef4444;font-weight:800;">XATO ✕</span>'}</td></tr>
+          </table>
         </div>
+      `;
+    } else if (s.pinfl) {
+      pinflDecoderHtml = `
+        <div class="sect-card">
+          <h4>JSHSHIR (PINFL) Tahlili</h4>
+          <div style="font-size:12.5px;color:#94a3b8;">14 xonali JSHSHIR formati to'liq emas.</div>
+        </div>
+      `;
+    }
 
-        <!-- Ta'lim hujjati kartasi -->
-        <div class="data-card data-card-doc">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;border-bottom:1.5px solid rgba(255,255,255,0.1);padding-bottom:6px;">
-            <h4 style="margin:0;border:none;padding:0;color:#34d399;font-size:15px;font-weight:800;">${ICONS.award} Ta'lim Hujjati Ma'lumotlari</h4>
-            <button type="button" class="btn btn-edit-mini" onclick="toggleEditMode(true)">${ICONS.edit} Tahrirlash</button>
-          </div>
-          <div class="data-row"><span class="lbl">Hujjat turi:</span><span class="val" id="val_doctur" style="color:#6ee7b7;font-weight:700;">${s.doc_tur || 'Shahodatnoma'}</span></div>
-          <div class="data-row"><span class="lbl">Hujjat seriya va №:</span><span class="val mono val-large-doc" id="val_shdoc">${s.sh_doc || '—'}</span></div>
-          <div class="data-row"><span class="lbl">Guruh:</span><span class="val" style="color:#60a5fa;font-weight:800;background:rgba(37,99,235,0.15);padding:3px 10px;border-radius:6px;border:1px solid rgba(37,99,235,0.3);">${s.group ? (isWithdrawnGroup(s.group) ? '<span style="color:#ef4444;font-weight:800;background:rgba(239,68,68,0.15);padding:2px 8px;border-radius:6px;border:1px solid rgba(239,68,68,0.35);">Talabalar safidan chiqarilganlar (Maxsus)</span>' : s.group) : '<span style="color:#f59e0b;font-weight:700;">Belgilanmagan</span>'}</span></div>
-          <div class="data-row"><span class="lbl">Tugatgan muassasasi:</span><span class="val" id="val_mak" style="max-width:65%;font-size:13px;color:#e2e8f0;">${s.mak || '—'}</span></div>
-          <div class="data-row"><span class="lbl">Bitirgan yili:</span><span class="val" id="val_yil" style="font-weight:700;">${s.yil || '—'}</span></div>
-          <div class="data-row"><span class="lbl">Yo'nalishi:</span><span class="val" style="color:#38bdf8;font-weight:700;">${s.yon || '—'}</span></div>
-          <div class="data-row"><span class="lbl">Word fayli:</span><span class="val" style="font-size:12px;color:#94a3b8;">${docFileName}</span></div>
+    sect1Side.innerHTML = `
+      <div class="sechd"><span class="n">1</span>Pasport / Shaxs Guvohnomasi</div>
+      <div class="sect-card">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+          <h4 style="margin:0;">Pasport Ma'lumotlari</h4>
+          <button type="button" class="btn btn-edit-mini" onclick="toggleEditMode(true)">${ICONS.edit} Tahrirlash</button>
+        </div>
+        <table class="kv">
+          <tr><td>Hujjat turi:</td><td>${s.pass_type || 'ID-karta'}</td></tr>
+          <tr><td>Pasport seriya va №:</td><td><strong class="mono-pass" style="font-size:14.5px;">${s.pv || '—'}</strong></td></tr>
+          <tr><td>JSHSHIR (PINFL):</td><td>${formatPinflDisplayJS(s.pinfl)}</td></tr>
+          <tr><td>Tug'ilgan sana (DOB):</td><td><strong>${s.dob || '—'}</strong></td></tr>
+          <tr><td>Pasport Berilgan:</td><td><strong>${s.ber || '—'}</strong></td></tr>
+          <tr><td>Otasining ismi:</td><td>${s.ota || '—'}</td></tr>
+          ${nameRow('Pasportdagi F.I.SH', s.pass_fish)}
+        </table>
+      </div>
+      ${pinflDecoderHtml}
+    `;
+
+    // 2-BO'LIM CHAP TOMONI: Ta'lim hujjati jadvali
+    sect2Side.innerHTML = `
+      <div class="sechd"><span class="n">2</span>Diplom / Shahodatnoma</div>
+      <div class="sect-card">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+          <h4 style="margin:0;">Ta'lim Hujjati Ma'lumotlari</h4>
+          <button type="button" class="btn btn-edit-mini" onclick="toggleEditMode(true)">${ICONS.edit} Tahrirlash</button>
+        </div>
+        <table class="kv">
+          <tr><td>Hujjat turi:</td><td><strong>${s.doc_tur || 'Shahodatnoma'}</strong></td></tr>
+          <tr><td>Hujjat seriya va №:</td><td><strong class="mono-doc" style="font-size:14.5px;">${s.sh_doc || '—'}</strong></td></tr>
+          <tr><td>Tugatgan muassasasi:</td><td>${s.mak || '—'}</td></tr>
+          <tr><td>Bitirgan yili:</td><td><strong>${s.yil || '—'}-yil</strong></td></tr>
+          <tr><td>Yo'nalishi:</td><td><span style="color:#0284c7;font-weight:700;">${s.yon || '—'}</span></td></tr>
           ${nameRow('Shahodatnomadagi F.I.SH', s.cert_fish)}
+        </table>
+      </div>
+    `;
+
+    // 3-BO'LIM CHAP TOMONI: Shartnoma & Aloqa ma'lumotlari
+    const isWithdrawn = isWithdrawnGroup(s.group);
+    const grpBadge = s.group
+      ? (isWithdrawn ? '<span class="card-group-badge grp-withdrawn">Safdan chiqarilgan</span>' : `<span class="card-group-badge grp-${(s.group || '').replace(/[^a-zA-Z0-9]/g, '').toLowerCase()}">${s.group}</span>`)
+      : '<span style="color:#f59e0b;font-weight:700;">Belgilanmagan</span>';
+
+    const isVerified = (s.verified === 'TASDIQLANDI');
+    const vBtnClass = isVerified ? 'btn-v-mini btn-v-ok' : 'btn-v-mini btn-v-wait';
+    const vBtnHtml = isVerified ? (ICONS.checkSm + ' Tasdiqlangan') : (ICONS.clockSm + ' Kutilmoqda');
+
+    sect3Side.innerHTML = `
+      <div class="sechd"><span class="n">3</span>Shartnoma & Aloqa</div>
+      <div class="sect-card">
+        <h4 style="margin:0 0 10px;">Shartnoma & Guruh</h4>
+        <table class="kv">
+          <tr><td>Shartnoma raqami:</td><td><strong style="font-size:14px;color:#2563eb;">#${s.shnum || '—'}</strong></td></tr>
+          <tr><td>Akademik guruh:</td><td>${grpBadge}</td></tr>
+          <tr><td>Telefon raqami:</td><td><strong style="font-size:13.5px;color:#0284c7;">${s.tel || '—'}</strong></td></tr>
+          <tr><td>Word fayli:</td><td><code style="font-size:11.5px;color:#64748b;">${docFileName}</code></td></tr>
+          <tr><td>Operator tasdig'i:</td><td>
+            <button type="button" class="${vBtnClass}" onclick="toggleStudentVerification(${window.currentStudentIdx}, ${s.row || 0})" title="Tasdiqlash holatini almashtirish">
+              ${vBtnHtml}
+            </button>
+          </td></tr>
+        </table>
+        <button type="button" class="btn btn-edit-main" onclick="toggleEditMode(true)" style="width:100%;margin-top:14px;justify-content:center;">
+          ${ICONS.edit} Barcha Ma'lumotlarni Tahrirlash
+        </button>
+      </div>
+    `;
+
+  } else {
+    // -------------------------------------------------------------
+    // TAHRIRLASH (EDIT) REJIMI (tekshiruv.html Uslubidagi maydonlar)
+    // -------------------------------------------------------------
+
+    // 1-BO'LIM: Pasport tahrirlash inputlari
+    sect1Side.innerHTML = `
+      <div class="sechd"><span class="n">1</span>Pasport & Shaxs Ma'lumotlari (Tahrirlash)</div>
+      <div class="sect-card">
+        <div class="data-row-edit">
+          <span class="lbl">Ism va Familiya:</span>
+          <input type="text" id="edit_ism" class="edit-input edit-input-lg" value="${s.ism || ''}" placeholder="Familiya Ism">
+        </div>
+        <div class="data-row-edit">
+          <span class="lbl">Otasining ismi:</span>
+          <input type="text" id="edit_ota" class="edit-input edit-input-lg" value="${s.ota || ''}" placeholder="... qizi / ... o'g'li">
+        </div>
+        <div class="data-row-edit">
+          <span class="lbl">Pasport seriya va №:</span>
+          <input type="text" id="edit_pv" class="edit-input edit-input-lg mono" oninput="this.value = this.value.toUpperCase()" value="${s.pv || ''}" placeholder="AD1234567">
+        </div>
+        <div class="data-row-edit">
+          <span class="lbl">JSHSHIR (PINFL - 14 ta):</span>
+          <input type="text" id="edit_pinfl" class="edit-input edit-input-lg mono" oninput="handlePinflAutoDob(this, 'edit_dob')" value="${s.pinfl || ''}" placeholder="604060 5572 0067">
+        </div>
+        <div class="data-row-edit">
+          <span class="lbl" style="color:#facc15;">Tug'ilgan sana (DOB):</span>
+          <input type="text" id="edit_dob" class="edit-input edit-input-lg" style="color:#facc15;font-weight:800;" value="${s.dob || ''}" placeholder="DD.MM.YYYY">
+        </div>
+        <div class="data-row-edit">
+          <span class="lbl">Pasport Berilgan:</span>
+          <input type="text" id="edit_ber" class="edit-input edit-input-lg" value="${s.ber || ''}" placeholder="DD.MM.YYYY">
         </div>
       </div>
     `;
-  } else {
-    // 2. TAHRIRLASH (EDIT) REJIMI: KATTA, QALIN VA ANIQ INPUTLAR
-    container.innerHTML = `
-      <div class="data-cards-grid">
-        <!-- Pasport kartasi (Tahrirlash) -->
-        <div class="data-card data-card-edit-pass">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;border-bottom:1.5px solid #2563eb;padding-bottom:8px;">
-            <h4 style="margin:0;border:none;padding:0;color:#60a5fa;font-size:16px;font-weight:800;">${ICONS.edit} Pasport & Shaxs Ma'lumotlari</h4>
-            <span style="font-size:12px;color:#38bdf8;font-weight:800;background:rgba(56,189,248,0.15);padding:3px 10px;border-radius:6px;border:1px solid rgba(56,189,248,0.3);">Tahrirlash rejimi</span>
-          </div>
-          <div class="data-row-edit">
-            <span class="lbl">Ism va Familiya:</span>
-            <input type="text" id="edit_ism" class="edit-input edit-input-lg" value="${s.ism || ''}" placeholder="Familiya Ism">
-          </div>
-          <div class="data-row-edit">
-            <span class="lbl">Otasining ismi:</span>
-            <input type="text" id="edit_ota" class="edit-input edit-input-lg" value="${s.ota || ''}" placeholder="... qizi / ... o'g'li">
-          </div>
-          <div class="data-row-edit">
-            <span class="lbl">Guruh:</span>
-            <select id="edit_group" class="edit-input edit-input-lg">
-              <option value="" ${!s.group ? 'selected' : ''}>Guruh belgilanmagan</option>
-              <option value="Talabalar safidan chiqarilganlar" ${isWithdrawnGroup(s.group) ? 'selected' : ''}>Talabalar safidan chiqarilganlar (Maxsus)</option>
-              <option value="26-01" ${s.group === '26-01' ? 'selected' : ''}>26-01 (Farmatsiya)</option>
-              <option value="26-02" ${s.group === '26-02' ? 'selected' : ''}>26-02 (Hamshiralik)</option>
-              <option value="26-03" ${s.group === '26-03' ? 'selected' : ''}>26-03 (Hamshiralik)</option>
-              <option value="26-04" ${s.group === '26-04' ? 'selected' : ''}>26-04 (Hamshiralik)</option>
-              <option value="26-05" ${s.group === '26-05' ? 'selected' : ''}>26-05 (Hamshiralik)</option>
-              <option value="26-06" ${s.group === '26-06' ? 'selected' : ''}>26-06 (Hamshiralik)</option>
-              <option value="26-07" ${s.group === '26-07' ? 'selected' : ''}>26-07 (Hamshiralik)</option>
-            </select>
-          </div>
-          <div class="data-row-edit">
-            <span class="lbl">Pasport seriya va №:</span>
-            <input type="text" id="edit_pv" class="edit-input edit-input-lg mono" oninput="this.value = this.value.toUpperCase()" value="${s.pv || ''}" placeholder="AD1234567">
-          </div>
-          <div class="data-row-edit">
-            <span class="lbl">JSHSHIR (PINFL - 14 ta):</span>
-            <input type="text" id="edit_pinfl" class="edit-input edit-input-lg mono" oninput="handlePinflAutoDob(this, 'edit_dob')" value="${s.pinfl || ''}" placeholder="Masalan: 604060 5572 0067" title="PINFL kiritilganda tug'ilgan sana avtomatik to'ladi">
-          </div>
-          <div class="data-row-edit">
-            <span class="lbl" style="color:#facc15;">Tug'ilgan sana (DOB):</span>
-            <input type="text" id="edit_dob" class="edit-input edit-input-lg" style="color:#facc15;font-weight:800;" value="${s.dob || ''}" placeholder="DD.MM.YYYY (JSHSHIR dan avtomatik)">
-          </div>
-          <div class="data-row-edit">
-            <span class="lbl">Pasport Berilgan:</span>
-            <input type="text" id="edit_ber" class="edit-input edit-input-lg" value="${s.ber || ''}" placeholder="DD.MM.YYYY">
-          </div>
-        </div>
 
-        <!-- Ta'lim hujjati kartasi (Tahrirlash) -->
-        <div class="data-card data-card-edit-doc">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;border-bottom:1.5px solid #10b981;padding-bottom:8px;">
-            <h4 style="margin:0;border:none;padding:0;color:#34d399;font-size:16px;font-weight:800;">${ICONS.edit} Ta'lim Hujjatini Tahrirlash</h4>
-            <div style="display:flex;gap:8px;">
-              <button type="button" class="btn btn-save-data" onclick="saveStudentData()">${ICONS.save} Saqlash (Excelga yozish)</button>
-              <button type="button" class="btn btn-cancel-edit" onclick="toggleEditMode(false)">Bekor qilish</button>
-            </div>
-          </div>
-          <div class="data-row-edit">
-            <span class="lbl">Hujjat turi:</span>
-            <select id="edit_doctur" class="edit-input edit-input-lg">
-              <option value="Shahodatnoma" ${s.doc_tur === 'Shahodatnoma' ? 'selected' : ''}>Shahodatnoma</option>
-              <option value="Diplom" ${s.doc_tur === 'Diplom' ? 'selected' : ''}>Diplom</option>
-            </select>
-          </div>
-          <div class="data-row-edit">
-            <span class="lbl">Hujjat seriya va №:</span>
-            <input type="text" id="edit_shdoc" class="edit-input edit-input-lg mono" oninput="this.value = this.value.toUpperCase()" value="${s.sh_doc || ''}" placeholder="UM 03752500">
-          </div>
-          <div class="data-row-edit">
-            <span class="lbl">Tugatgan muassasasi:</span>
-            <input type="text" id="edit_mak" class="edit-input edit-input-lg" value="${s.mak || ''}" placeholder="14-maktab...">
-          </div>
-          <div class="data-row-edit">
-            <span class="lbl">Bitirgan yili:</span>
-            <input type="text" id="edit_yil" class="edit-input edit-input-lg" value="${s.yil || ''}" placeholder="2026">
-          </div>
-          <div class="data-row-edit">
-            <span class="lbl">Yo'nalishi:</span>
-            <input type="text" id="edit_yon" class="edit-input edit-input-lg" value="${s.yon || ''}" placeholder="Hamshiralik ishi">
-          </div>
+    // 2-BO'LIM: Ta'lim hujjati tahrirlash inputlari
+    sect2Side.innerHTML = `
+      <div class="sechd"><span class="n">2</span>Ta'lim Hujjati (Tahrirlash)</div>
+      <div class="sect-card">
+        <div class="data-row-edit">
+          <span class="lbl">Hujjat turi:</span>
+          <select id="edit_doctur" class="edit-input edit-input-lg">
+            <option value="Shahodatnoma" ${s.doc_tur === 'Shahodatnoma' ? 'selected' : ''}>Shahodatnoma</option>
+            <option value="Diplom" ${s.doc_tur === 'Diplom' ? 'selected' : ''}>Diplom</option>
+          </select>
+        </div>
+        <div class="data-row-edit">
+          <span class="lbl">Hujjat seriya va №:</span>
+          <input type="text" id="edit_shdoc" class="edit-input edit-input-lg mono" oninput="this.value = this.value.toUpperCase()" value="${s.sh_doc || ''}" placeholder="UM 03752500">
+        </div>
+        <div class="data-row-edit">
+          <span class="lbl">Tugatgan muassasasi:</span>
+          <input type="text" id="edit_mak" class="edit-input edit-input-lg" value="${s.mak || ''}" placeholder="14-maktab...">
+        </div>
+        <div class="data-row-edit">
+          <span class="lbl">Bitirgan yili:</span>
+          <input type="text" id="edit_yil" class="edit-input edit-input-lg" value="${s.yil || ''}" placeholder="2026">
+        </div>
+        <div class="data-row-edit">
+          <span class="lbl">Yo'nalishi:</span>
+          <input type="text" id="edit_yon" class="edit-input edit-input-lg" value="${s.yon || ''}" placeholder="Hamshiralik ishi">
+        </div>
+      </div>
+    `;
+
+    // 3-BO'LIM: Shartnoma, Guruh & Aloqa tahrirlash inputlari + Saqlash tugmasi
+    sect3Side.innerHTML = `
+      <div class="sechd"><span class="n">3</span>Shartnoma & Guruh (Tahrirlash)</div>
+      <div class="sect-card">
+        <div class="data-row-edit">
+          <span class="lbl">Shartnoma raqami:</span>
+          <input type="text" id="edit_shnum" class="edit-input edit-input-lg mono" value="${s.shnum || ''}" placeholder="Masalan: 1234">
+        </div>
+        <div class="data-row-edit">
+          <span class="lbl">Akademik guruh:</span>
+          <select id="edit_group" class="edit-input edit-input-lg">
+            <option value="" ${!s.group ? 'selected' : ''}>Guruh belgilanmagan</option>
+            <option value="Talabalar safidan chiqarilganlar" ${isWithdrawnGroup(s.group) ? 'selected' : ''}>Talabalar safidan chiqarilganlar (Maxsus)</option>
+            <option value="26-01" ${s.group === '26-01' ? 'selected' : ''}>26-01 (Farmatsiya)</option>
+            <option value="26-02" ${s.group === '26-02' ? 'selected' : ''}>26-02 (Hamshiralik)</option>
+            <option value="26-03" ${s.group === '26-03' ? 'selected' : ''}>26-03 (Hamshiralik)</option>
+            <option value="26-04" ${s.group === '26-04' ? 'selected' : ''}>26-04 (Hamshiralik)</option>
+            <option value="26-05" ${s.group === '26-05' ? 'selected' : ''}>26-05 (Hamshiralik)</option>
+            <option value="26-06" ${s.group === '26-06' ? 'selected' : ''}>26-06 (Hamshiralik)</option>
+            <option value="26-07" ${s.group === '26-07' ? 'selected' : ''}>26-07 (Hamshiralik)</option>
+          </select>
+        </div>
+        <div class="data-row-edit">
+          <span class="lbl">Telefon raqami:</span>
+          <input type="text" id="edit_tel" class="edit-input edit-input-lg" value="${s.tel || ''}" placeholder="+998901234567">
+        </div>
+        <div style="display:flex;gap:10px;margin-top:16px;">
+          <button type="button" class="btn btn-save-data" onclick="saveStudentData()" style="flex:1;justify-content:center;padding:10px 18px;font-size:13px;">
+            ${ICONS.save} Saqlash (Excelga yozish)
+          </button>
+          <button type="button" class="btn btn-cancel-edit" onclick="toggleEditMode(false)" style="padding:10px 16px;">
+            Bekor qilish
+          </button>
         </div>
       </div>
     `;
@@ -725,7 +928,7 @@ window.updateStudentCardDOM = function(idx, s) {
    tahrir darhol localStorage ga yoziladi va yuklanishda qayta qo'llanadi.
    ========================================================================= */
 window.STUDENT_EDITS_KEY = 'student_portal_edits_map';
-window.STUDENT_EDIT_FIELDS = ['ism','ota','group','pv','pinfl','dob','ber','doc_tur','sh_doc','mak','yil','yon'];
+window.STUDENT_EDIT_FIELDS = ['ism','ota','group','pv','pinfl','dob','ber','doc_tur','sh_doc','mak','yil','yon','shnum','tel'];
 // Tasdiqlanmagan tahrir 7 kundan ortiq yashamasin (eskirib qolmasligi uchun)
 window.STUDENT_EDIT_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 
@@ -942,11 +1145,14 @@ window.saveStudentData = function() {
   const mak = (document.getElementById('edit_mak') ? document.getElementById('edit_mak').value : s.mak).trim();
   const yil = (document.getElementById('edit_yil') ? document.getElementById('edit_yil').value : s.yil).trim();
   const yon = (document.getElementById('edit_yon') ? document.getElementById('edit_yon').value : s.yon).trim();
+  const shnum = (document.getElementById('edit_shnum') ? document.getElementById('edit_shnum').value : (s.shnum || '')).trim();
+  const tel = (document.getElementById('edit_tel') ? document.getElementById('edit_tel').value : (s.tel || '')).trim();
 
   const idx = window.currentStudentIdx;
   const fields = {
     ism: ism, ota: ota, group: group, pv: pv, pinfl: pinfl, dob: dob,
-    ber: ber, doc_tur: doctur, sh_doc: shdoc, mak: mak, yil: yil, yon: yon
+    ber: ber, doc_tur: doctur, sh_doc: shdoc, mak: mak, yil: yil, yon: yon,
+    shnum: shnum, tel: tel
   };
 
   // Xatolik bo'lsa qaytarish uchun oldingi holatni eslab qolamiz
@@ -962,7 +1168,7 @@ window.saveStudentData = function() {
   // Modal sarlavhasini ham yangilash
   const modalTitle = document.getElementById('modalTitle');
   if (modalTitle) {
-    modalTitle.innerHTML = ICONS.user + " <strong>" + s.fish + "</strong> &nbsp;|&nbsp; Shartnoma: #" + s.shnum;
+    modalTitle.innerHTML = ICONS.user + " <strong>" + s.fish + "</strong> &nbsp;|&nbsp; Shartnoma: #" + (s.shnum || '—');
   }
 
   // Oddiy ko'rish rejimiga qaytarish
@@ -991,7 +1197,9 @@ window.saveStudentData = function() {
     '&sh_doc=' + encodeURIComponent(shdoc) +
     '&mak=' + encodeURIComponent(mak) +
     '&yil=' + encodeURIComponent(yil) +
-    '&yon=' + encodeURIComponent(yon);
+    '&yon=' + encodeURIComponent(yon) +
+    '&shnum=' + encodeURIComponent(shnum) +
+    '&tel=' + encodeURIComponent(tel);
 
   // 3-QADAM: fonda serverga yuboramiz (interfeys allaqachon yangilangan)
   fetch(url)
@@ -1305,7 +1513,7 @@ window.openLightbox = function(idx) {
   if (!window.currentDocImages || window.currentDocImages.length === 0) return;
   window.currentImgIdx = idx;
   window.imgZoom = 1;
-  window.imgRotate = 0;
+  window.imgRotate = (window.modalImgRotations && window.modalImgRotations[idx]) ? window.modalImgRotations[idx] : 0;
   window.imgPanX = 0;
   window.imgPanY = 0;
 
@@ -2639,6 +2847,7 @@ window.openAddStudentModal = function() {
     document.getElementById('add_dob').value = '';
     document.getElementById('add_ber').value = '';
     document.getElementById('add_tel').value = '';
+    if (document.getElementById('add_group')) document.getElementById('add_group').value = '';
     document.getElementById('add_doctur').value = 'Shahodatnoma';
     document.getElementById('add_shdoc').value = '';
     document.getElementById('add_mak').value = '';
@@ -2770,7 +2979,16 @@ window.analyzeUploadedNewDoc = function(usePro = false) {
         if (res.dob) document.getElementById('add_dob').value = res.dob;
         
         // FAQAT Pasport Berilgan Sanasi (Shahodatnoma sanasi EMAS!)
-        if (res.ber_sana) document.getElementById('add_ber').value = res.ber_sana;
+        const berVal = res.ber_sana || res.pass_ber || res.berilgan || res.berilgan_sana || res.date_of_issue || res.issue_date;
+        if (berVal && document.getElementById('add_ber')) {
+          document.getElementById('add_ber').value = berVal;
+        }
+
+        // Telefon raqami
+        const telVal = res.tel || res.phone || res.telefon;
+        if (telVal && document.getElementById('add_tel')) {
+          document.getElementById('add_tel').value = telVal;
+        }
         
         if (res.cert_tur) document.getElementById('add_doctur').value = res.cert_tur;
         if (res.cert_val) document.getElementById('add_shdoc').value = res.cert_val;

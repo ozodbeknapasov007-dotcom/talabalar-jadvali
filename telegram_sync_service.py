@@ -977,11 +977,19 @@ def parse_uz_id_card_qr(text):
             m_pin = re.search(r'([3-6]\d{13})', l1)
             if m_pin: data['pinfl'] = m_pin.group(1)
             
-        m_l2 = re.search(r'^(\d{2})(\d{2})(\d{2})[0-9MF]', l2.replace('<', ''))
+        m_l2 = re.search(r'^(\d{2})(\d{2})(\d{2})[0-9MF]([0-9]{6})?', l2.replace('<', ''))
         if m_l2:
             yy, mm, dd = m_l2.group(1), m_l2.group(2), m_l2.group(3)
             year = f"20{yy}" if int(yy) <= 30 else f"19{yy}"
             data['dob'] = f"{dd}.{mm}.{year}"
+            
+            # ID-karta amal qilish muddati 10 yil — berilgan sana = amal qilish muddati - 10 yil
+            exp_str = m_l2.group(4) if m_l2.lastindex and m_l2.lastindex >= 4 else None
+            if exp_str and len(exp_str) == 6:
+                exp_yy, exp_mm, exp_dd = int(exp_str[:2]), exp_str[2:4], exp_str[4:6]
+                iss_yy = (exp_yy - 10) % 100
+                iss_year = f"20{iss_yy:02d}" if iss_yy < 50 else f"19{iss_yy:02d}"
+                data['ber_sana'] = f"{exp_dd}.{exp_mm}.{iss_year}"
             
         m_name = re.search(r'([A-Z]+)<<([A-Z]+)', l3)
         if m_name:
@@ -1115,6 +1123,7 @@ def analyze_docx_content(docx_bytes, filename, default_ism="", default_yon="", u
         "maktab": "",
         "yil": "2024",
         "ber_sana": "",
+        "tel": "",
         "sh_qr": ""
     }
     
@@ -1133,6 +1142,22 @@ def analyze_docx_content(docx_bytes, filename, default_ism="", default_yon="", u
             m_sh2 = re.search(r'[№#\.\s]*(\d{1,4})[\s-]*(?:sonli|shartnoma)', full_text, re.I)
             if m_sh2: result['shnum'] = m_sh2.group(1)
 
+        # Word hujjati matnidan telefon raqam(lar)ini qidirish
+        tel_matches = re.findall(r'(?:\+?998[\s-]?)?(?:\(?\d{2}\)?[\s-]?)?\d{3}[\s-]?\d{2}[\s-]?\d{2}', full_text)
+        if tel_matches:
+            clean_tels = []
+            for t in tel_matches:
+                digits = re.sub(r'\D', '', t)
+                if len(digits) >= 9:
+                    clean_tels.append(t.strip())
+            if clean_tels:
+                result['tel'] = " / ".join(list(dict.fromkeys(clean_tels)))[:60]
+
+        # Word hujjati matnidan pasport berilgan sanani qidirish
+        m_ber_text = re.search(r'(?:berilgan|berildi|berilgan\s*sana|berilgan\s*vaqti|date\s*of\s*issue)[\s:]*(\d{2}[\.\/]\d{2}[\.\/]\d{4})', full_text, re.I)
+        if m_ber_text:
+            result['ber_sana'] = m_ber_text.group(1).replace('/', '.')
+
         # 1-QADAM: AVVAL QR-KODLARNI TEKSHIRISH (100% RASMIY VA ANIQ!)
         qr_extracted = scan_all_qrs(blobs_raw)
         if qr_extracted:
@@ -1142,6 +1167,7 @@ def analyze_docx_content(docx_bytes, filename, default_ism="", default_yon="", u
             if qr_extracted.get('pass_val'): result['pass_val'] = qr_extracted['pass_val']
             if qr_extracted.get('pinfl'): result['pinfl'] = qr_extracted['pinfl']
             if qr_extracted.get('dob'): result['dob'] = qr_extracted['dob']
+            if qr_extracted.get('ber_sana'): result['ber_sana'] = qr_extracted['ber_sana']
             if qr_extracted.get('cert_val'): result['cert_val'] = qr_extracted['cert_val']
             if qr_extracted.get('cert_tur'): result['cert_tur'] = qr_extracted['cert_tur']
             if qr_extracted.get('maktab'): result['maktab'] = qr_extracted['maktab']
@@ -1165,13 +1191,15 @@ Qat'iy Qoidalar:
 3. Tug'ilgan sana (DOB):
    - Pasportdagi tug'ilgan sana (DD.MM.YYYY).
 4. Pasport BERILGAN SANASI (Date of issue):
-   - FAQAT Pasport yoki ID-karta berilgan sanasi (Date of issue: DD.MM.YYYY).
-   - Shahodatnoma sanasini yoki kelajak sanani EMAS!
+   - FAQAT Pasport yoki ID-karta berilgan sanasi (Date of issue: DD.MM.YYYY). Pasport/ID-kartada "Date of issue" yoki "Berilgan sanasi" deb yozilgan bo'ladi.
+   - Hech qachon bo'sh qoldirma, agar sana ko'rinsa aniq DD.MM.YYYY formatda yoz.
 5. Shahodatnoma yoki Diplom:
    - Hujjat turi: Maktab bo'lsa 'Shahodatnoma', Kollej/Litsey/Texnikum bo'lsa 'Diplom'
    - Seriya va raqami: Masalan 'UM 03729356' yoki 'T-V 123456'
    - Maktab/Muassasa nomi: Maktab yoki Kollejning to'liq nomi
    - Bitirgan yili: Masalan '2024'
+6. Telefon raqami:
+   - Agar biron joyda telefon raqami ko'rinsa, masalan +998901234567 formatida chiqargin.
 
 Aniq JSON formatda qaytar:
 {
@@ -1181,6 +1209,7 @@ Aniq JSON formatda qaytar:
   "pinfl": "14 xonali PINFL",
   "dob": "DD.MM.YYYY",
   "pass_ber": "DD.MM.YYYY",
+  "tel": "+998...",
   "sh_doc": "UM 1234567",
   "doc_tur": "Shahodatnoma",
   "maktab": "...-maktab",
@@ -1216,7 +1245,23 @@ Aniq JSON formatda qaytar:
             if not result.get('pass_val') and ai_data.get('pass_ser'): result['pass_val'] = ai_data['pass_ser']
             if not result.get('pinfl') and ai_data.get('pinfl'): result['pinfl'] = str(ai_data['pinfl'])
             if not result.get('dob') and ai_data.get('dob'): result['dob'] = ai_data['dob']
-            if ai_data.get('pass_ber'): result['ber_sana'] = ai_data['pass_ber']
+            
+            # Pasport berilgan sanasining barcha sinonimlarini tekshirish
+            ber_val = (
+                ai_data.get('pass_ber') or 
+                ai_data.get('ber_sana') or 
+                ai_data.get('berilgan') or 
+                ai_data.get('berilgan_sana') or 
+                ai_data.get('date_of_issue') or 
+                ai_data.get('issue_date')
+            )
+            if ber_val:
+                result['ber_sana'] = str(ber_val).strip()
+
+            tel_val = ai_data.get('tel') or ai_data.get('telefon') or ai_data.get('phone')
+            if tel_val and not result.get('tel'):
+                result['tel'] = str(tel_val).strip()
+
             if not result.get('cert_val') and ai_data.get('sh_doc'): result['cert_val'] = ai_data['sh_doc']
             if not result.get('cert_tur') and ai_data.get('doc_tur'): result['cert_tur'] = ai_data['doc_tur']
             if not result.get('maktab') and ai_data.get('maktab'): result['maktab'] = ai_data['maktab']
@@ -1288,10 +1333,15 @@ def save_manual_students(students_list):
         ws.cell(row=nr, column=16, value=cqr)
         ws.cell(row=nr, column=17, value=maktab)
         ws.cell(row=nr, column=18, value="Umumiy o'rta maktab" if cert_tur == "Shahodatnoma" else "Kollej")
+        tel = str(st.get('tel', '')).strip()
+        group = str(st.get('group', '')).strip()
+
         ws.cell(row=nr, column=19, value=yil)
-        ws.cell(row=nr, column=20, value="")
+        ws.cell(row=nr, column=20, value=tel)
         ws.cell(row=nr, column=21, value="TOPILDI")
         ws.cell(row=nr, column=22, value="AI orqali tahlil qilinib qo'shildi")
+        if group:
+            ws.cell(row=nr, column=23, value=group)
         added += 1
 
     wb.save(EXCEL_PATH)
@@ -2298,6 +2348,8 @@ Aniq JSON formatda qaytar:
                 yil = get_param('yil')
                 yon = get_param('yon')
                 group = get_param('group')
+                shnum = get_param('shnum')
+                tel = get_param('tel')
                 verify = get_param('verify')
 
                 if verify:
@@ -2316,6 +2368,8 @@ Aniq JSON formatda qaytar:
                     cur_ota = ota if ota is not None else str(ws.cell(row=row_idx, column=7).value or '')
                     ws.cell(row=row_idx, column=8, value=f"{cur_ism} {cur_ota}".strip())
 
+                    if shnum is not None: ws.cell(row=row_idx, column=5, value=shnum)
+
                     if pv is not None: ws.cell(row=row_idx, column=10, value=pv)
                     if pinfl is not None: ws.cell(row=row_idx, column=11, value=pinfl)
                     if ber is not None: ws.cell(row=row_idx, column=12, value=ber)
@@ -2324,6 +2378,7 @@ Aniq JSON formatda qaytar:
                     if mak is not None: ws.cell(row=row_idx, column=17, value=mak)
                     if doc_tur is not None: ws.cell(row=row_idx, column=18, value=doc_tur)
                     if yil is not None: ws.cell(row=row_idx, column=19, value=yil)
+                    if tel is not None: ws.cell(row=row_idx, column=20, value=tel)
                     if yon is not None: ws.cell(row=row_idx, column=3, value=yon)
                     if group is not None and group: ws.cell(row=row_idx, column=23, value=group)
                     
@@ -2473,15 +2528,15 @@ Aniq JSON formatda qaytar:
                 yil = get_param('yil')
                 yon = get_param('yon') or 'Hamshiralik ishi - 3 yillik'
                 tel = get_param('tel')
-                group = get_param('group') or ('26-01' if 'farmat' in yon.lower() else '26-02')
+                group = get_param('group').strip()
                 doc_file = get_param('doc_file')
 
-                if not ism or not ota or not group:
+                if not ism or not ota:
                     self.send_response(400)
                     self.send_header('Content-Type', 'application/json; charset=utf-8')
                     self.send_header('Access-Control-Allow-Origin', '*')
                     self.end_headers()
-                    err_msg = "Ism-familiya, otasining ismi va guruh kiritilishi shart!"
+                    err_msg = "Ism-familiya va otasining ismi kiritilishi shart!"
                     self.wfile.write(json.dumps({"success": False, "error": err_msg}).encode('utf-8'))
                     return
 
@@ -2976,6 +3031,13 @@ Aniq JSON formatda qaytar:
                 except Exception as e:
                     print(f"AI Vision xatosi: {e}")
 
+                # Telefon raqamini full_text dan olish
+                m_tels = re.findall(r'(?:\+?998[\s-]?)?(?:\(?\d{2}\)?[\s-]?)?\d{3}[\s-]?\d{2}[\s-]?\d{2}', full_text)
+                if m_tels:
+                    clean_tels = [re.sub(r'\D', '', t) for t in m_tels if len(re.sub(r'\D', '', t)) >= 9]
+                    if clean_tels:
+                        ai_data['tel'] = " / ".join(list(dict.fromkeys(m_tels)))[:60]
+
                 # QR kod ustuvor
                 if qr_extracted:
                     if qr_extracted.get('ism'): ai_data['ism'] = qr_extracted['ism']
@@ -2983,11 +3045,23 @@ Aniq JSON formatda qaytar:
                     if qr_extracted.get('pass_val'): ai_data['pass_ser'] = qr_extracted['pass_val']
                     if qr_extracted.get('pinfl'): ai_data['pinfl'] = qr_extracted['pinfl']
                     if qr_extracted.get('dob'): ai_data['dob'] = qr_extracted['dob']
+                    if qr_extracted.get('ber_sana'): ai_data['pass_ber'] = qr_extracted['ber_sana']
                     if qr_extracted.get('cert_val'): ai_data['sh_doc'] = qr_extracted['cert_val']
                     if qr_extracted.get('cert_tur'): ai_data['doc_tur'] = qr_extracted['cert_tur']
                     if qr_extracted.get('maktab'): ai_data['maktab'] = qr_extracted['maktab']
                     if qr_extracted.get('yil'): ai_data['yil'] = qr_extracted['yil']
                     if qr_extracted.get('sh_qr'): ai_data['sh_qr'] = qr_extracted['sh_qr']
+
+                # Pasport berilgan sanasi sinonimlarini tekshirish
+                ber_val = (
+                    ai_data.get('pass_ber') or 
+                    ai_data.get('ber_sana') or 
+                    ai_data.get('berilgan') or 
+                    ai_data.get('berilgan_sana') or 
+                    ai_data.get('date_of_issue')
+                )
+                if ber_val:
+                    ai_data['pass_ber'] = str(ber_val).strip()
 
                 # Pasport seriya 7 raqam bo'lishini to'g'rilash
                 if ai_data.get('pass_ser'):
@@ -3026,6 +3100,7 @@ Aniq JSON formatda qaytar:
                         if ai_data.get('maktab'): ws.cell(row=row_idx, column=17, value=ai_data['maktab'])
                         if ai_data.get('doc_tur'): ws.cell(row=row_idx, column=18, value=ai_data['doc_tur'])
                         if ai_data.get('yil'): ws.cell(row=row_idx, column=19, value=str(ai_data['yil']))
+                        if ai_data.get('tel'): ws.cell(row=row_idx, column=20, value=str(ai_data['tel']))
 
                         group_val = str(ws.cell(row=row_idx, column=23).value or '').strip()
 
@@ -3244,6 +3319,9 @@ def update_student_data(st):
     ws.cell(row=target_row, column=17, value=maktab)
     ws.cell(row=target_row, column=18, value="Umumiy o'rta maktab" if cert_tur == "Shahodatnoma" else "Kollej")
     ws.cell(row=target_row, column=19, value=yil)
+    tel_val = str(st.get('tel', '')).strip()
+    if tel_val:
+        ws.cell(row=target_row, column=20, value=tel_val)
     ws.cell(row=target_row, column=21, value="TOPILDI")
     ws.cell(row=target_row, column=22, value="Tahrirlandi")
     grp_val = str(st.get('group', '')).strip()
