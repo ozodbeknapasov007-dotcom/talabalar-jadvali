@@ -4974,7 +4974,7 @@ var RAW_STUDENTS = {students_json};
             Telegramga Guruhlar Ro'yxatini Yuborish
           </h3>
           <div style="font-size: 11.5px; color: rgba(255,255,255,0.85); margin-top: 2px;">
-            Har bir guruh ro'yxati alohida xabar sifatida A-Z tartibida yuboriladi
+            Guruhlarning rasmiy jurnali yuqori sifatli rasm (shartnoma №, tug'ilgan sana va imzo bilan) formatida yuboriladi
           </div>
         </div>
       </div>

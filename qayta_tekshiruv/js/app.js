@@ -4131,13 +4131,13 @@ window.executeSendTelegram = async function() {
     statusBox.style.background = '#f0fdf4';
     statusBox.style.borderColor = '#bbf7d0';
     if (statusText) {
-      statusText.innerHTML = "Guruhlar ro'yxati tayyorlanmoqda va Telegramga yuborilmoqda...";
+      statusText.innerHTML = "Guruh jurnallari yuqori sifatli rasm formatida Telegramga yuborilmoqda...";
       statusText.style.color = '#166534';
     }
   }
 
   if (typeof showToast === 'function') {
-    showToast("Telegramga guruhlar ro'yxati yuborilmoqda...", "info");
+    showToast("Guruh jurnallari yuqori sifatli rasm formatida Telegramga yuborilmoqda...", "info");
   }
 
   // Brauzerdagi barcha mavjud talabalarni guruhlarga ajratish

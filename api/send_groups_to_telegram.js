@@ -113,6 +113,9 @@ module.exports = async function handler(req, res) {
   const results = [];
   let allSuccess = true;
 
+  const fs = require('fs');
+  const path = require('path');
+
   for (const grp of groupsToSend) {
     const stList = groupsData[grp] || [];
     if (stList.length === 0) continue;
@@ -120,36 +123,60 @@ module.exports = async function handler(req, res) {
     const meta = GROUP_META[grp] || {};
     const isWithdrawn = grp.toLowerCase().includes('chiqaril');
 
+    const fnameBase = isWithdrawn ? 'Guruh_Talabalar_safidan_chiqarilganlar' : `Guruh_${grp}`;
+    const jpgPath = path.join(process.cwd(), 'pdf_jurnallar', `${fnameBase}.jpg`);
+    let fileBuffer = null;
+    if (fs.existsSync(jpgPath)) {
+      try {
+        fileBuffer = fs.readFileSync(jpgPath);
+      } catch (e) {
+        console.warn("Rasm o'qishda xato:", e);
+      }
+    }
+
     const lines = [];
     lines.push("<b>Shahrisabz Tibbiyot Texnikumi</b>");
     if (isWithdrawn) {
       lines.push("<b>Talabalar safidan chiqarilganlar ro'yxati</b>");
       lines.push(`Talabalar soni: <b>${stList.length} nafar</b>`);
     } else {
-      lines.push(`<b>Akademik guruh: ${grp}</b>`);
-      lines.push(`Mutaxassislik: <b>${meta.specialty || 'Hamshiralik ishi'}</b>`);
+      lines.push(`<b>Akademik guruh: ${grp} (${meta.specialty || 'Hamshiralik ishi'})</b>`);
       lines.push(`Mas'ul murabbiy: <b>${meta.leader || '—'}</b>`);
       lines.push(`Talabalar soni: <b>${stList.length} nafar</b>`);
     }
-    lines.push("");
-
-    stList.forEach((s, idx) => {
-      lines.push(`${idx + 1}. ${escapeHtml(s.name)}`);
-    });
-
-    const msgText = lines.join("\n");
+    const captionText = lines.join("\n");
 
     for (const cid of destChats) {
       try {
-        const tgRes = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            chat_id: cid,
-            text: msgText,
-            parse_mode: 'HTML'
-          })
-        });
+        let tgRes;
+        if (fileBuffer) {
+          const formData = new FormData();
+          formData.append('chat_id', cid);
+          formData.append('caption', captionText);
+          formData.append('parse_mode', 'HTML');
+          formData.append('photo', new Blob([fileBuffer], { type: 'image/jpeg' }), `${fnameBase}.jpg`);
+
+          tgRes = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendPhoto`, {
+            method: 'POST',
+            body: formData
+          });
+        } else {
+          // Fallback matn
+          const textLines = [captionText, ""];
+          stList.forEach((s, idx) => {
+            textLines.push(`${idx + 1}. ${escapeHtml(s.name)}`);
+          });
+          tgRes = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              chat_id: cid,
+              text: textLines.join("\n"),
+              parse_mode: 'HTML'
+            })
+          });
+        }
+
         const data = await tgRes.json();
         if (tgRes.ok && data.ok) {
           results.push({

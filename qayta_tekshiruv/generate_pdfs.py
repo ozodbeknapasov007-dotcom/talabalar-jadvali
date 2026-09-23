@@ -34,7 +34,8 @@ GROUP_LEADERS = {
     "26-04": "Hamdamova.M",
     "26-05": "Rayimova.X",
     "26-06": "Yuldashev.O",
-    "26-07": "Asraliyev.A"
+    "26-07": "Asraliyev.A",
+    "Talabalar safidan chiqarilganlar": "Texnikum ma'muriyati"
 }
 
 GROUP_TITLES = {
@@ -44,15 +45,39 @@ GROUP_TITLES = {
     "26-04": "Hamshiralik ishi",
     "26-05": "Hamshiralik ishi",
     "26-06": "Hamshiralik ishi",
-    "26-07": "Hamshiralik ishi"
+    "26-07": "Hamshiralik ishi",
+    "Talabalar safidan chiqarilganlar": "Safdan chiqarilganlar ro'yxati"
 }
 
-def build_group_flowables(group_code, students, avail_width):
-    g_students = [s for s in students if s.get('group') == group_code]
-    g_students.sort(key=lambda x: str(x.get('ism', '')).lower())
+def export_pdf_to_images(pdf_path, dpi=250):
+    """PDF sahifalarini yuqori sifatli JPG rasm formatida saqlaydi."""
+    try:
+        import pymupdf
+        doc = pymupdf.open(pdf_path)
+        base = os.path.splitext(pdf_path)[0]
+        img_paths = []
+        for idx, page in enumerate(doc):
+            pix = page.get_pixmap(dpi=dpi)
+            out_img = f"{base}.jpg" if len(doc) == 1 else f"{base}_page_{idx+1}.jpg"
+            pix.save(out_img)
+            img_paths.append(out_img)
+        doc.close()
+        return img_paths
+    except Exception as e:
+        print(f"Rasmga eksport qilishda xatolik ({pdf_path}): {e}")
+        return []
 
-    leader = GROUP_LEADERS.get(group_code, "—")
-    g_title = GROUP_TITLES.get(group_code, "")
+def build_group_flowables(group_code, students, avail_width):
+    is_withdrawn = ('chiqaril' in str(group_code).lower() or str(group_code) in ['N', 'n', 'WITHDRAWN'])
+    if is_withdrawn:
+        g_students = [s for s in students if 'chiqaril' in str(s.get('group', '')).lower() or str(s.get('group', '')) in ['N', 'n', 'WITHDRAWN']]
+        leader = "Texnikum ma'muriyati"
+        g_title = "Safdan chiqarilganlar"
+    else:
+        g_students = [s for s in students if s.get('group') == group_code]
+        leader = GROUP_LEADERS.get(group_code, "—")
+        g_title = GROUP_TITLES.get(group_code, "")
+    g_students.sort(key=lambda x: str(x.get('ism', '')).lower())
 
     elements = []
     count = len(g_students)
@@ -128,16 +153,28 @@ def build_group_flowables(group_code, students, avail_width):
         textColor=colors.HexColor('#334155')
     )
 
-    header_table_data = [
-        [
-            Paragraph("Shahrisabz Tibbiyot Texnikumi", title_style),
-            ""
-        ],
-        [
-            Paragraph(f"Yo'nalish: <b>{g_title}</b> | Guruh: <b>{group_code}</b>", info_left_style),
-            Paragraph(f"Guruh rahbari: <b>{leader}</b>", info_right_style)
+    if is_withdrawn:
+        header_table_data = [
+            [
+                Paragraph("Shahrisabz Tibbiyot Texnikumi", title_style),
+                ""
+            ],
+            [
+                Paragraph("Maxsus ro'yxat: <b>Talabalar safidan chiqarilganlar</b>", info_left_style),
+                Paragraph("Holati: <b>Safdan chiqarilgan</b>", info_right_style)
+            ]
         ]
-    ]
+    else:
+        header_table_data = [
+            [
+                Paragraph("Shahrisabz Tibbiyot Texnikumi", title_style),
+                ""
+            ],
+            [
+                Paragraph(f"Yo'nalish: <b>{g_title}</b> | Guruh: <b>{group_code}</b>", info_left_style),
+                Paragraph(f"Guruh rahbari: <b>{leader}</b>", info_right_style)
+            ]
+        ]
 
     ht = Table(header_table_data, colWidths=[avail_width * 0.62, avail_width * 0.38])
     ht.setStyle(TableStyle([
@@ -273,6 +310,10 @@ def build_all_group_pdfs():
         })
 
     groups = ["26-01", "26-02", "26-03", "26-04", "26-05", "26-06", "26-07"]
+    withdrawn_students = [s for s in students if 'chiqaril' in str(s.get('group', '')).lower() or str(s.get('group', '')) in ['N', 'n', 'WITHDRAWN']]
+    if withdrawn_students:
+        groups.append("Talabalar safidan chiqarilganlar")
+
     generated_files = {}
 
     target_dirs = [
@@ -282,18 +323,22 @@ def build_all_group_pdfs():
 
     for tdir in target_dirs:
         os.makedirs(tdir, exist_ok=True)
-        # 1. Alohida guruh PDF lari
+        # 1. Alohida guruh PDF lari va ularning yuqori sifatli JPG rasmlari
         for g in groups:
-            out_file = os.path.join(tdir, f"Guruh_{g}.pdf")
+            fname = "Guruh_Talabalar_safidan_chiqarilganlar.pdf" if 'chiqaril' in g.lower() else f"Guruh_{g}.pdf"
+            out_file = os.path.join(tdir, fname)
             create_single_group_pdf(g, students, out_file)
             generated_files[g] = out_file
+            # Yuqori sifatli JPG rasmga eksport qilish (250 DPI)
+            export_pdf_to_images(out_file, dpi=250)
 
         # 2. Barcha 7 ta guruhni birlashtirgan YAGONA 1 ta A4 PDF (har bir guruh alohida varoqda)
+        official_groups = [g for g in groups if 'chiqaril' not in g.lower()]
         combined_file = os.path.join(tdir, "Barcha_Guruhlar_Jurnali.pdf")
-        create_all_groups_combined_pdf(groups, students, combined_file)
+        create_all_groups_combined_pdf(official_groups, students, combined_file)
         generated_files["ALL"] = combined_file
 
-    print(f"[OK] Barcha {len(groups)} ta guruh uchun alohida va 1 ta yagona umumiy A4 PDF jurnallar yaratildi!")
+    print(f"[OK] Barcha {len(groups)} ta guruh uchun alohida A4 PDF jurnallar va yuqori sifatli rasmlar yaratildi!")
     return generated_files
 
 if __name__ == '__main__':

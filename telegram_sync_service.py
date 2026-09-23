@@ -497,35 +497,71 @@ def send_group_lists_to_telegram(target='channel', group_filter=None):
         meta = GROUP_META.get(grp, {})
         is_withdrawn = ('chiqaril' in grp.lower())
 
-        lines = []
-        lines.append("<b>Shahrisabz Tibbiyot Texnikumi</b>")
+        # Rasm faylini aniqlash va tekshirish
+        fname_base = "Guruh_Talabalar_safidan_chiqarilganlar" if is_withdrawn else f"Guruh_{grp}"
+        jpg_path = os.path.join(BASE_DIR, 'pdf_jurnallar', f"{fname_base}.jpg")
+        pdf_path = os.path.join(BASE_DIR, 'pdf_jurnallar', f"{fname_base}.pdf")
+
+        # Agar JPG yo'q bo'lsa, PDF dan tezkor render qilamiz
+        if not os.path.exists(jpg_path) and os.path.exists(pdf_path):
+            try:
+                import pymupdf
+                doc = pymupdf.open(pdf_path)
+                pix = doc[0].get_pixmap(dpi=250)
+                pix.save(jpg_path)
+                doc.close()
+            except Exception as e_rend:
+                print(f"[TELEGRAM] PDF render xatosi: {e_rend}")
+
+        # Caption (xabar izohi)
+        caption_lines = []
+        caption_lines.append("<b>Shahrisabz Tibbiyot Texnikumi</b>")
         if is_withdrawn:
-            lines.append("<b>Talabalar safidan chiqarilganlar ro'yxati</b>")
-            lines.append(f"Talabalar soni: <b>{len(st_list)} nafar</b>")
+            caption_lines.append("<b>Talabalar safidan chiqarilganlar ro'yxati</b>")
+            caption_lines.append(f"Talabalar soni: <b>{len(st_list)} nafar</b>")
         else:
-            lines.append(f"<b>Akademik guruh: {grp}</b>")
-            lines.append(f"Mutaxassislik: <b>{meta.get('specialty', 'Hamshiralik ishi')}</b>")
-            lines.append(f"Mas'ul murabbiy: <b>{meta.get('leader', '—')}</b>")
-            lines.append(f"Talabalar soni: <b>{len(st_list)} nafar</b>")
-        lines.append("")
+            caption_lines.append(f"<b>Akademik guruh: {grp} ({meta.get('specialty', 'Hamshiralik ishi')})</b>")
+            caption_lines.append(f"Mas'ul murabbiy: <b>{meta.get('leader', '—')}</b>")
+            caption_lines.append(f"Talabalar soni: <b>{len(st_list)} nafar</b>")
+        caption_text = "\n".join(caption_lines)
 
-        for idx, s in enumerate(st_list, 1):
-            esc_name = html.escape(s['name'])
-            lines.append(f"{idx}. {esc_name}")
-
-        msg_text = "\n".join(lines)
+        img_bytes = None
+        if os.path.exists(jpg_path):
+            try:
+                with open(jpg_path, 'rb') as f_in:
+                    img_bytes = f_in.read()
+            except Exception as e_read:
+                print(f"[TELEGRAM] Rasm o'qishda xato: {e_read}")
 
         for chat_id in dest_chats:
             try:
-                resp = requests.post(
-                    f"https://api.telegram.org/bot{token}/sendMessage",
-                    json={
-                        "chat_id": chat_id,
-                        "text": msg_text,
-                        "parse_mode": "HTML"
-                    },
-                    timeout=30
-                )
+                if img_bytes:
+                    # Yuqori sifatli rasm formatida (sendPhoto)
+                    resp = requests.post(
+                        f"https://api.telegram.org/bot{token}/sendPhoto",
+                        data={
+                            "chat_id": chat_id,
+                            "caption": caption_text,
+                            "parse_mode": "HTML"
+                        },
+                        files={"photo": (f"{fname_base}.jpg", img_bytes, "image/jpeg")},
+                        timeout=60
+                    )
+                else:
+                    # Agar rasm bo'lmasa, matn formatida fallback
+                    lines = [caption_text, ""]
+                    for idx, s in enumerate(st_list, 1):
+                        lines.append(f"{idx}. {html.escape(s['name'])}")
+                    resp = requests.post(
+                        f"https://api.telegram.org/bot{token}/sendMessage",
+                        json={
+                            "chat_id": chat_id,
+                            "text": "\n".join(lines),
+                            "parse_mode": "HTML"
+                        },
+                        timeout=30
+                    )
+
                 res_data = resp.json()
                 if resp.ok and res_data.get('ok'):
                     sent_reports.append({
@@ -552,7 +588,7 @@ def send_group_lists_to_telegram(target='channel', group_filter=None):
                     'ok': False
                 })
 
-            time.sleep(0.25)
+            time.sleep(0.35)
 
     return {
         'ok': all_success,
