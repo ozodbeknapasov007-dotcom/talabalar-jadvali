@@ -7425,8 +7425,8 @@ window.closeAddModalOnBackdrop = function(e) {
 };
 
 /* 4 TURDAGI AI MODELLARINI TANLASH VA BOSHQARISH */
-window.selectedAiModel = 'google/gemini-2.5-flash';
-window.selectedAiModelTitle = 'Gemini 2.5 Flash';
+window.selectedAiModel = 'google/gemini-3.8-flash';
+window.selectedAiModelTitle = 'Gemini 3.8 Flash';
 
 window.selectAiModel = function(cardEl, modelId, modelTitle) {
   window.selectedAiModel = modelId;
@@ -7450,8 +7450,8 @@ window.analyzeUploadedNewDoc = function(modelParam) {
     return;
   }
 
-  let modelToUse = window.selectedAiModel || 'google/gemini-2.5-flash';
-  let modelTitle = window.selectedAiModelTitle || 'Gemini 2.5 Flash';
+  let modelToUse = window.selectedAiModel || 'google/gemini-3.8-flash';
+  let modelTitle = window.selectedAiModelTitle || 'Gemini 3.8 Flash';
   if (typeof modelParam === 'string' && modelParam) {
     modelToUse = modelParam;
   } else if (modelParam === true) {
@@ -9241,19 +9241,31 @@ window.executeSendTelegram = async function() {
             <span>Qaysi AI Modeli Bilan Tekshirish Kerak? (4 Ta Model):</span>
           </div>
           <div class="ai-models-grid" id="aiModelsGrid">
-            <!-- 1. Gemini 2.5 Flash -->
-            <div class="ai-model-card active" data-model="google/gemini-2.5-flash" onclick="selectAiModel(this, 'google/gemini-2.5-flash', 'Gemini 2.5 Flash')">
+            <!-- 1. Gemini 3.8 Flash -->
+            <div class="ai-model-card active" data-model="google/gemini-3.8-flash" onclick="selectAiModel(this, 'google/gemini-3.8-flash', 'Gemini 3.8 Flash')">
               <div class="ai-model-card-top">
                 <span class="ai-model-name">
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
-                  Gemini 2.5 Flash
+                  Gemini 3.8 Flash
                 </span>
-                <span class="ai-model-badge badge-recommended">Tavsiya</span>
+                <span class="ai-model-badge badge-recommended">Yangi & Tavsiya</span>
               </div>
-              <div class="ai-model-desc">Eng tezkor va aniq avtomatik o'qish (Google)</div>
+              <div class="ai-model-desc">Eng aqlli yangi avlod Flash modeli (Google)</div>
             </div>
 
-            <!-- 2. Gemini 2.5 Pro -->
+            <!-- 2. Gemini 2.5 Flash -->
+            <div class="ai-model-card" data-model="google/gemini-2.5-flash" onclick="selectAiModel(this, 'google/gemini-2.5-flash', 'Gemini 2.5 Flash')">
+              <div class="ai-model-card-top">
+                <span class="ai-model-name">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 14 14"></polyline></svg>
+                  Gemini 2.5 Flash
+                </span>
+                <span class="ai-model-badge badge-stable">Tezkor</span>
+              </div>
+              <div class="ai-model-desc">Tezkor va aniq avtomatik o'qish (Google)</div>
+            </div>
+
+            <!-- 3. Gemini 2.5 Pro -->
             <div class="ai-model-card" data-model="google/gemini-2.5-pro" onclick="selectAiModel(this, 'google/gemini-2.5-pro', 'Gemini 2.5 Pro')">
               <div class="ai-model-card-top">
                 <span class="ai-model-name">
@@ -9263,18 +9275,6 @@ window.executeSendTelegram = async function() {
                 <span class="ai-model-badge badge-pro">Eng Kuchli</span>
               </div>
               <div class="ai-model-desc">Xira va murakkab hujjatlarni chuqur tahlil qilish</div>
-            </div>
-
-            <!-- 3. Gemini 2.0 Flash -->
-            <div class="ai-model-card" data-model="google/gemini-2.0-flash-001" onclick="selectAiModel(this, 'google/gemini-2.0-flash-001', 'Gemini 2.0 Flash')">
-              <div class="ai-model-card-top">
-                <span class="ai-model-name">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 14 14"></polyline></svg>
-                  Gemini 2.0 Flash
-                </span>
-                <span class="ai-model-badge badge-stable">Barqaror</span>
-              </div>
-              <div class="ai-model-desc">Yuqori tezlikdagi standart barqaror arxitektura</div>
             </div>
 
             <!-- 4. GPT-4o Vision -->
@@ -9300,7 +9300,7 @@ window.executeSendTelegram = async function() {
 
           <button type="button" id="btnAnalyzeNewDocPro" class="btn-ai-action btn-ai-purple" onclick="analyzeUploadedNewDoc(window.selectedAiModel)">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
-            <span id="btnAiAnalyzeText">QR & Gemini 2.5 Flash Bilan Tahlil</span>
+            <span id="btnAiAnalyzeText">QR & Gemini 3.8 Flash Bilan Tahlil</span>
           </button>
         </div>
         

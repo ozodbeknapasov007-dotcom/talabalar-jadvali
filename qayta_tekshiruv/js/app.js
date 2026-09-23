@@ -2966,8 +2966,8 @@ window.closeAddModalOnBackdrop = function(e) {
 };
 
 /* 4 TURDAGI AI MODELLARINI TANLASH VA BOSHQARISH */
-window.selectedAiModel = 'google/gemini-2.5-flash';
-window.selectedAiModelTitle = 'Gemini 2.5 Flash';
+window.selectedAiModel = 'google/gemini-3.8-flash';
+window.selectedAiModelTitle = 'Gemini 3.8 Flash';
 
 window.selectAiModel = function(cardEl, modelId, modelTitle) {
   window.selectedAiModel = modelId;
@@ -2991,8 +2991,8 @@ window.analyzeUploadedNewDoc = function(modelParam) {
     return;
   }
 
-  let modelToUse = window.selectedAiModel || 'google/gemini-2.5-flash';
-  let modelTitle = window.selectedAiModelTitle || 'Gemini 2.5 Flash';
+  let modelToUse = window.selectedAiModel || 'google/gemini-3.8-flash';
+  let modelTitle = window.selectedAiModelTitle || 'Gemini 3.8 Flash';
   if (typeof modelParam === 'string' && modelParam) {
     modelToUse = modelParam;
   } else if (modelParam === true) {

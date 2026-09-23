@@ -848,15 +848,17 @@ def trigger_report_rebuild(delay=None, async_mode=True):
 
 OPENROUTER_API_KEY = os.environ.get("OPENROUTER_API_KEY", "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")
 SUPPORTED_AI_MODELS = {
+    "google/gemini-3.8-flash": "google/gemini-3.8-flash",
+    "google/gemini-3.7-flash": "google/gemini-3.7-flash",
     "google/gemini-2.5-flash": "google/gemini-2.5-flash",
     "google/gemini-2.5-pro": "google/gemini-2.5-pro",
     "google/gemini-2.0-flash-001": "google/gemini-2.0-flash-001",
     "google/gemini-2.0-flash": "google/gemini-2.0-flash-001",
     "openai/gpt-4o": "openai/gpt-4o",
-    "flash": "google/gemini-2.5-flash",
+    "flash": "google/gemini-3.8-flash",
     "pro": "google/gemini-2.5-pro"
 }
-OPENROUTER_MODELS = ["google/gemini-2.5-flash", "google/gemini-2.5-pro", "google/gemini-2.0-flash-001", "openai/gpt-4o"]
+OPENROUTER_MODELS = ["google/gemini-3.8-flash", "google/gemini-2.5-flash", "google/gemini-2.5-pro", "openai/gpt-4o"]
 
 def clean_uz_name(text):
     if not text:
