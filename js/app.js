@@ -2607,13 +2607,6 @@ window.renderGroupsJournalTab = function() {
         Barcha guruhlar (<strong>${RAW_STUDENTS.length} nafar talaba</strong>)
       </div>
       <div style="display:flex; gap:8px; flex-wrap:wrap;">
-        <button type="button" class="btn btn-export"
-          style="font-size:12px; padding:6px 18px;"
-          onclick="exportAllGroupsMultiSheetExcel()"
-          title="Barcha 7 guruh bitta ko'p sahifali Excel faylda">
-          <svg style="width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2;" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-          Barcha .xlsx
-        </button>
         <button type="button" class="btn btn-danger"
           style="font-size:12px; padding:6px 18px;"
           onclick="downloadAllGroupPdfs()"
@@ -2798,10 +2791,165 @@ window.openStudentByRow = function(rowNum) {
    Guruhlar ro'yxati MA'LUMOTDAN olinadi — avval qo'lda '26-01'...'26-07' deb
    yozilgani uchun "Talabalar safidan chiqarilganlar" kabi guruhlar eksportga
    umuman tushmay qolardi. Yangi guruh qo'shilsa ham o'zi ilinadi. */
-window._buildFullWorkbook = function(students) {
+window.GROUP_LEADERS_MAP = {
+  "26-01": "Mirzayeva.D",
+  "26-02": "Ochilov.D",
+  "26-03": "To'rayeva.S",
+  "26-04": "Hamdamova.M",
+  "26-05": "Rayimova.X",
+  "26-06": "Yuldashev.O",
+  "26-07": "Asraliyev.A"
+};
+
+/* TUG'ILGAN TUMANNI JSHSHIR DAN ANIQLASH */
+window.TUGILGAN_TUMAN_KODI = {
+  '559': "Shahrisabz tumani",
+  '568': "Kitob tumani",
+  '573': "Yakkabog' tumani",
+  '789': "Shahrisabz shahri",
+  '256': "Shahrisabz tumani",
+  '572': "Chiroqchi tumani",
+  '563': "Qamashi tumani"
+};
+
+window.tugilganTuman = function(pinfl) {
+  var p = String(pinfl || '').replace(/\s/g, '');
+  if (p.length !== 14 || !/^\d+$/.test(p)) return '';
+  return window.TUGILGAN_TUMAN_KODI[p.substring(7, 10)] || '';
+};
+
+/* 3 TA BO'LIM UCHUN MAXSUS USTUNLAR VA DIZAYN BILAN EXCEL VARAQ YARATISH:
+   1) 'buxgalteriya' -> Shartnoma raqamlari va pasport ma'lumotlari
+   2) 'admin'        -> Pasport va shahodatnoma/diplom ma'lumotlari
+   3) 'guruh_rahbari'-> Tug'ilgan kun.oy.yil, pasport va shahodatnoma/diplom ma'lumotlari */
+window._buildRoleStyledSheet = function(students, role) {
+  role = role || 'guruh_rahbari';
+  var COLS = [];
+  var headerBg = '0F172A';
+
+  if (role === 'buxgalteriya') {
+    headerBg = '065F46'; // Buxgalteriya: zumrad yashil
+    COLS = [
+      { header: 'T/R',                      wch: 5,  val: function(st, i, fish) { return i + 1; } },
+      { header: 'Guruh',                    wch: 10, val: function(st) { return st.group || ''; } },
+      { header: "F.I.SH (Talaba)",          wch: 34, val: function(st, i, fish) { return fish; }, bold: true },
+      { header: "Yo'nalishi",               wch: 24, val: function(st) { return st.yon || ''; } },
+      { header: "Shartnoma №",              wch: 14, val: function(st) { return st.shnum || ''; }, bold: true },
+      { header: "Shartnoma sanasi",         wch: 16, val: function(st) { return st.sana || ''; } },
+      { header: "Pasport seriya va raqami", wch: 18, val: function(st) { return st.pv || ''; }, bold: true },
+      { header: "JSHSHIR (PINFL)",          wch: 18, val: function(st) { return st.pinfl || ''; } },
+      { header: "Pasport berilgan sanasi",  wch: 16, val: function(st) { return st.ber || ''; } },
+      { header: "Tug'ilgan sanasi",         wch: 15, val: function(st) { return st.dob || ''; } }
+    ];
+  } else if (role === 'admin') {
+    headerBg = '1E3A8A'; // Baza administratori: to'q ko'k
+    COLS = [
+      { header: 'T/R',                              wch: 5,  val: function(st, i, fish) { return i + 1; } },
+      { header: 'Guruh',                            wch: 10, val: function(st) { return st.group || ''; } },
+      { header: "F.I.SH (Talaba)",                  wch: 34, val: function(st, i, fish) { return fish; }, bold: true },
+      { header: "Pasport seriya va raqami",         wch: 18, val: function(st) { return st.pv || ''; }, bold: true },
+      { header: "JSHSHIR (PINFL)",                  wch: 18, val: function(st) { return st.pinfl || ''; } },
+      { header: "Pasport berilgan sanasi",          wch: 16, val: function(st) { return st.ber || ''; } },
+      { header: "Tug'ilgan sanasi",                 wch: 15, val: function(st) { return st.dob || ''; } },
+      { header: "Tug'ilgan tumani",                 wch: 20, val: function(st) { return window.tugilganTuman(st.pinfl); } },
+      { header: "Hujjat turi (Shahodatnoma/Diplom)",wch: 20, val: function(st) { return st.doc_tur || ''; } },
+      { header: "Shahodatnoma / Diplom seriya №",   wch: 22, val: function(st) { return st.sh_doc || ''; }, bold: true },
+      { header: "Tugatgan ta'lim muassasasi",       wch: 38, val: function(st) { return st.mak || ''; } },
+      { header: "Bitirgan yili",                    wch: 14, val: function(st) { return st.yil || ''; } }
+    ];
+  } else {
+    // 'guruh_rahbari' (va alohida guruhlar eksporti)
+    headerBg = '4C1D95'; // Guruh rahbarlari: to'q binafsha
+    COLS = [
+      { header: 'T/R',                              wch: 5,  val: function(st, i, fish) { return i + 1; } },
+      { header: 'Guruh',                            wch: 10, val: function(st) { return st.group || ''; } },
+      { header: 'Guruh rahbari',                    wch: 18, val: function(st) { return window.GROUP_LEADERS_MAP[st.group] || '—'; } },
+      { header: "F.I.SH (Talaba)",                  wch: 34, val: function(st, i, fish) { return fish; }, bold: true },
+      { header: "Tug'ilgan sanasi (Kun.Oy.Yil)",    wch: 20, val: function(st) { return st.dob || ''; }, bold: true },
+      { header: "Tug'ilgan tumani",                 wch: 20, val: function(st) { return window.tugilganTuman(st.pinfl); } },
+      { header: "Pasport seriya va raqami",         wch: 18, val: function(st) { return st.pv || ''; }, bold: true },
+      { header: "JSHSHIR (PINFL)",                  wch: 18, val: function(st) { return st.pinfl || ''; } },
+      { header: "Pasport berilgan sanasi",          wch: 16, val: function(st) { return st.ber || ''; } },
+      { header: "Hujjat turi (Shahodatnoma/Diplom)",wch: 20, val: function(st) { return st.doc_tur || ''; } },
+      { header: "Shahodatnoma / Diplom seriya №",   wch: 22, val: function(st) { return st.sh_doc || ''; }, bold: true },
+      { header: "Tugatgan ta'lim muassasasi",       wch: 38, val: function(st) { return st.mak || ''; } },
+      { header: "Bitirgan yili",                    wch: 14, val: function(st) { return st.yil || ''; } },
+      { header: "Telefon raqami",                   wch: 16, val: function(st) { return st.tel || ''; } }
+    ];
+  }
+
+  var borderGrid = {
+    top:    { style: 'thin', color: { rgb: '94A3B8' } },
+    bottom: { style: 'thin', color: { rgb: '94A3B8' } },
+    left:   { style: 'thin', color: { rgb: '94A3B8' } },
+    right:  { style: 'thin', color: { rgb: '94A3B8' } }
+  };
+  var hSt = {
+    font: { bold: true, sz: 12, color: { rgb: 'FFFFFF' }, name: 'Calibri' },
+    fill: { fgColor: { rgb: headerBg }, patternType: 'solid' },
+    alignment: { horizontal: 'center', vertical: 'center', wrapText: true },
+    border: {
+      top:    { style: 'medium', color: { rgb: '1E293B' } },
+      bottom: { style: 'medium', color: { rgb: '1E293B' } },
+      left:   { style: 'thin', color: { rgb: '334155' } },
+      right:  { style: 'thin', color: { rgb: '334155' } }
+    }
+  };
+  var dSt = function(alt, bold) { return {
+    font: { sz: 12, name: 'Calibri', bold: !!bold, color: { rgb: '0F172A' } },
+    fill: { fgColor: { rgb: alt ? 'F8FAFC' : 'FFFFFF' }, patternType: 'solid' },
+    alignment: { vertical: 'center', wrapText: false },
+    border: borderGrid
+  }; };
+  var trSt = function(alt) { return {
+    font: { sz: 12, name: 'Calibri', color: { rgb: '475569' }, bold: true },
+    fill: { fgColor: { rgb: alt ? 'F8FAFC' : 'FFFFFF' }, patternType: 'solid' },
+    alignment: { horizontal: 'center', vertical: 'center' },
+    border: borderGrid
+  }; };
+
+  var aoa = [COLS.map(function(c) { return c.header; })];
+  students.forEach(function(st, i) {
+    var fish = st.fish || ((st.ism || '') + ' ' + (st.ota || '')).trim();
+    aoa.push(COLS.map(function(c) { return c.val(st, i, fish); }));
+  });
+
+  var ws = XLSX.utils.aoa_to_sheet(aoa);
+  var range = XLSX.utils.decode_range(ws['!ref'] || 'A1');
+  for (var R = range.s.r; R <= range.e.r; R++) {
+    for (var C = range.s.c; C <= range.e.c; C++) {
+      var addr = XLSX.utils.encode_cell({ r: R, c: C });
+      if (!ws[addr]) continue;
+      var alt = R % 2 === 0;
+      if (R === 0) {
+        ws[addr].s = hSt;
+      } else if (C === 0) {
+        ws[addr].s = trSt(alt);
+      } else {
+        ws[addr].s = dSt(alt, !!(COLS[C] && COLS[C].bold));
+      }
+    }
+  }
+
+  ws['!cols'] = COLS.map(function(c) { return { wch: c.wch }; });
+  var rows = [{ hpt: 28 }];
+  for (var i = 0; i < students.length; i++) rows.push({ hpt: 22 });
+  ws['!rows'] = rows;
+  ws['!freeze'] = { xSplit: 0, ySplit: 1 };
+  var lastColLetter = XLSX.utils.encode_col(COLS.length - 1);
+  ws['!autofilter'] = { ref: 'A1:' + lastColLetter + '1' };
+
+  return ws;
+};
+
+window._buildStyledSheet = function(students) {
+  return window._buildRoleStyledSheet(students, 'guruh_rahbari');
+};
+
+window._buildFullWorkbook = function(students, role) {
+  role = role || 'guruh_rahbari';
   var wb = XLSX.utils.book_new();
 
-  // Jami talabalar sahifasi: 1- Guruh (26-01...26-07, maxsus guruhlar oxirida), 2- I.F.O (A-Z)
   var sortedAll = students.slice().sort(function(a, b) {
     var grpA = (a.group || '').trim();
     var grpB = (b.group || '').trim();
@@ -2814,9 +2962,8 @@ window._buildFullWorkbook = function(students) {
     var nameB = (b.fish || (b.ism + ' ' + (b.ota || ''))).trim();
     return nameA.localeCompare(nameB, 'uz', { sensitivity: 'base' });
   });
-  XLSX.utils.book_append_sheet(wb, window._buildStyledSheet(sortedAll), "Jami talabalar");
+  XLSX.utils.book_append_sheet(wb, window._buildRoleStyledSheet(sortedAll, role), "Jami talabalar");
 
-  // Guruhlarni ma'lumotdan yig'amiz: raqamli guruhlar oldin, maxsus guruhlar keyin
   var groups = [];
   students.forEach(function(s) {
     var g = (s.group || '').trim();
@@ -2835,169 +2982,76 @@ window._buildFullWorkbook = function(students) {
       var nameB = (b.fish || (b.ism + ' ' + (b.ota || ''))).trim();
       return nameA.localeCompare(nameB, 'uz', { sensitivity: 'base' });
     });
-    // Excel sahifa nomi 31 belgidan oshmasligi va : \ / ? * [ ] bo'lmasligi kerak.
-    // Raqamli guruhga "Guruh " prefiksi qo'yamiz, uzun nomli maxsus guruhga esa
-    // qo'ymaymiz — aks holda nom kesilib "Guruh Talabalar safidan chiqari" bo'lib qoladi
     var name = (/^\d/.test(g) ? 'Guruh ' + g : g).replace(/[:\\\/\?\*\[\]]/g, ' ').slice(0, 31);
-    XLSX.utils.book_append_sheet(wb, window._buildStyledSheet(gSt), name);
+    XLSX.utils.book_append_sheet(wb, window._buildRoleStyledSheet(gSt, role), name);
   });
 
-  // Guruhi ko'rsatilmaganlar (agar bo'lsa)
   var noG = students.filter(function(s) { return !(s.group || '').trim(); });
   if (noG.length > 0) {
-    XLSX.utils.book_append_sheet(wb, window._buildStyledSheet(noG), "Guruhsizlar");
+    XLSX.utils.book_append_sheet(wb, window._buildRoleStyledSheet(noG, role), "Guruhsizlar");
   }
 
   return wb;
 };
 
-/* TUG'ILGAN TUMANNI JSHSHIR DAN ANIQLASH
-   JSHSHIR ning 8-10 raqamlari tug'ilgan joyni bildiradi. Quyidagi jadval
-   talabalarning haqiqiy pasportlaridagi "TUG'ILGAN JOYI" yozuvi bilan
-   solishtirib tekshirildi (JSHSHIR MRZ dan o'qib tasdiqlandi):
-     559 -> Xurramova Shodiya   (pasport: SHAXRISABZ TUMANI)
-     568 -> Narziyeva Intizor   (pasport: KITOB TUMANI)
-     573 -> Eshquvatova Yulduz  (pasport: YAKKABOG' TUMANI)
-     789 -> Aliqulova Shaxzoda  (pasport: SHAHRISABZ SHAHRI)
-     256 -> Miliyeva Umida      (pasport: SHAXRISABZ TUMANI, eski format)
-   572 va 563 esa faqat shahodatnomadagi "berilgan joyi" bo'yicha
-   taxmin qilingan — pasport bilan tasdiqlanmagan.
-   Qolgan kodlar (274, 565, 264, 574) aniqlanmagan: bo'sh qoldiriladi. */
-window.TUGILGAN_TUMAN_KODI = {
-  '559': "Shahrisabz tumani",
-  '568': "Kitob tumani",
-  '573': "Yakkabog' tumani",
-  '789': "Shahrisabz shahri",
-  '256': "Shahrisabz tumani",
-  '572': "Chiroqchi tumani",
-  '563': "Qamashi tumani"
-};
-
-window.tugilganTuman = function(pinfl) {
-  var p = String(pinfl || '').replace(/\s/g, '');
-  if (p.length !== 14 || !/^\d+$/.test(p)) return '';
-  return window.TUGILGAN_TUMAN_KODI[p.substring(7, 10)] || '';
-};
-
-window._buildStyledSheet = function(students) {
-  var COLS = [
-    { header: 'T/R',             key: '__tr',   wch: 5  },
-    { header: 'Guruh',           key: 'group',  wch: 8  },
-    { header: 'Shartnoma #',     key: 'shnum',  wch: 11 },
-    { header: "F.I.SH (Talaba)", key: '__fish', wch: 32 },
-    { header: 'Pasport',         key: 'pv',     wch: 12 },
-    { header: 'Berilgan sana',   key: 'ber',    wch: 14 },
-    { header: 'JSHSHIR',         key: 'pinfl',  wch: 16 },
-    { header: "Tug'ilgan sana",  key: 'dob',    wch: 14 },
-    { header: "Tug'ilgan tumani",key: '__tuman',wch: 20 },
-    { header: 'Hujjat raqami',   key: 'sh_doc', wch: 13 },
-    { header: 'Muassasa',        key: 'mak',    wch: 36 },
-    { header: 'Bitirgan yili',   key: 'yil',    wch: 13 },
-    { header: 'Holati',          key: '__ver',  wch: 13 }
-  ];
-
-  /* ---- Stillar (14pt font, to'liq aniq chiziqlar) ---- */
-  var borderGrid = {
-    top:    { style: 'thin', color: { rgb: '94A3B8' } },
-    bottom: { style: 'thin', color: { rgb: '94A3B8' } },
-    left:   { style: 'thin', color: { rgb: '94A3B8' } },
-    right:  { style: 'thin', color: { rgb: '94A3B8' } }
-  };
-  var hSt = {
-    font: { bold: true, sz: 14, color: { rgb: 'FFFFFF' }, name: 'Calibri' },
-    fill: { fgColor: { rgb: '0F172A' }, patternType: 'solid' },
-    alignment: { horizontal: 'center', vertical: 'center', wrapText: false },
-    border: {
-      top:    { style: 'medium', color: { rgb: '334155' } },
-      bottom: { style: 'medium', color: { rgb: '334155' } },
-      left:   { style: 'thin', color: { rgb: '334155' } },
-      right:  { style: 'thin', color: { rgb: '334155' } }
+/* 3 TA BO'LIM BO'YICHA EXCEL YUKLAB OLISH FUNKSIYASI:
+   1. Buxgalteriya ('buxgalteriya')
+   2. Baza administratori ('admin')
+   3. Guruh rahbarlari ('guruh_rahbari') */
+window.exportRoleExcel = function(role) {
+  role = role || 'guruh_rahbari';
+  var meta = {
+    'buxgalteriya': {
+      file: '1_Buxgalteriya_Shartnoma_va_Pasport.xlsx',
+      label: '1. Buxgalteriya (Shartnoma № va Pasport)'
+    },
+    'admin': {
+      file: '2_Baza_Admin_Pasport_va_Shahodatnoma.xlsx',
+      label: '2. Baza Administratori (Pasport va Shahodatnoma/Diplom)'
+    },
+    'guruh_rahbari': {
+      file: '3_Guruh_Rahbarlari_Talabalar_Malumotlari.xlsx',
+      label: '3. Guruh Rahbarlari (Tug\'ilgan sana, Pasport va Shahodatnoma/Diplom)'
     }
+  }[role] || {
+    file: 'Talabalar_Malumotlari.xlsx',
+    label: 'Talabalar ma\'lumotlari'
   };
-  var dSt = function(alt, bold) { return {
-    font: { sz: 14, name: 'Calibri', bold: !!bold, color: { rgb: '0F172A' } },
-    fill: { fgColor: { rgb: alt ? 'F1F5F9' : 'FFFFFF' }, patternType: 'solid' },
-    alignment: { vertical: 'center', wrapText: false },
-    border: borderGrid
-  }; };
-  var trSt = function(alt) { return {
-    font: { sz: 14, name: 'Calibri', color: { rgb: '475569' }, bold: true },
-    fill: { fgColor: { rgb: alt ? 'F1F5F9' : 'FFFFFF' }, patternType: 'solid' },
-    alignment: { horizontal: 'center', vertical: 'center' },
-    border: borderGrid
-  }; };
 
-  /* ---- Ma'lumotlardan sheet yaratish ---- */
-  var aoa = [COLS.map(function(c) { return c.header; })];
-  students.forEach(function(st, i) {
-    var fish = st.fish || ((st.ism || '') + ' ' + (st.ota || '')).trim();
-    aoa.push([
-      i + 1,
-      st.group  || '',
-      st.shnum  || '',
-      fish,
-      st.pv     || '',
-      st.ber    || '',
-      st.pinfl  || '',
-      st.dob    || '',
-      window.tugilganTuman(st.pinfl),
-      st.sh_doc || '',
-      st.mak    || '',
-      st.yil    || '',
-      st.verified || 'KUTILMOQDA'
-    ]);
-  });
-
-  var ws = XLSX.utils.aoa_to_sheet(aoa);
-
-  /* ---- Har bir katakka stil qo'shish ---- */
-  var range = XLSX.utils.decode_range(ws['!ref'] || 'A1');
-  for (var R = range.s.r; R <= range.e.r; R++) {
-    for (var C = range.s.c; C <= range.e.c; C++) {
-      var addr = XLSX.utils.encode_cell({ r: R, c: C });
-      if (!ws[addr]) continue;
-      var alt = R % 2 === 0;
-      if (R === 0) {
-        ws[addr].s = hSt;
-      } else if (C === 0) {
-        ws[addr].s = trSt(alt); /* T/R */
-      } else if (C === 3) {
-        ws[addr].s = dSt(alt, true); /* FISH - bold */
-      } else {
-        ws[addr].s = dSt(alt, false);
-      }
-    }
+  if (typeof XLSX !== 'undefined') {
+    var wb = window._buildFullWorkbook(RAW_STUDENTS, role);
+    XLSX.writeFile(wb, meta.file, { cellStyles: true, bookSST: false });
+    showToast(meta.label + ' Excel fayli yuklab olindi!', 'success');
+    return;
   }
 
-  /* ---- Ustun kengliklari ---- */
-  ws['!cols'] = COLS.map(function(c) { return { wch: c.wch }; });
-
-  /* ---- Qator balandliklari ---- */
-  var rows = [{ hpt: 26 }]; /* header */
-  for (var i = 0; i < students.length; i++) rows.push({ hpt: 22 });
-  ws['!rows'] = rows;
-
-  /* ---- Muzlatish (freeze) va avtofil'tr ---- */
-  ws['!freeze'] = { xSplit: 0, ySplit: 1 };
-  ws['!autofilter'] = { ref: 'A1:M1' };
-
-  return ws;
+  var apiHost = (window.location.protocol === 'http:' || window.location.protocol === 'https:') ? '' : 'http://localhost:8080';
+  window.location.href = apiHost + '/api/export_role_excel?role=' + encodeURIComponent(role);
+  showToast(meta.label + ' yuklanmoqda...', 'success');
 };
+
+window.exportBuxgalteriyaExcel = function() { window.exportRoleExcel('buxgalteriya'); };
+window.exportAdminExcel = function() { window.exportRoleExcel('admin'); };
+window.exportGuruhRahbariExcel = function() { window.exportRoleExcel('guruh_rahbari'); };
 
 /* 1 TA ALOHIDA GURUHNI FORMATLANGAN EXCEL QILIB YUKLASH */
 window.exportSingleGroupExcel = function(groupName) {
-  var isRemote = (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1');
   var isWithdrawn = isWithdrawnGroup(groupName);
+  var knownGroups = ['26-01', '26-02', '26-03', '26-04', '26-05', '26-06', '26-07'];
 
-  if (isRemote && typeof XLSX !== 'undefined') {
-    var gStudents = RAW_STUDENTS.filter(function(st) { 
+  if (typeof XLSX !== 'undefined') {
+    var gStudents = RAW_STUDENTS.filter(function(st) {
       if (isWithdrawn) {
-        return isWithdrawnGroup(st.group) || (!st.group || !groups.includes(st.group));
+        return isWithdrawnGroup(st.group) || (!st.group || knownGroups.indexOf(st.group) === -1);
       }
-      return (st.group || '') === groupName; 
+      return (st.group || '') === groupName;
     });
-    gStudents.sort(function(a, b) { return (a.ism || '').localeCompare(b.ism || '', 'uz'); });
-    var ws = window._buildStyledSheet(gStudents);
+    gStudents.sort(function(a, b) {
+      var nameA = (a.fish || (a.ism + ' ' + (a.ota || ''))).trim();
+      var nameB = (b.fish || (b.ism + ' ' + (b.ota || ''))).trim();
+      return nameA.localeCompare(nameB, 'uz', { sensitivity: 'base' });
+    });
+    var ws = window._buildRoleStyledSheet(gStudents, 'guruh_rahbari');
     var wb = XLSX.utils.book_new();
     var sheetName = isWithdrawn ? 'Safdan chiqarilganlar' : ('Guruh ' + groupName);
     var fileName = isWithdrawn ? 'Talabalar_Safidan_Chiqarilganlar.xlsx' : ('Guruh_' + groupName + '_Talabalar_Royxati.xlsx');

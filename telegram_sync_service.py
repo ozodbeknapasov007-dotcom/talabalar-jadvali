@@ -598,8 +598,79 @@ def send_group_lists_to_telegram(target='channel', group_filter=None):
     }
 
 
-def send_backup_to_telegram(reason='kunlik'):
-    """Bazani Telegram'ga yuboradi. True/False qaytaradi."""
+def build_json_database_file():
+    """Talabalar_Toliq_Royxati.xlsx asosida to'liq .json bazani (talabalar_bazasi.json) yangilaydi."""
+    json_path = os.path.join(BASE_DIR, 'talabalar_bazasi.json')
+    try:
+        wb = openpyxl.load_workbook(EXCEL_PATH, data_only=True)
+        ws = wb.active
+        ver_map = {}
+        try:
+            ver_file = os.path.join(BASE_DIR, 'scripts', 'verifications.json')
+            if os.path.exists(ver_file):
+                with open(ver_file, 'r', encoding='utf-8') as vf:
+                    ver_map = json.load(vf)
+        except Exception:
+            pass
+
+        records = []
+        for r in range(2, ws.max_row + 1):
+            ism = str(ws.cell(r, 2).value or '').strip()
+            ota = str(ws.cell(r, 3).value or '').strip()
+            fish = f"{ism} {ota}".strip()
+            if not fish:
+                continue
+            shnum = str(ws.cell(r, 8).value or '').strip()
+            sana = str(ws.cell(r, 9).value or '').strip()
+            yon = str(ws.cell(r, 10).value or '').strip()
+            pv = str(ws.cell(r, 11).value or '').strip()
+            ber = str(ws.cell(r, 12).value or '').strip()
+            pinfl = str(ws.cell(r, 13).value or '').strip()
+            dob = str(ws.cell(r, 14).value or '').strip()
+            doc_tur = str(ws.cell(r, 15).value or '').strip()
+            sh_doc = str(ws.cell(r, 16).value or '').strip()
+            mak = str(ws.cell(r, 17).value or '').strip()
+            yil = str(ws.cell(r, 18).value or '').strip()
+            tel = str(ws.cell(r, 21).value or '').strip()
+            grp = str(ws.cell(r, 25).value or '').strip()
+            ver_status = ver_map.get(str(r), str(ws.cell(r, 26).value or 'KUTILMOQDA').strip())
+            records.append({
+                'row': r,
+                'group': grp,
+                'fish': fish,
+                'ism': ism,
+                'ota': ota,
+                'shnum': shnum,
+                'sana': sana,
+                'yon': yon,
+                'pv': pv,
+                'ber': ber,
+                'pinfl': pinfl,
+                'dob': dob,
+                'doc_tur': doc_tur,
+                'sh_doc': sh_doc,
+                'mak': mak,
+                'yil': yil,
+                'tel': tel,
+                'verified': ver_status
+            })
+        wb.close()
+
+        payload = {
+            'updated_at': time.strftime('%Y-%m-%d %H:%M:%S'),
+            'total_students': len(records),
+            'students': records
+        }
+        with open(json_path, 'w', encoding='utf-8') as jf:
+            json.dump(payload, jf, ensure_ascii=False, indent=2)
+        return json_path, len(records)
+    except Exception as e:
+        print(f"[ZAHIRA] JSON baza yaratishda xato: {e}")
+        return json_path, '?'
+
+
+def send_backup_to_telegram(reason='kunlik 18:00'):
+    """Har kuni soat 18:00 da .json baza ma'lumotlarini (talabalar_bazasi.json) Telegram botga yuboradi."""
     cfg = load_backup_config()
     if not cfg:
         print("[ZAHIRA] Sozlanmagan (scripts/backup_config.json yo'q) — o'tkazib yuborildi")
@@ -607,27 +678,17 @@ def send_backup_to_telegram(reason='kunlik'):
 
     import requests
 
-    # Faqat chiroyli, guruhlarga bo'lingan fayl yuboriladi — bu aynan
-    # "Jadvalni Eksport" tugmasi beradigan fayl (/api/export_full_excel
-    # ham shu build_full_multisheet_excel natijasini qaytaradi).
-    # Xom ichki baza (Talabalar_Toliq_Royxati.xlsx) yuborilmaydi.
+    json_path, talaba_soni = build_json_database_file()
     files_to_send = [
+        json_path,
         os.path.join(BASE_DIR, 'Talabalar_Yangilangan_Royxat.xlsx'),
     ]
     stamp = time.strftime('%Y-%m-%d %H:%M')
 
     try:
-        talaba_soni = '?'
-        try:
-            wb = openpyxl.load_workbook(files_to_send[0], read_only=True)
-            talaba_soni = wb.worksheets[0].max_row - 1
-            wb.close()
-        except Exception:
-            pass
-
-        caption = (f"Talabalar bazasi zahirasi ({reason})\n"
-                   f"Sana: {stamp}\n"
-                   f"Talabalar soni: {talaba_soni}")
+        caption = (f"📦 Talabalar bazasi (.json) zahirasi ({reason})\n"
+                   f"🕒 Sana va vaqt: {stamp} (Har kuni 18:00 da)\n"
+                   f"👥 Jami talabalar soni: {talaba_soni} nafar")
 
         sent = 0
         for idx, path in enumerate(files_to_send):
@@ -638,7 +699,7 @@ def send_backup_to_telegram(reason='kunlik'):
                     f"https://api.telegram.org/bot{cfg['token']}/sendDocument",
                     data={
                         'chat_id': cfg['chat_id'],
-                        'caption': caption if idx == 0 else os.path.basename(path)
+                        'caption': caption if idx == 0 else f"📊 {os.path.basename(path)} ({stamp})"
                     },
                     files={'document': (os.path.basename(path), fh)},
                     timeout=120
@@ -649,7 +710,7 @@ def send_backup_to_telegram(reason='kunlik'):
                 print(f"[ZAHIRA] {os.path.basename(path)} yuborilmadi: {resp.text[:160]}")
 
         if sent:
-            print(f"[ZAHIRA] ✅ {sent} ta fayl Telegram'ga yuborildi ({stamp})")
+            print(f"[ZAHIRA] ✅ {sent} ta fayl (.json baza) Telegram botga yuborildi ({stamp})")
             return True
         return False
     except Exception as e:

@@ -826,6 +826,18 @@ tbody_content = "\n".join(table_rows)
 cards_content = "\n".join(card_rows)
 students_json = json.dumps(students, ensure_ascii=False)
 
+# Save full JSON database (talabalar_bazasi.json) for daily 18:00 Telegram Bot backup
+json_db_path = os.path.join(BASE_DIR, 'talabalar_bazasi.json')
+try:
+    with open(json_db_path, 'w', encoding='utf-8') as jf:
+        json.dump({
+            'updated_at': __import__('datetime').datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+            'total_students': len(students),
+            'students': students
+        }, jf, ensure_ascii=False, indent=2)
+except Exception as e:
+    print(f"[OGOHLANTIRISH] talabalar_bazasi.json saqlanmadi: {e}")
+
 # Read JS code
 with open(JS_SRC, 'r', encoding='utf-8') as f:
     js_code = f.read()
@@ -5729,17 +5741,22 @@ var RAW_STUDENTS = {students_json};
         <svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><line x1="20" y1="8" x2="20" y2="14"></line><line x1="23" y1="11" x2="17" y2="11"></line></svg>
         Yangi Talaba
       </button>
-      <button type="button" class="btn btn-multi-export" onclick="exportAllGroupsMultiSheetExcel()" title="Barcha 7 ta guruhni 7 ta alohida varaq (Sheet) bilan bitta Excel qilib yuklash">
-        <svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
-        Barcha Guruhlar (.xlsx)
+      <!-- 3 TA MAXSUS EXCEL EKSPORT BO'LIMI: 1. Buxgalteriya, 2. Baza Administratori, 3. Guruh Rahbarlari -->
+      <button type="button" class="btn btn-export" style="background:linear-gradient(135deg,#059669,#047857);color:#fff;border:none;" onclick="exportRoleExcel('buxgalteriya')" title="1. Buxgalteriya uchun: Shartnoma raqamlari va Pasport ma'lumotlari (.xlsx)">
+        <svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+        1. Buxgalteriya (.xlsx)
+      </button>
+      <button type="button" class="btn btn-export" style="background:linear-gradient(135deg,#2563eb,#1d4ed8);color:#fff;border:none;" onclick="exportRoleExcel('admin')" title="2. Baza administratori uchun: Pasport va Shahodatnoma/Diplom ma'lumotlari (.xlsx)">
+        <svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+        2. Baza Admin (.xlsx)
+      </button>
+      <button type="button" class="btn btn-export" style="background:linear-gradient(135deg,#7c3aed,#6d28d9);color:#fff;border:none;" onclick="exportRoleExcel('guruh_rahbari')" title="3. Guruh rahbarlari uchun: Tug'ilgan kun.oy.yil, Pasport va Shahodatnoma/Diplom ma'lumotlari (.xlsx)">
+        <svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+        3. Guruh Rahbarlari (.xlsx)
       </button>
       <button type="button" class="btn btn-telegram" onclick="openSendTelegramModal()" title="Har bir guruh ro'yxatini Telegram'ga yuborish">
         <svg class="svg-icon" viewBox="0 0 24 24" fill="currentColor" style="width:15px;height:15px;"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69a.2.2 0 00-.05-.18c-.06-.05-.14-.03-.21-.02-.09.02-1.49.95-4.22 2.79-.4.27-.76.41-1.08.4-.36-.01-1.04-.2-1.55-.37-.63-.2-1.12-.31-1.08-.66.02-.18.27-.36.75-.55 2.92-1.27 4.86-2.11 5.83-2.51 2.78-1.16 3.35-1.36 3.73-1.36.08 0 .27.02.39.12.1.08.13.19.14.27-.01.06.01.24 0 .38z"/></svg>
         Telegramga Ro'yxat
-      </button>
-      <button type="button" class="btn btn-export" onclick="exportFilteredToExcel()">
-        <svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-        Jadvalni Eksport
       </button>
       <button type="button" class="btn btn-refresh" onclick="location.reload()">
         <svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
