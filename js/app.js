@@ -48,8 +48,11 @@ window.isWithdrawnGroup = isWithdrawnGroup;
 
 function navigateStudentModal(dir) {
   if (window.currentStudentIdx === null || typeof RAW_STUDENTS === 'undefined') return;
-  const newIdx = window.currentStudentIdx + dir;
-  if (newIdx >= 0 && newIdx < RAW_STUDENTS.length) {
+  let newIdx = window.currentStudentIdx + dir;
+  while (newIdx >= 0 && newIdx < RAW_STUDENTS.length && RAW_STUDENTS[newIdx] && RAW_STUDENTS[newIdx]._deleted) {
+    newIdx += dir;
+  }
+  if (newIdx >= 0 && newIdx < RAW_STUDENTS.length && RAW_STUDENTS[newIdx]) {
     window.openStudentModal(newIdx, window.isEditMode);
   }
 }
@@ -175,7 +178,35 @@ window.decodePinfl = function(s) {
    ========================================================================= */
 
 window.openStudentModal = function(studentIdx, startInEditMode = false) {
-  if (typeof RAW_STUDENTS === 'undefined' || !RAW_STUDENTS[studentIdx]) {
+  if (typeof RAW_STUDENTS === 'undefined') {
+    alert("Talaba ma'lumotlari topilmadi: " + studentIdx);
+    return;
+  }
+
+  // DOM karta/qator bilan indeks mosligini ikki karra tekshiramiz
+  let resolvedIdx = studentIdx;
+  const domEl = document.getElementById('student-card-' + studentIdx) || document.getElementById('student-row-' + studentIdx);
+  if (domEl) {
+    const domPinfl = (domEl.getAttribute('data-pinfl') || '').trim();
+    const domName = (domEl.getAttribute('data-name') || '').trim().toLowerCase();
+    const cur = RAW_STUDENTS[studentIdx];
+    const curPinfl = cur ? String(cur.pinfl || '').trim() : '';
+    const curName = cur ? String(cur.fish || cur.ism || '').trim().toLowerCase() : '';
+    if (!cur || cur._deleted || (domPinfl && curPinfl !== domPinfl) || (domName && curName !== domName)) {
+      const matchIdx = RAW_STUDENTS.findIndex(function(item) {
+        if (!item || item._deleted) return false;
+        const itemPinfl = String(item.pinfl || '').trim();
+        const itemName = String(item.fish || item.ism || '').trim().toLowerCase();
+        if (domPinfl && itemPinfl && itemPinfl === domPinfl) return true;
+        if (domName && itemName && itemName === domName) return true;
+        return false;
+      });
+      if (matchIdx !== -1) resolvedIdx = matchIdx;
+    }
+  }
+  studentIdx = resolvedIdx;
+
+  if (!RAW_STUDENTS[studentIdx]) {
     alert("Talaba ma'lumotlari topilmadi: " + studentIdx);
     return;
   }
@@ -933,9 +964,12 @@ window.toggleAllCards = function(expand) {
 
 /* TALABA KARTASINI BIR ZUMDA (REAL-TIME) DOM DA YANGILASH */
 window.updateStudentCardDOM = function(idx, s) {
-  const cards = document.querySelectorAll('.student-card');
-  if (!cards || !cards[idx]) return;
-  const card = cards[idx];
+  let card = document.getElementById('student-card-' + idx);
+  if (!card) {
+    const cards = document.querySelectorAll('.student-card');
+    if (cards && cards[idx]) card = cards[idx];
+  }
+  if (!card) return;
 
   // Qidiruv atributlari
   card.setAttribute('data-name', (s.fish || s.ism || '').toLowerCase());
@@ -2135,13 +2169,13 @@ window.switchDisplayMode = function(mode) {
   } catch(e) {}
 
   if (mode === 'cards') {
-    if (cardsCont) cardsCont.style.display = 'grid';
-    if (tableCont) tableCont.style.display = 'none';
+    if (cardsCont) cardsCont.style.setProperty('display', 'grid', 'important');
+    if (tableCont) tableCont.style.setProperty('display', 'none', 'important');
     if (btnCards) btnCards.classList.add('active');
     if (btnTable) btnTable.classList.remove('active');
   } else {
-    if (cardsCont) cardsCont.style.display = 'none';
-    if (tableCont) tableCont.style.display = 'block';
+    if (cardsCont) cardsCont.style.setProperty('display', 'none', 'important');
+    if (tableCont) tableCont.style.setProperty('display', 'block', 'important');
     if (btnTable) btnTable.classList.add('active');
     if (btnCards) btnCards.classList.remove('active');
   }
@@ -3158,44 +3192,47 @@ window.removeStudentFromDOM = function(s) {
   if (typeof RAW_STUDENTS === 'undefined' || !Array.isArray(RAW_STUDENTS)) return;
 
   const targetIdx = RAW_STUDENTS.findIndex(function(item) {
+    if (!item || item._deleted) return false;
     if (s.pinfl && item.pinfl && item.pinfl.toString().trim() === s.pinfl.toString().trim()) return true;
-    if (s.shnum && s.shnum !== '—' && s.shnum !== '-' && item.shnum && item.shnum.toString().trim() === s.shnum.toString().trim()) return true;
     if (s.fish && item.fish && item.fish.trim().toLowerCase() === s.fish.trim().toLowerCase()) return true;
     if (s.row && item.row && item.row === s.row) return true;
     return false;
   });
 
   if (targetIdx !== -1) {
-    RAW_STUDENTS.splice(targetIdx, 1);
+    // MUHIM: RAW_STUDENTS dan splice() QILMAYMIZ!
+    // Aks holda keyingi barcha talabalarning indekslari 1 taga surilib ketadi
+    // va openStudentModal(idx) boshqa talabani ochib yuboradi!
+    RAW_STUDENTS[targetIdx]._deleted = true;
+    const exactRow = document.getElementById('student-row-' + targetIdx);
+    if (exactRow) exactRow.remove();
+    const exactCard = document.getElementById('student-card-' + targetIdx);
+    if (exactCard) exactCard.remove();
+  } else {
+    // 1. Asosiy jadvaldan (tr) aniq PINFL yoki FISH bo'yicha o'chirish
+    const rows = document.querySelectorAll('.student-row');
+    rows.forEach(function(tr) {
+      const rPinfl = tr.getAttribute('data-pinfl') || '';
+      const rName = tr.getAttribute('data-name') || '';
+      const matchPinfl = (s.pinfl && rPinfl.trim() === s.pinfl.toString().trim());
+      const matchName = (s.fish && rName.toLowerCase() === s.fish.toLowerCase());
+      if (matchPinfl || matchName) {
+        tr.remove();
+      }
+    });
+
+    // 2. Kartalar qatoridan (card) aniq PINFL yoki FISH bo'yicha o'chirish
+    const cards = document.querySelectorAll('.student-card');
+    cards.forEach(function(c) {
+      const cPinfl = c.getAttribute('data-pinfl') || '';
+      const cName = c.getAttribute('data-name') || '';
+      const matchPinfl = (s.pinfl && cPinfl.trim() === s.pinfl.toString().trim());
+      const matchName = (s.fish && cName.toLowerCase() === s.fish.toLowerCase());
+      if (matchPinfl || matchName) {
+        c.remove();
+      }
+    });
   }
-
-  // 1. Asosiy jadvaldan (tr) o'chirish
-  const rows = document.querySelectorAll('.student-row');
-  rows.forEach(function(tr) {
-    const rSh = tr.getAttribute('data-shnum') || '';
-    const rPinfl = tr.getAttribute('data-pinfl') || '';
-    const rName = tr.getAttribute('data-name') || '';
-    const matchSh = (s.shnum && s.shnum !== '—' && s.shnum !== '-' && rSh.toLowerCase() === s.shnum.toString().toLowerCase());
-    const matchPinfl = (s.pinfl && rPinfl.trim() === s.pinfl.toString().trim());
-    const matchName = (s.fish && rName.toLowerCase() === s.fish.toLowerCase());
-    if (matchSh || matchPinfl || matchName) {
-      tr.remove();
-    }
-  });
-
-  // 2. Kartalar qatoridan (card) o'chirish
-  const cards = document.querySelectorAll('.student-card');
-  cards.forEach(function(c) {
-    const cSh = c.getAttribute('data-shnum') || '';
-    const cPinfl = c.getAttribute('data-pinfl') || '';
-    const cName = c.getAttribute('data-name') || '';
-    const matchSh = (s.shnum && s.shnum !== '—' && s.shnum !== '-' && cSh.toLowerCase() === s.shnum.toString().toLowerCase());
-    const matchPinfl = (s.pinfl && cPinfl.trim() === s.pinfl.toString().trim());
-    const matchName = (s.fish && cName.toLowerCase() === s.fish.toLowerCase());
-    if (matchSh || matchPinfl || matchName) {
-      c.remove();
-    }
-  });
 
   // 3. T/r tartib raqamlarini yangilash
   const remainingRows = document.querySelectorAll('#studentsTbody tr.student-row');
@@ -3238,9 +3275,8 @@ window.saveDeletedStudentToStorage = function(s) {
     if (Array.isArray(pending) && pending.length) {
       pending = pending.filter(function(item) {
         const pMatch = (s.pinfl && item.pinfl && item.pinfl.toString().trim() === s.pinfl.toString().trim());
-        const sMatch = (s.shnum && s.shnum !== '—' && s.shnum !== '-' && item.shnum && item.shnum.toString().trim() === s.shnum.toString().trim());
         const nMatch = (s.fish && item.fish && item.fish.toLowerCase() === s.fish.toLowerCase());
-        return !(pMatch || sMatch || nMatch);
+        return !(pMatch || nMatch);
       });
       localStorage.setItem('student_pending_students', JSON.stringify(pending));
     }
@@ -3255,13 +3291,17 @@ window.reconcileDeletedStudents = function() {
     let deleted = JSON.parse(localStorage.getItem('student_deleted_students') || '[]');
     if (!deleted || !deleted.length) return;
 
+    const now = Date.now();
     const remainingDeleted = [];
     deleted.forEach(function(del) {
+      // 2 daqiqadan oshgan eski yozuvlarni avtomatik tozalaymiz (server allaqachon yangilangan bo'ladi)
+      if (!del || !del.deleted_at || (now - del.deleted_at) > 120000) return;
+
       const stillInRaw = RAW_STUDENTS.some(function(item) {
+        if (!item || item._deleted) return false;
         const pMatch = (del.pinfl && item.pinfl && item.pinfl.toString().trim() === del.pinfl.toString().trim());
-        const sMatch = (del.shnum && del.shnum !== '—' && del.shnum !== '-' && item.shnum && item.shnum.toString().trim() === del.shnum.toString().trim());
-        const nMatch = (del.fish && item.fish && item.fish.toLowerCase() === del.fish.toLowerCase());
-        return pMatch || sMatch || nMatch;
+        const nMatch = (del.fish && item.fish && item.fish.trim().toLowerCase() === del.fish.trim().toLowerCase());
+        return pMatch || nMatch;
       });
 
       if (stillInRaw) {

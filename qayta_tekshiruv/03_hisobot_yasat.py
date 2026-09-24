@@ -2462,10 +2462,14 @@ html = f"""<!DOCTYPE html>
   }}
 
   .cards-container {{
-    display: grid !important;
+    display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
     gap: 18px !important;
     align-items: start !important;
+  }}
+  .cards-container[style*="display: none"],
+  .cards-container[style*="display:none"] {{
+    display: none !important;
   }}
 
     /* =========================================================================
