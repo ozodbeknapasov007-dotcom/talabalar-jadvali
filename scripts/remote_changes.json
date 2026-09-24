@@ -1,1 +1,26 @@
-[]
+[
+  {
+    "type": "update_student",
+    "data": {
+      "row": 71,
+      "fields": {
+        "ism": "Meyliqulova Hilola",
+        "ota": "Farhod qizi",
+        "group": "26-02",
+        "pv": "AB7137876",
+        "pinfl": "61202005680055",
+        "dob": "12.02.2000",
+        "ber": "07.07.2017",
+        "doc_tur": "Diplom",
+        "sh_doc": "K 5470992",
+        "mak": "Kitob agrobiznes kasb-hunar kolleji",
+        "yil": "2019",
+        "yon": "Hamshiralik ishi - 3 yillik",
+        "shnum": "60",
+        "tel": ""
+      }
+    },
+    "id": "chg_1790261150445",
+    "created_at": "2026-09-24T14:45:50.445Z"
+  }
+]
