@@ -4464,13 +4464,46 @@ var RAW_STUDENTS = [{"row": 2, "tr": 1, "shnum": "303", "sana": "2026-09-14", "i
 
 window.handleNewDocFileSelected = function(input) {
   const labelSpan = document.getElementById('selectedFileName');
+  const statusBox = document.getElementById('newDocStatus');
   if (!labelSpan) return;
   if (input.files && input.files[0]) {
-    labelSpan.innerText = input.files[0].name;
+    const file = input.files[0];
+    labelSpan.innerText = file.name;
     labelSpan.style.color = '#2563eb';
     labelSpan.style.fontWeight = '700';
-    if (typeof window.analyzeUploadedNewDoc === 'function') {
-      window.analyzeUploadedNewDoc();
+    if (document.getElementById('add_docfile')) {
+      document.getElementById('add_docfile').value = file.name;
+    }
+
+    // Avval faylni xotiraga olib, rasmlarini chiqarib turamiz (AI tekshirishni faqat tugma bosilganda boshlaydi!)
+    if (statusBox) {
+      statusBox.style.display = 'block';
+      statusBox.style.background = 'rgba(16, 185, 129, 0.12)';
+      statusBox.style.color = '#10b981';
+      statusBox.style.border = '1.5px solid #10b981';
+      statusBox.innerHTML = `📥 <strong>${file.name}</strong> xotiraga olindi! Ma'lumotlarni o'qish uchun yuqoridagi <strong>«QR & AI Bilan Tahlil»</strong> tugmasini bosing.<div id="newDocPreviewImgs" style="display:flex;gap:10px;flex-wrap:wrap;margin-top:8px;"></div>`;
+    }
+
+    if (file.name.toLowerCase().endsWith('.docx') && typeof window.extractDocxMediaInBrowser === 'function') {
+      file.arrayBuffer().then(function(ab) {
+        return window.extractDocxMediaInBrowser(ab);
+      }).then(function(ext) {
+        const cont = document.getElementById('newDocPreviewImgs');
+        if (cont && ext && ext.images && ext.images.length) {
+          cont.innerHTML = ext.images.map(function(src, i) {
+            return `<img src="${src}" alt="Rasm ${i+1}" style="max-height:150px;border-radius:8px;border:1px solid rgba(255,255,255,0.2);object-fit:contain;background:#0f172a;">`;
+          }).join('');
+        }
+      }).catch(function() {});
+    } else if (file.type && file.type.startsWith('image/')) {
+      const r = new FileReader();
+      r.onload = function(ev) {
+        const cont = document.getElementById('newDocPreviewImgs');
+        if (cont) {
+          cont.innerHTML = `<img src="${ev.target.result}" alt="${file.name}" style="max-height:150px;border-radius:8px;border:1px solid rgba(255,255,255,0.2);object-fit:contain;background:#0f172a;">`;
+        }
+      };
+      r.readAsDataURL(file);
     }
   } else {
     labelSpan.innerText = 'Word (.docx) yoki rasm tanlang...';
@@ -4841,7 +4874,7 @@ window.openStudentModal = function(studentIdx, startInEditMode = false) {
     });
 };
 
-/* PASPORT YOKI SHAHODATNOMA UCHUN 1-2 TA RASM/PDF/WORD ELEMENTLARINI SERVERGA YUBORISH VA PREVIEW CHIZISH */
+/* PASPORT YOKI SHAHODATNOMA UCHUN 1-2 TA RASM/PDF/WORD ELEMENTLARINI XOTIRAGA OLISH VA DARHOL PREVIEW CHIZISH (AI TEKSHIRISH FAQAT TUGMA BOSILGANDA BOSHLANADI) */
 window.applySectionBase64Items = function(sectionType, validItems, appendMode) {
   if (!validItems || !validItems.length || window.currentStudentIdx === null || !RAW_STUDENTS[window.currentStudentIdx]) return;
   const s = RAW_STUDENTS[window.currentStudentIdx];
@@ -4868,15 +4901,31 @@ window.applySectionBase64Items = function(sectionType, validItems, appendMode) {
     window.toggleEditMode(true);
   }
 
+  // 1. Brauzer xotirasining o'zidayoq rasmlarni DARHOL (0ms) chiqaramiz!
+  const instantImgs = [];
+  (window.pendingPassportFiles || []).concat(window.pendingDiplomaFiles || []).forEach(function(item) {
+    if (item && item.base64 && item.base64.startsWith('data:image/')) {
+      instantImgs.push(item.base64);
+    }
+  });
+  if (instantImgs.length > 0) {
+    window.currentDocImages = instantImgs;
+    window.renderModalDocImages();
+  } else {
+    window.renderModalDocImages();
+  }
+
+  const secTitle = sectionType === 'passport' ? 'Pasport / ID-karta' : 'Shahodatnoma / Diplom';
   const statusBox = document.getElementById('reanalyzeStatus');
   if (statusBox) {
     statusBox.style.display = 'block';
-    statusBox.style.background = 'rgba(59, 130, 246, 0.14)';
-    statusBox.style.color = '#60a5fa';
-    statusBox.style.border = '1px solid rgba(59, 130, 246, 0.4)';
-    statusBox.innerHTML = `⏳ <strong>${currentList.map(function(f){return f.filename;}).join(', ')}</strong> biriktirilmoqda va ko'rish uchun tayyorlanmoqda...`;
+    statusBox.style.background = 'rgba(16, 185, 129, 0.14)';
+    statusBox.style.color = '#34d399';
+    statusBox.style.border = '1.5px solid #10b981';
+    statusBox.innerHTML = `📥 <strong>Xotiraga olindi: ${secTitle} (${currentList.length}/2 ta fayl: ${currentList.map(function(f){return f.filename;}).join(', ')})</strong> rasmlari chiqarildi! Tekshirishni boshlash uchun <strong>«⚡ AI Bilan Tahrir»</strong> tugmasini bosing. <button type="button" class="btn btn-multi-export" style="margin-left:10px;padding:4px 12px;font-size:11.5px;" onclick="reanalyzeCurrentStudent()">${ICONS.zap} AI Bilan Tahrir (Tekshirish)</button>`;
   }
 
+  // 2. Agar PDF yoki Word (.docx) bo'lsa, rasmlarini serverdan ajratib previewga qo'shamiz (analyze: false — AI ishga tushmaydi!)
   const apiHost = (window.location.protocol === 'http:' || window.location.protocol === 'https:') ? '' : 'http://localhost:8080';
   fetch(apiHost + '/api/upload_student_section_files', {
     method: 'POST',
@@ -4912,20 +4961,10 @@ window.applySectionBase64Items = function(sectionType, validItems, appendMode) {
           };
           pre.src = src;
         });
-      } else {
-        window.renderModalDocImages();
-      }
-
-      if (statusBox) {
-        const secTitle = sectionType === 'passport' ? 'Pasport / ID-karta' : 'Shahodatnoma / Diplom';
-        statusBox.style.background = 'rgba(16, 185, 129, 0.14)';
-        statusBox.style.color = '#34d399';
-        statusBox.style.border = '1.5px solid #10b981';
-        statusBox.innerHTML = `✅ <strong>${secTitle} (${currentList.length}/2 ta fayl: ${currentList.map(function(f){return f.filename;}).join(', ')})</strong> muvaffaqiyatli qo'yildi! Yana 2-rasmni buferdan qo'yishingiz yoki <strong>«⚡ AI Bilan Tahrir»</strong> tugmasini bosishingiz mumkin! <button type="button" class="btn btn-multi-export" style="margin-left:10px;padding:4px 12px;font-size:11.5px;" onclick="reanalyzeCurrentStudent()">${ICONS.zap} Hozir AI Bilan Tahrirlash</button>`;
       }
       if (typeof showToast === 'function') {
         const secName = sectionType === 'passport' ? 'Pasport' : 'Shahodatnoma';
-        showToast(`📋 ${secName} bo'limiga rasm/fayl qo'yildi (${currentList.length}/2)!`, 'success');
+        showToast(`📥 ${secName} xotiraga olindi (${currentList.length}/2). Tekshirish uchun "AI Bilan Tahrir" ni bosing!`, 'success');
       }
     }
   })
@@ -5227,135 +5266,11 @@ window.renderModalDocImages = function() {
   wrap2.innerHTML = extraHtml + renderDropzoneHtml();
 };
 
-/* USHBU TALABAGA FAYL BIRIKTIRISH VA AI ORQALI TO'LDIRISH */
+/* USHBU TALABAGA FAYL BIRIKTIRISH (XOTIRAGA OLIB RASMLARNI KO'RSATISH — AI TEKSHIRISH FAQAT TUGMA BOSILGANDA BOSHLANADI) */
 window.uploadAndAttachForCurrentStudent = function(file) {
   if (!file || window.currentStudentIdx === null || !RAW_STUDENTS[window.currentStudentIdx]) return;
-  const s = RAW_STUDENTS[window.currentStudentIdx];
-
-  const statusBox = document.getElementById('reanalyzeStatus');
-
-  if (statusBox) {
-    statusBox.style.display = 'block';
-    statusBox.style.background = '#eff6ff';
-    statusBox.style.color = '#1d4ed8';
-    statusBox.style.border = '1px solid #bfdbfe';
-    statusBox.innerHTML = '<strong>' + file.name + '</strong> yuklanmoqda va eng kuchli Gemini AI modeli orqali sinchiklab tahlil qilinmoqda...';
-  }
-
-  const reader = new FileReader();
-  reader.onload = function(e) {
-    const b64 = e.target.result.split(',')[1];
-    const apiHost = (window.location.protocol === 'http:' || window.location.protocol === 'https:') ? '' : 'http://localhost:8080';
-
-    fetch(apiHost + '/api/upload_and_attach_to_student', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        row: s.row || 0,
-        filename: file.name,
-        file_base64: b64
-      })
-    })
-    .then(function(r) { return r.json(); })
-    .then(function(res) {
-      if (res && res.success) {
-        s.doc_file = res.filename;
-        const fpEl = document.getElementById('modalFilePath');
-        if (fpEl) fpEl.innerText = 'files/' + res.filename;
-
-        const d = res.data || {};
-        if (d.ism) s.ism = d.ism;
-        if (d.ota) s.ota = d.ota;
-        s.fish = (s.ism + ' ' + (s.ota || '')).trim();
-        if (d.pass_ser) s.pv = d.pass_ser;
-        if (d.pinfl) s.pinfl = String(d.pinfl);
-        if (d.dob) s.dob = d.dob;
-        if (d.pass_ber) s.ber = d.pass_ber; // Faqat pasport berilgan sana
-        if (d.sh_doc) s.sh_doc = d.sh_doc;
-        if (d.doc_tur) s.doc_tur = d.doc_tur;
-        if (d.maktab) s.mak = d.maktab;
-        if (d.yil) s.yil = String(d.yil);
-        if (d.tel) s.tel = d.tel;
-        if (d.shnum) s.shnum = d.shnum;
-
-        // EDIT INPUTLARNI DARHOL YANGILASH
-        const editIsm = document.getElementById('edit_ism');
-        if (editIsm) editIsm.value = s.ism || '';
-        const editOta = document.getElementById('edit_ota');
-        if (editOta) editOta.value = s.ota || '';
-        const editPv = document.getElementById('edit_pv');
-        if (editPv) editPv.value = s.pv || '';
-        const editPinfl = document.getElementById('edit_pinfl');
-        if (editPinfl) editPinfl.value = s.pinfl || '';
-        const editDob = document.getElementById('edit_dob');
-        if (editDob) editDob.value = s.dob || '';
-        const editBer = document.getElementById('edit_ber');
-        if (editBer) editBer.value = s.ber || '';
-        const editShDoc = document.getElementById('edit_shdoc');
-        if (editShDoc) editShDoc.value = s.sh_doc || '';
-        const editMak = document.getElementById('edit_mak');
-        if (editMak) editMak.value = s.mak || '';
-        const editYil = document.getElementById('edit_yil');
-        if (editYil) editYil.value = s.yil || '';
-        const editDocTur = document.getElementById('edit_doctur');
-        if (editDocTur) editDocTur.value = s.doc_tur || 'Shahodatnoma';
-        const editShnum = document.getElementById('edit_shnum');
-        if (editShnum) editShnum.value = s.shnum || '';
-        const editTel = document.getElementById('edit_tel');
-        if (editTel) editTel.value = s.tel || '';
-
-        // Modal sarlavhasini yangilash
-        const modalTitle = document.getElementById('modalTitle');
-        if (modalTitle) {
-          modalTitle.innerHTML = ICONS.user + " <strong>" + s.fish + "</strong> &nbsp;|&nbsp; Shartnoma: #" + (s.shnum || '—');
-        }
-
-        // Rasmlar galereyasini chizish
-        if (res.images && res.images.length > 0) {
-          window.currentDocImages = res.images;
-          window.modalImgRotations = {};
-          renderModalDocImages();
-        }
-
-        // Kartalarni yangilash
-        renderInfoCards(s, window.isEditMode);
-
-        // Jadvaldagi qatorni va kartani xatosiz to'liq yangilash
-        if (typeof window.applyStudentRowToDOM === 'function') {
-          window.applyStudentRowToDOM(window.currentStudentIdx, s);
-        }
-        if (typeof window.updateStudentCardDOM === 'function') {
-          window.updateStudentCardDOM(window.currentStudentIdx, s);
-        }
-
-        if (statusBox) {
-          statusBox.style.background = '#dcfce7';
-          statusBox.style.color = '#15803d';
-          statusBox.style.border = '1px solid #86efac';
-          statusBox.innerHTML = '<strong>' + file.name + '</strong> muvaffaqiyatli biriktirildi va AI orqali to\'liq tahlil qilinib Excelga saqlandi!';
-        }
-        alert("Fayl muvaffaqiyatli biriktirildi va AI orqali to'liq o'qilib Excel bazaga saqlandi!");
-      } else {
-        if (statusBox) {
-          statusBox.style.background = '#fee2e2';
-          statusBox.style.color = '#991b1b';
-          statusBox.style.border = '1px solid #f87171';
-          statusBox.innerHTML = 'Xatolik: ' + (res.error || 'Faylni tahlil qilib bo\'lmadi');
-        }
-        alert("Xatolik: " + (res.error || 'Faylni biriktirib bo\'lmadi'));
-      }
-    })
-    .catch(function(err) {
-      if (statusBox) {
-        statusBox.style.background = '#fee2e2';
-        statusBox.style.color = '#991b1b';
-        statusBox.style.border = '1px solid #f87171';
-        statusBox.innerHTML = 'Server bilan ulanishda xatolik: ' + err;
-      }
-      alert("Server bilan ulanishda xatolik: " + err);
-    });
-  };
-  reader.readAsDataURL(file);
+  // Faylni darhol xotiraga olamiz va rasmlarini ekranga chiqaramiz (AI tahlilni avtomatik boshlamaymiz!)
+  window.handleSectionFileSelect('passport', [file], false);
 };
 
 /* PINFL (JSHSHIR) DAN TUG'ILGAN SANANI AVTOMATIK ANIQLASH */

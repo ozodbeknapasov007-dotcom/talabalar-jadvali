@@ -3353,8 +3353,8 @@ Aniq JSON formatda qaytar:
                         if m_fix:
                             ai_data['pass_ser'] = m_fix.group(1) + m_fix.group(2)
 
-                # Excel va manual_file_map.json ni yangilash
-                if row_idx >= 2:
+                # Excel va manual_file_map.json ni yangilash (FAQAT AI tekshirish bosilganda!)
+                if do_analyze and row_idx >= 2:
                     with EXCEL_LOCK:
                         wb = openpyxl.load_workbook(os.path.join(BASE_DIR, 'Talabalar_Toliq_Royxati.xlsx'))
                         ws = wb.active
