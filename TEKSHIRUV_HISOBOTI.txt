@@ -1,0 +1,327 @@
+==============================================================================
+  QR ORQALI TEKSHIRUV HISOBOTI
+  Sana: 18.09.2026 16:30
+==============================================================================
+  Jami talabalar             : 167
+  Word fayli topilmadi       : 16
+  Faylda QR topilmadi        : 17
+  Skanerlashda xato          : 0
+  QR bilan tekshirildi       : 134
+------------------------------------------------------------------------------
+  🛑 KARANTIN (ishonchsiz)   : 15 ta talaba  <-- QO'LDA HAL QILINSIN
+  ❌ Ma'lumotda farq bor      : 0 ta talaba
+  ➕ Bo'sh maydon to'ldiriladi: 0 ta talaba
+  ⚠️  Ogohlantirish (imlo)     : 12 ta talaba
+  ❓ Fayl bog'lanishi shubhali: 3 ta talaba
+==============================================================================
+
+██████████████████████████████████████████████████████████████████████████████
+  🛑 KARANTIN — HUJJAT BOSHQA ODAMNIKI YOKI IKKI TALABAGA BIRIKTIRILGAN
+     Bu talabalarga HECH QANDAY ma'lumot yozilmaydi.
+     Har birini qo'lda tekshirib, to'g'ri faylni biriktirish kerak.
+██████████████████████████████████████████████████████████████████████████████
+
+  [26-02] Ilhomova Zuhra  (qator 22, shartnoma #-)
+      biriktirilgan fayl: Olimova Zuxra 15.docx
+      ❌ BOSHQA ODAM — ID-karta MRZ: 'OLIMOVA ZUHRA' | bazada: 'Ilhomova Zuhra' (fayl: Olimova Zuxra 15.docx)
+      ❌ BOSHQA ODAM — Shahodatnoma PDF: 'Olimova Zuhra Ilyos qizi' | bazada: 'Ilhomova Zuhra' (fayl: Olimova Zuxra 15.docx)
+      ── yozilmagan (bloklangan) qiymatlar:
+         • Pasport/ID: (bo'sh) -> 'AE4431243'
+         • PINFL: (bo'sh) -> '61304085590092'
+         • Berilgan sana: (bo'sh) -> '03.10.2025'
+         • Tug'ilgan sana: (bo'sh) -> '13.04.2008'
+         • Shahodatnoma: (bo'sh) -> 'UM 03754983'
+         • QR havola: (bo'sh) -> 'https://e-shahodatnoma.uz/api/public/getcertpdf/4022542/3531221/173c5eff-b365-4f41-8b54-894bf90a8d91?preview=true'
+         • Maktab: (bo'sh) -> "47-sonli umumiy o'rta ta'lim maktabi"
+         • Hujjat turi: (bo'sh) -> 'Shahodatnoma'
+         • Bitirgan yili: (bo'sh) -> '2026'
+
+  [26-02] Saidaliyeva Ruxshona  (qator 33, shartnoma #-)
+      biriktirilgan fayl: Saydalimova Ruxshona 74.docx
+      ❌ BOSHQA ODAM — ID-karta MRZ: 'SAYDALIMOVA RUXSHONA' | bazada: 'Saidaliyeva Ruxshona' (fayl: Saydalimova Ruxshona 74.docx)
+      ❌ BOSHQA ODAM — Shahodatnoma PDF: 'Saydalimova Ruxshona Sharofiddin qizi' | bazada: 'Saidaliyeva Ruxshona' (fayl: Saydalimova Ruxshona 74.docx)
+      ── yozilmagan (bloklangan) qiymatlar:
+         • Pasport/ID: (bo'sh) -> 'AE3352294'
+         • PINFL: (bo'sh) -> '61807085590034'
+         • Berilgan sana: (bo'sh) -> '10.07.2025'
+         • Tug'ilgan sana: (bo'sh) -> '18.07.2008'
+         • Shahodatnoma: (bo'sh) -> 'UM 03754198'
+         • QR havola: (bo'sh) -> 'https://e-shahodatnoma.uz/api/public/getcertpdf/3897513/3441099/8fd45749-c87c-46e9-abdb-bbfb7442e007?preview=true'
+         • Maktab: (bo'sh) -> "29-sonli umumiy o'rta ta'lim maktabi"
+         • Hujjat turi: (bo'sh) -> 'Shahodatnoma'
+         • Bitirgan yili: (bo'sh) -> '2026'
+
+  [26-02] Suyunova Maftuna  (qator 36, shartnoma #122)
+      biriktirilgan fayl: Suyunova Maftuna 122.docx
+      ❌ BOSHQA ODAM — Shahodatnoma PDF: 'Rasulova Husnobod Bekmurod qizi' | bazada: 'Suyunova Maftuna' (fayl: Suyunova Maftuna 122.docx)
+      ❌ Bir xil Shahodatnoma (UM 01891815) 2 ta talabada: Suyunova Maftuna [26-02], Rasulova Husnobod [26-03]
+      ❌ Bir xil QR havola (https://e-shahodatnoma.uz/api/public/getcertpdf/921114/889651/0cca6b2c-74dd-4711-d168-08db6f99367e?preview=true) 2 ta talabada: Suyunova Maftuna [26-02], Rasulova Husnobod [26-03]
+      ── yozilmagan (bloklangan) qiymatlar:
+         • Tug'ilgan sana: '14.09.2000' -> '27.05.2005'
+         • Shahodatnoma: 'K 5491697' -> 'UM 01891815'
+         • Maktab: "Kitob tumani agrobiznes va xizmat ko'rsatish kasb-hunar kolleji" -> "49-sonli umumiy o'rta ta'lim maktabi"
+         • Hujjat turi: 'Diplom' -> 'Shahodatnoma'
+         • Bitirgan yili: '2019' -> '2023'
+         • QR havola: (bo'sh) -> 'https://e-shahodatnoma.uz/api/public/getcertpdf/921114/889651/0cca6b2c-74dd-4711-d168-08db6f99367e?preview=true'
+
+  [26-03] Rasulova Husnobod  (qator 62, shartnoma #392)
+      biriktirilgan fayl: Rasulova Husnobod.docx
+      ❌ Bir xil Shahodatnoma (UM 01891815) 2 ta talabada: Suyunova Maftuna [26-02], Rasulova Husnobod [26-03]
+      ❌ Bir xil QR havola (https://e-shahodatnoma.uz/api/public/getcertpdf/921114/889651/0cca6b2c-74dd-4711-d168-08db6f99367e?preview=true) 2 ta talabada: Suyunova Maftuna [26-02], Rasulova Husnobod [26-03]
+      ── yozilmagan (bloklangan) qiymatlar:
+         • QR havola: (bo'sh) -> 'https://e-shahodatnoma.uz/api/public/getcertpdf/921114/889651/0cca6b2c-74dd-4711-d168-08db6f99367e?preview=true'
+
+  [26-03] Rustamova Charos  (qator 63, shartnoma #-)
+      biriktirilgan fayl: Rustamova Charos O`ktam qizi 309.docx
+      ❌ BOSHQA ODAM — ID-karta MRZ: 'SUYAROVA DINORA' | bazada: 'Rustamova Charos' (fayl: Rustamova Charos O`ktam qizi 309.docx)
+      ❌ BOSHQA ODAM — Shahodatnoma PDF: 'Suyarova Dinora Sodiq qizi' | bazada: 'Rustamova Charos' (fayl: Rustamova Charos O`ktam qizi 309.docx)
+      ❌ Bir xil PINFL (60108085590037) 2 ta talabada: Rustamova Charos [26-03], Suyarova Dinora [26-04]
+      ❌ Bir xil Pasport (AD9863476) 2 ta talabada: Rustamova Charos [26-03], Suyarova Dinora [26-04]
+      ❌ Bir xil Shahodatnoma (UM 03755218) 2 ta talabada: Rustamova Charos [26-03], Suyarova Dinora [26-04]
+      ❌ Bir xil QR havola (https://e-shahodatnoma.uz/api/public/getcertpdf/4037312/3736310/7bb8e72b-2dd3-4e1b-9864-76c45681833f?preview=true) 2 ta talabada: Rustamova Charos [26-03], Suyarova Dinora [26-04]
+      ── yozilmagan (bloklangan) qiymatlar:
+         • Pasport/ID: (bo'sh) -> 'AD9863476'
+         • PINFL: (bo'sh) -> '60108085590037'
+         • Berilgan sana: (bo'sh) -> '18.12.2024'
+         • Tug'ilgan sana: (bo'sh) -> '01.08.2008'
+         • Shahodatnoma: (bo'sh) -> 'UM 03755218'
+         • QR havola: (bo'sh) -> 'https://e-shahodatnoma.uz/api/public/getcertpdf/4037312/3736310/7bb8e72b-2dd3-4e1b-9864-76c45681833f?preview=true'
+         • Maktab: (bo'sh) -> "56-sonli umumiy o'rta ta'lim maktabi"
+         • Hujjat turi: (bo'sh) -> 'Shahodatnoma'
+         • Bitirgan yili: (bo'sh) -> '2026'
+
+  [26-04] Isomiddinova Ruxshona  (qator 84, shartnoma #66)
+      biriktirilgan fayl: G'ayratova Jasmina 66.docx
+      ❌ BOSHQA ODAM — ID-karta MRZ: 'GAYRATOVA JASMINA' | bazada: 'Isomiddinova Ruxshona' (fayl: G'ayratova Jasmina 66.docx)
+      ❌ BOSHQA ODAM — Shahodatnoma PDF: 'G'ayratova Jasmina Sherali qizi' | bazada: 'Isomiddinova Ruxshona' (fayl: G'ayratova Jasmina 66.docx)
+      ❌ Bir xil PINFL (60208085590146) 2 ta talabada: Isomiddinova Ruxshona [26-04], G'ayratova Jasmina [26-05]
+      ❌ Bir xil Pasport (AE3497923) 2 ta talabada: Isomiddinova Ruxshona [26-04], G'ayratova Jasmina [26-05]
+      ❌ Bir xil Shahodatnoma (UM 03754785) 2 ta talabada: Isomiddinova Ruxshona [26-04], G'ayratova Jasmina [26-05]
+      ❌ Bir xil QR havola (https://e-shahodatnoma.uz/api/public/getcertpdf/3863942/3812255/99805781-5bd1-4a92-b7a2-33c8d1eb1b98?preview=true) 2 ta talabada: Isomiddinova Ruxshona [26-04], G'ayratova Jasmina [26-05]
+      ── yozilmagan (bloklangan) qiymatlar:
+         • Pasport/ID: (bo'sh) -> 'AE3497923'
+         • PINFL: (bo'sh) -> '60208085590146'
+         • Berilgan sana: (bo'sh) -> '23.07.2025'
+         • Tug'ilgan sana: (bo'sh) -> '02.08.2008'
+         • Shahodatnoma: (bo'sh) -> 'UM 03754785'
+         • QR havola: (bo'sh) -> 'https://e-shahodatnoma.uz/api/public/getcertpdf/3863942/3812255/99805781-5bd1-4a92-b7a2-33c8d1eb1b98?preview=true'
+         • Maktab: (bo'sh) -> "43-sonli umumiy o'rta ta'lim maktabi"
+         • Hujjat turi: (bo'sh) -> 'Shahodatnoma'
+         • Bitirgan yili: (bo'sh) -> '2026'
+
+  [26-04] Maxmudova Musallam  (qator 88, shartnoma #-)
+      biriktirilgan fayl: Maxmudova Musallam 311.docx
+      ❌ BOSHQA ODAM — ID-karta MRZ: 'DAVLATOVA GULNOZA' | bazada: 'Maxmudova Musallam' (fayl: Maxmudova Musallam 311.docx)
+      ❌ Bir xil PINFL (41508955590021) 2 ta talabada: Maxmudova Musallam [26-04], Davlatova Gulnoza [26-06]
+      ❌ Bir xil Pasport (AD8208717) 2 ta talabada: Maxmudova Musallam [26-04], Davlatova Gulnoza [26-06]
+      ── yozilmagan (bloklangan) qiymatlar:
+         • Pasport/ID: (bo'sh) -> 'AD8208717'
+         • PINFL: (bo'sh) -> '41508955590021'
+         • Berilgan sana: (bo'sh) -> '12.08.2024'
+         • Tug'ilgan sana: (bo'sh) -> '15.08.1995'
+
+  [26-04] Qodirova Sabina  (qator 92, shartnoma #-)
+      biriktirilgan fayl: Qodirova Shabnam 137.docx
+      ❌ BOSHQA ODAM — ID-karta MRZ: 'QODIROVA SHABNAM' | bazada: 'Qodirova Sabina' (fayl: Qodirova Shabnam 137.docx)
+      ❌ BOSHQA ODAM — Shahodatnoma PDF: 'Qodirova Shabnam O'tkir qizi' | bazada: 'Qodirova Sabina' (fayl: Qodirova Shabnam 137.docx)
+      ── yozilmagan (bloklangan) qiymatlar:
+         • Pasport/ID: (bo'sh) -> 'AE5242435'
+         • PINFL: (bo'sh) -> '61807085680045'
+         • Berilgan sana: (bo'sh) -> '01.12.2025'
+         • Tug'ilgan sana: (bo'sh) -> '18.07.2008'
+         • Shahodatnoma: (bo'sh) -> 'UM 03729278'
+         • QR havola: (bo'sh) -> 'https://e-shahodatnoma.uz/api/public/getcertpdf/3934766/3452539/98763bcf-ef33-4ddb-b3e1-ddf8c7990688?preview=true'
+         • Maktab: (bo'sh) -> "44-sonli umumiy o'rta ta'lim maktabi"
+         • Hujjat turi: (bo'sh) -> 'Shahodatnoma'
+         • Bitirgan yili: (bo'sh) -> '2026'
+
+  [26-04] Suyarova Dinora  (qator 94, shartnoma #-)
+      biriktirilgan fayl: Suyarova Dinora Sodiq qizi 306.docx
+      ❌ Bir xil PINFL (60108085590037) 2 ta talabada: Rustamova Charos [26-03], Suyarova Dinora [26-04]
+      ❌ Bir xil Pasport (AD9863476) 2 ta talabada: Rustamova Charos [26-03], Suyarova Dinora [26-04]
+      ❌ Bir xil Shahodatnoma (UM 03755218) 2 ta talabada: Rustamova Charos [26-03], Suyarova Dinora [26-04]
+      ❌ Bir xil QR havola (https://e-shahodatnoma.uz/api/public/getcertpdf/4037312/3736310/7bb8e72b-2dd3-4e1b-9864-76c45681833f?preview=true) 2 ta talabada: Rustamova Charos [26-03], Suyarova Dinora [26-04]
+      ── yozilmagan (bloklangan) qiymatlar:
+         • Pasport/ID: (bo'sh) -> 'AD9863476'
+         • PINFL: (bo'sh) -> '60108085590037'
+         • Berilgan sana: (bo'sh) -> '18.12.2024'
+         • Tug'ilgan sana: (bo'sh) -> '01.08.2008'
+         • Shahodatnoma: (bo'sh) -> 'UM 03755218'
+         • QR havola: (bo'sh) -> 'https://e-shahodatnoma.uz/api/public/getcertpdf/4037312/3736310/7bb8e72b-2dd3-4e1b-9864-76c45681833f?preview=true'
+         • Maktab: (bo'sh) -> "56-sonli umumiy o'rta ta'lim maktabi"
+         • Hujjat turi: (bo'sh) -> 'Shahodatnoma'
+         • Bitirgan yili: (bo'sh) -> '2026'
+
+  [26-05] G'ayratova Jasmina  (qator 112, shartnoma #97)
+      biriktirilgan fayl: G'ayratova Jasmina 97.docx
+      ❌ Bir xil PINFL (60208085590146) 2 ta talabada: Isomiddinova Ruxshona [26-04], G'ayratova Jasmina [26-05]
+      ❌ Bir xil Pasport (AE3497923) 2 ta talabada: Isomiddinova Ruxshona [26-04], G'ayratova Jasmina [26-05]
+      ❌ Bir xil Shahodatnoma (UM 03754785) 2 ta talabada: Isomiddinova Ruxshona [26-04], G'ayratova Jasmina [26-05]
+      ❌ Bir xil QR havola (https://e-shahodatnoma.uz/api/public/getcertpdf/3863942/3812255/99805781-5bd1-4a92-b7a2-33c8d1eb1b98?preview=true) 2 ta talabada: Isomiddinova Ruxshona [26-04], G'ayratova Jasmina [26-05]
+      ── yozilmagan (bloklangan) qiymatlar:
+         • QR havola: (bo'sh) -> 'https://e-shahodatnoma.uz/api/public/getcertpdf/3863942/3812255/99805781-5bd1-4a92-b7a2-33c8d1eb1b98?preview=true'
+
+  [26-05] Jumayeva Muhlisa  (qator 116, shartnoma #59)
+      biriktirilgan fayl: Ergashova Janona 59.docx
+      ❌ BOSHQA ODAM — ID-karta MRZ: 'ERGASHOVA JANONA' | bazada: 'Jumayeva Muhlisa' (fayl: Ergashova Janona 59.docx)
+      ❌ BOSHQA ODAM — Shahodatnoma PDF: 'Ergashova Janona Boyburi qizi' | bazada: 'Jumayeva Muhlisa' (fayl: Ergashova Janona 59.docx)
+      ── yozilmagan (bloklangan) qiymatlar:
+         • Pasport/ID: (bo'sh) -> 'AE4646729'
+         • PINFL: (bo'sh) -> '60506085730028'
+         • Berilgan sana: (bo'sh) -> '16.10.2025'
+         • Tug'ilgan sana: (bo'sh) -> '05.06.2008'
+         • Shahodatnoma: (bo'sh) -> 'UM 03757885'
+         • QR havola: (bo'sh) -> 'https://e-shahodatnoma.uz/api/public/getcertpdf/4000498/3907022/881f43cc-6a18-41c0-853e-7765fc341b68?preview=true'
+         • Maktab: (bo'sh) -> "65-sonli umumiy o'rta ta'lim maktabi"
+         • Hujjat turi: (bo'sh) -> 'Shahodatnoma'
+         • Bitirgan yili: (bo'sh) -> '2026'
+
+  [26-05] Nematova Sevinch  (qator 121, shartnoma #-)
+      biriktirilgan fayl: Nurmatova Sevinch 85.docx
+      ❌ BOSHQA ODAM — ID-karta MRZ: 'NURMATOVA SEVINCH' | bazada: 'Nematova Sevinch' (fayl: Nurmatova Sevinch 85.docx)
+      ❌ BOSHQA ODAM — Shahodatnoma PDF: 'Nurmatova Sevinch Bozor qizi' | bazada: 'Nematova Sevinch' (fayl: Nurmatova Sevinch 85.docx)
+      ── yozilmagan (bloklangan) qiymatlar:
+         • Pasport/ID: (bo'sh) -> 'AE5728863'
+         • PINFL: (bo'sh) -> '60804085590032'
+         • Berilgan sana: (bo'sh) -> '07.01.2026'
+         • Tug'ilgan sana: (bo'sh) -> '08.04.2008'
+         • Shahodatnoma: (bo'sh) -> 'UM 03755450'
+         • QR havola: (bo'sh) -> 'https://e-shahodatnoma.uz/api/public/getcertpdf/4199422/3751566/0accffeb-a2d1-448f-aa68-5f4664f4211e?preview=true'
+         • Maktab: (bo'sh) -> "68-sonli umumiy o'rta ta'lim maktabi"
+         • Hujjat turi: (bo'sh) -> 'Shahodatnoma'
+         • Bitirgan yili: (bo'sh) -> '2026'
+
+  [26-06] Davlatova Gulnoza  (qator 137, shartnoma #-)
+      biriktirilgan fayl: Davlatova Gulnoza Xusan qizi 310.docx
+      ❌ Bir xil PINFL (41508955590021) 2 ta talabada: Maxmudova Musallam [26-04], Davlatova Gulnoza [26-06]
+      ❌ Bir xil Pasport (AD8208717) 2 ta talabada: Maxmudova Musallam [26-04], Davlatova Gulnoza [26-06]
+      ── yozilmagan (bloklangan) qiymatlar:
+         • Pasport/ID: (bo'sh) -> 'AD8208717'
+         • PINFL: (bo'sh) -> '41508955590021'
+         • Berilgan sana: (bo'sh) -> '12.08.2024'
+         • Tug'ilgan sana: (bo'sh) -> '15.08.1995'
+
+  [26-06] Mahmamurodova Sevara  (qator 142, shartnoma #390)
+      biriktirilgan fayl: Maxmudmurodova Sevara 390.docx
+      ❌ BOSHQA ODAM — ID-karta MRZ: 'MAHMADMURODOVA SEVARA' | bazada: 'Mahmamurodova Sevara' (fayl: Maxmudmurodova Sevara 390.docx)
+
+  [26-06] Muminova Durdona  (qator 146, shartnoma #-)
+      biriktirilgan fayl: Raxmonova  Durdona 200.docx
+      ❌ BOSHQA ODAM — ID-karta MRZ: 'RAXMONOVA DURDONA' | bazada: 'Muminova Durdona' (fayl: Raxmonova  Durdona 200.docx)
+      ── yozilmagan (bloklangan) qiymatlar:
+         • Pasport/ID: (bo'sh) -> 'AD3936978'
+         • PINFL: (bo'sh) -> '42412955590015'
+         • Berilgan sana: (bo'sh) -> '13.07.2023'
+         • Tug'ilgan sana: (bo'sh) -> '24.12.1995'
+
+██████████████████████████████████████████████████████████████████████████████
+  ⚠️  OGOHLANTIRISHLAR — QO'LDA TEKSHIRISH TAVSIYA ETILADI
+██████████████████████████████████████████████████████████████████████████████
+
+  [26-02] O'roqova Jasmina  (qator 29)
+      fayl: Uroqova Jasmina 148.docx
+      ⚠ imlo farqi — ID-karta MRZ: 'UROQOVA JASMINA' | bazada: 'O'roqova Jasmina'
+      ⚠ imlo farqi — Shahodatnoma PDF: 'Uroqova Jasmina Jasur qizi' | bazada: 'O'roqova Jasmina'
+
+  [26-02] Ochildiyeva Dinara  (qator 30)
+      fayl: Ochildiyeva Dinora 87.docx
+      ⚠ imlo farqi — ID-karta MRZ: 'OCHILDIYEVA DINORA' | bazada: 'Ochildiyeva Dinara'
+      ⚠ imlo farqi — Shahodatnoma PDF: 'Ochildiyeva Dinora Otabek qizi' | bazada: 'Ochildiyeva Dinara'
+
+  [26-02] Quysinova Ruhshona  (qator 31)
+      fayl: Quysinova Rohshona 242.docx
+      ⚠ imlo farqi — ID-karta MRZ: 'QUYSINOVA ROHSHONA' | bazada: 'Quysinova Ruhshona'
+      ⚠ imlo farqi — Shahodatnoma PDF: 'Quysinova Rohshona To'lqin qizi' | bazada: 'Quysinova Ruhshona'
+
+  [26-02] Ruzimurodova Larisa  (qator 32)
+      fayl: Ro'zimurodova Larisa 100.docx
+      ⚠ imlo farqi — Shahodatnoma PDF: 'Ro'zimurodova Larisa Maxmatali qizi' | bazada: 'Ruzimurodova Larisa'
+
+  [26-03] Mustafayeva Madina  (qator 55)
+      fayl: Mustafoyeva Madina 282.docx
+      ⚠ imlo farqi — ID-karta MRZ: 'MUSTAFOYEVA MADINA' | bazada: 'Mustafayeva Madina'
+      ⚠ imlo farqi — Shahodatnoma PDF: 'Mustafoyeva Madina Ortiq qizi' | bazada: 'Mustafayeva Madina'
+
+  [26-04] Abdixalilova Shahzoda  (qator 77)
+      fayl: Abdixalilova Shohzoda 274.docx
+      ⚠ imlo farqi — ID-karta MRZ: 'ABDIXALILOVA SHOHZODA' | bazada: 'Abdixalilova Shahzoda'
+      ⚠ imlo farqi — Shahodatnoma PDF: 'Abdixalilova Shohzoda Bahodir qizi' | bazada: 'Abdixalilova Shahzoda'
+
+  [26-04] Hamraqulova Marjona  (qator 83)
+      fayl: Hamroqulova Marjona 275.docx
+      ⚠ imlo farqi — ID-karta MRZ: 'HAMROQULOVA MARJONA' | bazada: 'Hamraqulova Marjona'
+      ⚠ imlo farqi — Shahodatnoma PDF: 'Hamroqulova Marjona O'ktam qizi' | bazada: 'Hamraqulova Marjona'
+
+  [26-05] Ergashova Shabbona  (qator 110)
+      fayl: Ergasheva Shabbona 123.docx
+      ⚠ imlo farqi — ID-karta MRZ: 'ERGASHEVA SHABBONA' | bazada: 'Ergashova Shabbona'
+
+  [26-05] Xolmirzayeva Zebiniso  (qator 133)
+      fayl: Xolmirzayeva Zebiniso 183.docx
+      ⚠ imlo farqi — ID-karta MRZ: 'XOLMIRZAYEVA ZEBUNISO' | bazada: 'Xolmirzayeva Zebiniso'
+
+  [26-05] Yo'ldosheva Ruxshona  (qator 134)
+      fayl: Yo'ldosheva Ruhshona 118.docx
+      ⚠ imlo farqi — ID-karta MRZ: 'YULDOSHEVA RUHSHONA' | bazada: 'Yo'ldosheva Ruxshona'
+
+  [26-06] Abduxoliqova Elmira  (qator 135)
+      fayl: Abdixoliqova Elmira 286.docx
+      ⚠ imlo farqi — ID-karta MRZ: 'ABDIXOLIQOVA ELMIRA' | bazada: 'Abduxoliqova Elmira'
+      ⚠ imlo farqi — Shahodatnoma PDF: 'Abdixoliqova Elmira Farxod qizi' | bazada: 'Abduxoliqova Elmira'
+
+  [26-06] Sayfullayeva Shodiyona  (qator 157)
+      fayl: Sayfillayeva Shodiyona 03.docx
+      ⚠ imlo farqi — ID-karta MRZ: 'SAYFILLAYEVA SHODIYONA' | bazada: 'Sayfullayeva Shodiyona'
+      ⚠ imlo farqi — Shahodatnoma PDF: 'Sayfillayeva Shodiyona Sayfilla qizi' | bazada: 'Sayfullayeva Shodiyona'
+
+██████████████████████████████████████████████████████████████████████████████
+  ❓ FAYL BOG'LANISHI SHUBHALI — bir nechta mos fayl topildi
+██████████████████████████████████████████████████████████████████████████████
+  [26-02] Ilhomova Zuhra                       -> Olimova Zuxra 15.docx
+  [26-02] Saidaliyeva Ruxshona                 -> Saydalimova Ruxshona 74.docx
+  [26-06] Muminova Durdona                     -> Raxmonova  Durdona 200.docx
+
+------------------------------------------------------------------------------
+  📂 WORD FAYLI TOPILMADI (16 ta) — tekshirib bo'lmadi
+------------------------------------------------------------------------------
+  [26-01] G'iyosova Shodiyona                  #125
+  [26-01] Ibodullayeva Asilzoda                #129
+  [26-03] Abdujalolova Dilnura                 #-
+  [26-03] Mansurova Gulasal                    #-
+  [26-03] Niyozova Komila                      #-
+  [26-03] Raimova Nozliya                      #-
+  [26-03] Temirova Rushana                     #-
+  [26-03] Umirova Sevinch                      #-
+  [26-04] Jalolov Javlonbek                    #211
+  [26-04] Karimova Shaxina                     #-
+  [26-04] Soyipova Dinora                      #-
+  [26-04] Xo'jaqulova Navbahor                 #-
+  [26-04] Xolmurodova Dilnura                  #-
+  [26-05] Oripova Sevinch                      #-
+  [26-06] Niyozova Sevara                      #-
+  [26-07] Salayeva Dilroz                      #205
+
+------------------------------------------------------------------------------
+  🔍 FAYLDA QR TOPILMADI (17 ta) — rasm sifati past yoki QR yo'q
+------------------------------------------------------------------------------
+  [26-01] Majidova Namuna                      -> Majidova Namuna 12.docx
+  [26-01] Miliyeva Umida                       -> Meliyeva Umida 281.docx
+  [26-02] Meyliqulova Hilola                   -> Jumayeva Muxlisa 60.docx
+  [26-02] Xurramova Shodiya                    -> Xurramova Shodiya.docx
+  [26-03] Aliqulova Shahzoda                   -> Aliqulova Shahzoda 272.docx
+  [26-03] Eshnazarova Dilnoza                  -> Eshnazarova Dilnoza 221.docx
+  [26-03] Primova Husnora                      -> Primova Husnora 251.docx
+  [26-03] Xayrullayeva Umida                   -> Xayrullayeva Umida 116.docx
+  [26-04] Eshquvatova Yulduz                   -> Eshquvatova Yulduz  267.docx
+  [26-04] Xamdamova Madina                     -> Xamdamova Madina 14.docx
+  [26-04] Xurramova Shahnoza                   -> Xurramova Shahnoza 29.docx
+  [26-05] Murodova Munisa                      -> Murodova Munisa 169.docx
+  [26-06] Sanaqulova Nozliya                   -> Sanaqulova Nozliya   N 32.docx
+  [26-07] G'aniyeva Asila                      -> G'aniyeva Asila  381.docx
+  [26-07] Mustafayeva Nargiza                  -> Mustafoyeva Nargiza    205 (1).docx
+  [26-07] Nazirova Intizor                     -> Nazirova  Intizor 212.docx
+  [26-07] Usmonova Gulnoza                     -> Usmanova Gulnoza 283.docx
+
+==============================================================================
+  Excelga yozish uchun:  python scripts/verify_all_students.py --apply
+==============================================================================

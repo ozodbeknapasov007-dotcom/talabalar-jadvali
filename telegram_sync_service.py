@@ -73,6 +73,7 @@ def _do_git_push():
         result_add = subprocess.run(
             ['git', 'add',
              'index.html',
+             'students.json',
              'Talabalar_Toliq_Royxati.xlsx',
              'Talabalar_Yangilangan_Royxat.xlsx',
              'qayta_tekshiruv/Talabalar_Yangilangan_Royxat.xlsx',
@@ -244,6 +245,12 @@ def process_remote_github_changes():
                             ws.cell(row=r_idx, column=19, value=str(fields['yil']).strip())
                         if 'yon' in fields:
                             ws.cell(row=r_idx, column=3, value=str(fields['yon']).strip())
+                        # Lokal /api/update_student bilan bir xil: shartnoma
+                        # raqami va telefon ham yoziladi (avval tashlab ketilardi)
+                        if 'shnum' in fields:
+                            ws.cell(row=r_idx, column=5, value=str(fields['shnum']).strip())
+                        if 'tel' in fields:
+                            ws.cell(row=r_idx, column=20, value=str(fields['tel']).strip())
                         if 'group' in fields:
                             ws.cell(row=r_idx, column=23, value=str(fields['group']).strip())
 

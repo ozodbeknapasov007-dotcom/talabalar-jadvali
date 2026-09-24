@@ -6079,6 +6079,11 @@ with open(ROOT_HISOBOT, 'w', encoding='utf-8') as f:
 with open(INDEX_HTML, 'w', encoding='utf-8') as f:
     f.write(html)
 
+# Next.js versiyasi (web/) uchun ma'lumot alohida JSON faylda — sahifaga
+# 2.8 MB HTML ichidan ajratib olmasdan, faqat shu ~130 KB yuklanadi.
+with open(os.path.join(BASE_DIR, 'students.json'), 'w', encoding='utf-8') as f:
+    f.write(students_json)
+
 # Formatlangan ko'p sahifali (8 ta guruh) Excel faylini saqlash
 try:
     from telegram_sync_service import apply_full_excel_styling, build_full_multisheet_excel

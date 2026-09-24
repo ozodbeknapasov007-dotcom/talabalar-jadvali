@@ -1,0 +1,113 @@
+@import 'tailwindcss';
+
+/*
+  Rang tizimi: to'q dengiz-ko'k fon, uchta aksent —
+  yashil (emerald) = tasdiqlangan / muvaffaqiyat,
+  ko'k (blue)      = asosiy harakatlar,
+  havorang (sky)   = ma'lumot, havolalar, belgilar.
+*/
+@theme {
+  --color-ink-950: #040b14;
+  --color-ink-900: #07111f;
+  --color-ink-850: #0a1728;
+  --color-ink-800: #0e1e33;
+  --color-ink-700: #15294a;
+  --color-ink-600: #1f3a63;
+
+  --color-line: rgb(125 175 235 / 0.12);
+  --color-line-strong: rgb(125 175 235 / 0.22);
+
+  --color-fg: #e8f1fb;
+  --color-fg-muted: #93acc8;
+  --color-fg-subtle: #5f7a99;
+
+  --color-emerald: #10b981;
+  --color-emerald-soft: #34d399;
+  --color-blue: #3b82f6;
+  --color-blue-soft: #60a5fa;
+  --color-sky: #38bdf8;
+  --color-sky-soft: #7dd3fc;
+  --color-amber: #f59e0b;
+  --color-rose: #f43f5e;
+  --color-violet: #a78bfa;
+
+  --font-sans: var(--font-jakarta), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-jetbrains), ui-monospace, monospace;
+
+  --animate-fade-in: fade-in 0.18s ease-out;
+  --animate-pop-in: pop-in 0.2s cubic-bezier(0.2, 0.9, 0.3, 1.2);
+  --animate-slide-up: slide-up 0.25s ease-out;
+}
+
+@keyframes fade-in { from { opacity: 0 } to { opacity: 1 } }
+@keyframes pop-in { from { opacity: 0; transform: scale(0.97) translateY(6px) } to { opacity: 1; transform: none } }
+@keyframes slide-up { from { opacity: 0; transform: translateY(12px) } to { opacity: 1; transform: none } }
+
+:root {
+  color-scheme: dark;
+}
+
+html {
+  background: var(--color-ink-950);
+}
+
+body {
+  min-height: 100dvh;
+  background: var(--color-ink-950);
+  color: var(--color-fg);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Fon: ikki yumshoq nur (yashil va ko'k). position:fixed + transform yo'q —
+   skroll paytida qayta chizilmaydi, sahifani sekinlashtirmaydi. */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(900px 520px at 8% -10%, rgb(16 185 129 / 0.13), transparent 60%),
+    radial-gradient(900px 600px at 95% -5%, rgb(59 130 246 / 0.16), transparent 60%),
+    radial-gradient(700px 500px at 50% 110%, rgb(56 189 248 / 0.07), transparent 60%);
+}
+
+::selection { background: rgb(56 189 248 / 0.35); }
+
+* { scrollbar-width: thin; scrollbar-color: var(--color-ink-600) transparent; }
+
+/* Qayta ishlatiladigan klasslar (Tailwind v4 da @apply bilan ulash uchun @utility bo'lishi shart) */
+@utility panel {
+  @apply rounded-2xl border border-line bg-ink-900/80;
+}
+@utility btn {
+  @apply inline-flex items-center justify-center gap-2 rounded-xl px-3.5 py-2 text-[13px] font-semibold transition-colors duration-150 select-none
+    disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky;
+}
+@utility btn-ghost {
+  @apply btn border border-line bg-ink-800/60 text-fg-muted hover:border-line-strong hover:bg-ink-700/60 hover:text-fg;
+}
+@utility btn-primary {
+  @apply btn bg-gradient-to-r from-blue to-sky text-white shadow-[0_6px_20px_-6px_rgb(56_189_248/0.55)] hover:brightness-110;
+}
+@utility btn-success {
+  @apply btn bg-gradient-to-r from-emerald to-emerald-soft text-ink-950 shadow-[0_6px_20px_-6px_rgb(16_185_129/0.55)] hover:brightness-110;
+}
+@utility btn-danger {
+  @apply btn border border-rose/40 bg-rose/10 text-rose hover:bg-rose/20;
+}
+@utility field {
+  @apply w-full rounded-xl border border-line bg-ink-950/70 px-3 py-2 text-[13.5px] text-fg placeholder:text-fg-subtle
+    outline-none transition-colors focus:border-sky/70 focus:bg-ink-950 focus:ring-2 focus:ring-sky/20;
+}
+@utility label {
+  @apply mb-1.5 block text-[11px] font-bold tracking-wider text-fg-subtle uppercase;
+}
+@utility chip {
+  @apply inline-flex items-center gap-1 rounded-lg border px-2 py-0.5 text-[11.5px] font-semibold whitespace-nowrap;
+}
+@utility mono {
+  @apply font-mono tracking-tight;
+}
