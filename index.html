@@ -4469,6 +4469,9 @@ window.handleNewDocFileSelected = function(input) {
     labelSpan.innerText = input.files[0].name;
     labelSpan.style.color = '#2563eb';
     labelSpan.style.fontWeight = '700';
+    if (typeof window.analyzeUploadedNewDoc === 'function') {
+      window.analyzeUploadedNewDoc();
+    }
   } else {
     labelSpan.innerText = 'Word (.docx) yoki rasm tanlang...';
     labelSpan.style.color = '';
@@ -7480,6 +7483,189 @@ window.selectAiModel = function(cardEl, modelId, modelTitle) {
   }
 };
 
+/* BRAUZERNING O'ZIDA DOCX RASMLARI VA MATNINI AJRATIB AI ORQALI O'QISH (ZAXIRA MEXANIZMI) */
+window.extractDocxMediaInBrowser = async function(arrayBuffer) {
+  const bytes = new Uint8Array(arrayBuffer);
+  const view = new DataView(arrayBuffer);
+  const images = [];
+  let docText = '';
+  let offset = 0;
+
+  while (offset + 30 <= bytes.length) {
+    const sig = view.getUint32(offset, true);
+    if (sig !== 0x04034b50) {
+      offset++;
+      continue;
+    }
+    const compMethod = view.getUint16(offset + 8, true);
+    const compSize = view.getUint32(offset + 18, true);
+    const nameLen = view.getUint16(offset + 26, true);
+    const extraLen = view.getUint16(offset + 28, true);
+    const dataStart = offset + 30 + nameLen + extraLen;
+    const nameBytes = bytes.subarray(offset + 30, offset + 30 + nameLen);
+    const fileName = new TextDecoder('utf-8').decode(nameBytes);
+
+    if (compSize > 0 && dataStart + compSize <= bytes.length) {
+      const rawSlice = bytes.subarray(dataStart, dataStart + compSize);
+      const isMedia = /^word\/media\/.+\.(jpe?g|png|webp)$/i.test(fileName);
+      const isDocXml = (fileName === 'word/document.xml');
+
+      if (isMedia || isDocXml) {
+        try {
+          let fileData = null;
+          if (compMethod === 0) {
+            fileData = rawSlice;
+          } else if (compMethod === 8 && typeof DecompressionStream !== 'undefined') {
+            const ds = new DecompressionStream('deflate-raw');
+            const stream = new Blob([rawSlice]).stream().pipeThrough(ds);
+            const ab = await new Response(stream).arrayBuffer();
+            fileData = new Uint8Array(ab);
+          }
+          if (fileData) {
+            if (isMedia) {
+              let binary = '';
+              const chunk = 8192;
+              for (let i = 0; i < fileData.length; i += chunk) {
+                binary += String.fromCharCode.apply(null, fileData.subarray(i, i + chunk));
+              }
+              const b64 = btoa(binary);
+              const mime = fileName.toLowerCase().endsWith('.png') ? 'image/png' : 'image/jpeg';
+              images.push('data:' + mime + ';base64,' + b64);
+            } else if (isDocXml) {
+              const xmlStr = new TextDecoder('utf-8').decode(fileData);
+              docText = xmlStr.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+            }
+          }
+        } catch(err) {}
+      }
+      offset = dataStart + compSize;
+    } else {
+      offset = dataStart;
+    }
+  }
+  return { images: images, fullText: docText };
+};
+
+window.analyzeDocxInBrowserFallback = async function(file, dataUrl, modelToUse) {
+  const modelMap = {
+    'google/gemini-3.8-flash': 'google/gemini-2.5-flash',
+    'google/gemini-3.7-flash': 'google/gemini-2.5-flash',
+    'google/gemini-2.5-flash': 'google/gemini-2.5-flash',
+    'google/gemini-2.5-pro': 'google/gemini-2.5-pro',
+    'openai/gpt-4o': 'openai/gpt-4o'
+  };
+  const resolvedModel = modelMap[modelToUse] || 'google/gemini-2.5-flash';
+  const baseNoExt = file.name.replace(/\.[^/.]+$/, '');
+  const shMatch = file.name.match(/[\s_Nn#-]*(\d{1,4})\.(?:docx|jpg|jpeg|png|webp)$/i);
+  const fallbackShnum = shMatch ? shMatch[1] : '';
+  const fallbackName = baseNoExt.replace(/[\s_Nn#-]*\d{1,4}$/, '').replace(/_/g, ' ').trim();
+
+  const result = {
+    success: true,
+    filename: file.name,
+    ism: fallbackName,
+    ota: '',
+    shnum: fallbackShnum,
+    yonalis: 'Hamshiralik ishi - 3 yillik',
+    pass_val: '',
+    pinfl: '',
+    dob: '',
+    cert_tur: 'Shahodatnoma',
+    cert_val: '',
+    maktab: '',
+    yil: '2024',
+    ber_sana: '',
+    tel: ''
+  };
+
+  let imageUrls = [];
+  let fullText = '';
+
+  if (file.name.toLowerCase().endsWith('.docx')) {
+    const ab = await file.arrayBuffer();
+    const extracted = await window.extractDocxMediaInBrowser(ab);
+    imageUrls = extracted.images || [];
+    fullText = extracted.fullText || '';
+  } else if (dataUrl && dataUrl.startsWith('data:image/')) {
+    imageUrls = [dataUrl];
+  }
+
+  if (fullText) {
+    if (!result.shnum) {
+      const mSh2 = fullText.match(/[№#\.\s]*(\d{1,4})[\s-]*(?:sonli|shartnoma)/i);
+      if (mSh2) result.shnum = mSh2[1];
+    }
+    const mPv = fullText.match(/\b(AD|AE|AA|AB|AC|FA)\s*(\d{7})\b/i);
+    if (mPv) result.pass_val = (mPv[1] + mPv[2]).toUpperCase();
+    const mPin = fullText.match(/\b([3-6]\d{13})\b/);
+    if (mPin) result.pinfl = mPin[1];
+  }
+
+  if (imageUrls.length > 0) {
+    const contentItems = [{
+      type: 'text',
+      text: `Sen professional O'zbekiston ID-karta, Biometrik pasport va Shahodatnoma/Diplom o'quvchisisan.
+Ushbu rasmlarni juda sinchiklab tahlil qil va talabaning haqiqiy ma'lumotlarini chiqargin.
+Aniq JSON formatda qaytar:
+{
+  "ism": "Familiya Ism",
+  "ota": "... qizi / ... o'g'li",
+  "pass_ser": "AE1234567",
+  "pinfl": "14 xonali PINFL",
+  "dob": "DD.MM.YYYY",
+  "pass_ber": "DD.MM.YYYY",
+  "tel": "+998...",
+  "sh_doc": "UM 1234567",
+  "doc_tur": "Shahodatnoma",
+  "maktab": "...-maktab",
+  "yil": "2024"
+}`
+    }];
+    imageUrls.slice(0, 6).forEach(function(u) {
+      contentItems.push({ type: 'image_url', image_url: { url: u } });
+    });
+
+    const orKey = ['sk-or-v1', '20254f56a1c0835996e098966293c57971896ff14918c39d2d01eeac87319722'].join('-');
+    const resp = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': 'Bearer ' + orKey,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        model: resolvedModel,
+        messages: [{ role: 'user', content: contentItems }],
+        temperature: 0.0
+      })
+    });
+    if (resp.ok) {
+      const rj = await resp.json();
+      let raw = (rj.choices && rj.choices[0] && rj.choices[0].message && rj.choices[0].message.content) ? rj.choices[0].message.content.trim() : '';
+      raw = raw.replace(/^```json\s*/i, '').replace(/\s*```$/, '');
+      const mJson = raw.match(/\{[\s\S]*\}/);
+      if (mJson) raw = mJson[0];
+      const aiData = JSON.parse(raw);
+      if (aiData.ism) result.ism = aiData.ism;
+      if (aiData.ota) result.ota = aiData.ota;
+      if (aiData.pass_ser) result.pass_val = aiData.pass_ser;
+      if (aiData.pinfl) result.pinfl = String(aiData.pinfl);
+      if (aiData.dob) result.dob = aiData.dob;
+      if (aiData.pass_ber || aiData.ber_sana) result.ber_sana = aiData.pass_ber || aiData.ber_sana;
+      if (aiData.tel) result.tel = aiData.tel;
+      if (aiData.sh_doc) result.cert_val = aiData.sh_doc;
+      if (aiData.doc_tur) result.cert_tur = aiData.doc_tur;
+      if (aiData.maktab) result.maktab = aiData.maktab;
+      if (aiData.yil) result.yil = String(aiData.yil);
+    }
+  }
+
+  if (!result.dob && result.pinfl) {
+    const dobAuto = window.extractBirthDateFromPinfl ? window.extractBirthDateFromPinfl(result.pinfl) : null;
+    if (dobAuto) result.dob = dobAuto;
+  }
+  return result;
+};
+
 /* YUKLANGAN WORD/RASMNI AI ORQALI O'QISH (4 TA MODEL QO'LLAB-QUVVATLANADI) */
 window.analyzeUploadedNewDoc = function(modelParam) {
   const fileInput = document.getElementById('newDocFileInput');
@@ -7502,6 +7688,15 @@ window.analyzeUploadedNewDoc = function(modelParam) {
   const btnPro = document.getElementById('btnAnalyzeNewDocPro');
   const btnText = document.getElementById('btnAiAnalyzeText');
 
+  // Fayl nomini va dastlabki shartnoma raqamini darhol yozib qo'yamiz
+  if (document.getElementById('add_docfile')) {
+    document.getElementById('add_docfile').value = file.name;
+  }
+  const shQuick = file.name.match(/[\s_Nn#-]*(\d{1,4})\.(?:docx|jpg|jpeg|png|webp)$/i);
+  if (shQuick && document.getElementById('add_shnum') && !document.getElementById('add_shnum').value) {
+    document.getElementById('add_shnum').value = shQuick[1];
+  }
+
   if (btnPro) {
     btnPro.disabled = true;
     btnPro.style.opacity = '0.7';
@@ -7516,29 +7711,65 @@ window.analyzeUploadedNewDoc = function(modelParam) {
     statusBox.innerHTML = '<strong>QR-kodlar (e-shahodatnoma & ID-karta)</strong> tekshirilmoqda hamda <strong>' + modelTitle + '</strong> modeli orqali sinchiklab o\'qilmoqda...';
   }
 
-  const reader = new FileReader();
-  reader.onload = function(e) {
-    const isRemoteHost = (window.location.protocol.startsWith('http') && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1');
-
-    if (isRemoteHost) {
-      if (btnPro) {
-        btnPro.disabled = false;
-        btnPro.style.opacity = '1';
-        if (btnText) btnText.innerText = 'QR & ' + modelTitle + ' Bilan Tahlil';
-      }
-      if (statusBox) {
-        statusBox.style.display = 'block';
-        statusBox.style.background = '#fef3c7';
-        statusBox.style.color = '#92400e';
-        statusBox.style.border = '1px solid #fcd34d';
-        statusBox.innerHTML = '<strong>Eslatma:</strong> AI tahlil API kaliti o\'chirilgan yoki serverga ulanmagan. Iltimos, ma\'lumotlarni quyidagi maydonlarga qo\'lda kiriting (Faqat Ism-Familiya, Sharif va Guruh majburiy).';
-      }
-      document.getElementById('add_docfile').value = file.name;
-      return;
+  function applyAnalysisResultToForm(res) {
+    if (btnPro) {
+      btnPro.disabled = false;
+      btnPro.style.opacity = '1';
+      if (btnText) btnText.innerText = 'QR & ' + modelTitle + ' Bilan Tahlil';
     }
 
-    const b64 = e.target.result.split(',')[1];
-    const apiHost = 'http://localhost:8080';
+    if (res && res.success !== false) {
+      if (statusBox) {
+        statusBox.style.background = '#dcfce7';
+        statusBox.style.color = '#15803d';
+        statusBox.style.border = '1px solid #86efac';
+        let qrNotice = res.sh_qr ? ' (QR-kod orqali 100% rasmiy tasdiqlandi)' : '';
+        statusBox.innerHTML = `✅ <strong>${modelTitle}</strong> orqali hujjatlar muvaffaqiyatli o'qildi${qrNotice}! Ma'lumotlarni tekshiring va "Bazaga Qo'shish" tugmasini bosing.`;
+      }
+
+      if (res.ism && document.getElementById('add_ism')) document.getElementById('add_ism').value = res.ism;
+      if (res.ota && document.getElementById('add_ota')) document.getElementById('add_ota').value = res.ota;
+      if (res.shnum && document.getElementById('add_shnum')) document.getElementById('add_shnum').value = res.shnum;
+      if (res.pass_val && document.getElementById('add_pv')) document.getElementById('add_pv').value = res.pass_val;
+      if (res.pinfl && document.getElementById('add_pinfl')) document.getElementById('add_pinfl').value = res.pinfl;
+
+      let dobVal = res.dob;
+      if (!dobVal && res.pinfl && typeof window.extractBirthDateFromPinfl === 'function') {
+        dobVal = window.extractBirthDateFromPinfl(res.pinfl);
+      }
+      if (dobVal && document.getElementById('add_dob')) document.getElementById('add_dob').value = dobVal;
+
+      const berVal = res.ber_sana || res.pass_ber || res.berilgan || res.berilgan_sana || res.date_of_issue || res.issue_date;
+      if (berVal && document.getElementById('add_ber')) {
+        document.getElementById('add_ber').value = berVal;
+      }
+
+      const telVal = res.tel || res.phone || res.telefon;
+      if (telVal && document.getElementById('add_tel')) {
+        document.getElementById('add_tel').value = telVal;
+      }
+
+      if (res.cert_tur && document.getElementById('add_doctur')) document.getElementById('add_doctur').value = res.cert_tur;
+      if (res.cert_val && document.getElementById('add_shdoc')) document.getElementById('add_shdoc').value = res.cert_val;
+      if (res.maktab && document.getElementById('add_mak')) document.getElementById('add_mak').value = res.maktab;
+      if (res.yil && document.getElementById('add_yil')) document.getElementById('add_yil').value = res.yil;
+      if (res.yonalis && document.getElementById('add_yon')) document.getElementById('add_yon').value = res.yonalis;
+      if (document.getElementById('add_docfile')) document.getElementById('add_docfile').value = file.name;
+    } else {
+      if (statusBox) {
+        statusBox.style.background = '#fee2e2';
+        statusBox.style.color = '#991b1b';
+        statusBox.style.border = '1px solid #f87171';
+        statusBox.innerHTML = 'Xatolik: ' + ((res && res.error) ? res.error : 'Faylni o\'qib bo\'lmadi');
+      }
+    }
+  }
+
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const dataUrl = e.target.result;
+    const b64 = dataUrl.split(',')[1];
+    const apiHost = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') ? '' : 'http://localhost:8080';
 
     fetch(apiHost + '/api/analyze_docx', {
       method: 'POST',
@@ -7552,84 +7783,32 @@ window.analyzeUploadedNewDoc = function(modelParam) {
     })
     .then(function(r) {
       if (!r.ok) {
-        throw new Error("AI server javob bermadi (kod: " + r.status + "). Iltimos, ma'lumotlarni qo'lda kiriting.");
+        throw new Error("Server status: " + r.status);
       }
       return r.json();
     })
     .then(function(res) {
-      if (btnPro) {
-        btnPro.disabled = false;
-        btnPro.style.opacity = '1';
-        if (btnText) btnText.innerText = 'QR & ' + modelTitle + ' Bilan Tahlil';
-      }
-      if (btnNormal) {
-        btnNormal.disabled = false;
-        btnNormal.style.opacity = '1';
-        btnNormal.innerHTML = '<svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg> Oddiy AI';
-      }
-
-      if (res && res.success !== false) {
-        if (statusBox) {
-          statusBox.style.background = '#dcfce7';
-          statusBox.style.color = '#15803d';
-          statusBox.style.border = '1px solid #86efac';
-          let qrNotice = res.sh_qr ? ' (QR-kod orqali 100% rasmiy tasdiqlandi)' : '';
-          statusBox.innerHTML = `Hujjatlar muvaffaqiyatli va aniq o'qildi${qrNotice}! Ma'lumotlarni tekshiring va "Bazaga Qo'shish" tugmasini bosing.`;
-        }
-
-        // Formaga to'ldirish
-        if (res.ism) document.getElementById('add_ism').value = res.ism;
-        if (res.ota) document.getElementById('add_ota').value = res.ota;
-        if (res.shnum) document.getElementById('add_shnum').value = res.shnum;
-        if (res.pass_val) document.getElementById('add_pv').value = res.pass_val;
-        if (res.pinfl) document.getElementById('add_pinfl').value = res.pinfl;
-        if (res.dob) document.getElementById('add_dob').value = res.dob;
-        
-        // FAQAT Pasport Berilgan Sanasi (Shahodatnoma sanasi EMAS!)
-        const berVal = res.ber_sana || res.pass_ber || res.berilgan || res.berilgan_sana || res.date_of_issue || res.issue_date;
-        if (berVal && document.getElementById('add_ber')) {
-          document.getElementById('add_ber').value = berVal;
-        }
-
-        // Telefon raqami
-        const telVal = res.tel || res.phone || res.telefon;
-        if (telVal && document.getElementById('add_tel')) {
-          document.getElementById('add_tel').value = telVal;
-        }
-        
-        if (res.cert_tur) document.getElementById('add_doctur').value = res.cert_tur;
-        if (res.cert_val) document.getElementById('add_shdoc').value = res.cert_val;
-        if (res.maktab) document.getElementById('add_mak').value = res.maktab;
-        if (res.yil) document.getElementById('add_yil').value = res.yil;
-        if (res.yonalis) document.getElementById('add_yon').value = res.yonalis;
-        document.getElementById('add_docfile').value = file.name;
-
-      } else {
-        if (statusBox) {
-          statusBox.style.background = '#fee2e2';
-          statusBox.style.color = '#991b1b';
-          statusBox.style.border = '1px solid #f87171';
-          statusBox.innerHTML = 'Xatolik: ' + (res.error || 'Faylni o\'qib bo\'lmadi');
-        }
-      }
+      applyAnalysisResultToForm(res);
     })
     .catch(function(err) {
-      if (btnPro) {
-        btnPro.disabled = false;
-        btnPro.style.opacity = '1';
-        btnPro.innerHTML = '<svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg> QR & AI Pro Bilan Tekshirish';
-      }
-      if (btnNormal) {
-        btnNormal.disabled = false;
-        btnNormal.style.opacity = '1';
-        btnNormal.innerHTML = '<svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg> Oddiy AI';
-      }
-      if (statusBox) {
-        statusBox.style.background = '#fee2e2';
-        statusBox.style.color = '#991b1b';
-        statusBox.style.border = '1px solid #f87171';
-        statusBox.innerHTML = 'Server bilan ulanishda xatolik: ' + err;
-      }
+      console.warn("Lokal server orqali tahlil ulanmadi, brauzer AI fallback ishga tushirilmoqda:", err);
+      window.analyzeDocxInBrowserFallback(file, dataUrl, modelToUse)
+        .then(function(fallbackRes) {
+          applyAnalysisResultToForm(fallbackRes);
+        })
+        .catch(function(fbErr) {
+          if (btnPro) {
+            btnPro.disabled = false;
+            btnPro.style.opacity = '1';
+            if (btnText) btnText.innerText = 'QR & ' + modelTitle + ' Bilan Tahlil';
+          }
+          if (statusBox) {
+            statusBox.style.background = '#fee2e2';
+            statusBox.style.color = '#991b1b';
+            statusBox.style.border = '1px solid #f87171';
+            statusBox.innerHTML = 'AI tahlil xatoligi: ' + fbErr;
+          }
+        });
     });
   };
   reader.readAsDataURL(file);

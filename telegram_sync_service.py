@@ -848,17 +848,17 @@ def trigger_report_rebuild(delay=None, async_mode=True):
 
 OPENROUTER_API_KEY = os.environ.get("OPENROUTER_API_KEY", "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")
 SUPPORTED_AI_MODELS = {
-    "google/gemini-3.8-flash": "google/gemini-3.8-flash",
-    "google/gemini-3.7-flash": "google/gemini-3.7-flash",
+    "google/gemini-3.8-flash": "google/gemini-2.5-flash",
+    "google/gemini-3.7-flash": "google/gemini-2.5-flash",
     "google/gemini-2.5-flash": "google/gemini-2.5-flash",
     "google/gemini-2.5-pro": "google/gemini-2.5-pro",
     "google/gemini-2.0-flash-001": "google/gemini-2.0-flash-001",
     "google/gemini-2.0-flash": "google/gemini-2.0-flash-001",
     "openai/gpt-4o": "openai/gpt-4o",
-    "flash": "google/gemini-3.8-flash",
+    "flash": "google/gemini-2.5-flash",
     "pro": "google/gemini-2.5-pro"
 }
-OPENROUTER_MODELS = ["google/gemini-3.8-flash", "google/gemini-2.5-flash", "google/gemini-2.5-pro", "openai/gpt-4o"]
+OPENROUTER_MODELS = ["google/gemini-2.5-flash", "google/gemini-2.5-pro", "openai/gpt-4o"]
 
 def clean_uz_name(text):
     if not text:
@@ -1138,9 +1138,13 @@ def analyze_docx_content(docx_bytes, filename, default_ism="", default_yon="", u
         "sh_qr": ""
     }
     
-    m_sh = re.search(r'[\s_Nn](\d{1,4})\.docx$', filename, re.I)
+    m_sh = re.search(r'[\s_Nn#-]*(\d{1,4})\.(?:docx|jpg|jpeg|png|webp)$', filename, re.I)
     if m_sh:
         result['shnum'] = m_sh.group(1)
+
+    # Fayl nomidan dastlabki ism-familiyani ajratib olish (zaxira uchun)
+    base_no_ext = os.path.splitext(filename)[0]
+    fallback_name = re.sub(r'[\s_Nn#-]*\d{1,4}$', '', base_no_ext).replace('_', ' ').strip()
         
     try:
         saved_temp = os.path.join(FILES_DIR, filename)
@@ -1169,6 +1173,14 @@ def analyze_docx_content(docx_bytes, filename, default_ism="", default_yon="", u
         if m_ber_text:
             result['ber_sana'] = m_ber_text.group(1).replace('/', '.')
 
+        # Word hujjati matnidan pasport seriya va JSHSHIR qidirish (zaxira)
+        m_pv_text = re.search(r'\b(AD|AE|AA|AB|AC|FA)\s*(\d{7})\b', full_text, re.I)
+        if m_pv_text:
+            result['pass_val'] = (m_pv_text.group(1) + m_pv_text.group(2)).upper()
+        m_pin_text = re.search(r'\b([3-6]\d{13})\b', full_text)
+        if m_pin_text:
+            result['pinfl'] = m_pin_text.group(1)
+
         # 1-QADAM: AVVAL QR-KODLARNI TEKSHIRISH (100% RASMIY VA ANIQ!)
         qr_extracted = scan_all_qrs(blobs_raw)
         if qr_extracted:
@@ -1185,14 +1197,14 @@ def analyze_docx_content(docx_bytes, filename, default_ism="", default_yon="", u
             if qr_extracted.get('yil'): result['yil'] = qr_extracted['yil']
             if qr_extracted.get('sh_qr'): result['sh_qr'] = qr_extracted['sh_qr']
 
-        # 2-QADAM: AI VISION TAHLIL (4 TA MODEL QO'LLAB-QUVVATLANADI)
+        # 2-QADAM: AI VISION TAHLIL (4 TA MODEL VA AVTOMATIK FALLBACK)
         if model and model in SUPPORTED_AI_MODELS:
             model_to_use = SUPPORTED_AI_MODELS[model]
         elif model:
-            model_to_use = model
+            model_to_use = SUPPORTED_AI_MODELS.get(model.lower(), 'google/gemini-2.5-flash')
         else:
             model_to_use = 'google/gemini-2.5-pro' if use_pro else 'google/gemini-2.5-flash'
-        print(f"Hujjat AI tahlili: model = {model_to_use}")
+        print(f"Hujjat AI tahlili: model = {model_to_use} (tanlangan: {model})")
 
         content_items = [{'type': 'text', 'text': """Sen professional O'zbekiston ID-karta, Biometrik pasport va Shahodatnoma/Diplom o'quvchisisan.
 Ushbu rasmlarni juda sinchiklab tahlil qil va talabaning haqiqiy ma'lumotlarini chiqargin.
@@ -1236,61 +1248,96 @@ Aniq JSON formatda qaytar:
             b64 = base64.b64encode(b).decode('utf-8')
             content_items.append({'type': 'image_url', 'image_url': {'url': f'data:image/jpeg;base64,{b64}'}})
 
-        ai_payload = {
-            'model': model_to_use,
-            'messages': [{'role': 'user', 'content': content_items}],
-            'temperature': 0.0
-        }
-        
-        req = urllib.request.Request(
-            'https://openrouter.ai/api/v1/chat/completions',
-            data=json.dumps(ai_payload).encode('utf-8'),
-            headers={'Authorization': f'Bearer {OPENROUTER_API_KEY}', 'Content-Type': 'application/json'}
-        )
-        
-        with urllib.request.urlopen(req, timeout=45) as resp:
-            res_json = json.loads(resp.read().decode('utf-8'))
-            raw = res_json['choices'][0]['message']['content'].strip()
-            raw = re.sub(r'^```json\s*', '', raw)
-            raw = re.sub(r'\s*```$', '', raw)
-            ai_data = json.loads(raw)
-            
-            # Agar QR dan olinmagan bo'lsa yoki bo'sh bo'lsa AI ma'lumotlarini qo'yish
-            if not result.get('ism') and ai_data.get('ism'): result['ism'] = clean_uz_name(ai_data['ism'])
-            if not result.get('ota') and ai_data.get('ota'): result['ota'] = clean_uz_name(ai_data['ota'])
-            if not result.get('pass_val') and ai_data.get('pass_ser'): result['pass_val'] = ai_data['pass_ser']
-            if not result.get('pinfl') and ai_data.get('pinfl'): result['pinfl'] = str(ai_data['pinfl'])
-            if not result.get('dob') and ai_data.get('dob'): result['dob'] = ai_data['dob']
-            
-            # Pasport berilgan sanasining barcha sinonimlarini tekshirish
-            ber_val = (
-                ai_data.get('pass_ber') or 
-                ai_data.get('ber_sana') or 
-                ai_data.get('berilgan') or 
-                ai_data.get('berilgan_sana') or 
-                ai_data.get('date_of_issue') or 
-                ai_data.get('issue_date')
-            )
-            if ber_val:
-                result['ber_sana'] = str(ber_val).strip()
+        if blobs_raw:
+            candidate_models = [model_to_use]
+            for fb in ["google/gemini-2.5-flash", "google/gemini-2.5-pro", "openai/gpt-4o"]:
+                if fb not in candidate_models:
+                    candidate_models.append(fb)
 
-            tel_val = ai_data.get('tel') or ai_data.get('telefon') or ai_data.get('phone')
-            if tel_val and not result.get('tel'):
-                result['tel'] = str(tel_val).strip()
+            ai_data = None
+            for try_model in candidate_models:
+                try:
+                    ai_payload = {
+                        'model': try_model,
+                        'messages': [{'role': 'user', 'content': content_items}],
+                        'temperature': 0.0
+                    }
+                    req = urllib.request.Request(
+                        'https://openrouter.ai/api/v1/chat/completions',
+                        data=json.dumps(ai_payload).encode('utf-8'),
+                        headers={'Authorization': f'Bearer {OPENROUTER_API_KEY}', 'Content-Type': 'application/json'}
+                    )
+                    with urllib.request.urlopen(req, timeout=45) as resp:
+                        res_json = json.loads(resp.read().decode('utf-8'))
+                        raw = res_json['choices'][0]['message']['content'].strip()
+                        raw = re.sub(r'^```json\s*', '', raw)
+                        raw = re.sub(r'\s*```$', '', raw)
+                        m_json = re.search(r'\{.*\}', raw, re.S)
+                        if m_json:
+                            raw = m_json.group(0)
+                        ai_data = json.loads(raw)
+                        if ai_data:
+                            break
+                except Exception as ai_err:
+                    print(f"OpenRouter AI ({try_model}) xatosi: {ai_err}")
 
-            if not result.get('cert_val') and ai_data.get('sh_doc'): result['cert_val'] = ai_data['sh_doc']
-            if not result.get('cert_tur') and ai_data.get('doc_tur'): result['cert_tur'] = ai_data['doc_tur']
-            if not result.get('maktab') and ai_data.get('maktab'): result['maktab'] = ai_data['maktab']
-            if not result.get('yil') and ai_data.get('yil'): result['yil'] = str(ai_data['yil'])
-            
-            # Pasport seriya 7 raqam bo'lishini qat'iy tekshirish
-            pv = result.get('pass_val', '')
-            m_fix = re.search(r'([A-Z]{2})(\d{7})', pv)
-            if m_fix:
-                result['pass_val'] = m_fix.group(1) + m_fix.group(2)
+            if ai_data:
+                # Agar QR dan olinmagan bo'lsa yoki bo'sh bo'lsa AI ma'lumotlarini qo'yish
+                if not result.get('ism') and ai_data.get('ism'): result['ism'] = clean_uz_name(ai_data['ism'])
+                if not result.get('ota') and ai_data.get('ota'): result['ota'] = clean_uz_name(ai_data['ota'])
+                if not result.get('pass_val') and ai_data.get('pass_ser'): result['pass_val'] = ai_data['pass_ser']
+                if not result.get('pinfl') and ai_data.get('pinfl'): result['pinfl'] = str(ai_data['pinfl'])
+                if not result.get('dob') and ai_data.get('dob'): result['dob'] = ai_data['dob']
+                
+                ber_val = (
+                    ai_data.get('pass_ber') or 
+                    ai_data.get('ber_sana') or 
+                    ai_data.get('berilgan') or 
+                    ai_data.get('berilgan_sana') or 
+                    ai_data.get('date_of_issue') or 
+                    ai_data.get('issue_date')
+                )
+                if ber_val:
+                    result['ber_sana'] = str(ber_val).strip()
+
+                tel_val = ai_data.get('tel') or ai_data.get('telefon') or ai_data.get('phone')
+                if tel_val and not result.get('tel'):
+                    result['tel'] = str(tel_val).strip()
+
+                if not result.get('cert_val') and ai_data.get('sh_doc'): result['cert_val'] = ai_data['sh_doc']
+                if not result.get('cert_tur') and ai_data.get('doc_tur'): result['cert_tur'] = ai_data['doc_tur']
+                if not result.get('maktab') and ai_data.get('maktab'): result['maktab'] = ai_data['maktab']
+                if not result.get('yil') and ai_data.get('yil'): result['yil'] = str(ai_data['yil'])
+                
+                pv = result.get('pass_val', '')
+                m_fix = re.search(r'([A-Z]{2})(\d{7})', pv)
+                if m_fix:
+                    result['pass_val'] = m_fix.group(1) + m_fix.group(2)
+
+        # Agar ism hali ham topilmagan bo'lsa, fayl nomidan olamiz
+        if not result.get('ism') and fallback_name:
+            words = fallback_name.split()
+            if len(words) >= 3 and words[-1].lower() in ('qizi', 'kizi', "o'g'li", 'ogli', 'ugli'):
+                result['ism'] = clean_uz_name(" ".join(words[:-2]))
+                if not result.get('ota'):
+                    result['ota'] = clean_uz_name(" ".join(words[-2:]))
+            else:
+                result['ism'] = clean_uz_name(fallback_name)
+
+        # Agar DOB bo'sh bo'lsa-yu PINFL 14 xonali bo'lsa, PINFL dan tug'ilgan sanani chiqaramiz
+        pin_clean = re.sub(r'\D', '', str(result.get('pinfl', '')))
+        if len(pin_clean) == 14:
+            result['pinfl'] = pin_clean
+            if not result.get('dob'):
+                dd, mm, yy = int(pin_clean[1:3]), int(pin_clean[3:5]), int(pin_clean[5:7])
+                cent = 1900 if int(pin_clean[0]) in (3, 4) else 2000
+                if 1 <= dd <= 31 and 1 <= mm <= 12:
+                    result['dob'] = f"{dd:02d}.{mm:02d}.{cent+yy}"
             
     except Exception as e:
         print(f"analyze_docx_content xatosi: {e}")
+        if not result.get('ism') and fallback_name:
+            result['ism'] = clean_uz_name(fallback_name)
         
     return result
 
