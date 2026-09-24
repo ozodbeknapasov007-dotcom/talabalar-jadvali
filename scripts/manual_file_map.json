@@ -23,12 +23,12 @@
       "sabab": "Manba jadvalda xato fayl ko'rsatilgan edi (Ergashova Janona 59.docx). Haqiqiy fayl tasdiqlandi: shartnoma #60, Qarshi ped kollej, Komiljon qizi."
     },
     "Ilhomova Zuhra|26-02": {
-      "file": "",
-      "sabab": "Fayli mavjud emas. Olimova Zuxra 15.docx xato biriktirilgan edi, uzildi."
+      "file": "Ilhomova zuhra davron qizi 294.docx",
+      "sabab": "Haqiqiy 294-shartnoma fayli biriktirildi"
     },
     "Nematova Sevinch|26-05": {
       "file": "",
-      "sabab": "Fayli mavjud emas. Nurmatova Sevinch 85.docx xato biriktirilgan edi, uzildi."
+      "sabab": "Foydalanuvchi topshirig'i bilan xato fayl va rasmlar olib tashlandi"
     },
     "Muminova Durdona|26-06": {
       "file": "",
@@ -51,12 +51,12 @@
       "sabab": "Familiyadagi xato tuzatildi: Saydalimova Ruxshona Sharofiddin qizi (#74)"
     },
     "Mustafayeva Madina|26-03": {
-      "file": "",
-      "sabab": "Mustafoyeva Madina 282.docx boshqa shaxs (Ortiq qizi), uzildi. Fayl mavjud emas."
+      "file": "Mustafoyeva Madina 282.docx",
+      "sabab": "Mustafayeva Madina Ortiq qizi (#282) fayli tasdiqlandi"
     },
     "Qodirova Sabina|26-04": {
       "file": "",
-      "sabab": "Qodirova Shabnam 137.docx boshqa shaxs (Shabnam O'tkir qizi), uzildi. Fayl mavjud emas."
+      "sabab": "Qodirova Shabnam 137.docx boshqa shaxs, uzildi. Qodirova Sabina pasporti qo'lda kiritilgan."
     },
     "Quchqarova Zebiniso|26-06": {
       "file": "Kuchqarova Zebiniso 187.docx",
@@ -125,6 +125,38 @@
     "Sayfiyeva Sarvinoz Zafar qizi|26-06": {
       "file": "Sayfiyeva_Sarvinoz_Zafar_qizi.docx",
       "sabab": "Pasport/Shahodatnoma yuklandi (Sayfiyeva_Sarvinoz_Zafar_qizi.docx)"
+    },
+    "Meyliqulova Hilola|26-02": {
+      "file": "",
+      "sabab": "Jumayeva Muxlisa 60.docx uzildi, Meyliqulova Hilola o'z ma'lumotlari qo'lda kiritilgan"
+    },
+    "Ne'matova Sevinch|26-05": {
+      "file": "",
+      "sabab": "Foydalanuvchi topshirig'i bilan xato fayl va rasmlar olib tashlandi"
+    },
+    "Ne'matova Sevinch Hikmatullo qizi|26-05": {
+      "file": "",
+      "sabab": "Foydalanuvchi topshirig'i bilan xato fayl va rasmlar olib tashlandi"
+    },
+    "Abdinazarova Dilafro'z|26-06": {
+      "file": "Abdinazarova Dilafro’z 273.docx",
+      "sabab": "Shartnoma #273"
+    },
+    "Meliyeva Umida|26-01": {
+      "file": "Meliyeva Umida 281.docx",
+      "sabab": "Shartnoma #281"
+    },
+    "Xolmamatova Shoxista|26-03": {
+      "file": "Xolmamatova Shoxista 243.docx",
+      "sabab": "Shartnoma #243"
+    },
+    "Uroqova Jasmina|26-02": {
+      "file": "Uroqova Jasmina 148.docx",
+      "sabab": "Shartnoma #148"
+    },
+    "Narziyeva Intizor|26-06": {
+      "file": "Nazirova  Intizor 212.docx",
+      "sabab": "Shartnoma #212"
     }
   },
   "_qulf_izoh": "qulflangan: bu qatorlarga avtomatik skriptlar YOZMAYDI (qo'lda hujjat rasmidan tasdiqlangan)",
@@ -133,7 +165,7 @@
     "Xurramova Shodiya|26-02": "Pasport AC1967100 va ATTESTAT UM 0438281 rasmlari bilan to'liq tasdiqlandi",
     "Isomiddinova Ruxshona|26-04": "Haqiqiy shartnoma Isomiddinova Ruhshona 65.docx bilan tasdiqlandi (#65)",
     "Jumayeva Muhlisa|26-05": "Haqiqiy shartnoma Jumayeva Muxlisa 60.docx bilan tasdiqlandi (#60)",
-    "Ilhomova Zuhra|26-02": "Fayl yo'q, xato Olimova ma'lumotlari tozalandi",
+    "Ilhomova Zuhra|26-02": "Ilhomova zuhra davron qizi 294.docx bilan tasdiqlandi",
     "Nematova Sevinch|26-05": "Fayl yo'q, xato Nurmatova ma'lumotlari tozalandi",
     "Muminova Durdona|26-06": "Fayl yo'q, xato Raxmonova ma'lumotlari tozalandi",
     "Rustamova Charos|26-03": "ID-karta AE4730990 va Shahodatnoma UM 03728038 rasmlari (tg) dan to'liq kiritildi",
@@ -145,8 +177,8 @@
     "Xusanova Aziza|26-04": "ID-karta AE5015467 bosma MRZ dan PINFL tuzatildi, nazorat raqami tasdiqladi",
     "Jurayeva Madina|26-05": "ID-karta AD9394305 bosma MRZ dan PINFL tuzatildi, nazorat raqami tasdiqladi",
     "Saydalimova Ruxshona|26-02": "ID-karta AE3352294 va Shahodatnoma UM 03754198 rasmlaridan to'liq tasdiqlandi (#74)",
-    "Mustafayeva Madina|26-03": "Fayl yo'q, xato biriktirilgan Mustafoyeva ma'lumotlari tozalandi",
-    "Qodirova Sabina|26-04": "Fayl yo'q, xato biriktirilgan Qodirova Shabnam ma'lumotlari tozalandi",
+    "Mustafayeva Madina|26-03": "Mustafayeva Madina Ortiq qizi (#282) tasdiqlandi",
+    "Qodirova Sabina|26-04": "Pasport AC2359638 qo'lda kiritilib tasdiqlandi",
     "Quchqarova Zebiniso|26-06": "ID-karta AE1143288 rasmidan otasining ismi Farhod qizi ekanligi to'liq tasdiqlandi (#187)",
     "Narziyeva Intizor|26-07": "Biometrik pasport AB5359926 va Kollej diplomi K 5047841 rasmlaridan tasdiqlandi (#212)",
     "Tuychiyeva Farzona|26-04": "ID-karta AE4114421 va Shahodatnoma UM-O 00064269 rasmlaridan to'liq tasdiqlandi (#280)",
@@ -157,10 +189,10 @@
     "Azimova Zahroxon|26-06": "Foydalanuvchi biriktirgan Azimova Zahroxon Abdirauf qizi 318.docx fayli bilan tasdiqlandi",
     "Azimova Zahroxon Abdirauf qizi|26-06": "Foydalanuvchi biriktirgan Azimova Zahroxon Abdirauf qizi 318.docx fayli bilan tasdiqlandi",
     "Sayfiyeva Sarvinoz|26-06": "Foydalanuvchi tomonidan yuklangan (Sayfiyeva_Sarvinoz_Zafar_qizi.docx)",
-    "Sayfiyeva Sarvinoz Zafar qizi|26-06": "Foydalanuvchi tomonidan yuklangan (Sayfiyeva_Sarvinoz_Zafar_qizi.docx)"
+    "Sayfiyeva Sarvinoz Zafar qizi|26-06": "Foydalanuvchi tomonidan yuklangan (Sayfiyeva_Sarvinoz_Zafar_qizi.docx)",
+    "Meyliqulova Hilola|26-02": "Pasport AB7137876 va Diplom K 5470992 qo'lda tasdiqlandi",
+    "Ne'matova Sevinch|26-05": "Xato fayl va rasmlar olib tashlandi"
   },
-  "85": "Nazirova  Intizor 212.docx",
   "sh_212": "Nazirova  Intizor 212.docx",
-  "175": "Abdinazarova Dilafro’z 273.docx",
   "sh_273": "Abdinazarova Dilafro’z 273.docx"
 }

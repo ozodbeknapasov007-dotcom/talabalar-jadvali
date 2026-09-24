@@ -170,12 +170,12 @@ for r in range(2, ws.max_row + 1):
     r_key = str(r)
     sh_key = f"sh_{shnum}" if shnum else None
     pin_key = f"pinfl_{pinfl}" if pinfl else None
-    if r_key in verif_map:
-        verified_status = verif_map[r_key]
+    if pin_key and pin_key in verif_map:
+        verified_status = verif_map[pin_key]
     elif sh_key and sh_key in verif_map:
         verified_status = verif_map[sh_key]
-    elif pin_key and pin_key in verif_map:
-        verified_status = verif_map[pin_key]
+    elif r_key in verif_map:
+        verified_status = verif_map[r_key]
     
     if not ism and not shnum:
         continue
