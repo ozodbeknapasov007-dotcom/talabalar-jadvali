@@ -2084,8 +2084,13 @@ class WebServerHandler(BaseHTTPRequestHandler):
                 qr_extracted = scan_all_qrs(image_blobs)
                 print(f"reanalyze_student QR natijasi: {qr_extracted}")
 
-                use_model = "google/gemini-3.7-flash"
-                print(f"reanalyze_student ishlatilayotgan AI modeli: {use_model}")
+                req_model = unquote(params.get('model', 'google/gemini-3.8-flash')).strip()
+                primary_model = SUPPORTED_AI_MODELS.get(req_model, req_model if '/' in req_model else "google/gemini-2.5-flash")
+                models_to_try = [primary_model]
+                for fb_m in ["google/gemini-2.5-flash", "google/gemini-2.5-pro", "openai/gpt-4o"]:
+                    if fb_m not in models_to_try:
+                        models_to_try.append(fb_m)
+                print(f"reanalyze_student tanlangan model: {req_model} -> {primary_model}")
 
                 content_items = [{"type": "text", "text": """Sen professional O'zbekiston ID-karta, Biometrik pasport va Shahodatnoma/Diplom o'quvchisisan.
 Ushbu rasmlarni juda sinchiklab tahlil qil va talabaning haqiqiy ma'lumotlarini chiqargin.
@@ -2126,25 +2131,35 @@ Aniq JSON formatda qaytar:
                     b64 = base64.b64encode(b).decode('utf-8')
                     content_items.append({"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{b64}"}})
 
-                ai_payload = {
-                    "model": use_model,
-                    "messages": [{"role": "user", "content": content_items}],
-                    "temperature": 0.0
-                }
-
-                req = urllib.request.Request(
-                    "https://openrouter.ai/api/v1/chat/completions",
-                    data=json.dumps(ai_payload).encode('utf-8'),
-                    headers={"Authorization": f"Bearer {OPENROUTER_API_KEY}", "Content-Type": "application/json"}
-                )
-
                 parsed_ai = {}
-                with urllib.request.urlopen(req, timeout=45) as resp:
-                    res_data = json.loads(resp.read().decode('utf-8'))
-                    raw_txt = res_data['choices'][0]['message']['content'].strip()
-                    raw_txt = re.sub(r'^```json\s*', '', raw_txt)
-                    raw_txt = re.sub(r'\s*```$', '', raw_txt)
-                    parsed_ai = json.loads(raw_txt)
+                used_model_actual = primary_model
+                for try_m in models_to_try:
+                    try:
+                        ai_payload = {
+                            "model": try_m,
+                            "messages": [{"role": "user", "content": content_items}],
+                            "temperature": 0.0
+                        }
+                        req = urllib.request.Request(
+                            "https://openrouter.ai/api/v1/chat/completions",
+                            data=json.dumps(ai_payload).encode('utf-8'),
+                            headers={"Authorization": f"Bearer {OPENROUTER_API_KEY}", "Content-Type": "application/json"}
+                        )
+                        with urllib.request.urlopen(req, timeout=45) as resp:
+                            res_data = json.loads(resp.read().decode('utf-8'))
+                            raw_txt = res_data['choices'][0]['message']['content'].strip()
+                            raw_txt = re.sub(r'^```json\s*', '', raw_txt)
+                            raw_txt = re.sub(r'\s*```$', '', raw_txt)
+                            m_json = re.search(r'\{[\s\S]*\}', raw_txt)
+                            if m_json:
+                                raw_txt = m_json.group(0)
+                            parsed_ai = json.loads(raw_txt)
+                            if parsed_ai:
+                                used_model_actual = try_m
+                                break
+                    except Exception as e_try:
+                        print(f"reanalyze_student [{try_m}] xato: {e_try}")
+                        continue
 
                 # QR kod ma'lumotlarini birlashtirish (QR ustuvor!)
                 if qr_extracted:
@@ -3040,6 +3055,340 @@ Aniq JSON formatda qaytar:
             self.end_headers()
             self.wfile.write(json.dumps(res, ensure_ascii=False).encode('utf-8'))
             return
+
+        if parsed_path == '/api/upload_student_section_files':
+            length = int(self.headers.get('Content-Length', 0))
+            body = self.rfile.read(length)
+            try:
+                data = json.loads(body.decode('utf-8'))
+                row_idx = int(data.get('row', '0'))
+                student_ism = str(data.get('ism', '') or '').strip()
+                student_ota = str(data.get('ota', '') or '').strip()
+                student_group = str(data.get('group', '') or '').strip()
+                existing_doc_file = str(data.get('doc_file', '') or '').strip()
+                do_analyze = bool(data.get('analyze', True))
+                req_model = str(data.get('model', 'google/gemini-3.8-flash') or 'google/gemini-3.8-flash').strip()
+
+                passport_files = data.get('passport_files', []) or []
+                diploma_files = data.get('diploma_files', []) or []
+
+                def decode_items_to_blobs(file_list, target_role):
+                    out_blobs = []
+                    out_texts = []
+                    for fitem in file_list:
+                        fname_i = str(fitem.get('filename', 'hujjat.jpg') or 'hujjat.jpg')
+                        b64_i = str(fitem.get('base64', '') or '')
+                        if ',' in b64_i:
+                            b64_i = b64_i.split(',', 1)[1]
+                        if not b64_i:
+                            continue
+                        raw_bytes = base64.b64decode(b64_i)
+                        ext_i = os.path.splitext(fname_i)[1].lower()
+
+                        raw_imgs_for_item = []
+                        if ext_i == '.pdf':
+                            try:
+                                import fitz
+                                pdf_doc = fitz.open(stream=raw_bytes, filetype="pdf")
+                                for pg_idx in range(min(2, len(pdf_doc))):
+                                    pg = pdf_doc[pg_idx]
+                                    pg_txt = pg.get_text() or ''
+                                    if pg_txt.strip():
+                                        out_texts.append(pg_txt.strip())
+                                    pix = pg.get_pixmap(matrix=fitz.Matrix(2.0, 2.0), alpha=False)
+                                    raw_imgs_for_item.append(pix.tobytes("jpeg"))
+                                pdf_doc.close()
+                            except Exception as e_pdf:
+                                print(f"PDF render xatosi ({fname_i}): {e_pdf}")
+                        elif ext_i == '.docx':
+                            tmp_docx_path = os.path.join(FILES_DIR, f"_tmp_sec_{int(time.time()*1000)}_{os.path.basename(fname_i)}")
+                            try:
+                                with open(tmp_docx_path, 'wb') as tf:
+                                    tf.write(raw_bytes)
+                                _, d_blobs, d_txt = extract_doc_images_with_crop(tmp_docx_path)
+                                if d_txt:
+                                    out_texts.append(d_txt)
+                                raw_imgs_for_item.extend(d_blobs[:2])
+                            finally:
+                                if os.path.exists(tmp_docx_path):
+                                    try: os.remove(tmp_docx_path)
+                                    except Exception: pass
+                        else:
+                            raw_imgs_for_item.append(raw_bytes)
+
+                        # Normalize each image to clean RGB JPEG with role-appropriate aspect ratio
+                        for r_blob in raw_imgs_for_item:
+                            try:
+                                im = Image.open(io.BytesIO(r_blob)).convert('RGB')
+                                w, h = im.size
+                                if target_role == 'passport':
+                                    # Pasport rasmi modalda 1-bo'limda (w >= h * 1.05) chiqishi uchun:
+                                    if h > w:
+                                        new_w = int(h * 1.12)
+                                        canvas = Image.new('RGB', (new_w, h), (255, 255, 255))
+                                        canvas.paste(im, ((new_w - w) // 2, 0))
+                                        im = canvas
+                                elif target_role == 'diploma':
+                                    # Shahodatnoma/Diplom rasmi modalda 2-bo'limda (h > w * 1.05) chiqishi uchun:
+                                    if w >= h * 0.96:
+                                        new_h = int(w * 1.12)
+                                        canvas = Image.new('RGB', (w, new_h), (255, 255, 255))
+                                        canvas.paste(im, (0, (new_h - h) // 2))
+                                        im = canvas
+                                buf = io.BytesIO()
+                                im.save(buf, format='JPEG', quality=95)
+                                out_blobs.append(buf.getvalue())
+                            except Exception as e_im:
+                                print(f"Rasm konvertatsiya xatosi ({fname_i}): {e_im}")
+                    return out_blobs, "\n".join(out_texts)
+
+                new_pass_blobs, pass_txt = decode_items_to_blobs(passport_files, 'passport')
+                new_dip_blobs, dip_txt = decode_items_to_blobs(diploma_files, 'diploma')
+
+                # Mavjud .docx fayldagi rasmlarni o'qiymiz (agar faqat bitta bo'lim yangilangan bo'lsa, ikkinchisi saqlanib qoladi)
+                old_pass_blobs = []
+                old_dip_blobs = []
+                old_txt = ""
+                if existing_doc_file and existing_doc_file != 'Mavjud emas':
+                    ex_path = os.path.join(FILES_DIR, existing_doc_file)
+                    if os.path.exists(ex_path) and os.path.isfile(ex_path):
+                        _, ex_blobs, old_txt = extract_doc_images_with_crop(ex_path)
+                        for b in ex_blobs:
+                            try:
+                                im_b = Image.open(io.BytesIO(b))
+                                wb_i, hb_i = im_b.size
+                                if hb_i > wb_i * 1.05:
+                                    old_dip_blobs.append(b)
+                                else:
+                                    old_pass_blobs.append(b)
+                            except Exception:
+                                old_pass_blobs.append(b)
+
+                final_pass_blobs = new_pass_blobs if len(new_pass_blobs) > 0 else old_pass_blobs
+                final_dip_blobs = new_dip_blobs if len(new_dip_blobs) > 0 else old_dip_blobs
+                all_blobs = final_pass_blobs + final_dip_blobs
+                combined_text = "\n".join([t for t in [old_txt, pass_txt, dip_txt] if t])
+
+                if not all_blobs:
+                    self.send_response(400)
+                    self.send_header('Content-Type', 'application/json; charset=utf-8')
+                    self.send_header('Access-Control-Allow-Origin', '*')
+                    self.end_headers()
+                    self.wfile.write(json.dumps({"success": False, "error": "Pasport yoki Shahodatnoma rasmlari topilmadi"}).encode('utf-8'))
+                    return
+
+                # Yangi yoki mavjud .docx fayl nomini aniqlash va rasmlarni ichiga joylash
+                if existing_doc_file and existing_doc_file != 'Mavjud emas' and existing_doc_file.lower().endswith('.docx'):
+                    target_docx_name = os.path.basename(existing_doc_file)
+                else:
+                    base_student_str = f"{student_ism}_{student_ota}".strip('_') or f"Talaba_{row_idx}"
+                    clean_fname = re.sub(r'[^a-zA-Z0-9_\u0400-\u04FF-]+', '_', base_student_str).strip('_')
+                    target_docx_name = f"{clean_fname}.docx"
+
+                saved_docx_path = os.path.join(FILES_DIR, target_docx_name)
+                from docx.shared import Inches
+                new_doc = docx.Document()
+                if student_ism or student_ota:
+                    new_doc.add_paragraph(f"Talaba: {student_ism} {student_ota}".strip())
+                if combined_text:
+                    new_doc.add_paragraph(combined_text[:1000])
+                for b_img in all_blobs:
+                    try:
+                        new_doc.add_picture(io.BytesIO(b_img), width=Inches(5.8))
+                    except Exception as e_pic:
+                        print(f"docx.add_picture xatosi: {e_pic}")
+                new_doc.save(saved_docx_path)
+
+                safe_slug = re.sub(r'[^a-zA-Z0-9_-]+', '_', os.path.splitext(target_docx_name)[0]).strip('_') or f"student_row_{row_idx}"
+                images_b64, _, _, _ = extract_and_save_student_images(saved_docx_path, safe_slug)
+                if not images_b64:
+                    images_b64 = [f"data:image/jpeg;base64,{base64.b64encode(b).decode('utf-8')}" for b in all_blobs]
+
+                ai_data = {}
+                used_model_actual = SUPPORTED_AI_MODELS.get(req_model, req_model if '/' in req_model else 'google/gemini-2.5-flash')
+
+                if do_analyze:
+                    qr_extracted = scan_all_qrs(all_blobs)
+                    print(f"upload_student_section_files QR natijasi: {qr_extracted}")
+
+                    # PDF matnidan e-shahodatnoma ma'lumotlarini olish (agar PDF yuklangan bo'lsa)
+                    if dip_txt:
+                        for l in [ln.strip() for ln in dip_txt.split('\n') if ln.strip()]:
+                            if re.match(r'^\d{7,8}$', l) and not ai_data.get('sh_doc'):
+                                ai_data['sh_doc'] = f"UM {l}"
+                                ai_data['doc_tur'] = 'Shahodatnoma'
+                            m_mak = re.search(r'(\d{4})\s+(.+?maktab.+)', l, re.I)
+                            if m_mak:
+                                ai_data['yil'] = m_mak.group(1)
+                                ai_data['maktab'] = m_mak.group(2).strip()
+
+                    content_items = [{'type': 'text', 'text': """Sen professional O'zbekiston ID-karta, Biometrik pasport va Shahodatnoma/Diplom o'quvchisisan.
+Ushbu rasmlarni juda sinchiklab tahlil qil va talabaning haqiqiy ma'lumotlarini chiqargin.
+
+Qat'iy Qoidalar:
+1. Pasport/ID seriya va raqami:
+   - ID-karta: 'AD' yoki 'AE' harflari va KETMA-KET ANIQ 7 TA RAQAM (jami 9 ta belgi!). Masalan: AD1234567, AE4629898.
+   - Biometrik pasport: 'AA', 'AB', 'AC', 'FA' va 7 ta raqam.
+   - Hech qachon 8 ta yoki 6 ta raqam yozma!
+2. JSHSHIR (PINFL):
+   - ID-karta yoki pasport pastidagi/orqasidagi ANIQ 14 xonali raqam!
+3. Tug'ilgan sana (DOB):
+   - Pasportdagi tug'ilgan sana (DD.MM.YYYY).
+4. Pasport BERILGAN SANASI (Date of issue):
+   - FAQAT Pasport yoki ID-karta berilgan sanasi (Date of issue: DD.MM.YYYY).
+   - Shahodatnoma sanasini yoki kelajak sanani EMAS!
+5. Shahodatnoma yoki Diplom:
+   - Hujjat turi: Maktab bo'lsa 'Shahodatnoma', Kollej/Litsey/Texnikum bo'lsa 'Diplom'
+   - Seriya va raqami: Masalan 'UM 03729356' yoki 'T-V 123456'
+   - Maktab/Muassasa nomi: Maktab yoki Kollejning to'liq nomi
+   - Bitirgan yili: Masalan '2024'
+
+Aniq JSON formatda qaytar:
+{
+  "ism": "Familiya Ism",
+  "ota": "... qizi / ... o'g'li",
+  "pass_ser": "AE1234567",
+  "pinfl": "14 xonali PINFL",
+  "dob": "DD.MM.YYYY",
+  "pass_ber": "DD.MM.YYYY",
+  "sh_doc": "UM 1234567",
+  "doc_tur": "Shahodatnoma",
+  "maktab": "...-maktab",
+  "yil": "2024"
+}"""}]
+                    for b in all_blobs:
+                        b64 = base64.b64encode(b).decode('utf-8')
+                        content_items.append({'type': 'image_url', 'image_url': {'url': f'data:image/jpeg;base64,{b64}'}})
+
+                    models_to_try = [used_model_actual]
+                    for fb_m in ["google/gemini-2.5-flash", "google/gemini-2.5-pro", "openai/gpt-4o"]:
+                        if fb_m not in models_to_try:
+                            models_to_try.append(fb_m)
+
+                    for try_m in models_to_try:
+                        try:
+                            payload = {'model': try_m, 'messages': [{'role': 'user', 'content': content_items}], 'temperature': 0.0}
+                            req = urllib.request.Request(
+                                'https://openrouter.ai/api/v1/chat/completions',
+                                data=json.dumps(payload).encode('utf-8'),
+                                headers={'Authorization': f'Bearer {OPENROUTER_API_KEY}', 'Content-Type': 'application/json'}
+                            )
+                            with urllib.request.urlopen(req, timeout=45) as resp:
+                                res_json = json.loads(resp.read().decode('utf-8'))
+                                raw = res_json['choices'][0]['message']['content'].strip()
+                                raw = re.sub(r'^```json\s*', '', raw)
+                                raw = re.sub(r'\s*```$', '', raw)
+                                m_json = re.search(r'\{[\s\S]*\}', raw)
+                                if m_json:
+                                    raw = m_json.group(0)
+                                parsed_json = json.loads(raw)
+                                if parsed_json:
+                                    ai_data.update(parsed_json)
+                                    used_model_actual = try_m
+                                    break
+                        except Exception as e_ai:
+                            print(f"upload_student_section_files AI [{try_m}] xato: {e_ai}")
+                            continue
+
+                    if qr_extracted:
+                        if qr_extracted.get('ism'): ai_data['ism'] = qr_extracted['ism']
+                        if qr_extracted.get('ota'): ai_data['ota'] = qr_extracted['ota']
+                        if qr_extracted.get('pass_val'): ai_data['pass_ser'] = qr_extracted['pass_val']
+                        if qr_extracted.get('pinfl'): ai_data['pinfl'] = qr_extracted['pinfl']
+                        if qr_extracted.get('dob'): ai_data['dob'] = qr_extracted['dob']
+                        if qr_extracted.get('ber_sana'): ai_data['pass_ber'] = qr_extracted['ber_sana']
+                        if qr_extracted.get('cert_val'): ai_data['sh_doc'] = qr_extracted['cert_val']
+                        if qr_extracted.get('cert_tur'): ai_data['doc_tur'] = qr_extracted['cert_tur']
+                        if qr_extracted.get('maktab'): ai_data['maktab'] = qr_extracted['maktab']
+                        if qr_extracted.get('yil'): ai_data['yil'] = qr_extracted['yil']
+                        if qr_extracted.get('sh_qr'): ai_data['sh_qr'] = qr_extracted['sh_qr']
+
+                    if ai_data.get('pass_ser'):
+                        m_fix = re.search(r'([A-Z]{2})(\d{7})', str(ai_data['pass_ser']).upper().replace(' ', ''))
+                        if m_fix:
+                            ai_data['pass_ser'] = m_fix.group(1) + m_fix.group(2)
+
+                # Excel va manual_file_map.json ni yangilash
+                if row_idx >= 2:
+                    with EXCEL_LOCK:
+                        wb = openpyxl.load_workbook(os.path.join(BASE_DIR, 'Talabalar_Toliq_Royxati.xlsx'))
+                        ws = wb.active
+
+                        clean_ism = clean_uz_name(ai_data.get('ism', ''))
+                        clean_ota = clean_uz_name(ai_data.get('ota', ''))
+
+                        cur_ism = str(ws.cell(row=row_idx, column=2).value or '').strip() or clean_ism or student_ism
+                        cur_ota = str(ws.cell(row=row_idx, column=7).value or '').strip() or clean_ota or student_ota
+                        if clean_ism and not str(ws.cell(row=row_idx, column=2).value or '').strip():
+                            ws.cell(row=row_idx, column=2, value=clean_ism)
+                            cur_ism = clean_ism
+                        if clean_ota:
+                            ws.cell(row=row_idx, column=7, value=clean_ota)
+                            cur_ota = clean_ota
+                        full_fish = f"{cur_ism} {cur_ota}".strip()
+                        ws.cell(row=row_idx, column=8, value=full_fish)
+
+                        if ai_data.get('pass_ser'): ws.cell(row=row_idx, column=10, value=ai_data['pass_ser'])
+                        if ai_data.get('pinfl'): ws.cell(row=row_idx, column=11, value=str(ai_data['pinfl']))
+                        if ai_data.get('pass_ber'): ws.cell(row=row_idx, column=12, value=ai_data['pass_ber'])
+                        if ai_data.get('dob'): ws.cell(row=row_idx, column=13, value=ai_data['dob'])
+                        ws.cell(row=row_idx, column=14, value="Mavjud")
+                        if ai_data.get('sh_doc'): ws.cell(row=row_idx, column=15, value=ai_data['sh_doc'])
+                        if ai_data.get('sh_qr'): ws.cell(row=row_idx, column=16, value=ai_data['sh_qr'])
+                        if ai_data.get('maktab'): ws.cell(row=row_idx, column=17, value=ai_data['maktab'])
+                        if ai_data.get('doc_tur'): ws.cell(row=row_idx, column=18, value=ai_data['doc_tur'])
+                        if ai_data.get('yil'): ws.cell(row=row_idx, column=19, value=str(ai_data['yil']))
+
+                        group_val = str(ws.cell(row=row_idx, column=23).value or student_group or '').strip()
+                        wb.save(os.path.join(BASE_DIR, 'Talabalar_Toliq_Royxati.xlsx'))
+                        wb.save(os.path.join(BASE_DIR, 'Talabalar_Yangilangan_Royxat.xlsx'))
+                        wb.save(os.path.join(BASE_DIR, 'qayta_tekshiruv', 'Talabalar_Yangilangan_Royxat.xlsx'))
+
+                    try:
+                        manual_map_path = os.path.join(BASE_DIR, 'scripts', 'manual_file_map.json')
+                        if os.path.exists(manual_map_path):
+                            with open(manual_map_path, 'r', encoding='utf-8') as mf:
+                                mdata = json.load(mf)
+                        else:
+                            mdata = {"fayllar": {}, "qulflangan": {}}
+                        keys_to_lock = []
+                        if cur_ism and group_val: keys_to_lock.append(f"{cur_ism}|{group_val}")
+                        if full_fish and group_val: keys_to_lock.append(f"{full_fish}|{group_val}")
+                        for k in keys_to_lock:
+                            mdata.setdefault('fayllar', {})[k] = {
+                                "file": target_docx_name,
+                                "sabab": f"Pasport/Shahodatnoma yuklandi ({target_docx_name})"
+                            }
+                            mdata.setdefault('qulflangan', {})[k] = f"Foydalanuvchi tomonidan yuklangan ({target_docx_name})"
+                        with open(manual_map_path, 'w', encoding='utf-8') as mf:
+                            json.dump(mdata, mf, ensure_ascii=False, indent=2)
+                    except Exception as e_map:
+                        print(f"manual_file_map yangilash xatosi: {e_map}")
+
+                    trigger_report_rebuild()
+
+                self.send_response(200)
+                self.send_header('Content-Type', 'application/json; charset=utf-8')
+                self.send_header('Access-Control-Allow-Origin', '*')
+                self.send_header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
+                self.send_header('Access-Control-Allow-Headers', '*')
+                self.end_headers()
+                self.wfile.write(json.dumps({
+                    "success": True,
+                    "filename": target_docx_name,
+                    "filepath": f"files/{target_docx_name}",
+                    "images": images_b64,
+                    "model_used": used_model_actual,
+                    "data": ai_data
+                }).encode('utf-8'))
+                return
+            except Exception as e:
+                self.send_response(500)
+                self.send_header('Content-Type', 'application/json; charset=utf-8')
+                self.send_header('Access-Control-Allow-Origin', '*')
+                self.end_headers()
+                self.wfile.write(json.dumps({"success": False, "error": str(e)}).encode('utf-8'))
+                return
 
         if parsed_path == '/api/upload_and_attach_to_student':
             length = int(self.headers.get('Content-Length', 0))
