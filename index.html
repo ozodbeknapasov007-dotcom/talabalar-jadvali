@@ -5162,8 +5162,8 @@ window.renderModalDocImages = function() {
   }
 
   if (!imgs.length) {
-    wrap0.innerHTML = `<div class="sect-card" style="margin:0;"><div class="alert a-ogoh" style="margin:0;padding:10px 14px;background:rgba(245,158,11,0.08);color:#d97706;border:1px solid rgba(245,158,11,0.25);border-radius:8px;font-weight:600;font-size:12.5px;">Ushbu talaba uchun pasport rasmi mavjud emas.</div></div>` + renderSectionUploadBox('passport');
-    wrap1.innerHTML = `<div class="sect-card" style="margin:0;"><div class="alert a-ogoh" style="margin:0;padding:10px 14px;background:rgba(245,158,11,0.08);color:#d97706;border:1px solid rgba(245,158,11,0.25);border-radius:8px;font-weight:600;font-size:12.5px;">Ushbu talaba uchun shahodatnoma / diplom rasmi mavjud emas.</div></div>` + renderSectionUploadBox('diploma');
+    wrap0.innerHTML = renderSectionUploadBox('passport') + `<div class="sect-card" style="margin-top:8px;"><div class="alert a-ogoh" style="margin:0;padding:10px 14px;background:rgba(245,158,11,0.08);color:#d97706;border:1px solid rgba(245,158,11,0.25);border-radius:8px;font-weight:600;font-size:12.5px;">Ushbu talaba uchun pasport rasmi mavjud emas.</div></div>`;
+    wrap1.innerHTML = renderSectionUploadBox('diploma') + `<div class="sect-card" style="margin-top:8px;"><div class="alert a-ogoh" style="margin:0;padding:10px 14px;background:rgba(245,158,11,0.08);color:#d97706;border:1px solid rgba(245,158,11,0.25);border-radius:8px;font-weight:600;font-size:12.5px;">Ushbu talaba uchun shahodatnoma / diplom rasmi mavjud emas.</div></div>`;
     wrap2.innerHTML = renderDropzoneHtml();
     return;
   }
@@ -5202,22 +5202,22 @@ window.renderModalDocImages = function() {
     diplomaItems.push(passportItems.pop());
   }
 
-  // 1-Bo'lim: Pasport rasmlari + Pasport yuklash qutisi
+  // 1-Bo'lim: Pasport yuklash/bufer qutisi (yuqorida) + Pasport rasmlari
   if (passportItems.length > 0) {
-    wrap0.innerHTML = passportItems.map(function(item) {
+    wrap0.innerHTML = renderSectionUploadBox('passport') + passportItems.map(function(item) {
       return makeImgBlk(item.idx, item.title, ICONS.idCard);
-    }).join('') + renderSectionUploadBox('passport');
+    }).join('');
   } else {
-    wrap0.innerHTML = `<div class="sect-card" style="margin:0;"><div class="alert a-ogoh" style="margin:0;padding:10px 14px;background:rgba(245,158,11,0.08);color:#d97706;border:1px solid rgba(245,158,11,0.25);border-radius:8px;font-weight:600;font-size:12.5px;">Ushbu talaba uchun pasport rasmi mavjud emas.</div></div>` + renderSectionUploadBox('passport');
+    wrap0.innerHTML = renderSectionUploadBox('passport') + `<div class="sect-card" style="margin-top:8px;"><div class="alert a-ogoh" style="margin:0;padding:10px 14px;background:rgba(245,158,11,0.08);color:#d97706;border:1px solid rgba(245,158,11,0.25);border-radius:8px;font-weight:600;font-size:12.5px;">Ushbu talaba uchun pasport rasmi mavjud emas.</div></div>`;
   }
 
-  // 2-Bo'lim: Diplom / Shahodatnoma rasmlari + Shahodatnoma yuklash qutisi
+  // 2-Bo'lim: Shahodatnoma yuklash/bufer qutisi (yuqorida) + Diplom / Shahodatnoma rasmlari
   if (diplomaItems.length > 0) {
-    wrap1.innerHTML = diplomaItems.map(function(item) {
+    wrap1.innerHTML = renderSectionUploadBox('diploma') + diplomaItems.map(function(item) {
       return makeImgBlk(item.idx, item.title, ICONS.award);
-    }).join('') + renderSectionUploadBox('diploma');
+    }).join('');
   } else {
-    wrap1.innerHTML = `<div class="sect-card" style="margin:0;"><div class="alert a-ogoh" style="margin:0;padding:10px 14px;background:rgba(245,158,11,0.08);color:#d97706;border:1px solid rgba(245,158,11,0.25);border-radius:8px;font-weight:600;font-size:12.5px;">Ushbu talaba uchun shahodatnoma / diplom rasmi mavjud emas.</div></div>` + renderSectionUploadBox('diploma');
+    wrap1.innerHTML = renderSectionUploadBox('diploma') + `<div class="sect-card" style="margin-top:8px;"><div class="alert a-ogoh" style="margin:0;padding:10px 14px;background:rgba(245,158,11,0.08);color:#d97706;border:1px solid rgba(245,158,11,0.25);border-radius:8px;font-weight:600;font-size:12.5px;">Ushbu talaba uchun shahodatnoma / diplom rasmi mavjud emas.</div></div>`;
   }
 
   // 3-Bo'lim: Qo'shimcha rasmlar + Dropzone

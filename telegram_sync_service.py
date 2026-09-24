@@ -2047,6 +2047,51 @@ class WebServerHandler(BaseHTTPRequestHandler):
                 self.wfile.write(json.dumps({"success": False, "error": f"Fayl topilmadi: {fname}"}).encode('utf-8'))
                 return
 
+        if parsed_path.startswith('/api/get_clipboard_files'):
+            try:
+                from PIL import ImageGrab
+                clip = ImageGrab.grabclipboard()
+                out_files = []
+                if isinstance(clip, Image.Image):
+                    buf = io.BytesIO()
+                    clip.convert('RGB').save(buf, format='JPEG', quality=95)
+                    b64 = base64.b64encode(buf.getvalue()).decode('utf-8')
+                    out_files.append({
+                        "filename": f"bufer_rasm_{int(time.time())}.jpg",
+                        "base64": f"data:image/jpeg;base64,{b64}",
+                        "mime": "image/jpeg"
+                    })
+                elif isinstance(clip, list):
+                    for fpath in clip[:2]:
+                        if os.path.isfile(fpath):
+                            ext = os.path.splitext(fpath)[1].lower()
+                            if ext in ['.jpg', '.jpeg', '.png', '.webp', '.bmp', '.pdf', '.docx']:
+                                with open(fpath, 'rb') as rf:
+                                    raw_b = rf.read()
+                                b64 = base64.b64encode(raw_b).decode('utf-8')
+                                mime = 'application/pdf' if ext == '.pdf' else ('application/vnd.openxmlformats-officedocument.wordprocessingml.document' if ext == '.docx' else 'image/jpeg')
+                                out_files.append({
+                                    "filename": os.path.basename(fpath),
+                                    "base64": f"data:{mime};base64,{b64}",
+                                    "mime": mime
+                                })
+                self.send_response(200)
+                self.send_header('Content-Type', 'application/json; charset=utf-8')
+                self.send_header('Access-Control-Allow-Origin', '*')
+                self.end_headers()
+                if out_files:
+                    self.wfile.write(json.dumps({"success": True, "files": out_files}).encode('utf-8'))
+                else:
+                    self.wfile.write(json.dumps({"success": False, "error": "Buferda (Ctrl+C) rasm yoki fayl topilmadi. Avval rasm yoki faylni Ctrl+C qilib nusxalang!"}).encode('utf-8'))
+                return
+            except Exception as e_clip:
+                self.send_response(200)
+                self.send_header('Content-Type', 'application/json; charset=utf-8')
+                self.send_header('Access-Control-Allow-Origin', '*')
+                self.end_headers()
+                self.wfile.write(json.dumps({"success": False, "error": str(e_clip)}).encode('utf-8'))
+                return
+
         if parsed_path.startswith('/api/reanalyze_student'):
             query = self.path.split('?')[-1] if '?' in self.path else ''
             params = dict(qc.split('=') for qc in query.split('&') if '=' in qc)
