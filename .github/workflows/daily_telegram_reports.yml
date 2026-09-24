@@ -27,4 +27,4 @@ jobs:
             ACTION="backup_json"
           fi
           echo "Triggering Telegram report action: $ACTION"
-          curl -sS "https://talabalar-ro-yhati.vercel.app/api/telegram_webhook?action=$ACTION"
+          curl -L -sS "https://talabalar-royhati.vercel.app/api/telegram_webhook?action=$ACTION"
