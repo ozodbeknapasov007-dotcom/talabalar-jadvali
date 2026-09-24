@@ -616,24 +616,23 @@ def build_json_database_file():
         records = []
         for r in range(2, ws.max_row + 1):
             ism = str(ws.cell(r, 2).value or '').strip()
-            ota = str(ws.cell(r, 3).value or '').strip()
-            fish = f"{ism} {ota}".strip()
+            ota = str(ws.cell(r, 7).value or '').strip()
+            fish = str(ws.cell(r, 8).value or '').strip() or f"{ism} {ota}".strip()
             if not fish:
                 continue
-            shnum = str(ws.cell(r, 8).value or '').strip()
-            sana = str(ws.cell(r, 9).value or '').strip()
-            yon = str(ws.cell(r, 10).value or '').strip()
-            pv = str(ws.cell(r, 11).value or '').strip()
+            yon = str(ws.cell(r, 3).value or '').strip()
+            shnum = str(ws.cell(r, 5).value or '').strip()
+            pv = str(ws.cell(r, 10).value or '').strip()
+            pinfl = str(ws.cell(r, 11).value or '').strip()
             ber = str(ws.cell(r, 12).value or '').strip()
-            pinfl = str(ws.cell(r, 13).value or '').strip()
-            dob = str(ws.cell(r, 14).value or '').strip()
-            doc_tur = str(ws.cell(r, 15).value or '').strip()
-            sh_doc = str(ws.cell(r, 16).value or '').strip()
+            dob = str(ws.cell(r, 13).value or '').strip()
+            sh_doc = str(ws.cell(r, 15).value or '').strip()
             mak = str(ws.cell(r, 17).value or '').strip()
-            yil = str(ws.cell(r, 18).value or '').strip()
-            tel = str(ws.cell(r, 21).value or '').strip()
-            grp = str(ws.cell(r, 25).value or '').strip()
-            ver_status = ver_map.get(str(r), str(ws.cell(r, 26).value or 'KUTILMOQDA').strip())
+            doc_tur = str(ws.cell(r, 18).value or '').strip()
+            yil = str(ws.cell(r, 19).value or '').strip()
+            tel = str(ws.cell(r, 20).value or '').strip()
+            grp = str(ws.cell(r, 23).value or '').strip()
+            ver_status = ver_map.get(str(r), str(ws.cell(r, 25).value or 'KUTILMOQDA').strip())
             records.append({
                 'row': r,
                 'group': grp,
@@ -641,7 +640,6 @@ def build_json_database_file():
                 'ism': ism,
                 'ota': ota,
                 'shnum': shnum,
-                'sana': sana,
                 'yon': yon,
                 'pv': pv,
                 'ber': ber,
