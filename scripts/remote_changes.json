@@ -22,5 +22,29 @@
     },
     "id": "chg_1790261150445",
     "created_at": "2026-09-24T14:45:50.445Z"
+  },
+  {
+    "type": "update_student",
+    "data": {
+      "row": 80,
+      "fields": {
+        "ism": "Mustafayeva Madina",
+        "ota": "Ortiq qizi",
+        "group": "26-03",
+        "pv": "AE4846447",
+        "pinfl": "63110085680103",
+        "dob": "31.10.2008",
+        "ber": "31.10.2025",
+        "doc_tur": "Shahodatnoma",
+        "sh_doc": "UM 03729407",
+        "mak": "49-maktab",
+        "yil": "2026",
+        "yon": "Hamshiralik ishi",
+        "shnum": "282",
+        "tel": ""
+      }
+    },
+    "id": "chg_1790261660939",
+    "created_at": "2026-09-24T14:54:20.939Z"
   }
 ]
