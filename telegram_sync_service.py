@@ -1120,13 +1120,22 @@ def send_bot_welcome_menu(chat_id=None):
 
 
 def _start_telegram_bot_polling():
-    """Telegram botga kelgan tugma bosishlari va buyruqlarni tinglab, darhol javob va fayl qaytaradi."""
+    """Agar 24/7 Vercel Webhook ulangan bo'lsa, getUpdates chaqirmaydi (webhook uzilib qolmasligi uchun)."""
     def bot_loop():
         import requests
         cfg = load_backup_config()
         if not cfg:
             return
         token = cfg['token']
+        try:
+            wh = requests.get(f"https://api.telegram.org/bot{token}/getWebhookInfo", timeout=10)
+            if wh.ok and wh.json().get('ok'):
+                wh_url = wh.json().get('result', {}).get('url', '')
+                if wh_url and 'vercel.app/api/telegram_webhook' in wh_url:
+                    print(f"[BOT] ☁️ 24/7 Cloud Webhook faol ({wh_url}) — lokal polling talab etilmaydi.")
+                    return
+        except Exception:
+            pass
         offset = 0
         # Dastlabki ishga tushganda eskirgan update'larni o'tkazib yuboramiz
         try:

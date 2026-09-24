@@ -1,0 +1,30 @@
+name: Daily Telegram Reports (09:00 Kontingent & 18:00 JSON Backup)
+
+on:
+  schedule:
+    # Har kuni soat 09:00 Toshkent vaqti (04:00 UTC), Dushanbadan Shanbagacha (Yakshanbadan tashqari)
+    - cron: '0 4 * * 1-6'
+    # Har kuni soat 18:00 Toshkent vaqti (13:00 UTC)
+    - cron: '0 13 * * *'
+  workflow_dispatch:
+    inputs:
+      report_type:
+        description: 'Yuboriladigan hisobot (kontingent yoki backup_json)'
+        required: true
+        default: 'kontingent'
+
+jobs:
+  send-telegram-report:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger 24/7 Cloud Webhook Report
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            ACTION="${{ github.event.inputs.report_type }}"
+          elif [ "${{ github.event.schedule }}" = "0 4 * * 1-6" ]; then
+            ACTION="kontingent"
+          else
+            ACTION="backup_json"
+          fi
+          echo "Triggering Telegram report action: $ACTION"
+          curl -sS "https://talabalar-ro-yhati.vercel.app/api/telegram_webhook?action=$ACTION"
