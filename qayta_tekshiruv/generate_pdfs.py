@@ -31,8 +31,8 @@ except Exception as e:
 GROUP_LEADERS = {
     "26-01": "Mirzayeva.D",
     "26-02": "Ochilov.D",
-    "26-03": "To'rayeva.S",
-    "26-04": "Hamdamova.M",
+    "26-03": "A.Asraliyev",
+    "26-04": "Xamdamova.M",
     "26-05": "Rayimova.X",
     "26-06": "Yuldashev.O",
     "26-07": "Asraliyev.A",

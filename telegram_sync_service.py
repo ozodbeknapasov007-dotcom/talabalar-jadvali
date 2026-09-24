@@ -416,8 +416,8 @@ def send_group_lists_to_telegram(target='channel', group_filter=None):
     GROUP_META = {
         "26-01": {"specialty": "Farmatsiya ishi", "leader": "Mirzayeva.D"},
         "26-02": {"specialty": "Hamshiralik ishi", "leader": "Ochilov.D"},
-        "26-03": {"specialty": "Hamshiralik ishi", "leader": "To'rayeva.S"},
-        "26-04": {"specialty": "Hamshiralik ishi", "leader": "Hamdamova.M"},
+        "26-03": {"specialty": "Hamshiralik ishi", "leader": "A.Asraliyev"},
+        "26-04": {"specialty": "Hamshiralik ishi", "leader": "Xamdamova.M"},
         "26-05": {"specialty": "Hamshiralik ishi", "leader": "Rayimova.X"},
         "26-06": {"specialty": "Hamshiralik ishi", "leader": "Yuldashev.O"},
         "26-07": {"specialty": "Hamshiralik ishi", "leader": "Asraliyev.A"},
@@ -598,6 +598,51 @@ def send_group_lists_to_telegram(target='channel', group_filter=None):
     }
 
 
+OFFICIAL_GROUP_LEADERS = {
+    "26-01": "Mirzayeva.D",
+    "26-02": "Ochilov.D",
+    "26-03": "A.Asraliyev",
+    "26-04": "Xamdamova.M",
+    "26-05": "Rayimova.X",
+    "26-06": "Yuldashev.O",
+    "26-07": "Asraliyev.A"
+}
+
+TUMAN_KODI_MAP = {
+    '559': "Shahrisabz tumani",
+    '568': "Kitob tumani",
+    '573': "Yakkabog' tumani",
+    '789': "Shahrisabz shahri",
+    '256': "Shahrisabz tumani",
+    '572': "Chiroqchi tumani",
+    '563': "Qamashi tumani"
+}
+
+def _fmt_date_ddmmyyyy(val):
+    s = str(val or '').strip()
+    if not s or s in ('—', '-', 'None'):
+        return ''
+    s = s.split(' ')[0]
+    m1 = re.match(r'^(\d{1,2})[\.\/\-](\d{1,2})[\.\/\-](\d{4})$', s)
+    if m1:
+        return f"{int(m1.group(1)):02d}.{int(m1.group(2)):02d}.{m1.group(3)}"
+    m2 = re.match(r'^(\d{4})[\.\/\-](\d{1,2})[\.\/\-](\d{1,2})$', s)
+    if m2:
+        return f"{int(m2.group(3)):02d}.{int(m2.group(2)):02d}.{m2.group(1)}"
+    return s
+
+def _to_int_if_digits(val):
+    s = str(val if val is not None else '').strip()
+    if s and s.isdigit() and len(s) <= 10:
+        return int(s)
+    return s
+
+def _get_tuman_from_pinfl(pinfl):
+    p = str(pinfl or '').strip()
+    if len(p) == 14 and p.isdigit():
+        return TUMAN_KODI_MAP.get(p[7:10], '')
+    return ''
+
 def build_json_database_file():
     """Talabalar_Toliq_Royxati.xlsx asosida to'liq .json bazani (talabalar_bazasi.json) yangilaydi."""
     json_path = os.path.join(BASE_DIR, 'talabalar_bazasi.json')
@@ -624,8 +669,8 @@ def build_json_database_file():
             shnum = str(ws.cell(r, 5).value or '').strip()
             pv = str(ws.cell(r, 10).value or '').strip()
             pinfl = str(ws.cell(r, 11).value or '').strip()
-            ber = str(ws.cell(r, 12).value or '').strip()
-            dob = str(ws.cell(r, 13).value or '').strip()
+            ber = _fmt_date_ddmmyyyy(ws.cell(r, 12).value)
+            dob = _fmt_date_ddmmyyyy(ws.cell(r, 13).value)
             sh_doc = str(ws.cell(r, 15).value or '').strip()
             mak = str(ws.cell(r, 17).value or '').strip()
             doc_tur = str(ws.cell(r, 18).value or '').strip()
@@ -667,6 +712,245 @@ def build_json_database_file():
         return json_path, '?'
 
 
+ROLE_EXCEL_CONFIG = {
+    'buxgalteriya': {
+        'file': '1_Buxgalteriya_Shartnoma_va_Pasport.xlsx',
+        'title': '1. Buxgalteriya (Shartnoma № va Pasport)',
+        'color': '065F46',
+        'cols': [
+            ('T/R', 6, lambda s, i: i, True, True),
+            ('Guruh', 10, lambda s, i: s.get('group', ''), False, True),
+            ('F.I.SH (Talaba)', 34, lambda s, i: s.get('fish', ''), True, False),
+            ('Shartnoma №', 14, lambda s, i: _to_int_if_digits(s.get('shnum', '')), True, True),
+            ('Pasport seriya va raqami', 18, lambda s, i: s.get('pv', ''), True, True),
+            ('JSHSHIR (PINFL)', 18, lambda s, i: s.get('pinfl', ''), False, True),
+            ('Pasport berilgan sanasi', 16, lambda s, i: _fmt_date_ddmmyyyy(s.get('ber', '')), False, True),
+            ("Tug'ilgan sanasi", 16, lambda s, i: _fmt_date_ddmmyyyy(s.get('dob', '')), False, True),
+        ]
+    },
+    'admin': {
+        'file': '2_Baza_Admin_Pasport_va_Shahodatnoma.xlsx',
+        'title': '2. Baza Administratori (Pasport va Shahodatnoma/Diplom)',
+        'color': '1E3A8A',
+        'cols': [
+            ('T/R', 6, lambda s, i: i, True, True),
+            ('Guruh', 10, lambda s, i: s.get('group', ''), False, True),
+            ('F.I.SH (Talaba)', 34, lambda s, i: s.get('fish', ''), True, False),
+            ('Pasport seriya va raqami', 18, lambda s, i: s.get('pv', ''), True, True),
+            ('JSHSHIR (PINFL)', 18, lambda s, i: s.get('pinfl', ''), False, True),
+            ('Pasport berilgan sanasi', 16, lambda s, i: _fmt_date_ddmmyyyy(s.get('ber', '')), False, True),
+            ("Tug'ilgan sanasi", 16, lambda s, i: _fmt_date_ddmmyyyy(s.get('dob', '')), False, True),
+            ("Tug'ilgan tumani", 20, lambda s, i: _get_tuman_from_pinfl(s.get('pinfl', '')), False, False),
+            ('Hujjat turi (Shahodatnoma/Diplom)', 22, lambda s, i: s.get('doc_tur', ''), False, True),
+            ('Shahodatnoma / Diplom seriya №', 22, lambda s, i: s.get('sh_doc', ''), True, True),
+            ("Tugatgan ta'lim muassasasi", 38, lambda s, i: s.get('mak', ''), False, False),
+            ('Bitirgan yili', 14, lambda s, i: _to_int_if_digits(s.get('yil', '')), False, True),
+        ]
+    },
+    'guruh_rahbari': {
+        'file': '3_Guruh_Rahbarlari_Talabalar_Malumotlari.xlsx',
+        'title': "3. Guruh Rahbarlari (Tug'ilgan sana, Pasport va Shahodatnoma)",
+        'color': '4C1D95',
+        'cols': [
+            ('T/R', 6, lambda s, i: i, True, True),
+            ('Guruh', 10, lambda s, i: s.get('group', ''), False, True),
+            ('Guruh rahbari', 18, lambda s, i: OFFICIAL_GROUP_LEADERS.get(s.get('group', ''), '—'), False, False),
+            ('F.I.SH (Talaba)', 34, lambda s, i: s.get('fish', ''), True, False),
+            ("Tug'ilgan sanasi (dd.mm.yyyy)", 20, lambda s, i: _fmt_date_ddmmyyyy(s.get('dob', '')), True, True),
+            ("Tug'ilgan tumani", 20, lambda s, i: _get_tuman_from_pinfl(s.get('pinfl', '')), False, False),
+            ('Pasport seriya va raqami', 18, lambda s, i: s.get('pv', ''), True, True),
+            ('JSHSHIR (PINFL)', 18, lambda s, i: s.get('pinfl', ''), False, True),
+            ('Pasport berilgan sanasi', 16, lambda s, i: _fmt_date_ddmmyyyy(s.get('ber', '')), False, True),
+            ('Hujjat turi (Shahodatnoma/Diplom)', 22, lambda s, i: s.get('doc_tur', ''), False, True),
+            ('Shahodatnoma / Diplom seriya №', 22, lambda s, i: s.get('sh_doc', ''), True, True),
+            ("Tugatgan ta'lim muassasasi", 38, lambda s, i: s.get('mak', ''), False, False),
+            ('Bitirgan yili', 14, lambda s, i: _to_int_if_digits(s.get('yil', '')), False, True),
+            ('Telefon raqami', 16, lambda s, i: s.get('tel', ''), False, True),
+        ]
+    },
+    'toliq': {
+        'file': '4_Toliq_Malumotlar_Bazasi.xlsx',
+        'title': "4. To'liq Ma'lumotlar (O'zim uchun barcha ustunlar)",
+        'color': '0F172A',
+        'cols': [
+            ('T/R', 6, lambda s, i: i, True, True),
+            ('Guruh', 10, lambda s, i: s.get('group', ''), False, True),
+            ('Guruh rahbari', 18, lambda s, i: OFFICIAL_GROUP_LEADERS.get(s.get('group', ''), '—'), False, False),
+            ('Shartnoma №', 14, lambda s, i: _to_int_if_digits(s.get('shnum', '')), True, True),
+            ('F.I.SH (Talaba)', 34, lambda s, i: s.get('fish', ''), True, False),
+            ("Tug'ilgan sanasi (dd.mm.yyyy)", 18, lambda s, i: _fmt_date_ddmmyyyy(s.get('dob', '')), True, True),
+            ("Tug'ilgan tumani", 20, lambda s, i: _get_tuman_from_pinfl(s.get('pinfl', '')), False, False),
+            ('Pasport seriya va raqami', 18, lambda s, i: s.get('pv', ''), True, True),
+            ('JSHSHIR (PINFL)', 18, lambda s, i: s.get('pinfl', ''), False, True),
+            ('Pasport berilgan sanasi', 16, lambda s, i: _fmt_date_ddmmyyyy(s.get('ber', '')), False, True),
+            ('Hujjat turi (Shahodatnoma/Diplom)', 22, lambda s, i: s.get('doc_tur', ''), False, True),
+            ('Shahodatnoma / Diplom seriya №', 22, lambda s, i: s.get('sh_doc', ''), True, True),
+            ("Tugatgan ta'lim muassasasi", 38, lambda s, i: s.get('mak', ''), False, False),
+            ('Bitirgan yili', 14, lambda s, i: _to_int_if_digits(s.get('yil', '')), False, True),
+            ('Telefon raqami', 16, lambda s, i: s.get('tel', ''), False, True),
+            ('Holati', 14, lambda s, i: s.get('verified', 'KUTILMOQDA'), False, True),
+        ]
+    }
+}
+
+
+def build_role_excel_file(role='toliq'):
+    """Tanlangan bo'lim ('buxgalteriya', 'admin', 'guruh_rahbari', 'toliq') uchun formatlangan Excel (.xlsx) yaratadi."""
+    from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
+    from openpyxl.utils import get_column_letter
+
+    role = role if role in ROLE_EXCEL_CONFIG else 'toliq'
+    cfg = ROLE_EXCEL_CONFIG[role]
+    json_path, _ = build_json_database_file()
+    with open(json_path, 'r', encoding='utf-8') as f:
+        students = json.load(f).get('students', [])
+
+    wb = openpyxl.Workbook()
+    wb.remove(wb.active)
+    thin = Side(style='thin', color='94A3B8')
+    med = Side(style='medium', color='1E293B')
+    grid_border = Border(left=thin, right=thin, top=thin, bottom=thin)
+    hdr_border = Border(left=thin, right=thin, top=med, bottom=med)
+    hdr_fill = PatternFill('solid', fgColor=cfg['color'])
+    hdr_font = Font(name='Calibri', size=11, bold=True, color='FFFFFF')
+    alt_fill = PatternFill('solid', fgColor='F8FAFC')
+    wht_fill = PatternFill('solid', fgColor='FFFFFF')
+    cols = cfg['cols']
+
+    def fill_sheet(ws, st_list):
+        ws.append([c[0] for c in cols])
+        ws.row_dimensions[1].height = 28
+        for c_idx, c in enumerate(cols, 1):
+            cell = ws.cell(1, c_idx)
+            cell.fill = hdr_fill
+            cell.font = hdr_font
+            cell.alignment = Alignment(horizontal='center', vertical='center', wrap_text=True)
+            cell.border = hdr_border
+            ws.column_dimensions[get_column_letter(c_idx)].width = c[1]
+        for idx, s in enumerate(st_list, 1):
+            row_vals = [c[2](s, idx) for c in cols]
+            ws.append(row_vals)
+            r_num = idx + 1
+            ws.row_dimensions[r_num].height = 22
+            fill = alt_fill if r_num % 2 == 0 else wht_fill
+            for c_idx, c in enumerate(cols, 1):
+                cell = ws.cell(r_num, c_idx)
+                cell.fill = fill
+                cell.border = grid_border
+                is_bold = c[3] if len(c) > 3 else False
+                is_center = c[4] if len(c) > 4 else False
+                cell.font = Font(name='Calibri', size=11, bold=is_bold, color='0F172A')
+                cell.alignment = Alignment(horizontal='center' if is_center else 'left', vertical='center')
+        ws.freeze_panes = 'A2'
+
+    sorted_all = sorted(students, key=lambda x: (0 if str(x.get('group', ''))[:1].isdigit() else 1, str(x.get('group', '')), str(x.get('fish', ''))))
+    fill_sheet(wb.create_sheet('Jami talabalar'), sorted_all)
+
+    groups = sorted(list({str(s.get('group', '')).strip() for s in students if str(s.get('group', '')).strip()}), key=lambda g: (0 if g[:1].isdigit() else 1, g))
+    for g in groups:
+        g_list = sorted([s for s in students if str(s.get('group', '')).strip() == g], key=lambda x: str(x.get('fish', '')))
+        sh_name = (f'Guruh {g}' if g[:1].isdigit() else g)[:31]
+        fill_sheet(wb.create_sheet(sh_name), g_list)
+
+    out_path = os.path.join(BASE_DIR, cfg['file'])
+    wb.save(out_path)
+    return out_path, cfg['title'], len(students)
+
+
+def build_all_4_role_excels():
+    paths = {}
+    for r in ('buxgalteriya', 'admin', 'guruh_rahbari', 'toliq'):
+        p, _, _ = build_role_excel_file(r)
+        paths[r] = p
+    return paths
+
+
+def send_role_excel_to_telegram_chat(role='toliq', target_chat_id=None):
+    import requests
+    cfg = load_backup_config()
+    if not cfg:
+        return False, "Telegram bot sozlanmagan"
+    chat_id = target_chat_id or cfg['chat_id']
+    out_path, title, count = build_role_excel_file(role)
+    stamp = time.strftime('%d.%m.%Y %H:%M')
+    caption = f"📊 <b>{title}</b>\n🕒 Sana: {stamp}\n👥 Jami talabalar: <b>{count} nafar</b>"
+    with open(out_path, 'rb') as fh:
+        resp = requests.post(
+            f"https://api.telegram.org/bot{cfg['token']}/sendDocument",
+            data={'chat_id': chat_id, 'caption': caption, 'parse_mode': 'HTML'},
+            files={'document': (os.path.basename(out_path), fh)},
+            timeout=120
+        )
+    if resp.ok and resp.json().get('ok'):
+        return True, title
+    return False, resp.text[:160]
+
+
+def build_kontingent_message_html(reason='So\'rov bo\'yicha'):
+    """Guruhlar va rahbarlar kesimida to'liq Kontingent hisobotini HTML matn sifatida qaytaradi."""
+    json_path, _ = build_json_database_file()
+    with open(json_path, 'r', encoding='utf-8') as f:
+        students = json.load(f).get('students', [])
+
+    official_groups = ["26-01", "26-02", "26-03", "26-04", "26-05", "26-06", "26-07"]
+    specialties = {
+        "26-01": "Farmatsiya ishi",
+        "26-02": "Hamshiralik ishi",
+        "26-03": "Hamshiralik ishi",
+        "26-04": "Hamshiralik ishi",
+        "26-05": "Hamshiralik ishi",
+        "26-06": "Hamshiralik ishi",
+        "26-07": "Hamshiralik ishi"
+    }
+    official_students = [s for s in students if s.get('group') in official_groups]
+    withdrawn_students = [s for s in students if s.get('group') not in official_groups]
+    ver_count = sum(1 for s in official_students if s.get('verified') == 'TASDIQLANDI')
+
+    stamp = time.strftime('%d.%m.%Y | %H:%M')
+    lines = [
+        "🏛 <b>SHAHRISABZ TIBBIYOT TEXNIKUMI</b>",
+        f"📈 <b>TALABALAR KONTINGENTI MA'LUMOTI ({reason})</b>",
+        f"🕒 Sana: <b>{stamp}</b>",
+        "━━━━━━━━━━━━━━━━━━━━━━",
+        f"👥 <b>Faol kontingent (7 ta guruh): {len(official_students)} nafar</b>",
+        f"✅ Tasdiqlangan hujjatlar: <b>{ver_count} / {len(official_students)} ({round(ver_count / len(official_students) * 100) if official_students else 0}%)</b>",
+        f"🚫 Safdan chiqarilganlar: <b>{len(withdrawn_students)} nafar</b>",
+        f"📦 Umumiy bazada jami: <b>{len(students)} nafar</b>",
+        "━━━━━━━━━━━━━━━━━━━━━━",
+        "📋 <b>GURUHLAR VA RAHBARLAR KESIMIDA:</b>",
+        ""
+    ]
+    for idx, g in enumerate(official_groups, 1):
+        g_st = [s for s in students if s.get('group') == g]
+        leader = OFFICIAL_GROUP_LEADERS.get(g, '—')
+        spec = specialties.get(g, 'Hamshiralik ishi')
+        lines.append(f"<b>{idx}. Guruh {g}</b> ({spec})\n   👤 Rahbar: <b>{leader}</b> — <b>{len(g_st)} nafar</b>")
+
+    if withdrawn_students:
+        lines.append(f"\n🔸 <b>Safdan chiqarilganlar:</b> {len(withdrawn_students)} nafar")
+
+    return "\n".join(lines)
+
+
+def send_kontingent_to_telegram(target_chat_id=None, reason="So'rov bo'yicha"):
+    import requests
+    cfg = load_backup_config()
+    if not cfg:
+        return False
+    chat_id = target_chat_id or cfg['chat_id']
+    msg = build_kontingent_message_html(reason)
+    try:
+        resp = requests.post(
+            f"https://api.telegram.org/bot{cfg['token']}/sendMessage",
+            json={'chat_id': chat_id, 'text': msg, 'parse_mode': 'HTML'},
+            timeout=30
+        )
+        return bool(resp.ok and resp.json().get('ok'))
+    except Exception as e:
+        print(f"[KONTINGENT] Xato: {e}")
+        return False
+
+
 def send_backup_to_telegram(reason='kunlik 18:00'):
     """Har kuni soat 18:00 da .json baza ma'lumotlarini (talabalar_bazasi.json) Telegram botga yuboradi."""
     cfg = load_backup_config()
@@ -677,11 +961,12 @@ def send_backup_to_telegram(reason='kunlik 18:00'):
     import requests
 
     json_path, talaba_soni = build_json_database_file()
+    toliq_excel_path, _, _ = build_role_excel_file('toliq')
     files_to_send = [
         json_path,
-        os.path.join(BASE_DIR, 'Talabalar_Yangilangan_Royxat.xlsx'),
+        toliq_excel_path,
     ]
-    stamp = time.strftime('%Y-%m-%d %H:%M')
+    stamp = time.strftime('%d.%m.%Y %H:%M')
 
     try:
         caption = (f"📦 Talabalar bazasi (.json) zahirasi ({reason})\n"
@@ -716,6 +1001,25 @@ def send_backup_to_telegram(reason='kunlik 18:00'):
         return False
 
 
+KONTINGENT_STATE_PATH = os.path.join(BASE_DIR, 'scripts', 'kontingent_state.json')
+
+def _kontingent_already_sent_today():
+    try:
+        with open(KONTINGENT_STATE_PATH, 'r', encoding='utf-8') as f:
+            return json.load(f).get('last_date') == time.strftime('%Y-%m-%d')
+    except Exception:
+        return False
+
+def _mark_kontingent_sent():
+    try:
+        os.makedirs(os.path.dirname(KONTINGENT_STATE_PATH), exist_ok=True)
+        with open(KONTINGENT_STATE_PATH, 'w', encoding='utf-8') as f:
+            json.dump({'last_date': time.strftime('%Y-%m-%d'),
+                       'last_time': time.strftime('%H:%M:%S')}, f, indent=2)
+    except Exception:
+        pass
+
+
 def _backup_already_sent_today():
     try:
         with open(BACKUP_STATE_PATH, 'r', encoding='utf-8') as f:
@@ -735,23 +1039,154 @@ def _mark_backup_sent():
 
 
 def _start_daily_backup_scheduler():
-    """Har daqiqada tekshiradi: belgilangan soat kelsa va bugun hali
-    yuborilmagan bo'lsa zahirani jo'natadi. Xizmat qayta ishga tushsa ham
-    bir kunda ikki marta yubormaydi (holat faylga yoziladi)."""
+    """
+    1) Har kuni soat 09:00 da (Yakshanba — tm_wday == 6 dan tashqari, Dushanba–Shanba)
+       avtomatik ravishda Kontingent hisobotini Telegram botga yuboradi.
+    2) Har kuni soat 18:00 da avtomatik ravishda .json baza ma'lumotlarini (talabalar_bazasi.json)
+       Telegram botga yuboradi.
+    """
     def loop():
         while True:
             try:
                 now = time.localtime()
+                # 1. Soat 09:00 da Kontingent hisoboti (Yakshanba = 6 dan boshqa barcha kunlari)
+                if now.tm_wday != 6 and (now.tm_hour > 9 or (now.tm_hour == 9 and now.tm_min >= 0)):
+                    if not _kontingent_already_sent_today():
+                        if send_kontingent_to_telegram(reason='Kunlik 09:00 avto-hisobot'):
+                            _mark_kontingent_sent()
+                            print(f"[KONTINGENT] ✅ Soat 09:00 kontingent ma'lumoti Telegramga yuborildi")
+
+                # 2. Soat 18:00 da .json baza zahirasi (Har kuni)
                 if (now.tm_hour > BACKUP_HOUR or
                         (now.tm_hour == BACKUP_HOUR and now.tm_min >= BACKUP_MINUTE)):
                     if not _backup_already_sent_today():
-                        if send_backup_to_telegram('kunlik avtomatik'):
+                        if send_backup_to_telegram('Kunlik 18:00 avto-zahira'):
                             _mark_backup_sent()
             except Exception as e:
                 print(f"[ZAHIRA] Rejalashtiruvchi xatosi: {e}")
-            time.sleep(60)
+            time.sleep(45)
 
     t = threading.Thread(target=loop, daemon=True)
+    t.start()
+
+
+BOT_KEYBOARD_MARKUP = {
+    "keyboard": [
+        [{"text": "📈 Kontingentni olish"}, {"text": "📋 4. To'liq Ma'lumotlar (.xlsx)"}],
+        [{"text": "📊 1. Buxgalteriya (.xlsx)"}, {"text": "🗂 2. Baza Admin (.xlsx)"}],
+        [{"text": "👥 3. Guruh Rahbarlari (.xlsx)"}, {"text": "📦 JSON Baza (.json)"}],
+        [{"text": "📑 Guruh Jurnallari (Rasm)"}]
+    ],
+    "resize_keyboard": True,
+    "is_persistent": True
+}
+
+
+def send_bot_welcome_menu(chat_id=None):
+    import requests
+    cfg = load_backup_config()
+    if not cfg:
+        return False
+    cid = chat_id or cfg['chat_id']
+    text = (
+        "🤖 <b>Talabalar Bazasi va Shartnomalar Boti</b>\n\n"
+        "Quyidagi tugmalar orqali istalgan vaqtda kerakli Excel (.xlsx) hisobotlarni, "
+        "<b>Kontingent</b> ma'lumotini yoki <b>.json</b> bazani yuklab olishingiz mumkin:\n\n"
+        "• <b>📈 Kontingentni olish</b> — Guruhlar va rahbarlar kesimida kontingent\n"
+        "• <b>📊 1. Buxgalteriya (.xlsx)</b> — Shartnoma № va Pasport\n"
+        "• <b>🗂 2. Baza Admin (.xlsx)</b> — Pasport va Shahodatnoma/Diplom\n"
+        "• <b>👥 3. Guruh Rahbarlari (.xlsx)</b> — Tug'ilgan sana, Pasport, Shahodatnoma\n"
+        "• <b>📋 4. To'liq Ma'lumotlar (.xlsx)</b> — O'zingiz uchun to'liq baza\n"
+        "• <b>📦 JSON Baza (.json)</b> — To'liq JSON baza fayli\n\n"
+        "⏰ <i>Avtomatik rejim:</i>\n"
+        "— Har kuni <b>09:00</b> da (Yakshanbadan tashqari): <b>Kontingent hisoboti</b>\n"
+        "— Har kuni <b>18:00</b> da: <b>.json baza zahirasi</b>"
+    )
+    try:
+        resp = requests.post(
+            f"https://api.telegram.org/bot{cfg['token']}/sendMessage",
+            json={
+                'chat_id': cid,
+                'text': text,
+                'parse_mode': 'HTML',
+                'reply_markup': BOT_KEYBOARD_MARKUP
+            },
+            timeout=20
+        )
+        return bool(resp.ok)
+    except Exception as e:
+        print(f"[BOT] Menu yuborishda xato: {e}")
+        return False
+
+
+def _start_telegram_bot_polling():
+    """Telegram botga kelgan tugma bosishlari va buyruqlarni tinglab, darhol javob va fayl qaytaradi."""
+    def bot_loop():
+        import requests
+        cfg = load_backup_config()
+        if not cfg:
+            return
+        token = cfg['token']
+        offset = 0
+        # Dastlabki ishga tushganda eskirgan update'larni o'tkazib yuboramiz
+        try:
+            r0 = requests.get(f"https://api.telegram.org/bot{token}/getUpdates", params={'timeout': 1}, timeout=10)
+            if r0.ok and r0.json().get('result'):
+                offset = r0.json()['result'][-1]['update_id'] + 1
+        except Exception:
+            pass
+
+        while True:
+            try:
+                resp = requests.get(
+                    f"https://api.telegram.org/bot{token}/getUpdates",
+                    params={'offset': offset, 'timeout': 25},
+                    timeout=35
+                )
+                if not resp.ok:
+                    time.sleep(5)
+                    continue
+                updates = resp.json().get('result', [])
+                for upd in updates:
+                    offset = upd['update_id'] + 1
+                    msg = upd.get('message') or upd.get('edited_message')
+                    if not msg:
+                        continue
+                    chat_id = msg.get('chat', {}).get('id')
+                    text = str(msg.get('text') or '').strip()
+                    if not text or not chat_id:
+                        continue
+
+                    t_low = text.lower()
+                    if t_low in ('/start', '/menu', '/help', 'menyu', 'start'):
+                        send_bot_welcome_menu(chat_id)
+                    elif 'kontingent' in t_low or 'kontengent' in t_low or t_low == '/kontingent':
+                        send_kontingent_to_telegram(chat_id, reason="Bot tugmasi orqali")
+                    elif 'buxgalter' in t_low or '1. buxgalter' in t_low or t_low == '/buxgalteriya':
+                        send_role_excel_to_telegram_chat('buxgalteriya', chat_id)
+                    elif 'baza admin' in t_low or '2. baza' in t_low or t_low == '/admin':
+                        send_role_excel_to_telegram_chat('admin', chat_id)
+                    elif 'guruh rahbar' in t_low or '3. guruh' in t_low or t_low == '/guruh_rahbari':
+                        send_role_excel_to_telegram_chat('guruh_rahbari', chat_id)
+                    elif "to'liq" in t_low or "toliq" in t_low or '4.' in t_low or t_low == '/toliq':
+                        send_role_excel_to_telegram_chat('toliq', chat_id)
+                    elif 'json' in t_low or t_low == '/json':
+                        json_path, cnt = build_json_database_file()
+                        with open(json_path, 'rb') as fh:
+                            requests.post(
+                                f"https://api.telegram.org/bot{token}/sendDocument",
+                                data={'chat_id': chat_id, 'caption': f"📦 <b>talabalar_bazasi.json</b>\n👥 Jami talabalar: <b>{cnt} nafar</b>", 'parse_mode': 'HTML'},
+                                files={'document': ('talabalar_bazasi.json', fh)},
+                                timeout=60
+                            )
+                    elif 'guruh jurnallari' in t_low or t_low == '/guruhlar':
+                        send_group_lists_to_telegram(target=str(chat_id), group_filter='ALL')
+                    else:
+                        send_bot_welcome_menu(chat_id)
+            except Exception as e_poll:
+                time.sleep(5)
+
+    t = threading.Thread(target=bot_loop, daemon=True)
     t.start()
 
 
@@ -2967,6 +3402,30 @@ Aniq JSON formatda qaytar:
                 self.send_error(404, f"Guruh PDF topilmadi: {target_group}")
                 return
 
+        if parsed_path == '/api/export_role_excel':
+            params = urllib.parse.parse_qs(urllib.parse.urlparse(self.path).query)
+            role = params.get('role', ['toliq'])[0]
+            out_path, _, _ = build_role_excel_file(role)
+            self.send_response(200)
+            self.send_header('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+            self.send_header('Content-Disposition', f'attachment; filename="{os.path.basename(out_path)}"')
+            self.send_header('Access-Control-Allow-Origin', '*')
+            self.end_headers()
+            with open(out_path, 'rb') as f:
+                self.wfile.write(f.read())
+            return
+
+        if parsed_path == '/api/send_role_excel_to_telegram':
+            params = urllib.parse.parse_qs(urllib.parse.urlparse(self.path).query)
+            role = params.get('role', ['toliq'])[0]
+            ok, msg = send_role_excel_to_telegram_chat(role)
+            self.send_response(200)
+            self.send_header('Content-Type', 'application/json; charset=utf-8')
+            self.send_header('Access-Control-Allow-Origin', '*')
+            self.end_headers()
+            self.wfile.write(json.dumps({'ok': ok, 'message': msg}).encode('utf-8'))
+            return
+
         if parsed_path == '/api/export_group_journal' or parsed_path == '/api/export_group_excel':
             # 1-list: Jami (Guruhi|T/R|F.I.SH|Sana), 2-8 listlar: Har guruh alohida (T/R|F.I.SH|Sana)
             try:
@@ -3976,11 +4435,12 @@ def run_server(port=8080):
     except Exception as e_sync:
         print(f"[SYNC] Tinglovchini ishga tushirishda xato: {e_sync}")
 
-    # Kunlik avto-zahira (Telegram)
+    # Kunlik avto-zahira (09:00 Kontingent & 18:00 JSON Baza) + Interaktiv Telegram Bot menyusi
     try:
         _start_daily_backup_scheduler()
+        _start_telegram_bot_polling()
         if load_backup_config():
-            print(f"[ZAHIRA] 🕕 Kunlik avto-zahira yoqildi — har kuni {BACKUP_HOUR:02d}:{BACKUP_MINUTE:02d}")
+            print(f"[ZAHIRA & BOT] 🤖 Telegram Bot tugmalari, 09:00 Kontingent (Dush-Shan) va {BACKUP_HOUR:02d}:{BACKUP_MINUTE:02d} .json zahira yoqildi!")
         else:
             print("[ZAHIRA] ⚠️ Sozlanmagan: scripts/backup_config.json yarating (bot_token, chat_id)")
     except Exception as e_bk:

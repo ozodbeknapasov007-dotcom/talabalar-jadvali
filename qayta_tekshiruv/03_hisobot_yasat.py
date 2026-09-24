@@ -281,8 +281,8 @@ GROUPS_LIST = ["26-01", "26-02", "26-03", "26-04", "26-05", "26-06", "26-07"]
 GROUP_LEADERS = {
     "26-01": "Mirzayeva.D",
     "26-02": "Ochilov.D",
-    "26-03": "To'rayeva.S",
-    "26-04": "Hamdamova.M",
+    "26-03": "A.Asraliyev",
+    "26-04": "Xamdamova.M",
     "26-05": "Rayimova.X",
     "26-06": "Yuldashev.O",
     "26-07": "Asraliyev.A"
@@ -5741,23 +5741,92 @@ var RAW_STUDENTS = {students_json};
         <svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><line x1="20" y1="8" x2="20" y2="14"></line><line x1="23" y1="11" x2="17" y2="11"></line></svg>
         Yangi Talaba
       </button>
-      <!-- 3 TA MAXSUS EXCEL EKSPORT BO'LIMI: 1. Buxgalteriya, 2. Baza Administratori, 3. Guruh Rahbarlari -->
-      <button type="button" class="btn btn-export" style="background:linear-gradient(135deg,#059669,#047857);color:#fff;border:none;" onclick="exportRoleExcel('buxgalteriya')" title="1. Buxgalteriya uchun: Shartnoma raqamlari va Pasport ma'lumotlari (.xlsx)">
-        <svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-        1. Buxgalteriya (.xlsx)
-      </button>
-      <button type="button" class="btn btn-export" style="background:linear-gradient(135deg,#2563eb,#1d4ed8);color:#fff;border:none;" onclick="exportRoleExcel('admin')" title="2. Baza administratori uchun: Pasport va Shahodatnoma/Diplom ma'lumotlari (.xlsx)">
-        <svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-        2. Baza Admin (.xlsx)
-      </button>
-      <button type="button" class="btn btn-export" style="background:linear-gradient(135deg,#7c3aed,#6d28d9);color:#fff;border:none;" onclick="exportRoleExcel('guruh_rahbari')" title="3. Guruh rahbarlari uchun: Tug'ilgan kun.oy.yil, Pasport va Shahodatnoma/Diplom ma'lumotlari (.xlsx)">
-        <svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-        3. Guruh Rahbarlari (.xlsx)
-      </button>
-      <button type="button" class="btn btn-telegram" onclick="openSendTelegramModal()" title="Har bir guruh ro'yxatini Telegram'ga yuborish">
-        <svg class="svg-icon" viewBox="0 0 24 24" fill="currentColor" style="width:15px;height:15px;"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69a.2.2 0 00-.05-.18c-.06-.05-.14-.03-.21-.02-.09.02-1.49.95-4.22 2.79-.4.27-.76.41-1.08.4-.36-.01-1.04-.2-1.55-.37-.63-.2-1.12-.31-1.08-.66.02-.18.27-.36.75-.55 2.92-1.27 4.86-2.11 5.83-2.51 2.78-1.16 3.35-1.36 3.73-1.36.08 0 .27.02.39.12.1.08.13.19.14.27-.01.06.01.24 0 .38z"/></svg>
-        Telegramga Ro'yxat
-      </button>
+      <!-- YAGONA EKSPORT DROPDOWN TUGMASI (4 TA BO'LIM: YUKLAB OLISH + TELEGRAMGA YUBORISH) -->
+      <div id="exportDropdownWrap" style="position:relative; display:inline-block;">
+        <button type="button" class="btn btn-export" style="background:linear-gradient(135deg,#059669,#047857);color:#fff;border:none;display:inline-flex;align-items:center;gap:6px;padding:8px 16px;font-weight:700;" onclick="toggleExportDropdown(event)" title="Excel (.xlsx) yuklab olish yoki Telegramga yuborish">
+          <svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+          Eksport (.xlsx / TG)
+          <svg style="width:14px;height:14px;margin-left:2px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"></polyline></svg>
+        </button>
+
+        <div id="exportDropdownMenu" style="display:none; position:absolute; right:0; top:calc(100% + 8px); width:460px; max-width:94vw; background:#0f172a; border:1px solid #334155; border-radius:14px; box-shadow:0 20px 40px rgba(0,0,0,0.45); padding:10px; z-index:99999;">
+          <div style="font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:0.6px; color:#94a3b8; padding:4px 8px 8px 8px; border-bottom:1px solid #1e293b; margin-bottom:6px;">
+            Excel (.xlsx) yuklab olish yoki Telegramga yuborish
+          </div>
+
+          <!-- 1. Buxgalteriya -->
+          <div style="display:flex; align-items:center; justify-content:space-between; gap:8px; padding:8px 10px; border-radius:10px; background:#1e293b; margin-bottom:6px;">
+            <div style="min-width:0;">
+              <div style="font-size:13px; font-weight:700; color:#34d399;">1. Buxgalteriya</div>
+              <div style="font-size:11px; color:#94a3b8;">Shartnoma № va Pasport ma'lumotlari</div>
+            </div>
+            <div style="display:flex; gap:6px; flex-shrink:0;">
+              <button type="button" onclick="exportRoleExcel('buxgalteriya')" style="background:#059669; color:#fff; border:none; border-radius:7px; padding:6px 11px; font-size:12px; font-weight:700; cursor:pointer; display:inline-flex; align-items:center; gap:4px;" title="Kompyuterga .xlsx yuklab olish">
+                📥 .xlsx
+              </button>
+              <button type="button" onclick="sendRoleExcelToTelegram('buxgalteriya')" style="background:#0284c7; color:#fff; border:none; border-radius:7px; padding:6px 10px; font-size:12px; font-weight:700; cursor:pointer; display:inline-flex; align-items:center; gap:4px;" title="Telegram botga yuborish">
+                ✈️ TG
+              </button>
+            </div>
+          </div>
+
+          <!-- 2. Baza administratori -->
+          <div style="display:flex; align-items:center; justify-content:space-between; gap:8px; padding:8px 10px; border-radius:10px; background:#1e293b; margin-bottom:6px;">
+            <div style="min-width:0;">
+              <div style="font-size:13px; font-weight:700; color:#60a5fa;">2. Baza administratori</div>
+              <div style="font-size:11px; color:#94a3b8;">Pasport va Shahodatnoma/Diplom</div>
+            </div>
+            <div style="display:flex; gap:6px; flex-shrink:0;">
+              <button type="button" onclick="exportRoleExcel('admin')" style="background:#2563eb; color:#fff; border:none; border-radius:7px; padding:6px 11px; font-size:12px; font-weight:700; cursor:pointer; display:inline-flex; align-items:center; gap:4px;" title="Kompyuterga .xlsx yuklab olish">
+                📥 .xlsx
+              </button>
+              <button type="button" onclick="sendRoleExcelToTelegram('admin')" style="background:#0284c7; color:#fff; border:none; border-radius:7px; padding:6px 10px; font-size:12px; font-weight:700; cursor:pointer; display:inline-flex; align-items:center; gap:4px;" title="Telegram botga yuborish">
+                ✈️ TG
+              </button>
+            </div>
+          </div>
+
+          <!-- 3. Guruh rahbarlari -->
+          <div style="display:flex; align-items:center; justify-content:space-between; gap:8px; padding:8px 10px; border-radius:10px; background:#1e293b; margin-bottom:6px;">
+            <div style="min-width:0;">
+              <div style="font-size:13px; font-weight:700; color:#c084fc;">3. Guruh rahbarlari</div>
+              <div style="font-size:11px; color:#94a3b8;">Tug'ilgan sana, Pasport, Shahodatnoma</div>
+            </div>
+            <div style="display:flex; gap:6px; flex-shrink:0;">
+              <button type="button" onclick="exportRoleExcel('guruh_rahbari')" style="background:#7c3aed; color:#fff; border:none; border-radius:7px; padding:6px 11px; font-size:12px; font-weight:700; cursor:pointer; display:inline-flex; align-items:center; gap:4px;" title="Kompyuterga .xlsx yuklab olish">
+                📥 .xlsx
+              </button>
+              <button type="button" onclick="sendRoleExcelToTelegram('guruh_rahbari')" style="background:#0284c7; color:#fff; border:none; border-radius:7px; padding:6px 10px; font-size:12px; font-weight:700; cursor:pointer; display:inline-flex; align-items:center; gap:4px;" title="Telegram botga yuborish">
+                ✈️ TG
+              </button>
+            </div>
+          </div>
+
+          <!-- 4. To'liq ma'lumotlar (O'zim uchun) -->
+          <div style="display:flex; align-items:center; justify-content:space-between; gap:8px; padding:8px 10px; border-radius:10px; background:#1e293b; border:1px solid #475569; margin-bottom:8px;">
+            <div style="min-width:0;">
+              <div style="font-size:13px; font-weight:700; color:#fbbf24;">4. To'liq ma'lumotlar (O'zim uchun)</div>
+              <div style="font-size:11px; color:#94a3b8;">Barcha ustunlar jamlangan to'liq baza</div>
+            </div>
+            <div style="display:flex; gap:6px; flex-shrink:0;">
+              <button type="button" onclick="exportRoleExcel('toliq')" style="background:#d97706; color:#fff; border:none; border-radius:7px; padding:6px 11px; font-size:12px; font-weight:700; cursor:pointer; display:inline-flex; align-items:center; gap:4px;" title="Kompyuterga .xlsx yuklab olish">
+                📥 .xlsx
+              </button>
+              <button type="button" onclick="sendRoleExcelToTelegram('toliq')" style="background:#0284c7; color:#fff; border:none; border-radius:7px; padding:6px 10px; font-size:12px; font-weight:700; cursor:pointer; display:inline-flex; align-items:center; gap:4px;" title="Telegram botga yuborish">
+                ✈️ TG
+              </button>
+            </div>
+          </div>
+
+          <!-- Guruh jurnallarini rasm sifatida Telegramga yuborish -->
+          <div style="border-top:1px solid #1e293b; padding-top:8px; display:flex; justify-content:space-between; align-items:center;">
+            <span style="font-size:11.5px; color:#cbd5e1; font-weight:600; padding-left:6px;">Guruh jurnallarini (Rasm) TG kanalga:</span>
+            <button type="button" onclick="document.getElementById('exportDropdownMenu').style.display='none'; openSendTelegramModal();" style="background:#0ea5e9; color:#fff; border:none; border-radius:7px; padding:6px 12px; font-size:12px; font-weight:700; cursor:pointer;">
+              ✈️ Guruhlarni TG yuborish
+            </button>
+          </div>
+        </div>
+      </div>
       <button type="button" class="btn btn-refresh" onclick="location.reload()">
         <svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
         Yangilash

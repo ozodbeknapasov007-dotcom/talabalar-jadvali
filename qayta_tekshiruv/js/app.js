@@ -2582,8 +2582,8 @@ window.renderGroupsJournalTab = function() {
   const groupLeaders = {
     "26-01": "Mirzayeva.D",
     "26-02": "Ochilov.D",
-    "26-03": "To'rayeva.S",
-    "26-04": "Hamdamova.M",
+    "26-03": "A.Asraliyev",
+    "26-04": "Xamdamova.M",
     "26-05": "Rayimova.X",
     "26-06": "Yuldashev.O",
     "26-07": "Asraliyev.A"
@@ -2794,11 +2794,41 @@ window.openStudentByRow = function(rowNum) {
 window.GROUP_LEADERS_MAP = {
   "26-01": "Mirzayeva.D",
   "26-02": "Ochilov.D",
-  "26-03": "To'rayeva.S",
-  "26-04": "Hamdamova.M",
+  "26-03": "A.Asraliyev",
+  "26-04": "Xamdamova.M",
   "26-05": "Rayimova.X",
   "26-06": "Yuldashev.O",
   "26-07": "Asraliyev.A"
+};
+
+/* SANANI DOIM DD.MM.YYYY FORMATGA KELTIRISH */
+window.formatDateDDMMYYYY = function(val) {
+  var s = String(val || '').trim();
+  if (!s || s === '—' || s === '-') return '';
+  s = s.split(' ')[0];
+  var m1 = s.match(/^(\d{1,2})[\.\/\-](\d{1,2})[\.\/\-](\d{4})$/);
+  if (m1) {
+    var dd = m1[1].length === 1 ? '0' + m1[1] : m1[1];
+    var mm = m1[2].length === 1 ? '0' + m1[2] : m1[2];
+    return dd + '.' + mm + '.' + m1[3];
+  }
+  var m2 = s.match(/^(\d{4})[\.\/\-](\d{1,2})[\.\/\-](\d{1,2})$/);
+  if (m2) {
+    var dd2 = m2[3].length === 1 ? '0' + m2[3] : m2[3];
+    var mm2 = m2[2].length === 1 ? '0' + m2[2] : m2[2];
+    return dd2 + '.' + mm2 + '.' + m2[1];
+  }
+  return s;
+};
+
+/* FAQAT RAQAMDAN IBORAT BO'LSA (SHARTNOMA RAQAMI, YIL) RAQAM FORMATIDA QAYTARISH (SARALASH UCHUN) */
+window.toNumericIfDigits = function(val) {
+  var s = String(val === null || val === undefined ? '' : val).trim();
+  if (!s) return '';
+  if (/^\d{1,10}$/.test(s)) {
+    return parseInt(s, 10);
+  }
+  return s;
 };
 
 /* TUG'ILGAN TUMANNI JSHSHIR DAN ANIQLASH */
@@ -2818,62 +2848,82 @@ window.tugilganTuman = function(pinfl) {
   return window.TUGILGAN_TUMAN_KODI[p.substring(7, 10)] || '';
 };
 
-/* 3 TA BO'LIM UCHUN MAXSUS USTUNLAR VA DIZAYN BILAN EXCEL VARAQ YARATISH:
-   1) 'buxgalteriya' -> Shartnoma raqamlari va pasport ma'lumotlari
-   2) 'admin'        -> Pasport va shahodatnoma/diplom ma'lumotlari
-   3) 'guruh_rahbari'-> Tug'ilgan kun.oy.yil, pasport va shahodatnoma/diplom ma'lumotlari */
+/* 4 TA BO'LIM UCHUN MAXSUS USTUNLAR VA DIZAYN BILAN EXCEL VARAQ YARATISH:
+   1) 'buxgalteriya' -> Shartnoma raqami (raqam) va pasport ma'lumotlari (Yo'nalishi yo'q!)
+   2) 'admin'        -> Pasport va shahodatnoma/diplom ma'lumotlari (Yo'nalishi yo'q!)
+   3) 'guruh_rahbari'-> Tug'ilgan kun.oy.yil, pasport va shahodatnoma/diplom ma'lumotlari (Yo'nalishi yo'q!)
+   4) 'toliq'        -> To'liq ma'lumotlar (O'zim uchun barcha ustunlar, Yo'nalishi yo'q!) */
 window._buildRoleStyledSheet = function(students, role) {
-  role = role || 'guruh_rahbari';
+  role = role || 'toliq';
   var COLS = [];
   var headerBg = '0F172A';
 
   if (role === 'buxgalteriya') {
     headerBg = '065F46'; // Buxgalteriya: zumrad yashil
     COLS = [
-      { header: 'T/R',                      wch: 5,  val: function(st, i, fish) { return i + 1; } },
-      { header: 'Guruh',                    wch: 10, val: function(st) { return st.group || ''; } },
+      { header: 'T/R',                      wch: 6,  val: function(st, i) { return i + 1; }, num: true },
+      { header: 'Guruh',                    wch: 10, val: function(st) { return st.group || ''; }, center: true },
       { header: "F.I.SH (Talaba)",          wch: 34, val: function(st, i, fish) { return fish; }, bold: true },
-      { header: "Yo'nalishi",               wch: 24, val: function(st) { return st.yon || ''; } },
-      { header: "Shartnoma №",              wch: 14, val: function(st) { return st.shnum || ''; }, bold: true },
-      { header: "Pasport seriya va raqami", wch: 18, val: function(st) { return st.pv || ''; }, bold: true },
-      { header: "JSHSHIR (PINFL)",          wch: 18, val: function(st) { return st.pinfl || ''; } },
-      { header: "Pasport berilgan sanasi",  wch: 16, val: function(st) { return st.ber || ''; } },
-      { header: "Tug'ilgan sanasi",         wch: 15, val: function(st) { return st.dob || ''; } }
+      { header: "Shartnoma №",              wch: 14, val: function(st) { return window.toNumericIfDigits(st.shnum); }, bold: true, num: true, center: true },
+      { header: "Pasport seriya va raqami", wch: 18, val: function(st) { return st.pv || ''; }, bold: true, center: true },
+      { header: "JSHSHIR (PINFL)",          wch: 18, val: function(st) { return st.pinfl || ''; }, center: true },
+      { header: "Pasport berilgan sanasi",  wch: 16, val: function(st) { return window.formatDateDDMMYYYY(st.ber); }, center: true },
+      { header: "Tug'ilgan sanasi",         wch: 16, val: function(st) { return window.formatDateDDMMYYYY(st.dob); }, center: true }
     ];
   } else if (role === 'admin') {
     headerBg = '1E3A8A'; // Baza administratori: to'q ko'k
     COLS = [
-      { header: 'T/R',                              wch: 5,  val: function(st, i, fish) { return i + 1; } },
-      { header: 'Guruh',                            wch: 10, val: function(st) { return st.group || ''; } },
+      { header: 'T/R',                              wch: 6,  val: function(st, i) { return i + 1; }, num: true },
+      { header: 'Guruh',                            wch: 10, val: function(st) { return st.group || ''; }, center: true },
       { header: "F.I.SH (Talaba)",                  wch: 34, val: function(st, i, fish) { return fish; }, bold: true },
-      { header: "Pasport seriya va raqami",         wch: 18, val: function(st) { return st.pv || ''; }, bold: true },
-      { header: "JSHSHIR (PINFL)",                  wch: 18, val: function(st) { return st.pinfl || ''; } },
-      { header: "Pasport berilgan sanasi",          wch: 16, val: function(st) { return st.ber || ''; } },
-      { header: "Tug'ilgan sanasi",                 wch: 15, val: function(st) { return st.dob || ''; } },
+      { header: "Pasport seriya va raqami",         wch: 18, val: function(st) { return st.pv || ''; }, bold: true, center: true },
+      { header: "JSHSHIR (PINFL)",                  wch: 18, val: function(st) { return st.pinfl || ''; }, center: true },
+      { header: "Pasport berilgan sanasi",          wch: 16, val: function(st) { return window.formatDateDDMMYYYY(st.ber); }, center: true },
+      { header: "Tug'ilgan sanasi",                 wch: 16, val: function(st) { return window.formatDateDDMMYYYY(st.dob); }, center: true },
       { header: "Tug'ilgan tumani",                 wch: 20, val: function(st) { return window.tugilganTuman(st.pinfl); } },
-      { header: "Hujjat turi (Shahodatnoma/Diplom)",wch: 20, val: function(st) { return st.doc_tur || ''; } },
-      { header: "Shahodatnoma / Diplom seriya №",   wch: 22, val: function(st) { return st.sh_doc || ''; }, bold: true },
+      { header: "Hujjat turi (Shahodatnoma/Diplom)",wch: 20, val: function(st) { return st.doc_tur || ''; }, center: true },
+      { header: "Shahodatnoma / Diplom seriya №",   wch: 22, val: function(st) { return st.sh_doc || ''; }, bold: true, center: true },
       { header: "Tugatgan ta'lim muassasasi",       wch: 38, val: function(st) { return st.mak || ''; } },
-      { header: "Bitirgan yili",                    wch: 14, val: function(st) { return st.yil || ''; } }
+      { header: "Bitirgan yili",                    wch: 14, val: function(st) { return window.toNumericIfDigits(st.yil); }, num: true, center: true }
     ];
-  } else {
-    // 'guruh_rahbari' (va alohida guruhlar eksporti)
+  } else if (role === 'guruh_rahbari') {
     headerBg = '4C1D95'; // Guruh rahbarlari: to'q binafsha
     COLS = [
-      { header: 'T/R',                              wch: 5,  val: function(st, i, fish) { return i + 1; } },
-      { header: 'Guruh',                            wch: 10, val: function(st) { return st.group || ''; } },
+      { header: 'T/R',                              wch: 6,  val: function(st, i) { return i + 1; }, num: true },
+      { header: 'Guruh',                            wch: 10, val: function(st) { return st.group || ''; }, center: true },
       { header: 'Guruh rahbari',                    wch: 18, val: function(st) { return window.GROUP_LEADERS_MAP[st.group] || '—'; } },
       { header: "F.I.SH (Talaba)",                  wch: 34, val: function(st, i, fish) { return fish; }, bold: true },
-      { header: "Tug'ilgan sanasi (Kun.Oy.Yil)",    wch: 20, val: function(st) { return st.dob || ''; }, bold: true },
+      { header: "Tug'ilgan sanasi (dd.mm.yyyy)",    wch: 20, val: function(st) { return window.formatDateDDMMYYYY(st.dob); }, bold: true, center: true },
       { header: "Tug'ilgan tumani",                 wch: 20, val: function(st) { return window.tugilganTuman(st.pinfl); } },
-      { header: "Pasport seriya va raqami",         wch: 18, val: function(st) { return st.pv || ''; }, bold: true },
-      { header: "JSHSHIR (PINFL)",                  wch: 18, val: function(st) { return st.pinfl || ''; } },
-      { header: "Pasport berilgan sanasi",          wch: 16, val: function(st) { return st.ber || ''; } },
-      { header: "Hujjat turi (Shahodatnoma/Diplom)",wch: 20, val: function(st) { return st.doc_tur || ''; } },
-      { header: "Shahodatnoma / Diplom seriya №",   wch: 22, val: function(st) { return st.sh_doc || ''; }, bold: true },
+      { header: "Pasport seriya va raqami",         wch: 18, val: function(st) { return st.pv || ''; }, bold: true, center: true },
+      { header: "JSHSHIR (PINFL)",                  wch: 18, val: function(st) { return st.pinfl || ''; }, center: true },
+      { header: "Pasport berilgan sanasi",          wch: 16, val: function(st) { return window.formatDateDDMMYYYY(st.ber); }, center: true },
+      { header: "Hujjat turi (Shahodatnoma/Diplom)",wch: 20, val: function(st) { return st.doc_tur || ''; }, center: true },
+      { header: "Shahodatnoma / Diplom seriya №",   wch: 22, val: function(st) { return st.sh_doc || ''; }, bold: true, center: true },
       { header: "Tugatgan ta'lim muassasasi",       wch: 38, val: function(st) { return st.mak || ''; } },
-      { header: "Bitirgan yili",                    wch: 14, val: function(st) { return st.yil || ''; } },
-      { header: "Telefon raqami",                   wch: 16, val: function(st) { return st.tel || ''; } }
+      { header: "Bitirgan yili",                    wch: 14, val: function(st) { return window.toNumericIfDigits(st.yil); }, num: true, center: true },
+      { header: "Telefon raqami",                   wch: 16, val: function(st) { return st.tel || ''; }, center: true }
+    ];
+  } else {
+    // 'toliq' — 4. To'liq ma'lumotlar (O'zim uchun barcha ustunlar, Yo'nalishi ustunisiz)
+    headerBg = '0F172A';
+    COLS = [
+      { header: 'T/R',                              wch: 6,  val: function(st, i) { return i + 1; }, num: true },
+      { header: 'Guruh',                            wch: 10, val: function(st) { return st.group || ''; }, center: true },
+      { header: 'Guruh rahbari',                    wch: 18, val: function(st) { return window.GROUP_LEADERS_MAP[st.group] || '—'; } },
+      { header: "Shartnoma №",                      wch: 14, val: function(st) { return window.toNumericIfDigits(st.shnum); }, bold: true, num: true, center: true },
+      { header: "F.I.SH (Talaba)",                  wch: 34, val: function(st, i, fish) { return fish; }, bold: true },
+      { header: "Tug'ilgan sanasi (dd.mm.yyyy)",    wch: 18, val: function(st) { return window.formatDateDDMMYYYY(st.dob); }, bold: true, center: true },
+      { header: "Tug'ilgan tumani",                 wch: 20, val: function(st) { return window.tugilganTuman(st.pinfl); } },
+      { header: "Pasport seriya va raqami",         wch: 18, val: function(st) { return st.pv || ''; }, bold: true, center: true },
+      { header: "JSHSHIR (PINFL)",                  wch: 18, val: function(st) { return st.pinfl || ''; }, center: true },
+      { header: "Pasport berilgan sanasi",          wch: 16, val: function(st) { return window.formatDateDDMMYYYY(st.ber); }, center: true },
+      { header: "Hujjat turi (Shahodatnoma/Diplom)",wch: 20, val: function(st) { return st.doc_tur || ''; }, center: true },
+      { header: "Shahodatnoma / Diplom seriya №",   wch: 22, val: function(st) { return st.sh_doc || ''; }, bold: true, center: true },
+      { header: "Tugatgan ta'lim muassasasi",       wch: 38, val: function(st) { return st.mak || ''; } },
+      { header: "Bitirgan yili",                    wch: 14, val: function(st) { return window.toNumericIfDigits(st.yil); }, num: true, center: true },
+      { header: "Telefon raqami",                   wch: 16, val: function(st) { return st.tel || ''; }, center: true },
+      { header: "Holati",                           wch: 14, val: function(st) { return st.verified || 'KUTILMOQDA'; }, center: true }
     ];
   }
 
@@ -2894,10 +2944,10 @@ window._buildRoleStyledSheet = function(students, role) {
       right:  { style: 'thin', color: { rgb: '334155' } }
     }
   };
-  var dSt = function(alt, bold) { return {
+  var dSt = function(alt, bold, center) { return {
     font: { sz: 12, name: 'Calibri', bold: !!bold, color: { rgb: '0F172A' } },
     fill: { fgColor: { rgb: alt ? 'F8FAFC' : 'FFFFFF' }, patternType: 'solid' },
-    alignment: { vertical: 'center', wrapText: false },
+    alignment: { horizontal: center ? 'center' : 'left', vertical: 'center', wrapText: false },
     border: borderGrid
   }; };
   var trSt = function(alt) { return {
@@ -2923,9 +2973,14 @@ window._buildRoleStyledSheet = function(students, role) {
       if (R === 0) {
         ws[addr].s = hSt;
       } else if (C === 0) {
+        ws[addr].t = 'n';
         ws[addr].s = trSt(alt);
       } else {
-        ws[addr].s = dSt(alt, !!(COLS[C] && COLS[C].bold));
+        var colMeta = COLS[C] || {};
+        if (colMeta.num && typeof ws[addr].v === 'number') {
+          ws[addr].t = 'n';
+        }
+        ws[addr].s = dSt(alt, !!colMeta.bold, !!colMeta.center);
       }
     }
   }
@@ -2942,11 +2997,11 @@ window._buildRoleStyledSheet = function(students, role) {
 };
 
 window._buildStyledSheet = function(students) {
-  return window._buildRoleStyledSheet(students, 'guruh_rahbari');
+  return window._buildRoleStyledSheet(students, 'toliq');
 };
 
 window._buildFullWorkbook = function(students, role) {
-  role = role || 'guruh_rahbari';
+  role = role || 'toliq';
   var wb = XLSX.utils.book_new();
 
   var sortedAll = students.slice().sort(function(a, b) {
@@ -2993,29 +3048,48 @@ window._buildFullWorkbook = function(students, role) {
   return wb;
 };
 
-/* 3 TA BO'LIM BO'YICHA EXCEL YUKLAB OLISH FUNKSIYASI:
-   1. Buxgalteriya ('buxgalteriya')
-   2. Baza administratori ('admin')
-   3. Guruh rahbarlari ('guruh_rahbari') */
+window.ROLE_EXPORT_META = {
+  'buxgalteriya': {
+    file: '1_Buxgalteriya_Shartnoma_va_Pasport.xlsx',
+    label: '1. Buxgalteriya (Shartnoma № va Pasport)'
+  },
+  'admin': {
+    file: '2_Baza_Admin_Pasport_va_Shahodatnoma.xlsx',
+    label: '2. Baza Administratori (Pasport va Shahodatnoma/Diplom)'
+  },
+  'guruh_rahbari': {
+    file: '3_Guruh_Rahbarlari_Talabalar_Malumotlari.xlsx',
+    label: '3. Guruh Rahbarlari (Tug\'ilgan sana, Pasport va Shahodatnoma)'
+  },
+  'toliq': {
+    file: '4_Toliq_Malumotlar_Bazasi.xlsx',
+    label: '4. To\'liq Ma\'lumotlar (O\'zim uchun barcha ustunlar)'
+  }
+};
+
+/* EKSPORT DROPDOWN MENYUSINI OCHISH/YOPISH */
+window.toggleExportDropdown = function(e) {
+  if (e && e.stopPropagation) e.stopPropagation();
+  var menu = document.getElementById('exportDropdownMenu');
+  if (!menu) return;
+  var isOpen = menu.style.display === 'block';
+  menu.style.display = isOpen ? 'none' : 'block';
+};
+
+document.addEventListener('click', function(e) {
+  var menu = document.getElementById('exportDropdownMenu');
+  var wrap = document.getElementById('exportDropdownWrap');
+  if (menu && menu.style.display === 'block' && wrap && !wrap.contains(e.target)) {
+    menu.style.display = 'none';
+  }
+});
+
+/* 4 TA BO'LIM BO'YICHA EXCEL YUKLAB OLISH FUNKSIYASI */
 window.exportRoleExcel = function(role) {
-  role = role || 'guruh_rahbari';
-  var meta = {
-    'buxgalteriya': {
-      file: '1_Buxgalteriya_Shartnoma_va_Pasport.xlsx',
-      label: '1. Buxgalteriya (Shartnoma № va Pasport)'
-    },
-    'admin': {
-      file: '2_Baza_Admin_Pasport_va_Shahodatnoma.xlsx',
-      label: '2. Baza Administratori (Pasport va Shahodatnoma/Diplom)'
-    },
-    'guruh_rahbari': {
-      file: '3_Guruh_Rahbarlari_Talabalar_Malumotlari.xlsx',
-      label: '3. Guruh Rahbarlari (Tug\'ilgan sana, Pasport va Shahodatnoma/Diplom)'
-    }
-  }[role] || {
-    file: 'Talabalar_Malumotlari.xlsx',
-    label: 'Talabalar ma\'lumotlari'
-  };
+  role = role || 'toliq';
+  var meta = window.ROLE_EXPORT_META[role] || window.ROLE_EXPORT_META['toliq'];
+  var menu = document.getElementById('exportDropdownMenu');
+  if (menu) menu.style.display = 'none';
 
   if (typeof XLSX !== 'undefined') {
     var wb = window._buildFullWorkbook(RAW_STUDENTS, role);
@@ -3029,9 +3103,53 @@ window.exportRoleExcel = function(role) {
   showToast(meta.label + ' yuklanmoqda...', 'success');
 };
 
+/* TANLANGAN BO'LIM EXCEL FAYLINI TELEGRAM BOTGA BEVOSITA YUBORISH */
+window.sendRoleExcelToTelegram = async function(role) {
+  role = role || 'toliq';
+  var meta = window.ROLE_EXPORT_META[role] || window.ROLE_EXPORT_META['toliq'];
+  var menu = document.getElementById('exportDropdownMenu');
+  if (menu) menu.style.display = 'none';
+
+  showToast(meta.label + " Telegram botga yuborilmoqda...", "info");
+
+  try {
+    if (typeof XLSX !== 'undefined') {
+      var wb = window._buildFullWorkbook(RAW_STUDENTS, role);
+      var wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array', cellStyles: true });
+      var blob = new Blob([wbout], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+      var formData = new FormData();
+      formData.append('chat_id', '8135594558');
+      formData.append('caption', "📊 " + meta.label + "\n👥 Jami talabalar: " + RAW_STUDENTS.length + " nafar");
+      formData.append('document', blob, meta.file);
+
+      var tgResp = await fetch('https://api.telegram.org/bot8645386410:AAGpMWubDaLI6KQ_hR9WuqkhCaoOAK2qWEM/sendDocument', {
+        method: 'POST',
+        body: formData
+      });
+      var tgJson = await tgResp.json();
+      if (tgResp.ok && tgJson && tgJson.ok) {
+        showToast(meta.label + " Telegram botga muvaffaqiyatli yuborildi!", "success");
+        return;
+      }
+    }
+    // Fallback to local backend if direct browser call failed
+    var apiHost = (window.location.protocol === 'http:' || window.location.protocol === 'https:') ? '' : 'http://localhost:8080';
+    var resp = await fetch(apiHost + '/api/send_role_excel_to_telegram?role=' + encodeURIComponent(role));
+    var resJson = await resp.json();
+    if (resJson && resJson.ok) {
+      showToast(meta.label + " Telegram botga muvaffaqiyatli yuborildi!", "success");
+    } else {
+      showToast("Xatolik: " + ((resJson && resJson.error) || "Telegramga yuborilmadi"), "danger");
+    }
+  } catch (err) {
+    showToast("Telegramga yuborishda xato: " + err.message, "danger");
+  }
+};
+
 window.exportBuxgalteriyaExcel = function() { window.exportRoleExcel('buxgalteriya'); };
 window.exportAdminExcel = function() { window.exportRoleExcel('admin'); };
 window.exportGuruhRahbariExcel = function() { window.exportRoleExcel('guruh_rahbari'); };
+window.exportToliqExcel = function() { window.exportRoleExcel('toliq'); };
 
 /* 1 TA ALOHIDA GURUHNI FORMATLANGAN EXCEL QILIB YUKLASH */
 window.exportSingleGroupExcel = function(groupName) {
@@ -3067,8 +3185,8 @@ window.exportSingleGroupExcel = function(groupName) {
 /* GURUH JURNALINI PDF / PRINT UCHUN OCHISH — TOZA A4, BO'SH SAHIFA YO'Q */
 window.printGroupJournal = function(groupCode) {
   const groupLeaders = {
-    "26-01": "Mirzayeva.D", "26-02": "Ochilov.D", "26-03": "To'rayeva.S",
-    "26-04": "Hamdamova.M", "26-05": "Rayimova.X", "26-06": "Yuldashev.O", "26-07": "Asraliyev.A"
+    "26-01": "Mirzayeva.D", "26-02": "Ochilov.D", "26-03": "A.Asraliyev",
+    "26-04": "Xamdamova.M", "26-05": "Rayimova.X", "26-06": "Yuldashev.O", "26-07": "Asraliyev.A"
   };
 
   const gStudents = RAW_STUDENTS.filter(function(st) { return (st.group || '') === groupCode; });

@@ -38,8 +38,8 @@ module.exports = async function handler(req, res) {
   const GROUP_META = {
     "26-01": { specialty: "Farmatsiya ishi", leader: "Mirzayeva.D" },
     "26-02": { specialty: "Hamshiralik ishi", leader: "Ochilov.D" },
-    "26-03": { specialty: "Hamshiralik ishi", leader: "To'rayeva.S" },
-    "26-04": { specialty: "Hamshiralik ishi", leader: "Hamdamova.M" },
+    "26-03": { specialty: "Hamshiralik ishi", leader: "A.Asraliyev" },
+    "26-04": { specialty: "Hamshiralik ishi", leader: "Xamdamova.M" },
     "26-05": { specialty: "Hamshiralik ishi", leader: "Rayimova.X" },
     "26-06": { specialty: "Hamshiralik ishi", leader: "Yuldashev.O" },
     "26-07": { specialty: "Hamshiralik ishi", leader: "Asraliyev.A" },
