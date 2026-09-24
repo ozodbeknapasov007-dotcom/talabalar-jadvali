@@ -4,7 +4,7 @@ const path = require('path');
 
 const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN || '8645386410:AAGpMWubDaLI6KQ_hR9WuqkhCaoOAK2qWEM';
 const DEFAULT_CHAT_ID = process.env.TELEGRAM_CHAT_ID || '8135594558';
-const GITHUB_RAW_BASE = 'https://raw.githubusercontent.com/OzodbekNapasov/Talabalar-ro-yhati/main';
+const STATIC_BASE_URL = 'https://talabalar-royhati.vercel.app';
 
 const GROUP_LEADERS = {
   "26-01": "Mirzayeva.D",
@@ -38,16 +38,16 @@ const BOT_KEYBOARD = {
 };
 
 async function loadDatabase() {
-  // 1. Try fetching latest from GitHub main branch first (so edits are always fresh)
+  // 1. Fetch from public Vercel static deployment (always 200 OK)
   try {
-    const resp = await fetch(`${GITHUB_RAW_BASE}/talabalar_bazasi.json?t=${Date.now()}`);
+    const resp = await fetch(`${STATIC_BASE_URL}/talabalar_bazasi.json?t=${Date.now()}`);
     if (resp.ok) {
       const data = await resp.json();
       if (data && Array.isArray(data.students)) return data;
     }
   } catch (e) {}
 
-  // 2. Fallback to local file bundled in Vercel deployment
+  // 2. Fallback to local filesystem if available
   try {
     const localPath = path.join(process.cwd(), 'talabalar_bazasi.json');
     if (fs.existsSync(localPath)) {
@@ -58,19 +58,28 @@ async function loadDatabase() {
   return { students: [], total_students: 0 };
 }
 
-async function loadFileBuffer(fileName) {
+async function loadFileBuffer(relativePath) {
+  // Clean path and encode segments safely
+  const encodedPath = relativePath
+    .split('/')
+    .map(seg => encodeURIComponent(seg))
+    .join('/');
+
   try {
-    const resp = await fetch(`${GITHUB_RAW_BASE}/${encodeURIComponent(fileName)}?t=${Date.now()}`);
+    const resp = await fetch(`${STATIC_BASE_URL}/${encodedPath}?t=${Date.now()}`);
     if (resp.ok) {
       const ab = await resp.arrayBuffer();
       return Buffer.from(ab);
     }
   } catch (e) {}
 
-  const localPath = path.join(process.cwd(), fileName);
-  if (fs.existsSync(localPath)) {
-    return fs.readFileSync(localPath);
-  }
+  try {
+    const localPath = path.join(process.cwd(), relativePath);
+    if (fs.existsSync(localPath)) {
+      return fs.readFileSync(localPath);
+    }
+  } catch (e) {}
+
   return null;
 }
 
@@ -115,7 +124,7 @@ function getTashkentStamp() {
   return { stamp: `${dd}.${mm}.${yyyy} | ${hh}:${min}`, ddmm: `${dd}.${mm}` };
 }
 
-async function buildKontingentText(reason = "Bot orqali (24/7 Cloud)") {
+async function buildKontingentText(reason = "Bot tugmasi orqali") {
   const db = await loadDatabase();
   const students = db.students || [];
   const officialGroups = ["26-01", "26-02", "26-03", "26-04", "26-05", "26-06", "26-07"];
@@ -149,7 +158,6 @@ async function buildKontingentText(reason = "Bot orqali (24/7 Cloud)") {
     lines.push(`\n🔸 <b>Safdan chiqarilganlar:</b> ${withdrawnStudents.length} nafar`);
   }
 
-  // Check today's birthdays
   const bdays = officialStudents.filter(s => String(s.dob || '').startsWith(ddmm + '.'));
   if (bdays.length > 0) {
     lines.push("\n🎂 <b>Bugun tug'ilgan kuni bo'lgan talabalar:</b>");
@@ -206,9 +214,7 @@ async function searchStudentText(query) {
     );
   });
 
-  if (matches.length === 0) {
-    return null;
-  }
+  if (matches.length === 0) return null;
 
   const top = matches.slice(0, 8);
   const lines = [`🔍 <b>Qidiruv natijasi (${matches.length} ta topildi):</b>\n`];
@@ -287,14 +293,15 @@ module.exports = async function handler(req, res) {
     if (tLow === '/start' || tLow === '/menu' || tLow === '/help' || tLow === 'menyu' || tLow === 'start') {
       const welcome =
         "🤖 <b>Talabalar Bazasi va Shartnomalar Boti (24/7 Cloud Webhook)</b>\n\n" +
-        "Quyidagi tugmalar orqali istalgan vaqtda (kompyuter o'chiq bo'lganda ham!) kerakli Excel hisobotlarni, <b>Kontingent</b> ma'lumotini yoki <b>.json</b> bazani olishingiz mumkin:\n\n" +
+        "Quyidagi tugmalar orqali istalgan vaqtda kerakli Excel hisobotlarni, <b>Kontingent</b> ma'lumotini, <b>Guruh jurnallarini (PDF)</b> yoki <b>.json</b> bazani olishingiz mumkin:\n\n" +
         "• <b>📈 Kontingentni olish</b> — Guruhlar va rahbarlar kesimida kontingent\n" +
         "• <b>📊 1. Buxgalteriya (.xlsx)</b> — Shartnoma № va Pasport\n" +
         "• <b>🗂 2. Baza Admin (.xlsx)</b> — Pasport va Shahodatnoma/Diplom\n" +
         "• <b>👥 3. Guruh Rahbarlari (.xlsx)</b> — Tug'ilgan sana, Pasport, Shahodatnoma\n" +
         "• <b>📋 4. To'liq Ma'lumotlar (.xlsx)</b> — O'zingiz uchun to'liq baza\n" +
         "• <b>📦 JSON Baza (.json)</b> — To'liq JSON baza fayli\n" +
-        "• <b>⚠️ Kamchiliklar ro'yxati</b> — Hujjati to'liq bo'lmagan talabalar\n\n" +
+        "• <b>⚠️ Kamchiliklar ro'yxati</b> — Hujjati to'liq bo'lmagan talabalar\n" +
+        "• <b>📑 Guruh Jurnallari (PDF)</b> — Barcha 7 ta guruh A4 PDF jurnallari\n\n" +
         "🔍 <i>Tezkor qidiruv:</i> Istalgan talabaning <b>Ism-familiyasi</b>, <b>Shartnoma №</b> yoki <b>Pasport seriyasini</b> yozib yuboring!";
       await sendTelegramMessage(chatId, welcome);
       return res.status(200).json({ ok: true });
@@ -323,9 +330,14 @@ module.exports = async function handler(req, res) {
       if (rf.match.some(m => tLow.includes(m))) {
         const buf = await loadFileBuffer(rf.file);
         if (buf) {
-          await sendTelegramDocument(chatId, buf, rf.file, `📊 <b>${rf.title}</b>\n🕒 Sana: ${stamp}`);
+          await sendTelegramDocument(
+            chatId,
+            buf,
+            rf.file,
+            `📊 <b>${rf.title}</b>\n🕒 Sana: ${stamp}\n👥 Jami talabalar: 177 nafar`
+          );
         } else {
-          await sendTelegramMessage(chatId, `❌ Fayl topilmadi: ${rf.file}`);
+          await sendTelegramMessage(chatId, `❌ Fayl yuklashda xatolik: ${rf.file}`);
         }
         return res.status(200).json({ ok: true });
       }
@@ -334,7 +346,9 @@ module.exports = async function handler(req, res) {
     if (tLow.includes('json') || tLow === '/json') {
       const buf = await loadFileBuffer('talabalar_bazasi.json');
       if (buf) {
-        await sendTelegramDocument(chatId, buf, 'talabalar_bazasi.json', `📦 <b>talabalar_bazasi.json</b>\n🕒 Sana: ${stamp}`);
+        await sendTelegramDocument(chatId, buf, 'talabalar_bazasi.json', `📦 <b>talabalar_bazasi.json (To'liq baza)</b>\n🕒 Sana: ${stamp}`);
+      } else {
+        await sendTelegramMessage(chatId, "❌ JSON baza fayli topilmadi.");
       }
       return res.status(200).json({ ok: true });
     }
@@ -342,12 +356,19 @@ module.exports = async function handler(req, res) {
     if (tLow.includes('guruh jurnallari') || tLow === '/guruhlar') {
       const pdfBuf = await loadFileBuffer('pdf_jurnallar/Barcha_Guruhlar_Jurnali.pdf');
       if (pdfBuf) {
-        await sendTelegramDocument(chatId, pdfBuf, 'Barcha_Guruhlar_Jurnali.pdf', `📑 <b>Barcha 7 ta guruh jurnallari (A4 PDF)</b>\n🕒 Sana: ${stamp}`);
+        await sendTelegramDocument(
+          chatId,
+          pdfBuf,
+          'Barcha_Guruhlar_Jurnali.pdf',
+          `📑 <b>Barcha 7 ta guruh jurnallari (A4 PDF)</b>\n🕒 Sana: ${stamp}\n👤 26-03: A.Asraliyev | 26-04: Xamdamova.M`
+        );
+      } else {
+        await sendTelegramMessage(chatId, "❌ PDF jurnal topilmadi.");
       }
       return res.status(200).json({ ok: true });
     }
 
-    // Otherwise try searching student by name / contract # / passport
+    // Student search by Name / Contract # / Passport / PINFL
     if (text.length >= 2) {
       const searchRes = await searchStudentText(text);
       if (searchRes) {
@@ -358,7 +379,7 @@ module.exports = async function handler(req, res) {
 
     await sendTelegramMessage(
       chatId,
-      "❓ Bunday talaba topilmadi. Pastdagi tugmalardan birini tanlang yoki talaba familiyasini / shartnoma raqamini yozing:"
+      "❓ Bunday talaba topilmadi. Pastdagi tugmalardan birini bosing yoki talaba familiyasini / shartnoma raqamini yozing:"
     );
     return res.status(200).json({ ok: true });
   } catch (err) {
