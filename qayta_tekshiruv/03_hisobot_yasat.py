@@ -64,6 +64,7 @@ def clean_w(w):
     w = (w or '').lower().strip()
     for ch in ["'", "`", "‘", "’", "ʻ", "ʼ", "-", "_", "."]:
         w = w.replace(ch, "")
+    w = w.replace("abdu", "abdi").replace("zaxro", "zahro").replace("uzoq", "uzak")
     return w
 
 all_docx_files = []
@@ -77,7 +78,7 @@ if os.path.exists(MANUAL_MAP_PATH):
     try:
         with open(MANUAL_MAP_PATH, 'r', encoding='utf-8') as mf:
             mdata = json.load(mf)
-            manual_files_map = mdata.get('fayllar', {})
+            manual_files_map = mdata.get('fayllar', mdata if isinstance(mdata, dict) else {})
     except Exception as e:
         print(f"manual_file_map yuklash xatosi: {e}")
 
@@ -88,14 +89,14 @@ def find_student_doc_file(shnum, ism, fish, group=""):
     group = str(group or '').strip()
 
     # 0. Qo'lda belgilangan xarita (manual_file_map.json) - ENG USTUVOR
-    for k in [f"{ism}|{group}", f"{fish}|{group}", ism, fish]:
+    for k in [f"{ism}|{group}", f"{fish}|{group}", ism, fish, f"sh_{shnum}"]:
         if k in manual_files_map:
-            mapped_file = manual_files_map[k].get('file', '')
+            val = manual_files_map[k]
+            mapped_file = val.get('file', '') if isinstance(val, dict) else str(val or '')
             if mapped_file:
                 if os.path.exists(os.path.join(files_dir, mapped_file)):
                     return mapped_file
             else:
-                # Maxsus bo'sh qoldirilgan bo'lsa (fayl yo'q yoki uzilgan)
                 return ""
 
     name_words = [clean_w(w) for w in ism.split() if len(clean_w(w)) >= 3]
@@ -104,19 +105,17 @@ def find_student_doc_file(shnum, ism, fish, group=""):
     if shnum and shnum.isdigit():
         target_num = int(shnum)
         for f in all_docx_files:
-            # Fayl nomidagi (1), (2) kabi nusxa raqamlarini hisobga olmaslik
             f_clean_num = re.sub(r'\(\d+\)', '', f)
             nums = re.findall(r'\b\d{1,4}\b', f_clean_num)
             if nums and any(int(n) == target_num for n in nums):
-                # Ism yoki familiya ham faylda bo'lishi shart!
-                f_tokens = [clean_w(w) for w in re.split(r'[^a-zA-Z0-9]+', f.lower()) if clean_w(w)]
+                f_tokens = [clean_w(w) for w in re.split(r'[^a-zA-Z0-9]+', clean_w(f.lower())) if clean_w(w)]
                 if name_words and any(nw in f_tokens or (nw.rstrip('va').rstrip('a') in [t.rstrip('va').rstrip('a') for t in f_tokens] and len(nw) >= 5) for nw in name_words):
                     return f
 
     # 2. To'liq Familiya va Ism bo'yicha qidirish (ikkala so'z ham aniq bo'lishi shart!)
     if len(name_words) >= 2:
         for f in all_docx_files:
-            f_clean = f.lower().replace('.docx', '')
+            f_clean = clean_w(f.lower().replace('.docx', ''))
             f_tokens = [clean_w(w) for w in re.split(r'[^a-zA-Z0-9]+', f_clean) if clean_w(w)]
             
             match_all = True

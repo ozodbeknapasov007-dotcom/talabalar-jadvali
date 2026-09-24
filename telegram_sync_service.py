@@ -1152,6 +1152,39 @@ def analyze_docx_content(docx_bytes, filename, default_ism="", default_yon="", u
             f.write(docx_bytes)
             
         images, blobs_raw, full_text = extract_doc_images_with_crop(saved_temp)
+
+        # Word (.docx) ichidagi jadvaldan (FAMILIYASI ISMI, OTASINI ISMI, TUGATGAN O'QISH JOYI, YILI, SHARTNOMA RAQAMI, TELEFON) o'qish
+        try:
+            d_obj = docx.Document(saved_temp)
+            for tbl in d_obj.tables:
+                for r_obj in tbl.rows:
+                    row_line = " ".join(c.text.strip() for c in r_obj.cells if c.text.strip())
+                    rl_low = row_line.lower()
+                    if 'familiyasi' in rl_low and ':' in row_line:
+                        val = row_line.split(':', 1)[1].strip()
+                        if val and not result.get('ism'):
+                            result['ism'] = clean_uz_name(val)
+                    elif 'otasini' in rl_low and ':' in row_line:
+                        val = row_line.split(':', 1)[1].strip()
+                        if val and not result.get('ota'):
+                            result['ota'] = clean_uz_name(val)
+                    elif 'joyi' in rl_low and ':' in row_line:
+                        val = row_line.split(':', 1)[1].strip()
+                        if val and not result.get('maktab'):
+                            result['maktab'] = val
+                            if any(w in val.lower() for w in ['kollej', 'texnikum', 'litsey']):
+                                result['cert_tur'] = 'Diplom'
+                    elif 'yili' in rl_low and ':' in row_line:
+                        val = row_line.split(':', 1)[1].strip()
+                        m_y = re.search(r'(19\d{2}|20\d{2})', val)
+                        if m_y:
+                            result['yil'] = m_y.group(1)
+                    elif 'shartnoma raqami' in rl_low and not result.get('shnum'):
+                        m_s = re.search(r'(\d{1,4})\b', row_line)
+                        if m_s:
+                            result['shnum'] = m_s.group(1)
+        except Exception as tbl_err:
+            print(f"Docx jadval o'qish xatosi: {tbl_err}")
         
         if not result['shnum']:
             m_sh2 = re.search(r'[№#\.\s]*(\d{1,4})[\s-]*(?:sonli|shartnoma)', full_text, re.I)

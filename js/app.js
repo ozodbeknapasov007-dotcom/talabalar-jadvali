@@ -303,6 +303,26 @@ window.openStudentModal = function(studentIdx, startInEditMode = false) {
     </div>
   `;
 
+  // Agar ushbu talabaning Pasport seriyasi yoki JSHSHIR raqami boshqa talaba bilan bir xil bo'lsa, ogohlantirish chiqaramiz
+  if (typeof window.findDuplicateStudents === 'function') {
+    const dups = window.findDuplicateStudents(s.pv, s.pinfl, studentIdx, s.row);
+    const statusEl = document.getElementById('reanalyzeStatus');
+    if (dups.length > 0 && statusEl) {
+      const dupItemsHtml = dups.map(function(d) {
+        const reasons = [];
+        if (d.matchPv) reasons.push('Pasport: <strong>' + d.matchPv + '</strong>');
+        if (d.matchPinfl) reasons.push('JSHSHIR: <strong>' + d.matchPinfl + '</strong>');
+        return `<div style="margin-top:4px;">👉 <strong>${d.student.fish || d.student.ism}</strong> (Guruh: <strong>${d.student.group || '—'}</strong>, Shartnoma: #${d.student.shnum || '—'}) — [${reasons.join(', ')}] <button type="button" class="btn" style="padding:2px 8px;font-size:11px;background:#dc2626;color:#fff;margin-left:6px;border-radius:5px;" onclick="openStudentModal(${d.idx})">Talabani ochish</button></div>`;
+      }).join('');
+      statusEl.style.display = 'block';
+      statusEl.style.background = 'rgba(239, 68, 68, 0.14)';
+      statusEl.style.color = '#fca5a5';
+      statusEl.style.border = '1.5px solid #ef4444';
+      statusEl.style.padding = '10px 14px';
+      statusEl.innerHTML = `<div style="font-size:13px;font-weight:800;color:#f87171;">⚠️ DIQQAT! PASPORT YOKI JSHSHIR BIR XIL BO'LIB QOLGAN (DUBLIKAT):</div>` + dupItemsHtml;
+    }
+  }
+
   // Kartalarni chizamiz
   renderInfoCards(s, window.isEditMode);
   modal.style.display = 'flex';
@@ -1283,6 +1303,24 @@ window.saveStudentData = function() {
   const tel = (document.getElementById('edit_tel') ? document.getElementById('edit_tel').value : (s.tel || '')).trim();
 
   const idx = window.currentStudentIdx;
+  if (typeof window.findDuplicateStudents === 'function') {
+    const dups = window.findDuplicateStudents(pv, pinfl, idx, s.row);
+    if (dups.length > 0) {
+      const dupText = dups.map(function(d) {
+        const r = [];
+        if (d.matchPv) r.push('Pasport: ' + d.matchPv);
+        if (d.matchPinfl) r.push('JSHSHIR: ' + d.matchPinfl);
+        return '• ' + (d.student.fish || d.student.ism) + ' (Guruh: ' + (d.student.group || '—') + ', Shartnoma: #' + (d.student.shnum || '—') + ') [' + r.join(', ') + ']';
+      }).join('\n');
+      if (typeof showToast === 'function') {
+        showToast("⚠️ DIQQAT: Pasport seriyasi yoki JSHSHIR boshqa talaba bilan bir xil!", "error");
+      }
+      if (!confirm("⚠️ DIQQAT! PASPORT YOKI JSHSHIR BIR XIL BO'LIB QOLMOQDA!\n\nUshbu ma'lumot bazada quyidagi talaba(lar)da mavjud:\n" + dupText + "\n\nShunga qaramay saqlashni tasdiqlaysizmi?")) {
+        return;
+      }
+    }
+  }
+
   const fields = {
     ism: ism, ota: ota, group: group, pv: pv, pinfl: pinfl, dob: dob,
     ber: ber, doc_tur: doctur, sh_doc: shdoc, mak: mak, yil: yil, yon: yon,
@@ -2958,6 +2996,182 @@ window.exportFilteredToExcel = function() {
 };
 
 /* =========================================================================
+   PASPORT SERIYASI VA JSHSHIR (PINFL) DUBLIKATLARINI ANIQLASH VA OGOHLANTIRISH
+   ========================================================================= */
+
+window.findDuplicateStudents = function(pvVal, pinflVal, excludeIdx, excludeRow) {
+  if (typeof RAW_STUDENTS === 'undefined' || !Array.isArray(RAW_STUDENTS)) return [];
+  const cleanPv = String(pvVal || '').replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
+  const cleanPinfl = String(pinflVal || '').replace(/\D/g, '');
+  const checkPv = (cleanPv.length >= 6 && cleanPv !== 'NONE');
+  const checkPinfl = (cleanPinfl.length >= 10);
+  if (!checkPv && !checkPinfl) return [];
+
+  const matches = [];
+  for (let i = 0; i < RAW_STUDENTS.length; i++) {
+    const item = RAW_STUDENTS[i];
+    if (!item || item._deleted) continue;
+    if (excludeIdx !== undefined && excludeIdx !== null && i === excludeIdx) continue;
+    if (excludeRow !== undefined && excludeRow !== null && excludeRow > 0 && item.row === excludeRow) continue;
+
+    const itemPv = String(item.pv || '').replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
+    const itemPinfl = String(item.pinfl || '').replace(/\D/g, '');
+
+    const mPv = (checkPv && itemPv && itemPv === cleanPv) ? cleanPv : '';
+    const mPin = (checkPinfl && itemPinfl && itemPinfl === cleanPinfl) ? cleanPinfl : '';
+    if (mPv || mPin) {
+      matches.push({
+        idx: i,
+        student: item,
+        matchPv: mPv,
+        matchPinfl: mPin
+      });
+    }
+  }
+  return matches;
+};
+
+window.checkAddModalDuplicates = function() {
+  const pvEl = document.getElementById('add_pv');
+  const pinflEl = document.getElementById('add_pinfl');
+  const pv = pvEl ? pvEl.value.trim() : '';
+  const pinfl = pinflEl ? pinflEl.value.trim() : '';
+
+  let warnBox = document.getElementById('addDuplicateWarningBox');
+  const statusEl = document.getElementById('newDocStatus');
+  if (!warnBox && statusEl && statusEl.parentNode) {
+    warnBox = document.createElement('div');
+    warnBox.id = 'addDuplicateWarningBox';
+    warnBox.style.cssText = 'display:none;margin-top:10px;padding:12px 16px;border-radius:10px;background:rgba(239,68,68,0.15);border:2px solid #ef4444;color:#fecaca;font-size:13px;line-height:1.5;';
+    statusEl.parentNode.insertBefore(warnBox, statusEl.nextSibling);
+  }
+
+  if (pvEl) { pvEl.style.borderColor = ''; pvEl.style.boxShadow = ''; }
+  if (pinflEl) { pinflEl.style.borderColor = ''; pinflEl.style.boxShadow = ''; }
+
+  const dups = window.findDuplicateStudents(pv, pinfl, -1, -1);
+  if (dups.length === 0) {
+    if (warnBox) warnBox.style.display = 'none';
+    return [];
+  }
+
+  let hasPvDup = false;
+  let hasPinDup = false;
+  const listHtml = dups.map(function(d) {
+    const reasons = [];
+    if (d.matchPv) { hasPvDup = true; reasons.push('Pasport seriyasi: <strong>' + d.matchPv + '</strong>'); }
+    if (d.matchPinfl) { hasPinDup = true; reasons.push('JSHSHIR: <strong>' + d.matchPinfl + '</strong>'); }
+    return `<div style="margin-top:5px;padding:6px 10px;background:rgba(15,23,42,0.55);border-radius:7px;display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;">
+      <span>👉 <strong>${d.student.fish || d.student.ism}</strong> &nbsp;|&nbsp; Guruh: <strong>${d.student.group || '—'}</strong> &nbsp;|&nbsp; Shartnoma: <strong>#${d.student.shnum || '—'}</strong> &nbsp;(${reasons.join(', ')})</span>
+      <button type="button" class="btn" style="padding:4px 10px;font-size:11.5px;background:#ef4444;color:#fff;border-radius:6px;font-weight:700;" onclick="closeAddStudentModal(); openStudentModal(${d.idx});">O'sha talabani ko'rish</button>
+    </div>`;
+  }).join('');
+
+  if (hasPvDup && pvEl) {
+    pvEl.style.borderColor = '#ef4444';
+    pvEl.style.boxShadow = '0 0 0 3px rgba(239,68,68,0.3)';
+  }
+  if (hasPinDup && pinflEl) {
+    pinflEl.style.borderColor = '#ef4444';
+    pinflEl.style.boxShadow = '0 0 0 3px rgba(239,68,68,0.3)';
+  }
+
+  if (warnBox) {
+    warnBox.style.display = 'block';
+    warnBox.innerHTML = `<div style="font-weight:800;font-size:13.5px;color:#f87171;margin-bottom:4px;">⚠️ DIQQAT! PASPORT SERIYASI YOKI JSHSHIR BIR XIL BO'LIB QOLMOQDA (DUBLIKAT)!</div>
+      <div style="font-size:12.5px;color:#fca5a5;">Ushbu hujjat ma'lumotlari bazada quyidagi talaba(lar)da allaqachon ro'yxatga olingan:</div>` + listHtml;
+  }
+  return dups;
+};
+
+window.scanAndRenderGlobalDuplicates = function() {
+  if (typeof RAW_STUDENTS === 'undefined' || !Array.isArray(RAW_STUDENTS)) return;
+  const pvMap = {};
+  const pinflMap = {};
+  const dupIndices = new Set();
+  const dupGroups = [];
+
+  RAW_STUDENTS.forEach(function(s, idx) {
+    if (!s || s._deleted) return;
+    const pv = String(s.pv || '').replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
+    const pin = String(s.pinfl || '').replace(/\D/g, '');
+    if (pv.length >= 6 && pv !== 'NONE') {
+      if (!pvMap[pv]) pvMap[pv] = [];
+      pvMap[pv].push({ idx: idx, s: s });
+    }
+    if (pin.length >= 10) {
+      if (!pinflMap[pin]) pinflMap[pin] = [];
+      pinflMap[pin].push({ idx: idx, s: s });
+    }
+  });
+
+  Object.keys(pvMap).forEach(function(pv) {
+    if (pvMap[pv].length > 1) {
+      pvMap[pv].forEach(function(x) { dupIndices.add(x.idx); });
+      dupGroups.push({ type: 'Pasport seriyasi', val: pv, items: pvMap[pv] });
+    }
+  });
+  Object.keys(pinflMap).forEach(function(pin) {
+    if (pinflMap[pin].length > 1) {
+      pinflMap[pin].forEach(function(x) { dupIndices.add(x.idx); });
+      dupGroups.push({ type: 'JSHSHIR (PINFL)', val: pin, items: pinflMap[pin] });
+    }
+  });
+
+  // Eski dublikat belgilarini tozalash va yangilarini qo'yish
+  document.querySelectorAll('.dup-warn-badge').forEach(function(el) { el.remove(); });
+  dupIndices.forEach(function(idx) {
+    const card = document.getElementById('student-card-' + idx);
+    if (card) {
+      card.style.borderColor = '#ef4444';
+      const nameEl = card.querySelector('.card-student-name');
+      if (nameEl && !card.querySelector('.dup-warn-badge')) {
+        const b = document.createElement('span');
+        b.className = 'dup-warn-badge';
+        b.style.cssText = 'display:inline-flex;align-items:center;gap:4px;margin-left:8px;padding:2px 8px;border-radius:6px;background:#fee2e2;color:#b91c1c;border:1px solid #ef4444;font-size:11px;font-weight:800;';
+        b.innerText = '⚠️ Dublikat Pasport/JSHSHIR';
+        nameEl.appendChild(b);
+      }
+    }
+  });
+
+  let banner = document.getElementById('globalDuplicateBanner');
+  const cardsCont = document.getElementById('studentsCardsContainer');
+  if (!banner && cardsCont && cardsCont.parentNode) {
+    banner = document.createElement('div');
+    banner.id = 'globalDuplicateBanner';
+    banner.style.cssText = 'display:none;margin:0 0 16px 0;padding:14px 18px;border-radius:12px;background:rgba(239,68,68,0.12);border:2px solid #ef4444;color:#fee2e2;';
+    cardsCont.parentNode.insertBefore(banner, cardsCont);
+  }
+
+  if (dupGroups.length === 0) {
+    if (banner) banner.style.display = 'none';
+    return;
+  }
+
+  if (banner) {
+    banner.style.display = 'block';
+    banner.innerHTML = `<div style="font-size:14px;font-weight:800;color:#f87171;margin-bottom:6px;">⚠️ DIQQAT! BAZADA PASPORT YOKI JSHSHIR MA'LUMOTLARI BIR XIL BO'LGAN TALABALAR ANIQLANDI (${dupGroups.length} ta holat):</div>` +
+      dupGroups.map(function(g) {
+        const btns = g.items.map(function(x) {
+          return `<button type="button" class="btn" style="padding:3px 10px;font-size:12px;background:#dc2626;color:#fff;border-radius:6px;font-weight:700;" onclick="openStudentModal(${x.idx})">${x.s.fish || x.s.ism} (${x.s.group || '—'})</button>`;
+        }).join(' &nbsp;↔&nbsp; ');
+        return `<div style="margin-top:6px;font-size:13px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+          <span>• <strong>${g.type}: ${g.val}</strong> —</span> ${btns}
+        </div>`;
+      }).join('');
+  }
+};
+
+window.addEventListener('DOMContentLoaded', function() {
+  setTimeout(function() {
+    if (typeof window.scanAndRenderGlobalDuplicates === 'function') {
+      window.scanAndRenderGlobalDuplicates();
+    }
+  }, 500);
+});
+
+/* =========================================================================
    YANGI TALABA QO'SHISH (MODAL, AI O'QISH VA SAQLASH)
    ========================================================================= */
 
@@ -2973,21 +3187,31 @@ window.openAddStudentModal = function() {
       labelSpan.style.fontWeight = '';
     }
     document.getElementById('newDocStatus').style.display = 'none';
-    document.getElementById('add_ism').value = '';
-    document.getElementById('add_ota').value = '';
-    document.getElementById('add_shnum').value = '';
-    document.getElementById('add_pv').value = '';
-    document.getElementById('add_pinfl').value = '';
-    document.getElementById('add_dob').value = '';
-    document.getElementById('add_ber').value = '';
-    document.getElementById('add_tel').value = '';
+    const warnBox = document.getElementById('addDuplicateWarningBox');
+    if (warnBox) warnBox.style.display = 'none';
+
+    ['add_ism', 'add_ota', 'add_shnum', 'add_pv', 'add_pinfl', 'add_dob', 'add_ber', 'add_tel', 'add_shdoc', 'add_mak', 'add_docfile'].forEach(function(id) {
+      const el = document.getElementById(id);
+      if (el) {
+        el.value = '';
+        el.style.borderColor = '';
+        el.style.boxShadow = '';
+      }
+    });
     if (document.getElementById('add_group')) document.getElementById('add_group').value = '';
     document.getElementById('add_doctur').value = 'Shahodatnoma';
-    document.getElementById('add_shdoc').value = '';
-    document.getElementById('add_mak').value = '';
     document.getElementById('add_yil').value = '2024';
     document.getElementById('add_yon').value = 'Hamshiralik ishi - 3 yillik';
-    document.getElementById('add_docfile').value = '';
+
+    // Pasport va JSHSHIR kiritilganda jonli dublikat tekshiruvini ulash
+    ['add_pv', 'add_pinfl'].forEach(function(id) {
+      const el = document.getElementById(id);
+      if (el && !el._dupListenerBound) {
+        el.addEventListener('input', window.checkAddModalDuplicates);
+        el.addEventListener('change', window.checkAddModalDuplicates);
+        el._dupListenerBound = true;
+      }
+    });
     
     m.style.display = 'flex';
   }
@@ -3292,6 +3516,14 @@ window.analyzeUploadedNewDoc = function(modelParam) {
       if (res.yil && document.getElementById('add_yil')) document.getElementById('add_yil').value = res.yil;
       if (res.yonalis && document.getElementById('add_yon')) document.getElementById('add_yon').value = res.yonalis;
       if (document.getElementById('add_docfile')) document.getElementById('add_docfile').value = file.name;
+
+      // AI to'ldirgan Pasport va JSHSHIR bo'yicha darhol dublikat tekshiruvini ishga tushiramiz
+      if (typeof window.checkAddModalDuplicates === 'function') {
+        const dups = window.checkAddModalDuplicates();
+        if (dups && dups.length > 0 && typeof showToast === 'function') {
+          showToast("⚠️ DIQQAT: Ushbu Pasport seriyasi yoki JSHSHIR bazada boshqa talabada mavjud!", "error");
+        }
+      }
     } else {
       if (statusBox) {
         statusBox.style.background = '#fee2e2';
@@ -3690,6 +3922,9 @@ window.insertStudentToDOM = function(s) {
   if (typeof window.filterRows === 'function') {
     window.filterRows(true);
   }
+  if (typeof window.scanAndRenderGlobalDuplicates === 'function') {
+    window.scanAndRenderGlobalDuplicates();
+  }
 };
 
 window.saveNewStudentData = function() {
@@ -3729,6 +3964,28 @@ window.saveNewStudentData = function() {
     else alert("Iltimos, talabaning Guruhini tanlang!");
     if (document.getElementById('add_group')) document.getElementById('add_group').focus();
     return;
+  }
+
+  // Pasport seriyasi yoki JSHSHIR bir xil bo'lib qolsa ogohlantirish chiqarish
+  if (typeof window.findDuplicateStudents === 'function') {
+    const dups = window.findDuplicateStudents(pv, pinfl, -1, -1);
+    if (dups.length > 0) {
+      if (typeof window.checkAddModalDuplicates === 'function') {
+        window.checkAddModalDuplicates();
+      }
+      const dupDetails = dups.map(function(d) {
+        const r = [];
+        if (d.matchPv) r.push('Pasport: ' + d.matchPv);
+        if (d.matchPinfl) r.push('JSHSHIR: ' + d.matchPinfl);
+        return '• ' + (d.student.fish || d.student.ism) + ' (Guruh: ' + (d.student.group || '—') + ', Shartnoma: #' + (d.student.shnum || '—') + ') [' + r.join(', ') + ']';
+      }).join('\n');
+      if (typeof showToast === 'function') {
+        showToast("⚠️ DIQQAT: Pasport seriyasi yoki JSHSHIR bazada boshqa talabada mavjud!", "error");
+      }
+      if (!confirm("⚠️ DIQQAT! PASPORT SERIYASI YOKI JSHSHIR BIR XIL BO'LIB QOLMOQDA!\n\nKiritilgan ma'lumot bazada quyidagi talaba(lar)da allaqachon mavjud:\n" + dupDetails + "\n\nShunga qaramay bazaga qo'shishni tasdiqlaysizmi?")) {
+        return;
+      }
+    }
   }
 
   const fullFish = (ism + ' ' + ota).trim();
