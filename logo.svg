@@ -1,0 +1,93 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
+  <defs>
+    <!-- Asosiy fon gradienti (To'q ko'k va elektr moviy) -->
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#091428"/>
+      <stop offset="45%" stop-color="#0f2b5c"/>
+      <stop offset="100%" stop-color="#1d4ed8"/>
+    </linearGradient>
+
+    <!-- Tibbiyot nuri gradienti (Smaragd & Nefrit) -->
+    <linearGradient id="medGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#34d399"/>
+      <stop offset="100%" stop-color="#059669"/>
+    </linearGradient>
+
+    <!-- Oltin nur (Akademik shon-sharaf) -->
+    <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fde047"/>
+      <stop offset="50%" stop-color="#eab308"/>
+      <stop offset="100%" stop-color="#ca8a04"/>
+    </linearGradient>
+
+    <!-- Oq porlash -->
+    <linearGradient id="crossGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="100%" stop-color="#e0f2fe"/>
+    </linearGradient>
+
+    <!-- Soyalar -->
+    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="12" stdDeviation="16" flood-color="#0284c7" flood-opacity="0.5"/>
+    </filter>
+    <filter id="subtleShadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="4" stdDeviation="6" flood-color="#000000" flood-opacity="0.35"/>
+    </filter>
+  </defs>
+
+  <!-- Dumaloq-to'rtburchak (Squircle) Asosiy Badge -->
+  <rect x="24" y="24" width="464" height="464" rx="120" ry="120" fill="url(#bgGrad)"/>
+  <rect x="24" y="24" width="464" height="464" rx="120" ry="120" fill="none" stroke="rgba(255,255,255,0.2)" stroke-width="6"/>
+
+  <!-- Ichki nurli kontur -->
+  <rect x="36" y="36" width="440" height="440" rx="108" ry="108" fill="none" stroke="url(#medGrad)" stroke-width="3" stroke-opacity="0.4"/>
+
+  <!-- Tibbiyot qalqoni (Medical Shield) orqa foni -->
+  <g filter="url(#glow)">
+    <path d="M256 96 C336 96 390 120 406 148 C406 270 340 376 256 414 C172 376 106 270 106 148 C122 120 176 96 256 96 Z"
+          fill="rgba(15, 23, 42, 0.75)" stroke="#38bdf8" stroke-width="8" stroke-linejoin="round"/>
+  </g>
+
+  <!-- Qalqon ichidagi yaltiroq chegara -->
+  <path d="M256 112 C324 112 372 132 386 156 C386 260 330 354 256 388 C182 354 126 260 126 156 C140 132 188 112 256 112 Z"
+        fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="2"/>
+
+  <!-- 1. Markaziy Tibbiy Xoch (Medical Cross) -->
+  <g filter="url(#subtleShadow)">
+    <!-- Vertikal bar -->
+    <rect x="228" y="170" width="56" height="176" rx="14" fill="url(#crossGrad)"/>
+    <!-- Gorizontal bar -->
+    <rect x="168" y="230" width="176" height="56" rx="14" fill="url(#crossGrad)"/>
+  </g>
+
+  <!-- 2. Tibbiyot Qadahi va Ilon (Caduceus / Bowl of Hygieia ramzi) -->
+  <!-- Qadah (Bowl) -->
+  <path d="M216 310 C216 346 296 346 296 310 L296 295 L216 295 Z" fill="url(#goldGrad)" filter="url(#subtleShadow)"/>
+  <path d="M250 342 L250 370 L236 370 L236 378 L276 378 L276 370 L262 370 L262 342 Z" fill="url(#goldGrad)"/>
+
+  <!-- Ilon (Stylized Golden Serpent) -->
+  <path d="M256 160 C234 160 216 176 216 195 C216 220 286 220 286 248 C286 272 232 272 232 292"
+        fill="none" stroke="url(#goldGrad)" stroke-width="12" stroke-linecap="round" stroke-linejoin="round" filter="url(#subtleShadow)"/>
+  <!-- Ilon boshi -->
+  <circle cx="260" cy="158" r="9" fill="url(#goldGrad)"/>
+  <!-- Ilon ko'zi -->
+  <circle cx="263" cy="156" r="2.5" fill="#0f172a"/>
+
+  <!-- 3. Akademik Bitiruvchilar Shapkasi (Graduation Cap - Ta'lim / Texnikum ramzi) -->
+  <g transform="translate(0, -38)">
+    <!-- Shapka rombi -->
+    <polygon points="256,120 336,152 256,184 176,152" fill="#3b82f6" stroke="#93c5fd" stroke-width="5" filter="url(#subtleShadow)"/>
+    <!-- Shapka tagi -->
+    <path d="M208 165 L208 190 C208 206 304 206 304 190 L304 165" fill="#1d4ed8" stroke="#60a5fa" stroke-width="3"/>
+    <!-- Shapka popugi (Tassel) -->
+    <path d="M306 156 L332 178 L332 205" fill="none" stroke="url(#goldGrad)" stroke-width="4" stroke-linecap="round"/>
+    <circle cx="332" cy="207" r="4.5" fill="url(#goldGrad)"/>
+  </g>
+
+  <!-- 4. Yurak Kardiogramma Nuri (Pulse line) pastda -->
+  <path d="M160 338 L200 338 L212 320 L226 358 L240 332 L250 342 L262 338 L352 338"
+        fill="none" stroke="#38bdf8" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" opacity="0.85"/>
+
+  <!-- 5. Oltin Yulduzlar (Abu Ali ibn Sino ilmiy merosi ramzi) -->
+  <polygon points="256,80 260,92 272,92 262,100 266,112 256,104 246,112 250,100 240,92 252,92" fill="url(#goldGrad)"/>
+</svg>

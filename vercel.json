@@ -13,6 +13,10 @@
   ],
   "rewrites": [
     {
+      "source": "/api/doc-preview",
+      "destination": "/api/doc_preview"
+    },
+    {
       "source": "/api/view_group_pdf",
       "has": [
         {
@@ -28,7 +32,23 @@
       "destination": "/api/$1"
     },
     {
-      "source": "/((?!api/|pdf_jurnallar/).*)",
+      "source": "/_next/(.*)",
+      "destination": "/_next/$1"
+    },
+    {
+      "source": "/logo.svg",
+      "destination": "/logo.svg"
+    },
+    {
+      "source": "/web",
+      "destination": "/web.html"
+    },
+    {
+      "source": "/web/(.*)",
+      "destination": "/web.html"
+    },
+    {
+      "source": "/((?!api/|pdf_jurnallar/|_next/|logo\\.svg|web).*)",
       "destination": "/index.html"
     }
   ]
