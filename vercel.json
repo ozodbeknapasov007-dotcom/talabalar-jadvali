@@ -40,6 +40,14 @@
       "destination": "/logo.svg"
     },
     {
+      "source": "/web",
+      "destination": "/portal"
+    },
+    {
+      "source": "/web/(.*)",
+      "destination": "/portal"
+    },
+    {
       "source": "/((?!api/|pdf_jurnallar/|_next/|logo\\.svg|web|portal).*)",
       "destination": "/index.html"
     }
