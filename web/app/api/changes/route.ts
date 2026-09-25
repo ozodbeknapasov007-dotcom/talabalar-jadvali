@@ -6,9 +6,17 @@ function parseChange(body: unknown): Change | null {
   if (!body || typeof body !== 'object') return null
   const { type, data } = body as { type?: string; data?: Record<string, unknown> }
   if (!data || typeof data !== 'object') return null
+  const str = (v: unknown) => (v == null ? '' : String(v).slice(0, 500))
+
+  if (type === 'add_student') {
+    const fields: Record<string, string> = {}
+    for (const f of EDIT_FIELDS) if (f in data) fields[f] = str(data[f]).trim()
+    if (!fields.ism) return null
+    return { type, data: fields }
+  }
+
   const row = Number(data.row)
   if (!Number.isInteger(row) || row < 2) return null
-  const str = (v: unknown) => (v == null ? '' : String(v).slice(0, 500))
 
   if (type === 'update_student') {
     const src = (data.fields ?? {}) as Record<string, unknown>

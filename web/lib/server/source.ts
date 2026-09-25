@@ -87,6 +87,37 @@ export async function loadStudents(): Promise<Student[]> {
 /* ------------------------------ YOZISH ------------------------------ */
 
 async function sendLocal(change: Change): Promise<void> {
+  if (change.type === 'add_student') {
+    const d = change.data
+    const res = await fetch(`${LOCAL_API}/api/add_students`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        students: [{
+          ism: d.ism || '',
+          ota: d.ota || '',
+          shnum: d.shnum || '',
+          pass_val: d.pv || '',
+          pinfl: d.pinfl || '',
+          dob: d.dob || '',
+          ber_sana: d.ber || '',
+          cert_val: d.sh_doc || '',
+          cert_tur: d.doc_tur || 'Shahodatnoma',
+          maktab: d.mak || '',
+          yil: d.yil || '2024',
+          yonalis: d.yon || 'Hamshiralik ishi - 3 yillik',
+          tel: d.tel || '',
+          group: d.group || '26-02',
+        }],
+      }),
+      cache: 'no-store',
+    })
+    const body = await res.json().catch(() => ({}))
+    if (!res.ok || body.success === false) {
+      throw new Error(body.error || `Python xizmati ${res.status} qaytardi`)
+    }
+    return
+  }
   const q = new URLSearchParams()
   let endpoint: string
   if (change.type === 'update_student') {

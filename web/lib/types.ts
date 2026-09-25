@@ -44,6 +44,7 @@ export type Change =
   | { type: 'update_student'; data: { row: number; fields: EditFields } }
   | { type: 'verify_student'; data: { row: number; status: VerifyStatus; shnum: string; pinfl: string; ism: string } }
   | { type: 'delete_student'; data: { row: number; shnum: string; pinfl: string; ism: string; fish: string } }
+  | { type: 'add_student'; data: EditFields }
 
 export interface StudentsPayload {
   students: Student[]

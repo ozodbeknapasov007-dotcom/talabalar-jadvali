@@ -129,8 +129,8 @@ function ExportMenu({ students, notify }: { students: Student[]; notify: Notify 
 }
 
 export default function Header({
-  students, pendingCount, onRefresh, refreshing, notify,
-}: { students: Student[]; pendingCount: number; onRefresh: () => void; refreshing: boolean; notify: Notify }) {
+  students, pendingCount, onRefresh, refreshing, onAdd, notify,
+}: { students: Student[]; pendingCount: number; onRefresh: () => void; refreshing: boolean; onAdd: () => void; notify: Notify }) {
   return (
     <header className="z-40 border-b border-line bg-ink-950/85 backdrop-blur-md sm:sticky sm:top-0">
       <div className="mx-auto flex max-w-[1680px] flex-wrap items-center gap-x-4 gap-y-3 px-4 py-3 sm:px-6">
@@ -148,6 +148,10 @@ export default function Header({
         </div>
         <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto">
           <SyncBadge pendingCount={pendingCount} notify={notify} />
+          <button type="button" className="btn-success h-9" onClick={onAdd} title="Yangi talaba qo'shish">
+            <span className="text-[15px] leading-none font-bold">+</span>
+            <span>Talaba qo'shish</span>
+          </button>
           <button type="button" className="btn-ghost h-9" onClick={onRefresh} disabled={refreshing} title="Serverdan eng yangi ma'lumotni olish">
             <RefreshCw size={15} className={cx(refreshing && 'animate-spin')} />
             <span className="hidden sm:inline">Yangilash</span>

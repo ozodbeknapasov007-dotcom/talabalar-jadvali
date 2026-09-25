@@ -29,18 +29,21 @@ interface PendingEdit extends Meta { fields: EditFields }
 interface PendingVerify extends Meta { status: VerifyStatus }
 type PendingDelete = Meta
 
+interface PendingAdd { key: string; fields: EditFields; ts: number; sent: boolean }
+
 interface Pending {
   edits: Record<string, PendingEdit>
   verifies: Record<string, PendingVerify>
   deletes: PendingDelete[]
+  adds: PendingAdd[]
 }
 
-const EMPTY: Pending = { edits: {}, verifies: {}, deletes: [] }
+const EMPTY: Pending = { edits: {}, verifies: {}, deletes: [], adds: [] }
 
 function readPending(): Pending {
   try {
     const raw = JSON.parse(localStorage.getItem(KEY) || 'null')
-    if (raw && typeof raw === 'object') return { ...EMPTY, ...raw }
+    if (raw && typeof raw === 'object') return { ...EMPTY, ...raw, adds: Array.isArray(raw.adds) ? raw.adds : [] }
   } catch { /* shaxsiy oyna yoki buzilgan qiymat */ }
   return EMPTY
 }
@@ -49,7 +52,7 @@ function writePending(p: Pending) {
   try { localStorage.setItem(KEY, JSON.stringify(p)) } catch { /* joy yo'q — xotirada ishlayveradi */ }
 }
 
-const expired = (m: Meta, now: number) => now - m.ts > (m.sent ? TTL_SENT : TTL_UNSENT)
+const expired = (m: { ts: number; sent: boolean }, now: number) => now - m.ts > (m.sent ? TTL_SENT : TTL_UNSENT)
 
 /** Taqqoslashda bo'sh joy, katta-kichik harf va apostrof turlari farq qilmasin */
 const norm = (v: unknown) => String(v ?? '').toLowerCase().replace(/[\s'`ʻʼ‘’]/g, '')
@@ -68,9 +71,48 @@ function isSame(s: Student, id: Identity, altShnum?: string): boolean {
   return fullName(s).toLowerCase() === id.fish
 }
 
+function buildAddedStudent(a: PendingAdd, row: number): Student {
+  const f = a.fields
+  const ism = (f.ism || '').trim()
+  const ota = (f.ota || '').trim()
+  const fish = `${ism} ${ota}`.trim()
+  const pv = (f.pv || '').trim().toUpperCase()
+  const pass_type = pv.startsWith('AD') || pv.startsWith('AE') ? 'ID-karta' : /^A[ABC]/.test(pv) ? 'Biometrik Pasport' : ''
+  const hasFull = !!(pv && f.pinfl && f.dob && f.sh_doc)
+  return {
+    row,
+    tr: row - 1,
+    shnum: f.shnum || '',
+    sana: new Date().toLocaleDateString('ru-RU'),
+    ism,
+    ota,
+    fish,
+    yon: f.yon || 'Hamshiralik ishi - 3 yillik',
+    group: f.group || '26-02',
+    pv,
+    pass_type,
+    pinfl: f.pinfl || '',
+    dob: f.dob || '',
+    ber: f.ber || '',
+    sh_doc: f.sh_doc || '',
+    sh_qr: '',
+    mak: f.mak || '',
+    doc_tur: f.doc_tur || 'Shahodatnoma',
+    yil: f.yil || '2024',
+    tel: f.tel || '',
+    doc_file: '',
+    status: hasFull ? 'full' : (pv || f.sh_doc) ? 'chala' : 'yoq',
+    pass_fish: '',
+    cert_fish: '',
+    name_match: '',
+    name_flag: '',
+    verified: 'KUTILMOQDA',
+  }
+}
+
 /** Server ma'lumoti + kutilayotgan o'zgarishlar; server yetib olgan yozuvlar `next` ga tushmaydi */
 function merge(server: Student[], pending: Pending, now: number) {
-  const next: Pending = { edits: {}, verifies: {}, deletes: [] }
+  const next: Pending = { edits: {}, verifies: {}, deletes: [], adds: [] }
 
   for (const d of pending.deletes) {
     if (!expired(d, now) && server.some((s) => isSame(s, d.id))) next.deletes.push(d)
@@ -100,10 +142,21 @@ function merge(server: Student[], pending: Pending, now: number) {
     list.push(s)
   }
 
+  let nextRow = (server.reduce((m, s) => Math.max(m, s.row), 1) || 1) + 1
+  for (const a of pending.adds || []) {
+    if (expired(a, now)) continue
+    const fishLow = `${a.fields.ism || ''} ${a.fields.ota || ''}`.trim().toLowerCase()
+    const id: Identity = { row: nextRow, shnum: (a.fields.shnum || '').trim(), pinfl: (a.fields.pinfl || '').replace(/\s/g, ''), fish: fishLow }
+    if (server.some((s) => isSame(s, id))) continue
+    next.adds.push(a)
+    list.push(buildAddedStudent(a, nextRow++))
+  }
+
   const changed =
     Object.keys(next.edits).length !== Object.keys(pending.edits).length ||
     Object.keys(next.verifies).length !== Object.keys(pending.verifies).length ||
-    next.deletes.length !== pending.deletes.length
+    next.deletes.length !== pending.deletes.length ||
+    next.adds.length !== (pending.adds?.length ?? 0)
   return { list, next, changed }
 }
 
@@ -282,11 +335,33 @@ export function useStudents() {
     }
   }, [originalOf, updatePending, markSent])
 
-  const pendingCount = Object.keys(pending.edits).length + Object.keys(pending.verifies).length + pending.deletes.length
+  const addStudent = useCallback(async (fields: EditFields) => {
+    const clean: EditFields = {}
+    for (const f of EDIT_FIELDS) if (fields[f] !== undefined) clean[f] = String(fields[f]).trim()
+    const key = `add_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`
+    updatePending((p) => ({
+      ...p,
+      adds: [...(p.adds || []), { key, fields: clean, ts: Date.now(), sent: false }],
+    }))
+    try {
+      await postChange({ type: 'add_student', data: clean })
+      updatePending((p) => ({
+        ...p,
+        adds: (p.adds || []).map((a) => (a.key === key ? { ...a, sent: true, ts: Date.now() } : a)),
+      }))
+    } catch (e) {
+      if (isRejected(e)) {
+        updatePending((p) => ({ ...p, adds: (p.adds || []).filter((a) => a.key !== key) }))
+      }
+      throw e
+    }
+  }, [updatePending])
+
+  const pendingCount = Object.keys(pending.edits).length + Object.keys(pending.verifies).length + pending.deletes.length + (pending.adds?.length ?? 0)
 
   return {
     students: merged?.list ?? [],
     state, error, source, fetchedAt, pendingCount,
-    refresh, saveEdit, toggleVerify, remove,
+    refresh, saveEdit, toggleVerify, remove, addStudent,
   }
 }

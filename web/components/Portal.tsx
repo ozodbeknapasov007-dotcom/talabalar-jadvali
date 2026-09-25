@@ -12,6 +12,7 @@ import Header from './Header'
 import Overview from './Overview'
 import StudentList from './StudentList'
 import StudentModal from './StudentModal'
+import AddStudentModal from './AddStudentModal'
 import { Toasts, useToasts } from './Toast'
 import { cx } from './ui'
 
@@ -35,6 +36,7 @@ export default function Portal() {
   const [view, setView] = useState<View>('database')
   const [prefsLoaded, setPrefsLoaded] = useState(false)
   const [openRow, setOpenRow] = useState<number | null>(null)
+  const [adding, setAdding] = useState(false)
   const [refreshing, setRefreshing] = useState(false)
 
   // Filtr, ko'rinish va rejim F5 dan keyin ham saqlanib qoladi
@@ -72,7 +74,16 @@ export default function Portal() {
     if (next) setOpenRow(next.row)
   }, [navList, navIdx])
 
-  const { saveEdit, toggleVerify, remove, refresh } = data
+  const { saveEdit, toggleVerify, remove, addStudent, refresh } = data
+
+  const onAdd = useCallback(async (fields: EditFields) => {
+    try {
+      await addStudent(fields)
+      notify(`${fields.ism} (${fields.group || '26-02'}) muvaffaqiyatli qo'shildi!`)
+    } catch (e) {
+      notify(`Serverga yuborish navbatga qo'yildi: ${(e as Error).message}`, 'warning')
+    }
+  }, [addStudent, notify])
 
   const onToggleVerify = useCallback(async (s: Student) => {
     try {
@@ -120,7 +131,7 @@ export default function Portal() {
 
   return (
     <>
-      <Header students={data.students} pendingCount={data.pendingCount} onRefresh={onRefresh} refreshing={refreshing} notify={notify} />
+      <Header students={data.students} pendingCount={data.pendingCount} onRefresh={onRefresh} refreshing={refreshing} onAdd={() => setAdding(true)} notify={notify} />
 
       <main className="mx-auto max-w-[1680px] space-y-5 px-4 py-5 sm:px-6">
         {data.state === 'loading' && (
@@ -207,6 +218,15 @@ export default function Portal() {
           onToggleVerify={onToggleVerify}
           onDelete={onDelete}
           onOpenRow={setOpenRow}
+        />
+      )}
+
+      {adding && (
+        <AddStudentModal
+          all={data.students}
+          defaultGroup={filters.group}
+          onClose={() => setAdding(false)}
+          onAdd={onAdd}
         />
       )}
 
