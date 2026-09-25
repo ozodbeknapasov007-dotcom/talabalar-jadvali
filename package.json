@@ -4,6 +4,8 @@
   "description": "Ushbu dastur **Word (.docx)** shartnomalari/arizalari va **Excel (.xlsx)** talabalar ro'yxati o'rtasida aqlli tahlil (NLP, RegEx va Fuzzy Matching) o'tkazib, bo'sh qolgan \"Otasining ismi\" (Sharifi) ustunini avtomatik ravishda to'ldiradi va yangi to'liq shakllangan Excel fayli hamda interaktiv HTML hisobotini yaratadi.",
   "main": "index.js",
   "scripts": {
+    "dev": "npm --prefix web run dev",
+    "build": "npm --prefix web run build",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
