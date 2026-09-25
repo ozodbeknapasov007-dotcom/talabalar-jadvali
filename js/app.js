@@ -751,7 +751,23 @@ window.renderModalDocImages = function() {
   const diplomaItems = [];
   const otherItems = [];
 
+  const pendingPassB64s = (window.pendingPassportFiles || []).map(function(f) { return f && f.base64; }).filter(Boolean);
+  const pendingDipB64s = (window.pendingDiplomaFiles || []).map(function(f) { return f && f.base64; }).filter(Boolean);
+
   imgs.forEach(function(src, i) {
+    // 1. Agar foydalanuvchi aynan Pasport qutisiga qo'ygan bo'lsa — DOIM Pasport bo'limida chiqsin!
+    if (pendingPassB64s.indexOf(src) !== -1) {
+      const title = passportItems.length === 0 ? 'Pasport / ID-karta (Kiritilgan #1)' : 'Pasport / ID-karta (Kiritilgan #2)';
+      passportItems.push({ idx: i, title: title });
+      return;
+    }
+    // 2. Agar foydalanuvchi aynan Shahodatnoma/Diplom qutisiga qo'ygan bo'lsa — DOIM Shahodatnoma bo'limida chiqsin!
+    if (pendingDipB64s.indexOf(src) !== -1) {
+      const title = diplomaItems.length === 0 ? 'Shahodatnoma / Diplom (Kiritilgan #1)' : 'Shahodatnoma / Diplom (Kiritilgan #2)';
+      diplomaItems.push({ idx: i, title: title });
+      return;
+    }
+
     const im = new Image();
     im.src = src;
     const w = im.naturalWidth || 0;
@@ -770,12 +786,14 @@ window.renderModalDocImages = function() {
     }
   });
 
-  // Agar barcha rasmlar bir tomonga tushib qolsa, mantiqiy qayta taqsimlaymiz
-  if (passportItems.length === 0 && diplomaItems.length > 0 && !(window.pendingDiplomaFiles && window.pendingDiplomaFiles.length && (!window.pendingPassportFiles || !window.pendingPassportFiles.length))) {
-    passportItems.push(diplomaItems.shift());
-  }
-  if (diplomaItems.length === 0 && passportItems.length > 1 && !(window.pendingPassportFiles && window.pendingPassportFiles.length && (!window.pendingDiplomaFiles || !window.pendingDiplomaFiles.length))) {
-    diplomaItems.push(passportItems.pop());
+  // Agar foydalanuvchi maxsus bo'limga qo'ymagan bo'lsa va barcha rasmlar bir tomonga tushib qolsa, mantiqiy taqsimlaymiz
+  if (pendingPassB64s.length === 0 && pendingDipB64s.length === 0) {
+    if (passportItems.length === 0 && diplomaItems.length > 0) {
+      passportItems.push(diplomaItems.shift());
+    }
+    if (diplomaItems.length === 0 && passportItems.length > 1) {
+      diplomaItems.push(passportItems.pop());
+    }
   }
 
   // 1-Bo'lim: Pasport yuklash/bufer qutisi (yuqorida) + Pasport rasmlari

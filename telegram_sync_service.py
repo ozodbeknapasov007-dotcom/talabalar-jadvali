@@ -3811,6 +3811,7 @@ Qat'iy Qoidalar:
    - Hech qachon 8 ta yoki 6 ta raqam yozma!
 2. JSHSHIR (PINFL):
    - ID-karta yoki pasport pastidagi/orqasidagi ANIQ 14 xonali raqam!
+   - MUHIM MRZ QOIDASI: Biometrik pasportning pastki MRZ qatorida (masalan: AB63041584UZB9807154F270327641507985590024<52) 'UZB' dan keyin keladigan tug'ilgan sana (YYMMDD) va amal qilish sanasi (F2703276) raqamlarini JSHSHIR bilan ASLO adashtirma! Haqiqiy 14 xonali JSHSHIR amal qilish sanasidan KEYIN keladi va HAR DOIM 3, 4, 5 yoki 6 raqami + tug'ilgan sana (DDMMYY, masalan 15.07.1998 da tug'ilgan ayol uchun '41507985590024') bilan boshlanadi!
 3. Tug'ilgan sana (DOB):
    - Pasportdagi tug'ilgan sana (DD.MM.YYYY).
 4. Pasport BERILGAN SANASI (Date of issue):
@@ -3827,7 +3828,8 @@ Aniq JSON formatda qaytar:
   "ism": "Familiya Ism",
   "ota": "... qizi / ... o'g'li",
   "pass_ser": "AE1234567",
-  "pinfl": "14 xonali PINFL",
+  "pinfl": "14 xonali PINFL (3/4/5/6 + DDMMYY bilan boshlanuvchi)",
+  "mrz_line2": "Agar pasport MRZ qatori ko'rinsa, 2-qatorni to'liq yoz",
   "dob": "DD.MM.YYYY",
   "pass_ber": "DD.MM.YYYY",
   "sh_doc": "UM 1234567",
@@ -3886,6 +3888,12 @@ Aniq JSON formatda qaytar:
                         m_fix = re.search(r'([A-Z]{2})(\d{7})', str(ai_data['pass_ser']).upper().replace(' ', ''))
                         if m_fix:
                             ai_data['pass_ser'] = m_fix.group(1) + m_fix.group(2)
+
+                    mrz2 = str(ai_data.get('mrz_line2', '') or '').upper().replace(' ', '')
+                    if mrz2:
+                        m_mrz_pinfl = re.search(r'[MF]\d{7}([3456]\d{13})', mrz2)
+                        if m_mrz_pinfl:
+                            ai_data['pinfl'] = m_mrz_pinfl.group(1)
 
                 # Excel va manual_file_map.json ni yangilash (FAQAT AI tekshirish bosilganda!)
                 if do_analyze and row_idx >= 2:
@@ -4412,6 +4420,21 @@ def delete_student_data(shnum, ism):
     return True
 
 def run_server(port=8080):
+    if port == 5005:
+        port = 8080
+    try:
+        my_pid = os.getpid()
+        ps_cmd = f"Get-NetTCPConnection -LocalPort {port} -State Listen -ErrorAction SilentlyContinue | Select-Object -ExpandProperty OwningProcess"
+        out = subprocess.check_output(["powershell", "-NoProfile", "-Command", ps_cmd], text=True, timeout=4)
+        for line in out.splitlines():
+            line = line.strip()
+            if line.isdigit():
+                old_pid = int(line)
+                if old_pid != my_pid and old_pid > 0:
+                    subprocess.run(["taskkill", "/F", "/PID", str(old_pid)], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    except Exception:
+        pass
+
     class ThreadedServer(ThreadingHTTPServer):
         daemon_threads = True
         allow_reuse_address = True
