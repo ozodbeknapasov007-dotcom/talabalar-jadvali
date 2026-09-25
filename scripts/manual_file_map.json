@@ -157,6 +157,14 @@
     "Narziyeva Intizor|26-06": {
       "file": "Nazirova  Intizor 212.docx",
       "sabab": "Shartnoma #212"
+    },
+    "Sayfieva Sarvinoz|26-06": {
+      "file": "Sayfiyeva_Sarvinoz_Zafar_qizi.docx",
+      "sabab": "Pasport/Shahodatnoma yuklandi (Sayfiyeva_Sarvinoz_Zafar_qizi.docx)"
+    },
+    "Sayfieva Sarvinoz Zafar qizi|26-06": {
+      "file": "Sayfiyeva_Sarvinoz_Zafar_qizi.docx",
+      "sabab": "Pasport/Shahodatnoma yuklandi (Sayfiyeva_Sarvinoz_Zafar_qizi.docx)"
     }
   },
   "_qulf_izoh": "qulflangan: bu qatorlarga avtomatik skriptlar YOZMAYDI (qo'lda hujjat rasmidan tasdiqlangan)",
@@ -191,7 +199,9 @@
     "Sayfiyeva Sarvinoz|26-06": "Foydalanuvchi tomonidan yuklangan (Sayfiyeva_Sarvinoz_Zafar_qizi.docx)",
     "Sayfiyeva Sarvinoz Zafar qizi|26-06": "Foydalanuvchi tomonidan yuklangan (Sayfiyeva_Sarvinoz_Zafar_qizi.docx)",
     "Meyliqulova Hilola|26-02": "Pasport AB7137876 va Diplom K 5470992 qo'lda tasdiqlandi",
-    "Ne'matova Sevinch|26-05": "Xato fayl va rasmlar olib tashlandi"
+    "Ne'matova Sevinch|26-05": "Xato fayl va rasmlar olib tashlandi",
+    "Sayfieva Sarvinoz|26-06": "Foydalanuvchi tomonidan yuklangan (Sayfiyeva_Sarvinoz_Zafar_qizi.docx)",
+    "Sayfieva Sarvinoz Zafar qizi|26-06": "Foydalanuvchi tomonidan yuklangan (Sayfiyeva_Sarvinoz_Zafar_qizi.docx)"
   },
   "sh_212": "Nazirova  Intizor 212.docx",
   "sh_273": "Abdinazarova Dilafro’z 273.docx"
