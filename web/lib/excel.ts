@@ -6,9 +6,10 @@ import type { Student } from './types'
 
 /* Eski app.js dagi 4 bo'limli Excel eksportning aynan o'zi (ustunlar, ranglar, formatlar) */
 
-export type Role = 'buxgalteriya' | 'admin' | 'guruh_rahbari' | 'toliq'
+export type Role = 'qabul_shablon' | 'buxgalteriya' | 'admin' | 'guruh_rahbari' | 'toliq'
 
 export const ROLE_META: Record<Role, { file: string; title: string; sub: string }> = {
+  qabul_shablon: { file: 'Qabul_uchun_shablon_7_guruh.xlsx', title: 'Qabul uchun shablon (7 guruh)', sub: '14 ustunli rasmiy shablon (UZ / EN / RU, JSHSHIR, Diplom)' },
   buxgalteriya: { file: '1_Buxgalteriya_Shartnoma_va_Pasport.xlsx', title: 'Buxgalteriya', sub: "Shartnoma № va pasport ma'lumotlari" },
   admin: { file: '2_Baza_Admin_Pasport_va_Shahodatnoma.xlsx', title: 'Baza administratori', sub: 'Pasport va shahodatnoma / diplom' },
   guruh_rahbari: { file: '3_Guruh_Rahbarlari_Talabalar_Malumotlari.xlsx', title: 'Guruh rahbarlari', sub: "Tug'ilgan sana, pasport, shahodatnoma" },
@@ -29,6 +30,183 @@ const numIf = (v: string) => {
   return /^\d{1,10}$/.test(s) ? Number(s) : s
 }
 
+/* --- Qabul uchun shablon (2).xlsx maxsus 14 ustunli mantiq --- */
+const DISTRICT_RULES: [RegExp, string, string, string][] = [
+  [/shahrisabz\s+sh/i, 'Qashqadaryo, Shahrisabz shahri', 'Shahrisabz City', 'города Шахрисабз'],
+  [/shahrisabz/i, 'Qashqadaryo, Shahrisabz tumani', 'Shahrisabz District', 'Шахрисабзского района'],
+  [/kitob/i, 'Qashqadaryo, Kitob tumani', 'Kitob District', 'Китобского района'],
+  [/yakkabog/i, "Qashqadaryo, Yakkabog' tumani", 'Yakkabog District', 'Яккабагского района'],
+  [/qamashi/i, 'Qashqadaryo, Qamashi tumani', 'Qamashi District', 'Камашинского района'],
+  [/chiroqchi/i, 'Qashqadaryo, Chiroqchi tumani', 'Chiroqchi District', 'Чиракчинского района'],
+  [/ko['ʻ`\u2018\u2019]?kdala/i, "Qashqadaryo, Ko'kdala tumani", 'Kukdala District', 'Кукдалинского района'],
+  [/g['ʻ`\u2018\u2019]?uzor/i, "Qashqadaryo, G'uzor tumani", 'Guzar District', 'Гузарского района'],
+  [/qarshi\s+sh/i, 'Qashqadaryo, Qarshi shahri', 'Qarshi City', 'города Карши'],
+  [/qarshi/i, 'Qashqadaryo, Qarshi tumani', 'Qarshi District', 'Каршинского района'],
+  [/koson/i, 'Qashqadaryo, Koson tumani', 'Koson District', 'Касанского района'],
+  [/kasbi/i, 'Qashqadaryo, Kasbi tumani', 'Kasbi District', 'Касбинского района'],
+  [/dehqonobod/i, 'Qashqadaryo, Dehqonobod tumani', 'Dehqonobod District', 'Дехканабадского района'],
+  [/mirishkor/i, 'Qashqadaryo, Mirishkor tumani', 'Mirishkor District', 'Миришкорского района'],
+  [/muborak/i, 'Qashqadaryo, Muborak tumani', 'Muborak District', 'Мубарекского района'],
+  [/nishon/i, 'Qashqadaryo, Nishon tumani', 'Nishon District', 'Нишанского района'],
+]
+
+const PINFL_DIST_MAP: Record<string, [string, string, string]> = {
+  '559': ['Qashqadaryo, Shahrisabz tumani', 'Shahrisabz District', 'Шахрисабзского района'],
+  '572': ['Qashqadaryo, Shahrisabz shahri', 'Shahrisabz City', 'города Шахрисабз'],
+  '568': ['Qashqadaryo, Kitob tumani', 'Kitob District', 'Китобского района'],
+  '264': ['Qashqadaryo, Kitob tumani', 'Kitob District', 'Китобского района'],
+  '570': ["Qashqadaryo, Yakkabog' tumani", 'Yakkabog District', 'Яккабагского района'],
+  '253': ["Qashqadaryo, Yakkabog' tumani", 'Yakkabog District', 'Яккабагского района'],
+  '566': ['Qashqadaryo, Qamashi tumani', 'Qamashi District', 'Камашинского района'],
+  '256': ['Qashqadaryo, Qamashi tumani', 'Qamashi District', 'Камашинского района'],
+  '563': ['Qashqadaryo, Chiroqchi tumani', 'Chiroqchi District', 'Чиракчинского района'],
+  '275': ['Qashqadaryo, Chiroqchi tumani', 'Chiroqchi District', 'Чиракчинского района'],
+  '564': ["Qashqadaryo, G'uzor tumani", 'Guzar District', 'Гузарского района'],
+  '259': ["Qashqadaryo, G'uzor tumani", 'Guzar District', 'Гузарского района'],
+  '558': ['Qashqadaryo, Qarshi shahri', 'Qarshi City', 'города Карши'],
+  '560': ['Qashqadaryo, Qarshi tumani', 'Qarshi District', 'Каршинского района'],
+  '561': ['Qashqadaryo, Koson tumani', 'Koson District', 'Касанского района'],
+  '562': ['Qashqadaryo, Kasbi tumani', 'Kasbi District', 'Касбинского района'],
+  '565': ['Qashqadaryo, Dehqonobod tumani', 'Dehqonobod District', 'Дехканабадского района'],
+  '567': ['Qashqadaryo, Mirishkor tumani', 'Mirishkor District', 'Миришкорского района'],
+  '569': ['Qashqadaryo, Muborak tumani', 'Muborak District', 'Мубарекского района'],
+  '571': ['Qashqadaryo, Nishon tumani', 'Nishon District', 'Нишанского района'],
+  '789': ['Surxondaryo viloyati', 'Surkhandarya Region', 'Сурхандарьинской области'],
+  '549': ['Samarqand viloyati', 'Samarkand Region', 'Самаркандской области'],
+}
+
+function getQabulRowData(s: Student, idx: number): (string | number)[] {
+  const fio = fullName(s)
+  const pinfl = String(s.pinfl || '').trim()
+  const pv = String(s.pv || '').trim().toUpperCase().replace(/\s+/g, '')
+
+  const clean9 = (raw: string) => {
+    const d = raw.replace(/\D/g, '')
+    if (d.length === 12 && d.startsWith('998')) return d.slice(3)
+    return d.length === 9 ? d : raw.trim()
+  }
+  const telParts = String(s.tel || '').split(/[;,/]+/).map(clean9).filter(Boolean)
+  const tel1 = telParts[0] ? (/^\d{9}$/.test(telParts[0]) ? Number(telParts[0]) : telParts[0]) : ''
+  const tel2 = telParts[1] ? (/^\d{9}$/.test(telParts[1]) ? Number(telParts[1]) : telParts[1]) : ''
+
+  const makRaw = String(s.mak || '').trim()
+  let dist: [string, string, string] = ['Qashqadaryo, Shahrisabz tumani', 'Shahrisabz District', 'Шахрисабзского района']
+  let matched = false
+  for (const [re, uz, en, ru] of DISTRICT_RULES) {
+    if (re.test(makRaw)) { dist = [uz, en, ru]; matched = true; break }
+  }
+  if (!matched && pinfl.length === 14) {
+    const code = pinfl.slice(7, 10)
+    if (PINFL_DIST_MAP[code]) dist = PINFL_DIST_MAP[code]
+  }
+
+  const shDoc = String(s.sh_doc || '').trim().toUpperCase()
+  const lowMak = makRaw.toLowerCase()
+  const eduType = lowMak.includes('texnikum')
+    ? 'Texnikum'
+    : (lowMak.includes('kollej') || s.doc_tur === 'Diplom' || /^(K\s|K\d|D\s)/.test(shDoc))
+      ? 'Kollej'
+      : lowMak.includes('litsey')
+        ? 'Litsey'
+        : 'Maktab'
+
+  const numMatch = makRaw.match(/(\d+)\s*-?\s*(?:sonli|son|maktab|IDUM|DIMI)/i) || makRaw.match(/\b(\d{1,3})\b/)
+  const schoolNo = numMatch ? numMatch[1] : ''
+  const shortDistUz = dist[0].replace('Qashqadaryo, ', '').trim()
+
+  const makUz = !makRaw
+    ? (eduType === 'Kollej' ? `${shortDistUz} kasb-hunar kolleji` : `${shortDistUz} umumiy o'rta ta'lim maktabi`)
+    : (schoolNo && makRaw.length < 18 && !/tuman|shahar/i.test(makRaw) ? `${shortDistUz} ${schoolNo}-maktab` : makRaw)
+
+  let makEn = `${dist[1]} Secondary School`
+  let makRu = `Общеобразовательная школа ${dist[2]}`
+  if (/tibbiyot/i.test(lowMak)) { makEn = `${dist[1]} Medical College`; makRu = `Медицинский колледж ${dist[2]}` }
+  else if (/pedagogika/i.test(lowMak)) { makEn = `${dist[1]} Pedagogical College`; makRu = `Педагогический колледж ${dist[2]}` }
+  else if (/sanoat/i.test(lowMak)) { makEn = `${dist[1]} Industrial and Service Vocational College`; makRu = `Профессиональный колледж промышленности и сервиса ${dist[2]}` }
+  else if (/qurilish|qurulish/i.test(lowMak)) { makEn = `${dist[1]} Construction Vocational College`; makRu = `Строительный профессиональный колледж ${dist[2]}` }
+  else if (/agro/i.test(lowMak)) { makEn = `${dist[1]} Agro-Industrial Vocational College`; makRu = `Агропромышленный профессиональный колледж ${dist[2]}` }
+  else if (eduType === 'Kollej') { makEn = `${dist[1]} Vocational College`; makRu = `Профессиональный колледж ${dist[2]}` }
+  else if (eduType === 'Texnikum') { makEn = `${dist[1]} Technical College`; makRu = `Техникум ${dist[2]}` }
+  else if (eduType === 'Litsey') { makEn = `${dist[1]} Academic Lyceum`; makRu = `Академический лицей ${dist[2]}` }
+  else if (schoolNo) { makEn = `${dist[1]} School No. ${schoolNo}`; makRu = `Школа №${schoolNo} ${dist[2]}` }
+
+  const yStr = String(s.yil || '').trim()
+  let years = ''
+  if (/^\d{4}\s*-\s*\d{4}$/.test(yStr)) years = yStr.replace(/\s+/g, '')
+  else {
+    const ym = yStr.match(/\b(19\d{2}|20\d{2})\b/)
+    if (ym) {
+      const endY = Number(ym[1])
+      const dur = eduType === 'Maktab' ? 11 : 3
+      years = `${endY - dur}-${endY}`
+    }
+  }
+
+  return [idx + 1, fio, pinfl, pv, tel1, tel2, dist[0], '', makUz, makEn, makRu, eduType, shDoc, years]
+}
+
+const QABUL_HEADERS = [
+  '№',
+  'F.I.O',
+  'JSHSHIR',
+  'Pasport seriya raqami',
+  'Tel raqam(pastdagi shablondagidek kiritilsin)',
+  '2-Tel raqam(pastdagi shablondagidek kiritilsin)',
+  'Yashash viloyat+tumani',
+  'UY manzili',
+  'Avval o`qigan muassasa nomi(Uzbek tilida)',
+  'Avval o`qigan muassasa nomi(Ingliz tilida)',
+  'Avval o`qigan muassasa nomi(Rus tilida)',
+  'Maktab, kollej va HK',
+  'Avval olgan diplom seriya+raqami',
+  'Boshlagan va tugatgan yili',
+]
+
+const QABUL_WIDTHS = [4.5, 36, 17.5, 15, 18, 18, 27, 18, 36, 32, 34, 15, 16.5, 15]
+
+function buildQabulShablonSheet(X: XLSXModule, students: Student[], titleNote: string) {
+  const thin = { style: 'thin', color: { rgb: '000000' } }
+  const border = { top: thin, bottom: thin, left: thin, right: thin }
+  const headStyle = {
+    font: { bold: true, sz: 12, name: 'Times New Roman', color: { rgb: '000000' } },
+    fill: { fgColor: { rgb: 'E8EEF5' }, patternType: 'solid' },
+    alignment: { horizontal: 'center', vertical: 'center', wrapText: true },
+    border,
+  }
+  const cellStyle = (center: boolean) => ({
+    font: { sz: 12, name: 'Times New Roman', color: { rgb: '000000' } },
+    alignment: { horizontal: center ? 'center' : 'left', vertical: 'center' },
+    border,
+  })
+
+  const aoa: (string | number)[][] = [
+    ['', titleNote],
+    ['', 'Namuna: Saydalimov Anvarjon Sarvarjon o`g`li | 517******0016 | AC1686958 | 990201527 | Qashqadaryo, Qarshi | 4-mittituman 21/23 | Qarshi shahar 1-maktab | Qarshi City School No. 1 | Школа №1 города Карши | Maktab | AA1775603 | 2008-2019'],
+    QABUL_HEADERS,
+    ...students.map((s, i) => getQabulRowData(s, i)),
+  ]
+
+  const ws = X.utils.aoa_to_sheet(aoa)
+  const range = X.utils.decode_range(ws['!ref'] || 'A1')
+  for (let r = 2; r <= range.e.r; r++) {
+    for (let c = 0; c < QABUL_HEADERS.length; c++) {
+      const addr = X.utils.encode_cell({ r, c })
+      if (!ws[addr]) ws[addr] = { t: 's', v: '' }
+      const ref = ws[addr]
+      if (r === 2) {
+        ref.s = headStyle
+      } else {
+        const isCenter = [0, 2, 3, 4, 5, 11, 12, 13].includes(c)
+        if (c === 2) ref.t = 's'
+        ref.s = cellStyle(isCenter)
+      }
+    }
+  }
+  ws['!cols'] = QABUL_WIDTHS.map((wch) => ({ wch }))
+  ws['!rows'] = [{ hpt: 18 }, { hpt: 16 }, { hpt: 63 }, ...students.map(() => ({ hpt: 19 }))]
+  return ws
+}
+
 const C = {
   tr: { header: 'T/R', wch: 6, val: (_s: Student, i: number) => i + 1, num: true } as Col,
   group: { header: 'Guruh', wch: 10, val: (s: Student) => s.group || '', center: true } as Col,
@@ -47,7 +225,7 @@ const C = {
   tel: { header: 'Telefon raqami', wch: 16, val: (s: Student) => s.tel || '', center: true } as Col,
 }
 
-const ROLES: Record<Role, { bg: string; cols: Col[] }> = {
+const ROLES: Record<Exclude<Role, 'qabul_shablon'>, { bg: string; cols: Col[] }> = {
   buxgalteriya: { bg: '065F46', cols: [C.tr, C.group, C.fish, C.shnum, C.pv, C.pinfl, C.ber, C.dob] },
   admin: { bg: '1E3A8A', cols: [C.tr, C.group, C.fish, C.pv, C.pinfl, C.ber, C.dob, C.tuman, C.docTur, C.shDoc, C.mak, C.yil] },
   guruh_rahbari: {
@@ -69,7 +247,8 @@ type XLSXModule = typeof import('xlsx-js-style')
 /** Kutubxona faqat eksport bosilganda yuklanadi — sahifa og'irlashmasin */
 const loadXlsx = () => import('xlsx-js-style') as Promise<XLSXModule>
 
-function buildSheet(X: XLSXModule, students: Student[], role: Role) {
+function buildSheet(X: XLSXModule, students: Student[], role: Role, titleNote = '') {
+  if (role === 'qabul_shablon') return buildQabulShablonSheet(X, students, titleNote)
   const { bg, cols } = ROLES[role]
   const grid = { style: 'thin', color: { rgb: '94A3B8' } }
   const border = { top: grid, bottom: grid, left: grid, right: grid }
@@ -122,24 +301,45 @@ const groupOrder = (a: string, b: string) => {
   return a.localeCompare(b, 'uz')
 }
 
-/** 1-sahifa "Jami talabalar", keyin har bir guruh alohida sahifada */
+/** 1-sahifa "Jami talabalar" (yoki qabul_shablon uchun har bir guruh alohida sahifada) */
 export async function exportRole(students: Student[], role: Role) {
   const X = await loadXlsx()
   const wb = X.utils.book_new()
-  const all = [...students].sort((a, b) => groupOrder((a.group || '').trim(), (b.group || '').trim()) || byName(a, b))
-  X.utils.book_append_sheet(wb, buildSheet(X, all, role), 'Jami talabalar')
+  const official = students.filter((s) => isOfficialGroup(s.group))
+  const sourceList = role === 'qabul_shablon' ? official : students
+  const all = [...sourceList].sort((a, b) => groupOrder((a.group || '').trim(), (b.group || '').trim()) || byName(a, b))
 
-  const groups = [...new Set(students.map((s) => (s.group || '').trim()).filter(Boolean))].sort(groupOrder)
-  for (const g of groups) {
-    const list = students.filter((s) => (s.group || '').trim() === g).sort(byName)
-    const name = (/^\d/.test(g) ? `Guruh ${g}` : g).replace(/[:\\/?*[\]]/g, ' ').slice(0, 31)
-    X.utils.book_append_sheet(wb, buildSheet(X, list, role), name)
+  if (role === 'qabul_shablon') {
+    const groups = [...new Set(official.map((s) => (s.group || '').trim()).filter(Boolean))].sort(groupOrder)
+    for (const g of groups) {
+      const list = official.filter((s) => (s.group || '').trim() === g).sort(byName)
+      X.utils.book_append_sheet(wb, buildSheet(X, list, role, `Guruh ${g} — Qabul uchun ma'lumotlar (${list.length} nafar)`), `Guruh ${g}`)
+    }
+    X.utils.book_append_sheet(wb, buildSheet(X, all, role, `Barcha guruhlar — Jami ${all.length} nafar`), 'Jami talabalar')
+  } else {
+    X.utils.book_append_sheet(wb, buildSheet(X, all, role), 'Jami talabalar')
+    const groups = [...new Set(students.map((s) => (s.group || '').trim()).filter(Boolean))].sort(groupOrder)
+    for (const g of groups) {
+      const list = students.filter((s) => (s.group || '').trim() === g).sort(byName)
+      const name = (/^\d/.test(g) ? `Guruh ${g}` : g).replace(/[:\\/?*[\]]/g, ' ').slice(0, 31)
+      X.utils.book_append_sheet(wb, buildSheet(X, list, role), name)
+    }
+    const noGroup = students.filter((s) => !(s.group || '').trim())
+    if (noGroup.length) X.utils.book_append_sheet(wb, buildSheet(X, noGroup, role), 'Guruhsizlar')
   }
-  const noGroup = students.filter((s) => !(s.group || '').trim())
-  if (noGroup.length) X.utils.book_append_sheet(wb, buildSheet(X, noGroup, role), 'Guruhsizlar')
 
   X.writeFile(wb, ROLE_META[role].file, { cellStyles: true, bookSST: false })
   return wb.SheetNames.length
+}
+
+/** Bitta guruhni Qabul uchun shablon (2).xlsx formatida yuklab olish */
+export async function exportQabulShablonGroup(students: Student[], group: string) {
+  const X = await loadXlsx()
+  const list = students.filter((s) => s.group === group).sort(byName)
+  const wb = X.utils.book_new()
+  X.utils.book_append_sheet(wb, buildQabulShablonSheet(X, list, `Guruh ${group} — Qabul shabloni (${list.length} nafar)`), `Guruh ${group}`)
+  X.writeFile(wb, `Qabul_uchun_shablon_Guruh_${group}.xlsx`, { cellStyles: true, bookSST: false })
+  return list.length
 }
 
 /** Bitta guruh (yoki safdan chiqarilganlar) — guruh rahbari ustunlari bilan */
@@ -167,21 +367,32 @@ const TG_BOT_TOKEN = '8645386410:AAGpMWubDaLI6KQ_hR9WuqkhCaoOAK2qWEM'
 const TG_CHAT_ID = '8135594558'
 const TG_CHANNEL_ID = '-1004375713276'
 
-/** 4 bo'limli Excel faylni to'g'ridan-to'g'ri Telegram botga yuborish */
+/** Excel faylni to'g'ridan-to'g'ri Telegram botga yuborish */
 export async function sendRoleToTelegram(students: Student[], role: Role) {
   const X = await loadXlsx()
   const wb = X.utils.book_new()
-  const all = [...students].sort((a, b) => groupOrder((a.group || '').trim(), (b.group || '').trim()) || byName(a, b))
-  X.utils.book_append_sheet(wb, buildSheet(X, all, role), 'Jami talabalar')
+  const official = students.filter((s) => isOfficialGroup(s.group))
+  const sourceList = role === 'qabul_shablon' ? official : students
+  const all = [...sourceList].sort((a, b) => groupOrder((a.group || '').trim(), (b.group || '').trim()) || byName(a, b))
 
-  const groups = [...new Set(students.map((s) => (s.group || '').trim()).filter(Boolean))].sort(groupOrder)
-  for (const g of groups) {
-    const list = students.filter((s) => (s.group || '').trim() === g).sort(byName)
-    const name = (/^\d/.test(g) ? `Guruh ${g}` : g).replace(/[:\\/?*[\]]/g, ' ').slice(0, 31)
-    X.utils.book_append_sheet(wb, buildSheet(X, list, role), name)
+  if (role === 'qabul_shablon') {
+    const groups = [...new Set(official.map((s) => (s.group || '').trim()).filter(Boolean))].sort(groupOrder)
+    for (const g of groups) {
+      const list = official.filter((s) => (s.group || '').trim() === g).sort(byName)
+      X.utils.book_append_sheet(wb, buildSheet(X, list, role, `Guruh ${g} — Qabul shabloni (${list.length} nafar)`), `Guruh ${g}`)
+    }
+    X.utils.book_append_sheet(wb, buildSheet(X, all, role, `Barcha guruhlar — Jami ${all.length} nafar`), 'Jami talabalar')
+  } else {
+    X.utils.book_append_sheet(wb, buildSheet(X, all, role), 'Jami talabalar')
+    const groups = [...new Set(students.map((s) => (s.group || '').trim()).filter(Boolean))].sort(groupOrder)
+    for (const g of groups) {
+      const list = students.filter((s) => (s.group || '').trim() === g).sort(byName)
+      const name = (/^\d/.test(g) ? `Guruh ${g}` : g).replace(/[:\\/?*[\]]/g, ' ').slice(0, 31)
+      X.utils.book_append_sheet(wb, buildSheet(X, list, role), name)
+    }
+    const noGroup = students.filter((s) => !(s.group || '').trim())
+    if (noGroup.length) X.utils.book_append_sheet(wb, buildSheet(X, noGroup, role), 'Guruhsizlar')
   }
-  const noGroup = students.filter((s) => !(s.group || '').trim())
-  if (noGroup.length) X.utils.book_append_sheet(wb, buildSheet(X, noGroup, role), 'Guruhsizlar')
 
   const wbout = X.write(wb, { bookType: 'xlsx', type: 'array', cellStyles: true })
   const blob = new Blob([wbout], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
@@ -189,7 +400,7 @@ export async function sendRoleToTelegram(students: Student[], role: Role) {
 
   const formData = new FormData()
   formData.append('chat_id', TG_CHAT_ID)
-  formData.append('caption', `📊 ${meta.title} (${meta.sub})\n👥 Jami talabalar: ${students.length} nafar`)
+  formData.append('caption', `📊 ${meta.title} (${meta.sub})\n👥 Jami talabalar: ${sourceList.length} nafar`)
   formData.append('document', blob, meta.file)
 
   const res = await fetch(`https://api.telegram.org/bot${TG_BOT_TOKEN}/sendDocument`, {

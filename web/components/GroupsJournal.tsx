@@ -1,9 +1,9 @@
 'use client'
 
 import { memo, useMemo, useState } from 'react'
-import { Check, Download, FileText, Loader2, Printer, Send, UserRound } from 'lucide-react'
+import { Check, Download, FileSpreadsheet, FileText, Loader2, Printer, Send, UserRound } from 'lucide-react'
 import { GROUPS, GROUP_LEADERS, GROUP_TITLES, LEGACY_URL, WITHDRAWN_GROUP } from '@/lib/config'
-import { exportGroup, sendGroupsToTelegram, type TgTarget } from '@/lib/excel'
+import { exportGroup, exportQabulShablonGroup, exportRole, sendGroupsToTelegram, type TgTarget } from '@/lib/excel'
 import { byName, fullName, isOfficialGroup } from '@/lib/student'
 import type { Student } from '@/lib/types'
 import type { Notify } from './Toast'
@@ -14,6 +14,7 @@ function GroupCard({ code, title, leader, students, withdrawn, onOpen, notify }:
   onOpen: (s: Student) => void; notify: Notify
 }) {
   const [busy, setBusy] = useState(false)
+  const [qabulBusy, setQabulBusy] = useState(false)
   const [tgBusy, setTgBusy] = useState(false)
   const farm = code === '26-01'
   const download = async () => {
@@ -25,6 +26,18 @@ function GroupCard({ code, title, leader, students, withdrawn, onOpen, notify }:
       notify(`Excel yaratilmadi: ${(e as Error).message}`, 'error')
     } finally {
       setBusy(false)
+    }
+  }
+
+  const downloadQabul = async () => {
+    setQabulBusy(true)
+    try {
+      const n = await exportQabulShablonGroup(students, code)
+      notify(`Guruh ${code} Qabul shabloni (${n} nafar) yuklandi`)
+    } catch (e) {
+      notify(`Qabul shabloni yaratilmadi: ${(e as Error).message}`, 'error')
+    } finally {
+      setQabulBusy(false)
     }
   }
 
@@ -56,9 +69,20 @@ function GroupCard({ code, title, leader, students, withdrawn, onOpen, notify }:
         </div>
         <div className="flex gap-1.5">
           {!withdrawn && (
-            <a className="btn-ghost h-8 px-2.5 text-[12px]" href={`${LEGACY_URL}/pdf_jurnallar/Guruh_${encodeURIComponent(code)}.pdf`} target="_blank" rel="noreferrer" title="Toza A4 PDF jurnal">
-              <FileText size={14} /> PDF
-            </a>
+            <>
+              <button
+                type="button"
+                className="btn-ghost h-8 px-2.5 text-[12px] border-emerald/35 text-emerald-soft hover:bg-emerald/10"
+                onClick={downloadQabul}
+                disabled={qabulBusy || !students.length}
+                title="Shu guruhni Qabul uchun shablon (2).xlsx formatida yuklab olish"
+              >
+                {qabulBusy ? <Loader2 size={14} className="animate-spin" /> : <FileSpreadsheet size={14} />} Qabul
+              </button>
+              <a className="btn-ghost h-8 px-2.5 text-[12px]" href={`${LEGACY_URL}/pdf_jurnallar/Guruh_${encodeURIComponent(code)}.pdf`} target="_blank" rel="noreferrer" title="Toza A4 PDF jurnal">
+                <FileText size={14} /> PDF
+              </a>
+            </>
           )}
           <button type="button" className="btn-ghost h-8 px-2.5 text-[12px]" onClick={download} disabled={busy || !students.length} title="Guruhni Excel (.xlsx) formatda yuklab olish">
             {busy ? <Loader2 size={14} className="animate-spin" /> : <Download size={14} />} .xlsx
@@ -146,6 +170,21 @@ function GroupsJournal({ students, onOpen, notify }: { students: Student[]; onOp
           )}
         </div>
         <div className="flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            className="btn-ghost h-9 border-emerald/40 bg-emerald/10 text-[12.5px] text-emerald-soft hover:bg-emerald/20"
+            onClick={async () => {
+              try {
+                await exportRole(students, 'qabul_shablon')
+                notify('Qabul uchun shablon (7 ta guruh) Excelga yuklandi!')
+              } catch (e) {
+                notify(`Xatolik: ${(e as Error).message}`, 'error')
+              }
+            }}
+            title="Barcha 7 ta guruhni Qabul uchun shablon (2).xlsx formatida (14 ustunli) yuklab olish"
+          >
+            <FileSpreadsheet size={15} /> Qabul shabloni (7 guruh)
+          </button>
           <button type="button" className="btn-ghost h-9 text-[12.5px]" onClick={openAllPdfs} title="Barcha 7 ta guruh PDF jurnalini yangi oynada ochish">
             <FileText size={15} className="text-sky" /> Barcha PDF (7)
           </button>
