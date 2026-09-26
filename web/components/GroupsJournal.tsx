@@ -1,9 +1,9 @@
 'use client'
 
 import { memo, useMemo, useState } from 'react'
-import { Download, FileText, Loader2, UserRound } from 'lucide-react'
+import { Check, Download, FileText, Loader2, Printer, Send, UserRound } from 'lucide-react'
 import { GROUPS, GROUP_LEADERS, GROUP_TITLES, LEGACY_URL, WITHDRAWN_GROUP } from '@/lib/config'
-import { exportGroup } from '@/lib/excel'
+import { exportGroup, sendGroupsToTelegram, type TgTarget } from '@/lib/excel'
 import { byName, fullName, isOfficialGroup } from '@/lib/student'
 import type { Student } from '@/lib/types'
 import type { Notify } from './Toast'
@@ -14,6 +14,7 @@ function GroupCard({ code, title, leader, students, withdrawn, onOpen, notify }:
   onOpen: (s: Student) => void; notify: Notify
 }) {
   const [busy, setBusy] = useState(false)
+  const [tgBusy, setTgBusy] = useState(false)
   const farm = code === '26-01'
   const download = async () => {
     setBusy(true)
@@ -24,6 +25,19 @@ function GroupCard({ code, title, leader, students, withdrawn, onOpen, notify }:
       notify(`Excel yaratilmadi: ${(e as Error).message}`, 'error')
     } finally {
       setBusy(false)
+    }
+  }
+
+  const sendSingleTg = async () => {
+    setTgBusy(true)
+    try {
+      const res = await sendGroupsToTelegram(students, [withdrawn ? 'safdan' : code], 'both')
+      if (res.failed.length === 0) notify(`${withdrawn ? 'Safdan chiqarilganlar' : `Guruh ${code}`} Telegramga yuborildi!`)
+      else notify(`Qisman yuborildi (${res.sent.join(', ')}). Xato: ${res.failed.join('; ')}`, 'warning')
+    } catch (e) {
+      notify(`Telegramga yuborilmadi: ${(e as Error).message}`, 'error')
+    } finally {
+      setTgBusy(false)
     }
   }
 
@@ -46,8 +60,11 @@ function GroupCard({ code, title, leader, students, withdrawn, onOpen, notify }:
               <FileText size={14} /> PDF
             </a>
           )}
-          <button type="button" className="btn-ghost h-8 px-2.5 text-[12px]" onClick={download} disabled={busy || !students.length}>
+          <button type="button" className="btn-ghost h-8 px-2.5 text-[12px]" onClick={download} disabled={busy || !students.length} title="Guruhni Excel (.xlsx) formatda yuklab olish">
             {busy ? <Loader2 size={14} className="animate-spin" /> : <Download size={14} />} .xlsx
+          </button>
+          <button type="button" className="btn-ghost h-8 px-2 text-[12px] text-sky hover:text-sky-soft" onClick={sendSingleTg} disabled={tgBusy || !students.length} title="Shu guruhni Telegramga yuborish">
+            {tgBusy ? <Loader2 size={14} className="animate-spin" /> : <Send size={14} />}
           </button>
         </div>
       </header>
@@ -71,6 +88,11 @@ function GroupCard({ code, title, leader, students, withdrawn, onOpen, notify }:
 }
 
 function GroupsJournal({ students, onOpen, notify }: { students: Student[]; onOpen: (s: Student) => void; notify: Notify }) {
+  const [tgOpen, setTgOpen] = useState(false)
+  const [tgTarget, setTgTarget] = useState<TgTarget>('both')
+  const [selectedGroups, setSelectedGroups] = useState<string[]>(() => [...GROUPS])
+  const [sendingTg, setSendingTg] = useState(false)
+
   const groups = useMemo(() => {
     const map = new Map<string, Student[]>(GROUPS.map((g) => [g, []]))
     const other: Student[] = []
@@ -79,8 +101,134 @@ function GroupsJournal({ students, onOpen, notify }: { students: Student[]; onOp
     return { map, other: other.sort(byName) }
   }, [students])
 
+  const officialTotal = useMemo(() => {
+    let sum = 0
+    for (const list of groups.map.values()) sum += list.length
+    return sum
+  }, [groups])
+
+  const toggleGroupSelection = (g: string) => {
+    setSelectedGroups((prev) => prev.includes(g) ? prev.filter((x) => x !== g) : [...prev, g])
+  }
+
+  const handleSendBulkTg = async () => {
+    if (!selectedGroups.length) return
+    setSendingTg(true)
+    try {
+      const res = await sendGroupsToTelegram(students, selectedGroups, tgTarget)
+      if (res.failed.length === 0) {
+        notify(`${selectedGroups.length} ta guruh jurnali (${res.sent.join(' + ')}) Telegramga yuborildi!`)
+        setTgOpen(false)
+      } else {
+        notify(`Yuborildi: ${res.sent.join(', ') || 'yo\'q'}. Xato: ${res.failed.join('; ')}`, 'warning')
+      }
+    } catch (e) {
+      notify(`Telegramga yuborishda xatolik: ${(e as Error).message}`, 'error')
+    } finally {
+      setSendingTg(false)
+    }
+  }
+
+  const openAllPdfs = () => {
+    for (const g of GROUPS) {
+      window.open(`${LEGACY_URL}/pdf_jurnallar/Guruh_${encodeURIComponent(g)}.pdf`, '_blank', 'noopener,noreferrer')
+    }
+  }
+
   return (
     <div className="space-y-4">
+      <div className="panel flex flex-wrap items-center justify-between gap-3 px-4 py-3">
+        <div className="flex flex-wrap items-center gap-2.5 text-[13px]">
+          <span className="font-bold text-fg">Akademik guruhlar jurnali</span>
+          <span className="chip border-sky/35 bg-sky/10 text-sky-soft">7 ta rasmiy guruh · {officialTotal} nafar talaba</span>
+          {groups.other.length > 0 && (
+            <span className="chip border-rose/35 bg-rose/10 text-rose">Safdan chiqarilgan: {groups.other.length} nafar</span>
+          )}
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          <button type="button" className="btn-ghost h-9 text-[12.5px]" onClick={openAllPdfs} title="Barcha 7 ta guruh PDF jurnalini yangi oynada ochish">
+            <FileText size={15} className="text-sky" /> Barcha PDF (7)
+          </button>
+          <button type="button" className="btn-ghost h-9 text-[12.5px]" onClick={() => window.print()} title="Jurnallarni chop etish (Ctrl+P)">
+            <Printer size={15} /> Chop etish
+          </button>
+          <button
+            type="button"
+            className={cx('btn-primary h-9 text-[12.5px]', tgOpen && 'ring-2 ring-sky/40')}
+            onClick={() => setTgOpen((o) => !o)}
+          >
+            <Send size={14} /> Telegramga yuborish
+          </button>
+        </div>
+      </div>
+
+      {tgOpen && (
+        <div className="panel animate-pop-in space-y-3 border-sky/35 bg-ink-900/90 p-4">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <div className="text-[13.5px] font-bold text-fg">Tanlangan guruhlarni bitta Excel faylda Telegramga yuborish</div>
+            <div className="flex items-center gap-1.5 text-[12px]">
+              <button type="button" className="btn-ghost h-7 px-2 text-[11.5px]" onClick={() => setSelectedGroups([...GROUPS])}>Barchasi (7)</button>
+              <button type="button" className="btn-ghost h-7 px-2 text-[11.5px]" onClick={() => setSelectedGroups([])}>Tozalash</button>
+            </div>
+          </div>
+
+          <div className="flex flex-wrap gap-2">
+            {[...GROUPS, ...(groups.other.length ? ['safdan'] : [])].map((g) => {
+              const active = selectedGroups.includes(g)
+              const count = g === 'safdan' ? groups.other.length : (groups.map.get(g)?.length ?? 0)
+              return (
+                <button
+                  key={g}
+                  type="button"
+                  onClick={() => toggleGroupSelection(g)}
+                  className={cx(
+                    'flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-[12.5px] font-semibold transition-colors',
+                    active
+                      ? 'border-sky/60 bg-sky/15 text-sky-soft'
+                      : 'border-line bg-ink-950/60 text-fg-muted hover:text-fg',
+                  )}
+                >
+                  <Check size={13} className={active ? 'opacity-100 text-sky' : 'opacity-0'} />
+                  <span>{g === 'safdan' ? 'Safdan chiqarilganlar' : `Guruh ${g}`}</span>
+                  <span className="mono text-[11px] text-fg-subtle">({count})</span>
+                </button>
+              )
+            })}
+          </div>
+
+          <div className="flex flex-wrap items-center justify-between gap-3 border-t border-line pt-3">
+            <div className="flex flex-wrap items-center gap-2 text-[12.5px]">
+              <span className="text-fg-muted">Qayerga:</span>
+              {([['both', 'Kanal + Shaxsiy bot'], ['channel', 'Faqat kanalga'], ['bot', 'Faqat shaxsiy botga']] as const).map(([val, label]) => (
+                <button
+                  key={val}
+                  type="button"
+                  onClick={() => setTgTarget(val)}
+                  className={cx(
+                    'rounded-lg border px-2.5 py-1 text-[12px] font-semibold transition-colors',
+                    tgTarget === val ? 'border-emerald/50 bg-emerald/15 text-emerald-soft' : 'border-line text-fg-muted hover:text-fg',
+                  )}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+            <div className="flex items-center gap-2">
+              <button type="button" className="btn-ghost h-9 text-[12.5px]" onClick={() => setTgOpen(false)}>Bekor qilish</button>
+              <button
+                type="button"
+                className="btn-success h-9 text-[12.5px]"
+                disabled={sendingTg || !selectedGroups.length}
+                onClick={handleSendBulkTg}
+              >
+                {sendingTg ? <Loader2 size={15} className="animate-spin" /> : <Send size={14} />}
+                {sendingTg ? 'Yuborilmoqda…' : `Yuborish (${selectedGroups.length} ta guruh)`}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
         {GROUPS.map((g) => (
           <GroupCard key={g} code={g} title={GROUP_TITLES[g]} leader={GROUP_LEADERS[g]} students={groups.map.get(g)!} onOpen={onOpen} notify={notify} />

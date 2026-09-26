@@ -294,8 +294,8 @@ export default function StudentModal({ student: s, all, hasPrev, hasNext, onNav,
               : <ViewInfo s={s} onEdit={() => setEditing(true)} onToggleVerify={onToggleVerify} />}
           </div>
           <div className="border-t border-line bg-ink-950/40 p-4 sm:p-5 lg:overflow-y-auto lg:border-t-0 lg:border-l">
-            <div className="mb-3 text-[11px] font-bold tracking-wider text-fg-subtle uppercase">Hujjat rasmlari</div>
-            <DocImages file={s.doc_file} />
+            <div className="mb-3 text-[11px] font-bold tracking-wider text-fg-subtle uppercase">Hujjat rasmlari va AI Tahlil</div>
+            <DocImages file={s.doc_file} studentRow={s.row} onApplyFields={(fields) => onSave(s, fields)} />
           </div>
         </div>
       </div>

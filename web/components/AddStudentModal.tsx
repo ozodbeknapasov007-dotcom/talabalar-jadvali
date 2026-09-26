@@ -1,7 +1,8 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
-import { AlertTriangle, Plus, Save, UserPlus, X } from 'lucide-react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { AlertTriangle, ClipboardPaste, Loader2, Plus, Save, Sparkles, Upload, UserPlus, X } from 'lucide-react'
+import { AI_MODELS, analyzeAndUploadDocs, getFilesFromClipboard, getSavedAiModel, setSavedAiModel, type AiModelId } from '@/lib/ai-doc'
 import { GROUPS, WITHDRAWN_GROUP, YON_OPTIONS } from '@/lib/config'
 import { decodePinfl, dobFromPinfl, findDuplicates, fullName } from '@/lib/student'
 import type { EditFields, Student } from '@/lib/types'
@@ -67,8 +68,48 @@ export default function AddStudentModal({ all, defaultGroup, onClose, onAdd }: P
   const [f, setF] = useState<EditFields>(() => makeInitial(defaultGroup))
   const [saving, setSaving] = useState(false)
   const [dobFlash, setDobFlash] = useState(false)
+  const [aiBusy, setAiBusy] = useState(false)
+  const [aiMsg, setAiMsg] = useState('')
+  const [model, setModel] = useState<AiModelId>(() => getSavedAiModel())
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   const set = (k: keyof EditFields) => (v: string) => setF((x) => ({ ...x, [k]: v }))
+
+  const runAutoFill = useCallback(async (files: File[]) => {
+    if (!files.length) return
+    setAiBusy(true)
+    setAiMsg('Hujjat AI va QR orqali tahlil qilinmoqda…')
+    try {
+      const res = await analyzeAndUploadDocs({ generalFiles: files, model })
+      setAiMsg(res.message)
+      if (Object.keys(res.fields).length > 0) {
+        setF((prev) => {
+          const next = { ...prev }
+          for (const [k, val] of Object.entries(res.fields)) {
+            if (val && k in next) (next as Record<string, string>)[k] = String(val)
+          }
+          if (next.pinfl && next.pinfl.length === 14 && !next.dob) {
+            const d = dobFromPinfl(next.pinfl)
+            if (d) next.dob = d
+          }
+          return next
+        })
+      }
+    } catch (e) {
+      setAiMsg(`Tahlil xatosi: ${(e as Error).message}`)
+    } finally {
+      setAiBusy(false)
+    }
+  }, [model])
+
+  const handleClipboardFill = useCallback(async () => {
+    const files = await getFilesFromClipboard()
+    if (!files.length) {
+      setAiMsg("Buferda rasm yoki .docx topilmadi (avval rasm/faylni Ctrl+C qiling)")
+      return
+    }
+    await runAutoFill(files)
+  }, [runAutoFill])
 
   useEffect(() => {
     const prev = document.body.style.overflow
@@ -161,6 +202,46 @@ export default function AddStudentModal({ all, defaultGroup, onClose, onAdd }: P
           className="flex-1 space-y-4 overflow-y-auto p-5"
           onSubmit={(e) => { e.preventDefault(); void submit(false) }}
         >
+          <div className="flex flex-wrap items-center gap-2 rounded-2xl border border-sky/35 bg-ink-950/60 p-3">
+            <Sparkles size={16} className="text-sky" />
+            <span className="text-[12.5px] font-bold text-fg">AI orqali to'ldirish:</span>
+            <select
+              value={model}
+              onChange={(e) => { const m = e.target.value as AiModelId; setModel(m); setSavedAiModel(m) }}
+              className="field h-8 w-auto min-w-[165px] py-1 pr-7 pl-2.5 text-[11.5px]"
+            >
+              {AI_MODELS.map(([id, name]) => <option key={id} value={id}>{name}</option>)}
+            </select>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".docx,image/*"
+              multiple
+              className="hidden"
+              onChange={(e) => {
+                const files = Array.from(e.target.files || [])
+                if (files.length) void runAutoFill(files)
+              }}
+            />
+            <button
+              type="button"
+              className="btn-ghost h-8 px-2.5 text-[12px]"
+              disabled={aiBusy}
+              onClick={() => fileInputRef.current?.click()}
+            >
+              {aiBusy ? <Loader2 size={14} className="animate-spin" /> : <Upload size={14} className="text-sky" />} .docx / Rasm tanlash
+            </button>
+            <button
+              type="button"
+              className="btn-ghost h-8 px-2.5 text-[12px]"
+              disabled={aiBusy}
+              onClick={() => void handleClipboardFill()}
+            >
+              <ClipboardPaste size={14} className="text-emerald-soft" /> Buferdan (Ctrl+V)
+            </button>
+            {aiMsg && <div className="w-full pt-1 text-[11.5px] text-sky-soft">{aiMsg}</div>}
+          </div>
+
           <section className="rounded-2xl border border-line bg-ink-900/70 p-4">
             <h4 className="mb-3 flex items-center gap-2.5 text-[13px] font-bold text-fg">
               <span className="grid size-6 place-items-center rounded-lg bg-gradient-to-br from-blue to-sky text-[12px] font-extrabold text-ink-950">1</span>

@@ -1,12 +1,12 @@
 'use client'
 
 import { memo, useEffect, useRef } from 'react'
-import { FileDown, LayoutGrid, Rows3, Search, X } from 'lucide-react'
+import { FileDown, LayoutGrid, LayoutList, Rows3, Search, X } from 'lucide-react'
 import { GROUPS, WITHDRAWN_GROUP } from '@/lib/config'
 import { EMPTY_FILTERS, type Filters } from '@/lib/student'
 import { cx } from './ui'
 
-export type DisplayMode = 'cards' | 'table'
+export type DisplayMode = 'cards' | 'compact' | 'table'
 
 interface Props {
   filters: Filters
@@ -71,14 +71,14 @@ function FilterBar({ filters, onFilter, shown, total, mode, onMode, onExportShow
           </div>
         </label>
         <div className="flex h-10 rounded-xl border border-line bg-ink-950/60 p-0.5" role="tablist">
-          {([['cards', LayoutGrid, 'Karta'], ['table', Rows3, 'Jadval']] as const).map(([m, Icon, t]) => (
+          {([['cards', LayoutGrid, 'Karta'], ['compact', LayoutList, 'Ixcham'], ['table', Rows3, 'Jadval']] as const).map(([m, Icon, t]) => (
             <button
               key={m}
               type="button"
               role="tab"
               aria-selected={mode === m}
               onClick={() => onMode(m)}
-              className={cx('flex items-center gap-1.5 rounded-[10px] px-3.5 text-[12.5px] font-semibold transition-colors',
+              className={cx('flex items-center gap-1.5 rounded-[10px] px-3 text-[12.5px] font-semibold transition-colors',
                 mode === m ? 'bg-gradient-to-r from-blue/80 to-sky/80 text-white' : 'text-fg-muted hover:text-fg')}
             >
               <Icon size={14} /> {t}

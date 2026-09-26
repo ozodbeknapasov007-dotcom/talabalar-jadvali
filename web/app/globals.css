@@ -47,6 +47,27 @@
   color-scheme: dark;
 }
 
+:root[data-theme='light'] {
+  color-scheme: light;
+  --color-ink-950: #f1f5f9;
+  --color-ink-900: #ffffff;
+  --color-ink-850: #f8fafc;
+  --color-ink-800: #e2e8f0;
+  --color-ink-700: #cbd5e1;
+  --color-ink-600: #94a3b8;
+
+  --color-line: rgb(15 23 42 / 0.1);
+  --color-line-strong: rgb(15 23 42 / 0.18);
+
+  --color-fg: #0f172a;
+  --color-fg-muted: #475569;
+  --color-fg-subtle: #64748b;
+
+  --color-emerald-soft: #059669;
+  --color-blue-soft: #2563eb;
+  --color-sky-soft: #0284c7;
+}
+
 html {
   background: var(--color-ink-950);
 }

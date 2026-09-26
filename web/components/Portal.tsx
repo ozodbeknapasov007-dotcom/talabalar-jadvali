@@ -23,7 +23,10 @@ const PREFS_KEY = 'portal_v2_prefs'
 function readPrefs(): { filters: Filters; mode: DisplayMode; view: View } | null {
   try {
     const p = JSON.parse(localStorage.getItem(PREFS_KEY) || 'null')
-    if (p && typeof p === 'object') return { filters: { ...EMPTY_FILTERS, ...p.filters }, mode: p.mode === 'table' ? 'table' : 'cards', view: p.view === 'groups' ? 'groups' : 'database' }
+    if (p && typeof p === 'object') {
+      const mode: DisplayMode = p.mode === 'table' ? 'table' : p.mode === 'compact' ? 'compact' : 'cards'
+      return { filters: { ...EMPTY_FILTERS, ...p.filters }, mode, view: p.view === 'groups' ? 'groups' : 'database' }
+    }
   } catch { /* bo'sh */ }
   return null
 }
@@ -100,6 +103,16 @@ export default function Portal() {
       notify(`${fields.ism || s.ism} ma'lumotlari saqlandi`)
     } catch (e) {
       notify(`Serverga yetmadi: ${(e as Error).message}. Tahrir brauzerda saqlandi, qayta yuboriladi.`, 'warning')
+    }
+  }, [saveEdit, notify])
+
+  const onChangeGroup = useCallback(async (s: Student, group: string) => {
+    if ((s.group || '') === group) return
+    try {
+      await saveEdit(s, { group })
+      notify(`${s.ism} guruhi → ${group || 'Belgilanmagan'}`)
+    } catch (e) {
+      notify(`Guruh o'zgarishi brauzerda saqlandi: ${(e as Error).message}`, 'warning')
     }
   }, [saveEdit, notify])
 
@@ -193,7 +206,7 @@ export default function Portal() {
                 )}
 
                 <FilterBar filters={filters} onFilter={patchFilters} shown={shown.length} total={data.students.length} mode={mode} onMode={setMode} onExportShown={onExportShown} />
-                <StudentList students={shown} mode={mode} duplicateRows={duplicateRows} onOpen={onOpen} onToggleVerify={onToggleVerify} />
+                <StudentList students={shown} mode={mode} duplicateRows={duplicateRows} onOpen={onOpen} onToggleVerify={onToggleVerify} onChangeGroup={onChangeGroup} />
               </>
             ) : (
               <GroupsJournal students={data.students} onOpen={onOpen} notify={notify} />

@@ -1,8 +1,8 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import { ChevronDown, CloudCheck, CloudUpload, FileSpreadsheet, Loader2, RefreshCw, Download } from 'lucide-react'
-import { exportRole, ROLE_META, type Role } from '@/lib/excel'
+import { ChevronDown, CloudCheck, CloudUpload, FileSpreadsheet, Loader2, Moon, RefreshCw, Download, Send, Sun } from 'lucide-react'
+import { exportRole, ROLE_META, sendRoleToTelegram, type Role } from '@/lib/excel'
 import type { Student } from '@/lib/types'
 import type { Notify } from './Toast'
 import { cx } from './ui'
@@ -72,6 +72,7 @@ function SyncBadge({ pendingCount, notify }: { pendingCount: number; notify: Not
 function ExportMenu({ students, notify }: { students: Student[]; notify: Notify }) {
   const [open, setOpen] = useState(false)
   const [busy, setBusy] = useState<Role | null>(null)
+  const [tgBusy, setTgBusy] = useState<Role | null>(null)
   const ref = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -96,6 +97,20 @@ function ExportMenu({ students, notify }: { students: Student[]; notify: Notify 
     }
   }
 
+  const runTg = async (e: React.MouseEvent, role: Role) => {
+    e.stopPropagation()
+    setTgBusy(role)
+    try {
+      await sendRoleToTelegram(students, role)
+      notify(`${ROLE_META[role].title} Telegram botga yuborildi!`)
+      setOpen(false)
+    } catch (err) {
+      notify(`Telegramga yuborishda xato: ${(err as Error).message}`, 'error')
+    } finally {
+      setTgBusy(null)
+    }
+  }
+
   return (
     <div ref={ref} className="relative">
       <button type="button" className="btn-primary h-9" onClick={() => setOpen((o) => !o)} aria-expanded={open}>
@@ -104,27 +119,71 @@ function ExportMenu({ students, notify }: { students: Student[]; notify: Notify 
         <ChevronDown size={14} className={cx('transition-transform', open && 'rotate-180')} />
       </button>
       {open && (
-        <div className="animate-pop-in absolute right-0 z-50 mt-2 w-[min(340px,calc(100vw-2rem))] rounded-2xl border border-line-strong bg-ink-850 p-2 shadow-2xl shadow-black/50">
-          <div className="px-3 pt-2 pb-2 text-[11px] font-bold tracking-wider text-fg-subtle uppercase">4 bo'lim uchun .xlsx</div>
+        <div className="animate-pop-in absolute right-0 z-50 mt-2 w-[min(370px,calc(100vw-2rem))] rounded-2xl border border-line-strong bg-ink-850 p-2 shadow-2xl shadow-black/50">
+          <div className="flex items-center justify-between px-3 pt-2 pb-2 text-[11px] font-bold tracking-wider text-fg-subtle uppercase">
+            <span>4 bo'lim uchun .xlsx</span>
+            <span>Yuklash / Telegram</span>
+          </div>
           {(Object.keys(ROLE_META) as Role[]).map((role, i) => (
-            <button
+            <div
               key={role}
-              type="button"
-              onClick={() => run(role)}
-              disabled={!!busy}
-              className="group flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left transition-colors hover:bg-ink-700/60"
+              className="group flex w-full items-center gap-2 rounded-xl px-2.5 py-2 transition-colors hover:bg-ink-700/60"
             >
-              <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-gradient-to-br from-emerald/20 to-sky/20 text-[13px] font-bold text-sky-soft">{i + 1}</span>
-              <span className="min-w-0 flex-1">
-                <span className="block text-[13.5px] font-semibold text-fg">{ROLE_META[role].title}</span>
-                <span className="block truncate text-[12px] text-fg-muted">{ROLE_META[role].sub}</span>
-              </span>
-              {busy === role ? <Loader2 size={16} className="animate-spin text-sky" /> : <Download size={16} className="text-fg-subtle group-hover:text-sky" />}
-            </button>
+              <button
+                type="button"
+                onClick={() => run(role)}
+                disabled={!!busy || !!tgBusy}
+                className="flex min-w-0 flex-1 items-center gap-3 text-left"
+              >
+                <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-gradient-to-br from-emerald/20 to-sky/20 text-[13px] font-bold text-sky-soft">{i + 1}</span>
+                <span className="min-w-0 flex-1">
+                  <span className="block text-[13.5px] font-semibold text-fg">{ROLE_META[role].title}</span>
+                  <span className="block truncate text-[12px] text-fg-muted">{ROLE_META[role].sub}</span>
+                </span>
+                {busy === role ? <Loader2 size={16} className="animate-spin text-sky" /> : <Download size={16} className="text-fg-subtle group-hover:text-sky" />}
+              </button>
+              <button
+                type="button"
+                onClick={(e) => runTg(e, role)}
+                disabled={!!busy || !!tgBusy}
+                title={`${ROLE_META[role].title} Excel faylini Telegramga yuborish`}
+                className="grid size-8 shrink-0 place-items-center rounded-lg border border-sky/30 bg-sky/10 text-sky-soft transition-colors hover:bg-sky/25"
+              >
+                {tgBusy === role ? <Loader2 size={14} className="animate-spin" /> : <Send size={14} />}
+              </button>
+            </div>
           ))}
         </div>
       )}
     </div>
+  )
+}
+
+function ThemeButton() {
+  const [theme, setTheme] = useState<'dark' | 'light'>('dark')
+
+  useEffect(() => {
+    const saved = localStorage.getItem('portal_theme') === 'light' ? 'light' : 'dark'
+    setTheme(saved)
+    document.documentElement.dataset.theme = saved
+  }, [])
+
+  const toggle = () => {
+    const next = theme === 'dark' ? 'light' : 'dark'
+    setTheme(next)
+    document.documentElement.dataset.theme = next
+    try { localStorage.setItem('portal_theme', next) } catch { /* bo'sh */ }
+  }
+
+  return (
+    <button
+      type="button"
+      className="btn-ghost size-9 p-0"
+      onClick={toggle}
+      title={theme === 'dark' ? "Yorug' (Kun) rejimga o'tish" : "To'q (Tun) rejimga o'tish"}
+    >
+      {theme === 'dark' ? <Sun size={15} className="text-amber" /> : <Moon size={15} className="text-blue-soft" />}
+    </button>
   )
 }
 
@@ -156,6 +215,7 @@ export default function Header({
             <RefreshCw size={15} className={cx(refreshing && 'animate-spin')} />
             <span className="hidden sm:inline">Yangilash</span>
           </button>
+          <ThemeButton />
           <ExportMenu students={students} notify={notify} />
         </div>
       </div>
