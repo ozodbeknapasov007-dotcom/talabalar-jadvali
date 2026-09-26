@@ -20,8 +20,8 @@ except:
 sys.stdout.reconfigure(encoding='utf-8')
 
 OPENROUTER_API_KEY = "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"
-FILES_DIR = 'files'
-EXCEL_PATH = 'Talabalar_Toliq_Royxati.xlsx'
+FILES_DIR = 'hujjatlar/shartnomalar'
+EXCEL_PATH = 'data/Talabalar_Toliq_Royxati.xlsx'
 
 # Tasdiqlangan 33 ta talaba va ularga biriktirilgan fayllar xaritasi
 TARGET_MAPPINGS = [

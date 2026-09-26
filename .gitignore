@@ -20,13 +20,16 @@ $null
 
 # Scratch va Arxiv papkalari
 scratch/
+arxiv/scratch/
 arxiv/
 backup/
 files/extracted/
+hujjatlar/shartnomalar/extracted/
 
 # Juda katta HTML fayllar (har safar qayta generatsiya qilinadi)
-hisobot.html
-natijalar_hisoboti.html
+eski_portal/hisobot.html
+qayta_tekshiruv/hisobot.html
+eski_portal/natijalar_hisoboti.html
 messages.html
 
 # .claude papkasi

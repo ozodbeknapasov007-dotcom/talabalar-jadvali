@@ -16,7 +16,7 @@ sys.stdout.reconfigure(encoding='utf-8')
 # ═══════════════════════════════════════════════════════
 # KOLLEJ/TEXNIKUM TALABALAR RO'YXATI (Excel dan)
 # ═══════════════════════════════════════════════════════
-INPUT_EXCEL = 'Talabalar_Toliq_Royxati.xlsx'
+INPUT_EXCEL = 'data/Talabalar_Toliq_Royxati.xlsx'
 wb = openpyxl.load_workbook(INPUT_EXCEL)
 ws = wb.active
 headers = [ws.cell(row=1, column=c).value for c in range(1, ws.max_column+1)]

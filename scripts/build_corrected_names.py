@@ -28,7 +28,7 @@ import datetime
 sys.stdout.reconfigure(encoding='utf-8')
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-EXCEL_PATH = os.path.join(BASE_DIR, 'Talabalar_Toliq_Royxati.xlsx')
+EXCEL_PATH = os.path.join(BASE_DIR, 'data', 'Talabalar_Toliq_Royxati.xlsx')
 DRY = '--dry-run' in sys.argv
 
 C_IFO, C_OTA, C_FISH, C_PASS, C_CERT, C_GURUH, C_MATCH = 2, 7, 8, 9, 14, 23, 24
@@ -132,8 +132,8 @@ if DRY:
     sys.exit(0)
 
 stamp = datetime.datetime.now().strftime('%Y%m%d_%H%M%S')
-os.makedirs(os.path.join(BASE_DIR, 'backup'), exist_ok=True)
-bp = os.path.join(BASE_DIR, 'backup',
+os.makedirs(os.path.join(BASE_DIR, 'arxiv', 'backup'), exist_ok=True)
+bp = os.path.join(BASE_DIR, 'arxiv', 'backup',
                   f'Talabalar_Toliq_Royxati_TUZATILGAN_ISM_OLDIN_{stamp}.xlsx')
 shutil.copy2(EXCEL_PATH, bp)
 

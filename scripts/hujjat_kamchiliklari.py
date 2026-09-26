@@ -12,8 +12,8 @@ import openpyxl
 
 sys.stdout.reconfigure(encoding='utf-8')
 BASE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-XLSX = os.path.join(BASE, 'Talabalar_Toliq_Royxati.xlsx')
-OUT = os.path.join(BASE, 'HUJJAT_KAMCHILIKLARI.csv')
+XLSX = os.path.join(BASE, 'data', 'Talabalar_Toliq_Royxati.xlsx')
+OUT = os.path.join(BASE, 'hisobotlar', 'tekshiruvlar', 'HUJJAT_KAMCHILIKLARI.csv')
 
 C = dict(ifo=2, shartnoma=5, otasi=7, pasfio=9, pasraqam=10, pinfl=11,
          berilgan=12, tugilgan=13, shfio=14, shseriya=15, qr=16,

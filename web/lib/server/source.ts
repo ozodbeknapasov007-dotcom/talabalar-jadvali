@@ -6,12 +6,12 @@ import type { Change, Student } from '@/lib/types'
 /*
   Ma'lumot ikki xil yo'l bilan o'qiladi/yoziladi:
 
-  local  — kompyuterda `npm run dev`: talabalar ota papkadagi students.json dan
+  local  — kompyuterda `npm run dev`: talabalar ota papkadagi data/students.json dan
            o'qiladi, o'zgarishlar Python xizmatining (localhost:8080) mavjud
            /api/update_student, /api/verify_student, /api/delete_student
            endpointlariga yuboriladi. Xizmat darhol Excelga yozadi.
 
-  github — Vercel: talabalar GitHub'dagi students.json dan o'qiladi,
+  github — Vercel: talabalar GitHub'dagi data/students.json dan o'qiladi,
            o'zgarishlar scripts/remote_changes.json navbatiga qo'shiladi.
            Kompyuterdagi Python xizmati navbatni tortib Excelga qo'llaydi.
 */
@@ -31,6 +31,19 @@ const GH_OWNER = process.env.GITHUB_OWNER || 'OzodbekNapasov'
 const GH_REPO = process.env.GITHUB_REPO || 'Talabalar-ro-yhati'
 const GH_BRANCH = process.env.GITHUB_BRANCH || 'main'
 const QUEUE_PATH = 'scripts/remote_changes.json'
+
+/*
+  Loyiha papkalari (26.09.2026 dan). GitHub'da ham, kompyuterda ham shu yo'llar.
+  Ikkinchi qiymat — ko'chirishdan oldingi eski joy (o'tish davri uchun zaxira).
+*/
+export const REPO_PATHS = {
+  students: ['data/students.json', 'students.json'],
+  baza: ['data/talabalar_bazasi.json', 'talabalar_bazasi.json'],
+  eskiIndex: ['eski_portal/index.html', 'index.html'],
+  hujjatlar: ['hujjatlar/shartnomalar', 'files'],
+  pdfJurnallar: ['hisobotlar/pdf_jurnallar', 'pdf_jurnallar'],
+  rollar: ['hisobotlar/rollar', ''],
+} as const
 
 function ghHeaders(accept = 'application/vnd.github+json'): HeadersInit {
   const h: Record<string, string> = { Accept: accept, 'User-Agent': 'talabalar-portal' }
@@ -69,18 +82,35 @@ function parseFromIndexHtml(html: string): Student[] {
   return JSON.parse(html.slice(start, end).trim().replace(/;$/, ''))
 }
 
-export async function loadStudents(): Promise<Student[]> {
-  if (syncMode() === 'local') {
-    try {
-      return JSON.parse(await readFile(path.join(REPO_DIR, 'students.json'), 'utf-8'))
-    } catch {
-      return parseFromIndexHtml(await readFile(path.join(REPO_DIR, 'index.html'), 'utf-8'))
+/**
+ * Loyiha faylini o'qish: kompyuterda — diskdan, Vercel'da — GitHub'dan.
+ * candidates — birinchi topilgani qaytariladi (yangi joy, keyin eski joy).
+ */
+export async function readRepoFile(candidates: readonly string[]): Promise<Buffer | null> {
+  for (const rel of candidates) {
+    if (!rel) continue
+    if (syncMode() === 'local') {
+      try {
+        return await readFile(path.join(REPO_DIR, ...rel.split('/')))
+      } catch { /* keyingi nomzod */ }
+    } else {
+      const buf = await ghReadRaw(rel)
+      if (buf) return buf
     }
   }
-  const json = await ghReadRaw('students.json')
+  return null
+}
+
+/** Papka ichidagi faylni o'qish (masalan hujjatlar/shartnomalar/<fayl>) */
+export function readRepoFileIn(dirs: readonly string[], name: string): Promise<Buffer | null> {
+  return readRepoFile(dirs.map((d) => (d ? `${d}/${name}` : name)))
+}
+
+export async function loadStudents(): Promise<Student[]> {
+  const json = await readRepoFile(REPO_PATHS.students)
   if (json) return JSON.parse(json.toString('utf-8'))
-  const html = await ghReadRaw('index.html')
-  if (!html) throw new Error("GitHub'dan talabalar ma'lumotini o'qib bo'lmadi")
+  const html = await readRepoFile(REPO_PATHS.eskiIndex)
+  if (!html) throw new Error("Talabalar ma'lumotini o'qib bo'lmadi (data/students.json topilmadi)")
   return parseFromIndexHtml(html.toString('utf-8'))
 }
 
@@ -195,12 +225,5 @@ export async function localFlush() {
 /* ---------------------------- HUJJAT FAYLI ---------------------------- */
 
 export async function loadDocFile(name: string): Promise<Buffer | null> {
-  if (syncMode() === 'local') {
-    try {
-      return await readFile(path.join(REPO_DIR, 'files', name))
-    } catch {
-      return null
-    }
-  }
-  return ghReadRaw(`files/${name}`)
+  return readRepoFileIn(REPO_PATHS.hujjatlar, name)
 }

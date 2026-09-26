@@ -21,12 +21,12 @@ sys.stdout.reconfigure(encoding='utf-8')
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 TS = datetime.datetime.now().strftime('%Y%m%d_%H%M%S')
-BACKUP_DIR = os.path.join(BASE_DIR, 'backup')
+BACKUP_DIR = os.path.join(BASE_DIR, 'arxiv', 'backup')
 os.makedirs(BACKUP_DIR, exist_ok=True)
 
 # 1. ZAXIRA NUSXALARI
-f_main = os.path.join(BASE_DIR, 'Talabalar_Toliq_Royxati.xlsx')
-f_orig = os.path.join(BASE_DIR, "to'liq 1-KURS 2026-2027.xlsx")
+f_main = os.path.join(BASE_DIR, 'data', 'Talabalar_Toliq_Royxati.xlsx')
+f_orig = os.path.join(BASE_DIR, 'data', 'manba', "to'liq 1-KURS 2026-2027.xlsx")
 shutil.copy2(f_main, os.path.join(BACKUP_DIR, f'Talabalar_Toliq_Royxati_before_6cases_{TS}.xlsx'))
 shutil.copy2(f_orig, os.path.join(BACKUP_DIR, f'to_liq_1-KURS_before_6cases_{TS}.xlsx'))
 print(f"✅ Zaxira nusxalari yaratildi: {TS}")
@@ -261,7 +261,7 @@ wb_orig.save(f_orig)
 print(f"✅ {f_orig} muvaffaqiyatli saqlandi!")
 
 # 4. SCRATCH/VERIFY_RESULTS.JSON NI HAM YANGILASH
-res_path = os.path.join(BASE_DIR, 'scratch', 'verify_results.json')
+res_path = os.path.join(BASE_DIR, 'arxiv', 'scratch', 'verify_results.json')
 if os.path.exists(res_path):
     with open(res_path, 'r', encoding='utf-8') as f:
         v_data = json.load(f)

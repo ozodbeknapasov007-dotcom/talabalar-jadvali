@@ -8,7 +8,7 @@ from PIL import Image
 
 sys.stdout.reconfigure(encoding='utf-8')
 
-def parse_docx_and_append(docx_path, excel_path='Talabalar_Toliq_Royxati.xlsx'):
+def parse_docx_and_append(docx_path, excel_path='data/Talabalar_Toliq_Royxati.xlsx'):
     if not os.path.exists(docx_path):
         return None
     

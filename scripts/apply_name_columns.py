@@ -18,8 +18,8 @@ import openpyxl, os, sys, json, shutil, datetime, re
 sys.stdout.reconfigure(encoding='utf-8')
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-EXCEL_PATH = os.path.join(BASE_DIR, 'Talabalar_Toliq_Royxati.xlsx')
-NAME_JSON = os.path.join(BASE_DIR, 'scratch', 'name_check.json')
+EXCEL_PATH = os.path.join(BASE_DIR, 'data', 'Talabalar_Toliq_Royxati.xlsx')
+NAME_JSON = os.path.join(BASE_DIR, 'arxiv', 'scratch', 'name_check.json')
 
 DRY = '--dry-run' in sys.argv
 
@@ -119,7 +119,7 @@ if DRY:
     sys.exit(0)
 
 stamp = datetime.datetime.now().strftime('%Y%m%d_%H%M%S')
-bp = os.path.join(BASE_DIR, 'backup', f'Talabalar_Toliq_Royxati_ISM_USTUNLARIDAN_OLDIN_{stamp}.xlsx')
+bp = os.path.join(BASE_DIR, 'arxiv', 'backup', f'Talabalar_Toliq_Royxati_ISM_USTUNLARIDAN_OLDIN_{stamp}.xlsx')
 shutil.copy2(EXCEL_PATH, bp)
 print(f"\n✅ Zaxira: backup/{os.path.basename(bp)}")
 

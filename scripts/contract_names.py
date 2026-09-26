@@ -142,7 +142,7 @@ if __name__ == '__main__':
         print("Ishlatish: python scripts/contract_names.py \"<fayl nomi>.docx\" [...]")
         sys.exit(0)
     for fn in args:
-        p = fn if os.path.isabs(fn) else os.path.join(BASE, 'files', fn)
+        p = fn if os.path.isabs(fn) else os.path.join(BASE, 'hujjatlar', 'shartnomalar', fn)
         d = read_contract_fields(p)
         print('=' * 66)
         print(os.path.basename(p))

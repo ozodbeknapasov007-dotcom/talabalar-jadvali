@@ -14,5 +14,5 @@ echo   - Har kuni 18:00 da: .json baza zahirasi
 echo ======================================================================
 echo.
 
-python telegram_sync_service.py 8080
+python xizmatlar\telegram_sync_service.py 8080
 pause

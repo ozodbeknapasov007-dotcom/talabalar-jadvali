@@ -32,11 +32,11 @@ sys.stdout.reconfigure(encoding='utf-8')
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SCRIPTS = os.path.join(BASE_DIR, 'scripts')
-EXCEL_PATH = os.path.join(BASE_DIR, 'Talabalar_Toliq_Royxati.xlsx')
-RESULT_JSON = os.path.join(BASE_DIR, 'scratch', 'verify_results.json')
-CACHE_DIR = os.path.join(BASE_DIR, 'scratch', 'passport_name_cache')
-OUT_JSON = os.path.join(BASE_DIR, 'scratch', 'passport_name_check.json')
-REPORT = os.path.join(BASE_DIR, 'PASPORT_ISMLARI.txt')
+EXCEL_PATH = os.path.join(BASE_DIR, 'data', 'Talabalar_Toliq_Royxati.xlsx')
+RESULT_JSON = os.path.join(BASE_DIR, 'arxiv', 'scratch', 'verify_results.json')
+CACHE_DIR = os.path.join(BASE_DIR, 'arxiv', 'scratch', 'passport_name_cache')
+OUT_JSON = os.path.join(BASE_DIR, 'arxiv', 'scratch', 'passport_name_check.json')
+REPORT = os.path.join(BASE_DIR, 'hisobotlar', 'tekshiruvlar', 'PASPORT_ISMLARI.txt')
 
 APPLY = '--apply' in sys.argv
 
@@ -181,7 +181,7 @@ def evaluate(st, scan, cache):
     if scan.get('file'):
         try:
             c_fam, c_ota = read_contract_name(
-                os.path.join(BASE_DIR, 'files', scan['file']))
+                os.path.join(BASE_DIR, 'hujjatlar', 'shartnomalar', scan['file']))
         except Exception:
             pass
 
@@ -479,9 +479,9 @@ def main():
         return
 
     stamp = datetime.datetime.now().strftime('%Y%m%d_%H%M%S')
-    bp = os.path.join(BASE_DIR, 'backup',
+    bp = os.path.join(BASE_DIR, 'arxiv', 'backup',
                       f'Talabalar_Toliq_Royxati_PASPORT_ISM_OLDIN_{stamp}.xlsx')
-    os.makedirs(os.path.join(BASE_DIR, 'backup'), exist_ok=True)
+    os.makedirs(os.path.join(BASE_DIR, 'arxiv', 'backup'), exist_ok=True)
     shutil.copy2(EXCEL_PATH, bp)
 
     wb = openpyxl.load_workbook(EXCEL_PATH)

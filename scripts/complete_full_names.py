@@ -27,12 +27,12 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.join(BASE_DIR, 'scripts'))
 from contract_names import read_contract_name
 
-EXCEL_PATH = os.path.join(BASE_DIR, 'Talabalar_Toliq_Royxati.xlsx')
-EXCEL_YANGI = os.path.join(BASE_DIR, 'Talabalar_Yangilangan_Royxat.xlsx')
-CACHE_DIR = os.path.join(BASE_DIR, 'scratch', 'passport_name_cache')
-QR_CACHE = os.path.join(BASE_DIR, 'scratch', 'qr_cache')
-VERIFY_JSON = os.path.join(BASE_DIR, 'scratch', 'verify_results.json')
-FILES_DIR = os.path.join(BASE_DIR, 'files')
+EXCEL_PATH = os.path.join(BASE_DIR, 'data', 'Talabalar_Toliq_Royxati.xlsx')
+EXCEL_YANGI = os.path.join(BASE_DIR, 'data', 'Talabalar_Yangilangan_Royxat.xlsx')
+CACHE_DIR = os.path.join(BASE_DIR, 'arxiv', 'scratch', 'passport_name_cache')
+QR_CACHE = os.path.join(BASE_DIR, 'arxiv', 'scratch', 'qr_cache')
+VERIFY_JSON = os.path.join(BASE_DIR, 'arxiv', 'scratch', 'verify_results.json')
+FILES_DIR = os.path.join(BASE_DIR, 'hujjatlar', 'shartnomalar')
 
 try:
     import pypdf

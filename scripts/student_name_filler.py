@@ -618,7 +618,7 @@ async def run_master_pipeline():
             pdf_cache = json.load(f)
         print(f"[CACHE] cert_cache dan {len(pdf_cache)} ta PDF shahodatnoma yuklandi.", flush=True)
 
-    files = [f for f in glob.glob("files/*.docx") if not os.path.basename(f).startswith("~$")]
+    files = [f for f in glob.glob("hujjatlar/shartnomalar/*.docx") if not os.path.basename(f).startswith("~$")]
     print(f"[1/4] Topilgan {len(files)} ta Word fayli to'liq tahlil qilinmoqda (Multi-Angle OCR & QR)...", flush=True)
 
     doc_records = []
@@ -802,7 +802,7 @@ async def run_master_pipeline():
         col_letter = get_column_letter(col[0].column)
         out_ws.column_dimensions[col_letter].width = min(max(max_len + 3, 10), 38)
 
-    out_excel = "Talabalar_Toliq_Royxati.xlsx"
+    out_excel = "data/Talabalar_Toliq_Royxati.xlsx"
     try:
         out_wb.save(out_excel)
         print(f"[SAQLANDI] Yangilangan Excel: {out_excel}", flush=True)
@@ -1133,7 +1133,7 @@ def generate_master_html_dashboard(matched_results: list, excel_filename: str):
 </body>
 </html>
 """
-    with open("natijalar_hisoboti.html", "w", encoding="utf-8") as f:
+    with open("eski_portal/natijalar_hisoboti.html", "w", encoding="utf-8") as f:
         f.write(html_content)
     print(f"[HISOBOT] Yangilangan Mukammal HTML Dashboard: natijalar_hisoboti.html", flush=True)
 

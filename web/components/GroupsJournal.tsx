@@ -2,7 +2,7 @@
 
 import { memo, useMemo, useState } from 'react'
 import { Check, Download, FileSpreadsheet, FileText, Loader2, Printer, Send, UserRound } from 'lucide-react'
-import { GROUPS, GROUP_LEADERS, GROUP_TITLES, LEGACY_URL, WITHDRAWN_GROUP } from '@/lib/config'
+import { GROUPS, GROUP_LEADERS, GROUP_TITLES, WITHDRAWN_GROUP } from '@/lib/config'
 import { exportGroup, exportQabulShablonGroup, exportRole, sendGroupsToTelegram, type TgTarget } from '@/lib/excel'
 import { byName, fullName, isOfficialGroup } from '@/lib/student'
 import type { Student } from '@/lib/types'
@@ -79,7 +79,7 @@ function GroupCard({ code, title, leader, students, withdrawn, onOpen, notify }:
               >
                 {qabulBusy ? <Loader2 size={14} className="animate-spin" /> : <FileSpreadsheet size={14} />} Qabul
               </button>
-              <a className="btn-ghost h-8 px-2.5 text-[12px]" href={`${LEGACY_URL}/pdf_jurnallar/Guruh_${encodeURIComponent(code)}.pdf`} target="_blank" rel="noreferrer" title="Toza A4 PDF jurnal">
+              <a className="btn-ghost h-8 px-2.5 text-[12px]" href={`/api/view_group_pdf?group=${encodeURIComponent(code)}`} target="_blank" rel="noreferrer" title="Toza A4 PDF jurnal">
                 <FileText size={14} /> PDF
               </a>
             </>
@@ -153,10 +153,9 @@ function GroupsJournal({ students, onOpen, notify }: { students: Student[]; onOp
     }
   }
 
+  // Barcha guruhlar bitta PDF faylda — bir nechta oyna ochilsa brauzer bloklaydi
   const openAllPdfs = () => {
-    for (const g of GROUPS) {
-      window.open(`${LEGACY_URL}/pdf_jurnallar/Guruh_${encodeURIComponent(g)}.pdf`, '_blank', 'noopener,noreferrer')
-    }
+    window.open('/api/view_group_pdf?group=barcha', '_blank', 'noopener,noreferrer')
   }
 
   return (
@@ -164,7 +163,7 @@ function GroupsJournal({ students, onOpen, notify }: { students: Student[]; onOp
       <div className="panel flex flex-wrap items-center justify-between gap-3 px-4 py-3">
         <div className="flex flex-wrap items-center gap-2.5 text-[13px]">
           <span className="font-bold text-fg">Akademik guruhlar jurnali</span>
-          <span className="chip border-sky/35 bg-sky/10 text-sky-soft">7 ta rasmiy guruh · {officialTotal} nafar talaba</span>
+          <span className="chip border-sky/35 bg-sky/10 text-sky-soft">{GROUPS.length} ta rasmiy guruh · {officialTotal} nafar talaba</span>
           {groups.other.length > 0 && (
             <span className="chip border-rose/35 bg-rose/10 text-rose">Safdan chiqarilgan: {groups.other.length} nafar</span>
           )}
@@ -176,17 +175,17 @@ function GroupsJournal({ students, onOpen, notify }: { students: Student[]; onOp
             onClick={async () => {
               try {
                 await exportRole(students, 'qabul_shablon')
-                notify('Qabul uchun shablon (7 ta guruh) Excelga yuklandi!')
+                notify(`Qabul uchun shablon (${GROUPS.length} ta guruh) Excelga yuklandi!`)
               } catch (e) {
                 notify(`Xatolik: ${(e as Error).message}`, 'error')
               }
             }}
-            title="Barcha 7 ta guruhni Qabul uchun shablon (2).xlsx formatida (14 ustunli) yuklab olish"
+            title="Barcha guruhlarni Qabul uchun shablon (2).xlsx formatida yuklab olish"
           >
-            <FileSpreadsheet size={15} /> Qabul shabloni (7 guruh)
+            <FileSpreadsheet size={15} /> Qabul shabloni ({GROUPS.length} guruh)
           </button>
-          <button type="button" className="btn-ghost h-9 text-[12.5px]" onClick={openAllPdfs} title="Barcha 7 ta guruh PDF jurnalini yangi oynada ochish">
-            <FileText size={15} className="text-sky" /> Barcha PDF (7)
+          <button type="button" className="btn-ghost h-9 text-[12.5px]" onClick={openAllPdfs} title="Barcha guruhlar PDF jurnalini (bitta fayl) yangi oynada ochish">
+            <FileText size={15} className="text-sky" /> Barcha PDF ({GROUPS.length})
           </button>
           <button type="button" className="btn-ghost h-9 text-[12.5px]" onClick={() => window.print()} title="Jurnallarni chop etish (Ctrl+P)">
             <Printer size={15} /> Chop etish
@@ -206,7 +205,7 @@ function GroupsJournal({ students, onOpen, notify }: { students: Student[]; onOp
           <div className="flex flex-wrap items-center justify-between gap-2">
             <div className="text-[13.5px] font-bold text-fg">Tanlangan guruhlarni bitta Excel faylda Telegramga yuborish</div>
             <div className="flex items-center gap-1.5 text-[12px]">
-              <button type="button" className="btn-ghost h-7 px-2 text-[11.5px]" onClick={() => setSelectedGroups([...GROUPS])}>Barchasi (7)</button>
+              <button type="button" className="btn-ghost h-7 px-2 text-[11.5px]" onClick={() => setSelectedGroups([...GROUPS])}>Barchasi ({GROUPS.length})</button>
               <button type="button" className="btn-ghost h-7 px-2 text-[11.5px]" onClick={() => setSelectedGroups([])}>Tozalash</button>
             </div>
           </div>

@@ -20,12 +20,12 @@ sys.stdout.reconfigure(encoding='utf-8')
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if BASE_DIR not in sys.path:
     sys.path.insert(0, BASE_DIR)
-EXCEL_PATH = os.path.join(BASE_DIR, 'Talabalar_Toliq_Royxati.xlsx')
+EXCEL_PATH = os.path.join(BASE_DIR, 'data', 'Talabalar_Toliq_Royxati.xlsx')
 OUTPUT_HTML = os.path.join(BASE_DIR, 'qayta_tekshiruv', 'hisobot.html')
-MAIN_HTML = os.path.join(BASE_DIR, 'natijalar_hisoboti.html')
-ROOT_HISOBOT = os.path.join(BASE_DIR, 'hisobot.html')
-INDEX_HTML = os.path.join(BASE_DIR, 'index.html')
-JS_SRC = os.path.join(BASE_DIR, 'js', 'app.js')
+MAIN_HTML = os.path.join(BASE_DIR, 'eski_portal', 'natijalar_hisoboti.html')
+ROOT_HISOBOT = os.path.join(BASE_DIR, 'eski_portal', 'hisobot.html')
+INDEX_HTML = os.path.join(BASE_DIR, 'eski_portal', 'index.html')
+JS_SRC = os.path.join(BASE_DIR, 'eski_portal', 'js', 'app.js')
 
 wb = openpyxl.load_workbook(EXCEL_PATH)
 ws = wb.worksheets[0]
@@ -68,7 +68,7 @@ def clean_w(w):
     return w
 
 all_docx_files = []
-files_dir = os.path.join(BASE_DIR, 'files')
+files_dir = os.path.join(BASE_DIR, 'hujjatlar', 'shartnomalar')
 if os.path.exists(files_dir):
     all_docx_files = [f for f in os.listdir(files_dir) if f.endswith('.docx')]
 
@@ -254,7 +254,7 @@ for idx, s in enumerate(students, 1):
 
 total = len(students)
 
-GROUPS_LIST_OFFICIAL = ["26-01", "26-02", "26-03", "26-04", "26-05", "26-06", "26-07"]
+GROUPS_LIST_OFFICIAL = ["26-01", "26-02", "26-03", "26-04", "26-05", "26-06"]
 official_students = [s for s in students if s['group'] in GROUPS_LIST_OFFICIAL]
 official_total = len(official_students)   # rasmiy kontingent soni (safdan chiqarilganlarsiz)
 withdrawn_students = [s for s in students if is_withdrawn_group(s['group']) or s['group'] not in GROUPS_LIST_OFFICIAL]
@@ -277,7 +277,7 @@ feldsher_count     = sum(1 for s in students if ('feldsh' in s['yon'].lower() or
 hamshira_feldsher_count = hamshiralik_count + feldsher_count
 
 # Guruhlar ro'yxati va rasmiy guruh rahbarlari
-GROUPS_LIST = ["26-01", "26-02", "26-03", "26-04", "26-05", "26-06", "26-07"]
+GROUPS_LIST = ["26-01", "26-02", "26-03", "26-04", "26-05", "26-06"]
 GROUP_LEADERS = {
     "26-01": "Mirzayeva.D",
     "26-02": "Ochilov.D",
@@ -827,7 +827,7 @@ cards_content = "\n".join(card_rows)
 students_json = json.dumps(students, ensure_ascii=False)
 
 # Save full JSON database (talabalar_bazasi.json) for daily 18:00 Telegram Bot backup
-json_db_path = os.path.join(BASE_DIR, 'talabalar_bazasi.json')
+json_db_path = os.path.join(BASE_DIR, 'data', 'talabalar_bazasi.json')
 try:
     with open(json_db_path, 'w', encoding='utf-8') as jf:
         json.dump({
@@ -5404,7 +5404,6 @@ var RAW_STUDENTS = {students_json};
           <option value="26-04">26-04 (Hamshiralik ishi &bull; Hamdamova.M &bull; 29 nafar)</option>
           <option value="26-05">26-05 (Hamshiralik ishi &bull; Rayimova.X &bull; 32 nafar)</option>
           <option value="26-06">26-06 (Hamshiralik ishi &bull; Yuldashev.O &bull; 28 nafar)</option>
-          <option value="26-07">26-07 (Hamshiralik ishi &bull; Asraliyev.A &bull; 6 nafar)</option>
           <option value="Talabalar safidan chiqarilganlar">Talabalar safidan chiqarilganlar (2 nafar)</option>
         </select>
       </div>
@@ -5577,7 +5576,6 @@ var RAW_STUDENTS = {students_json};
                 <option value="26-04">26-04 (Hamshiralik)</option>
                 <option value="26-05">26-05 (Hamshiralik)</option>
                 <option value="26-06">26-06 (Hamshiralik)</option>
-                <option value="26-07">26-07 (Hamshiralik)</option>
                 <option value="Talabalar safidan chiqarilganlar">Talabalar safidan chiqarilganlar (Maxsus)</option>
               </select>
             </div>
@@ -6081,11 +6079,12 @@ with open(INDEX_HTML, 'w', encoding='utf-8') as f:
 
 # Next.js versiyasi (web/) uchun ma'lumot alohida JSON faylda — sahifaga
 # 2.8 MB HTML ichidan ajratib olmasdan, faqat shu ~130 KB yuklanadi.
-with open(os.path.join(BASE_DIR, 'students.json'), 'w', encoding='utf-8') as f:
+with open(os.path.join(BASE_DIR, 'data', 'students.json'), 'w', encoding='utf-8') as f:
     f.write(students_json)
 
 # Formatlangan ko'p sahifali (8 ta guruh) Excel faylini saqlash
 try:
+    sys.path.insert(0, os.path.join(BASE_DIR, 'xizmatlar'))
     from telegram_sync_service import apply_full_excel_styling, build_full_multisheet_excel
     source_wb = openpyxl.load_workbook(EXCEL_PATH, data_only=True)
     source_ws = source_wb.worksheets[0]
@@ -6118,7 +6117,7 @@ try:
                 zout.writestr(info, data)
         shutil.move(tmp, path)
 
-    for _xlsx_path in (os.path.join(BASE_DIR, 'Talabalar_Yangilangan_Royxat.xlsx'),
+    for _xlsx_path in (os.path.join(BASE_DIR, 'data', 'Talabalar_Yangilangan_Royxat.xlsx'),
                        os.path.join(BASE_DIR, 'qayta_tekshiruv', 'Talabalar_Yangilangan_Royxat.xlsx')):
         multisheet_wb.save(_xlsx_path)
         _pin_xlsx_timestamp(_xlsx_path)

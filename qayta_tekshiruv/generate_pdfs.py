@@ -284,7 +284,7 @@ def create_all_groups_combined_pdf(groups, students, output_pdf_path):
     return output_pdf_path
 
 def build_all_group_pdfs():
-    excel_path = os.path.join(BASE_DIR, 'Talabalar_Toliq_Royxati.xlsx')
+    excel_path = os.path.join(BASE_DIR, 'data', 'Talabalar_Toliq_Royxati.xlsx')
     if not os.path.exists(excel_path):
         return {}
 
@@ -310,7 +310,7 @@ def build_all_group_pdfs():
             'shnum': shnum
         })
 
-    groups = ["26-01", "26-02", "26-03", "26-04", "26-05", "26-06", "26-07"]
+    groups = ["26-01", "26-02", "26-03", "26-04", "26-05", "26-06"]
     withdrawn_students = [s for s in students if 'chiqaril' in str(s.get('group', '')).lower() or str(s.get('group', '')) in ['N', 'n', 'WITHDRAWN']]
     if withdrawn_students:
         groups.append("Talabalar safidan chiqarilganlar")
@@ -318,7 +318,7 @@ def build_all_group_pdfs():
     generated_files = {}
 
     target_dirs = [
-        os.path.join(BASE_DIR, 'pdf_jurnallar'),
+        os.path.join(BASE_DIR, 'hisobotlar', 'pdf_jurnallar'),
         os.path.join(BASE_DIR, 'qayta_tekshiruv', 'pdf_jurnallar')
     ]
 

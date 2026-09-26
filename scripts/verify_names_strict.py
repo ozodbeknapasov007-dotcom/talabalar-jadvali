@@ -21,10 +21,10 @@ import openpyxl, os, sys, re, json, io, unicodedata
 sys.stdout.reconfigure(encoding='utf-8')
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-EXCEL_PATH = os.path.join(BASE_DIR, 'Talabalar_Toliq_Royxati.xlsx')
-RESULT_JSON = os.path.join(BASE_DIR, 'scratch', 'verify_results.json')
-CACHE_DIR = os.path.join(BASE_DIR, 'scratch', 'qr_cache')
-REPORT = os.path.join(BASE_DIR, 'ISMLAR_TEKSHIRUVI.txt')
+EXCEL_PATH = os.path.join(BASE_DIR, 'data', 'Talabalar_Toliq_Royxati.xlsx')
+RESULT_JSON = os.path.join(BASE_DIR, 'arxiv', 'scratch', 'verify_results.json')
+CACHE_DIR = os.path.join(BASE_DIR, 'arxiv', 'scratch', 'qr_cache')
+REPORT = os.path.join(BASE_DIR, 'hisobotlar', 'tekshiruvlar', 'ISMLAR_TEKSHIRUVI.txt')
 
 try:
     import pypdf
@@ -356,6 +356,6 @@ for x in rows:
         'cert_holat': st.get('cert', ''),
         'trusted': x.get('trusted', True),
     }
-json.dump(out, open(os.path.join(BASE_DIR, 'scratch', 'name_check.json'), 'w',
+json.dump(out, open(os.path.join(BASE_DIR, 'arxiv', 'scratch', 'name_check.json'), 'w',
                     encoding='utf-8'), ensure_ascii=False, indent=1)
 print('💾 scratch/name_check.json')

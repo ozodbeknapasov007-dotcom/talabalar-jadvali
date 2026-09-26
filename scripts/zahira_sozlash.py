@@ -77,7 +77,7 @@ def find_chat_id(token, wait_seconds=120):
 
 
 def send_test(token, chat_id):
-    path = os.path.join(BASE_DIR, 'Talabalar_Toliq_Royxati.xlsx')
+    path = os.path.join(BASE_DIR, 'data', 'Talabalar_Toliq_Royxati.xlsx')
     if not os.path.exists(path):
         print("Ogohlantirish: Talabalar_Toliq_Royxati.xlsx topilmadi, sinov o'tkazilmadi")
         return False

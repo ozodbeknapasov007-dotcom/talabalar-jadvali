@@ -28,9 +28,9 @@ import importlib.util
 sys.stdout.reconfigure(encoding='utf-8')
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-FILES_DIR = os.path.join(BASE_DIR, 'files')
-RESULT_JSON = os.path.join(BASE_DIR, 'scratch', 'verify_results.json')
-CACHE_DIR = os.path.join(BASE_DIR, 'scratch', 'passport_name_cache')
+FILES_DIR = os.path.join(BASE_DIR, 'hujjatlar', 'shartnomalar')
+RESULT_JSON = os.path.join(BASE_DIR, 'arxiv', 'scratch', 'verify_results.json')
+CACHE_DIR = os.path.join(BASE_DIR, 'arxiv', 'scratch', 'passport_name_cache')
 os.makedirs(CACHE_DIR, exist_ok=True)
 
 try:
@@ -47,7 +47,7 @@ def _load_sync_service():
     extract_doc_images_with_crop ni oladi. Modul import qilinganda server
     ishga tushmaydi (u `if __name__ == '__main__'` bilan himoyalangan).
     """
-    path = os.path.join(BASE_DIR, 'telegram_sync_service.py')
+    path = os.path.join(BASE_DIR, 'xizmatlar', 'telegram_sync_service.py')
     spec = importlib.util.spec_from_file_location('tss', path)
     mod = importlib.util.module_from_spec(spec)
     saved = sys.argv

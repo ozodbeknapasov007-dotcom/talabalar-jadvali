@@ -11,7 +11,7 @@ import openpyxl, shutil, sys, os
 sys.stdout.reconfigure(encoding='utf-8')
 
 # 1. Avval zaxira nusxa yasaymiz
-src = 'Talabalar_Toliq_Royxati.xlsx'
+src = 'data/Talabalar_Toliq_Royxati.xlsx'
 backup = 'qayta_tekshiruv/ZAXIRA_Talabalar_Toliq_Royxati.xlsx'
 os.makedirs('qayta_tekshiruv', exist_ok=True)
 shutil.copy2(src, backup)

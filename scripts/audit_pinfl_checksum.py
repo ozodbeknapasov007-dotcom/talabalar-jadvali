@@ -12,7 +12,7 @@ import openpyxl, os, sys, re
 
 sys.stdout.reconfigure(encoding='utf-8')
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-EXCEL_PATH = os.path.join(BASE_DIR, 'Talabalar_Toliq_Royxati.xlsx')
+EXCEL_PATH = os.path.join(BASE_DIR, 'data', 'Talabalar_Toliq_Royxati.xlsx')
 
 W = [7, 3, 1, 7, 3, 1, 7, 3, 1, 7, 3, 1, 7]
 

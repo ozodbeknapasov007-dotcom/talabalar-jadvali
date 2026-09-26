@@ -19,7 +19,7 @@ import glob
 sys.stdout.reconfigure(encoding='utf-8')
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-CUR = os.path.join(BASE_DIR, 'Talabalar_Toliq_Royxati.xlsx')
+CUR = os.path.join(BASE_DIR, 'data', 'Talabalar_Toliq_Royxati.xlsx')
 
 COL_TR, COL_IFO, COL_OTA, COL_FISH, COL_GURUH = 1, 2, 7, 8, 23
 
@@ -74,7 +74,7 @@ def main():
     if len(sys.argv) > 1:
         backups = [os.path.join(BASE_DIR, sys.argv[1])]
     else:
-        backups = sorted(glob.glob(os.path.join(BASE_DIR, 'backup', '*.xlsx')))
+        backups = sorted(glob.glob(os.path.join(BASE_DIR, 'arxiv', 'backup', '*.xlsx')))
 
     print('=' * 78)
     print("  2-USTUN (SIZNING RO'YXATINGIZ) O'ZGARDIMI? — NAZORAT")

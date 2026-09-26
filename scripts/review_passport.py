@@ -18,9 +18,9 @@ import argparse
 sys.stdout.reconfigure(encoding='utf-8')
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-CHECK_JSON = os.path.join(BASE_DIR, 'scratch', 'passport_name_check.json')
-CACHE_DIR = os.path.join(BASE_DIR, 'scratch', 'passport_name_cache')
-IMG_DIR = os.path.join(BASE_DIR, 'scratch', 'imgs')
+CHECK_JSON = os.path.join(BASE_DIR, 'arxiv', 'scratch', 'passport_name_check.json')
+CACHE_DIR = os.path.join(BASE_DIR, 'arxiv', 'scratch', 'passport_name_cache')
+IMG_DIR = os.path.join(BASE_DIR, 'arxiv', 'scratch', 'imgs')
 os.makedirs(IMG_DIR, exist_ok=True)
 
 import docx
@@ -30,7 +30,7 @@ from PIL import Image
 def dump_images(fname):
     """Docx rasmlarini diskka chiqaradi, yo'llarini qaytaradi"""
     out = []
-    p = os.path.join(BASE_DIR, 'files', fname)
+    p = os.path.join(BASE_DIR, 'hujjatlar', 'shartnomalar', fname)
     if not os.path.exists(p):
         return out
     try:

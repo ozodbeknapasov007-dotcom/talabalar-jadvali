@@ -22,8 +22,8 @@ except:
 sys.stdout.reconfigure(encoding='utf-8')
 
 OPENROUTER_API_KEY = "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"
-FILES_DIR = 'files'
-EXCEL_PATH = 'Talabalar_Toliq_Royxati.xlsx'
+FILES_DIR = 'hujjatlar/shartnomalar'
+EXCEL_PATH = 'data/Talabalar_Toliq_Royxati.xlsx'
 OUT_DIR = 'qayta_tekshiruv'
 
 GROUP = int(sys.argv[1]) if len(sys.argv) > 1 else 1

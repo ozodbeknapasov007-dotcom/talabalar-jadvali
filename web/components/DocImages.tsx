@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { Award, Check, ClipboardPaste, FileImage, IdCard, ImageOff, Loader2, Maximize2, QrCode, RotateCw, Sparkles, Upload } from 'lucide-react'
 import { AI_MODELS, analyzeAndUploadDocs, getFilesFromClipboard, getSavedAiModel, scanQrFromDataUrls, setSavedAiModel, type AiModelId } from '@/lib/ai-doc'
 import type { EditFields } from '@/lib/types'
+import InlineZoomImage from './InlineZoomImage'
 import Lightbox from './Lightbox'
 import { cx } from './ui'
 
@@ -33,6 +34,8 @@ export default function DocImages({ file, studentRow, onApplyFields }: Props) {
   const [error, setError] = useState('')
   const [open, setOpen] = useState<number | null>(null)
   const [rot, setRot] = useState<Record<number, number>>({})
+  const [zoom, setZoom] = useState<Record<number, number>>({})
+  const [zoomReset, setZoomReset] = useState<Record<number, number>>({})
 
   const [showUpload, setShowUpload] = useState(false)
   const [passFiles, setPassFiles] = useState<File[]>([])
@@ -51,6 +54,7 @@ export default function DocImages({ file, studentRow, onApplyFields }: Props) {
     setImages(null)
     setError('')
     setRot({})
+    setZoom({})
     setExtracted(null)
     setQrResult(null)
     setStatusMsg('')
@@ -291,6 +295,13 @@ export default function DocImages({ file, studentRow, onApplyFields }: Props) {
                   <Icon size={14} className={l.tone} />
                   <span className="text-fg">{l.text}</span>
                   <span className="ml-auto flex items-center gap-1">
+                    {(zoom[i] ?? 1) > 1 ? (
+                      <button type="button" className="chip mono h-7 border-sky/40 bg-sky/10 px-2 text-sky-soft hover:bg-sky/20" title="Asl holatga qaytarish" onClick={() => setZoomReset((x) => ({ ...x, [i]: (x[i] ?? 0) + 1 }))}>
+                        {Math.round((zoom[i] ?? 1) * 100)}% ✕
+                      </button>
+                    ) : (
+                      <span className="hidden text-[10.5px] font-normal text-fg-subtle sm:inline">Shift + g'ildirak — zoom</span>
+                    )}
                     <button type="button" className="grid size-7 place-items-center rounded-lg text-fg-muted hover:bg-ink-700 hover:text-fg" title="Burish" onClick={() => setRot((x) => ({ ...x, [i]: r + 90 }))}>
                       <RotateCw size={14} />
                     </button>
@@ -299,16 +310,15 @@ export default function DocImages({ file, studentRow, onApplyFields }: Props) {
                     </button>
                   </span>
                 </figcaption>
-                <button type="button" className="block w-full cursor-zoom-in bg-ink-950 p-2" onClick={() => setOpen(i)}>
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={img.src}
-                    alt={l.text}
-                    loading="lazy"
-                    className={cx('mx-auto rounded-lg object-contain transition-transform duration-200', sideways ? 'max-h-[300px]' : 'max-h-[440px]')}
-                    style={{ transform: `rotate(${r}deg)` }}
-                  />
-                </button>
+                <InlineZoomImage
+                  src={img.src}
+                  alt={l.text}
+                  rotation={r}
+                  resetKey={zoomReset[i] ?? 0}
+                  onOpen={() => setOpen(i)}
+                  onZoomChange={(z) => setZoom((x) => (x[i] === z ? x : { ...x, [i]: z }))}
+                  imgClassName={cx('mx-auto rounded-lg object-contain transition-transform duration-200', sideways ? 'max-h-[300px]' : 'max-h-[440px]')}
+                />
               </figure>
             )
           })}

@@ -119,9 +119,9 @@ def parse_shnum(val):
 # ═══════════════════════════════════════════════════════
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-INPUT_EXCEL  = os.path.join(BASE_DIR, 'Talabalar_Toliq_Royxati.xlsx')
-OUTPUT_EXCEL = os.path.join(BASE_DIR, 'Talabalar_Yangilangan_Royxat.xlsx')
-OUTPUT_HTML  = os.path.join(BASE_DIR, 'natijalar_hisoboti.html')
+INPUT_EXCEL  = os.path.join(BASE_DIR, 'data', 'Talabalar_Toliq_Royxati.xlsx')
+OUTPUT_EXCEL = os.path.join(BASE_DIR, 'data', 'Talabalar_Yangilangan_Royxat.xlsx')
+OUTPUT_HTML  = os.path.join(BASE_DIR, 'eski_portal', 'natijalar_hisoboti.html')
 
 wb_in = openpyxl.load_workbook(INPUT_EXCEL)
 ws_in = wb_in.active
@@ -175,7 +175,7 @@ for r in range(2, ws_in.max_row + 1):
     age, age_grp = calc_age(dob_val)
     
     # DOCX FAYLNI files/ PAPKASIDAN 100% QAT'IY (STRICT) QIDIRISH
-    all_files_list = os.listdir('files') if os.path.exists('files') else []
+    all_files_list = os.listdir('hujjatlar/shartnomalar') if os.path.exists('hujjatlar/shartnomalar') else []
     docx_fname = '-'
     docx_path = ''
     
@@ -190,7 +190,7 @@ for r in range(2, ws_in.max_row + 1):
             if f_low.endswith('.docx') and parts[0] in f_low:
                 if re.search(rf'[\s_Nn#]{re.escape(sh_str)}(?:[\s_]|\.docx)', f_low) or f_low.endswith(f" {sh_str}.docx"):
                     docx_fname = f
-                    docx_path = os.path.join('files', f)
+                    docx_path = os.path.join('hujjatlar/shartnomalar', f)
                     break
                 
     # 2. Familiya VA Ismi (ikkalasi birgalikda) to'liq mos kelsa
@@ -199,7 +199,7 @@ for r in range(2, ws_in.max_row + 1):
             f_low = f.lower().replace("'", "").replace("‘", "").replace("’", "")
             if f_low.endswith('.docx') and parts[0] in f_low and parts[1] in f_low:
                 docx_fname = f
-                docx_path = os.path.join('files', f)
+                docx_path = os.path.join('hujjatlar/shartnomalar', f)
                 break
 
     row_dict = {

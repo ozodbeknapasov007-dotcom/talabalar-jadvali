@@ -19,9 +19,9 @@ from collections import Counter
 sys.stdout.reconfigure(encoding='utf-8')
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-TARGET = os.path.join(BASE_DIR, 'Talabalar_Toliq_Royxati.xlsx')
-SOURCE = os.path.join(BASE_DIR, "to'liq 1-KURS 2026-2027.xlsx")
-BACKUP_DIR = os.path.join(BASE_DIR, 'backup')
+TARGET = os.path.join(BASE_DIR, 'data', 'Talabalar_Toliq_Royxati.xlsx')
+SOURCE = os.path.join(BASE_DIR, 'data', 'manba', "to'liq 1-KURS 2026-2027.xlsx")
+BACKUP_DIR = os.path.join(BASE_DIR, 'arxiv', 'backup')
 
 HEADER_ROW = 12          # manbadagi sarlavha qatori
 DATA_START = 13          # manbadagi birinchi talaba qatori

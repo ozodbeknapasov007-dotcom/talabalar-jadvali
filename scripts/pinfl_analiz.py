@@ -53,7 +53,7 @@ def parse(p):
 
 def yozuvlar():
     """TEKSHIRUV/data.js dan yozuvlarni o'qiydi (JS emas, oddiy matn sifatida)."""
-    src = open(os.path.join(BASE, 'TEKSHIRUV', 'data.js'), encoding='utf-8').read()
+    src = open(os.path.join(BASE, 'hujjatlar', 'TEKSHIRUV', 'data.js'), encoding='utf-8').read()
     out = []
     for blok in src.split('\n{\n')[1:]:
         def g(key, ichida=blok):
@@ -81,7 +81,7 @@ def excel_qoshimcha():
         import openpyxl
     except ImportError:
         return []
-    yol = os.path.join(BASE, 'Talabalar_Toliq_Royxati.xlsx')
+    yol = os.path.join(BASE, 'data', 'Talabalar_Toliq_Royxati.xlsx')
     if not os.path.exists(yol):
         return []
     ws = openpyxl.load_workbook(yol, read_only=True).active

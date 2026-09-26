@@ -5,14 +5,14 @@ color 0A
 cd /d "%~dp0\web"
 
 echo ======================================================================
-echo       TALABALAR PORTALI - YANGI WEB SAHIFA (Next.js)
+echo       TALABALAR PORTALI - ASOSIY WEB SAHIFA (Next.js)
 echo ======================================================================
 echo.
-echo   [OK] Yangi Web Portal:   http://localhost:3000
-echo   [OK] Asosiy Eski Sahifa: http://localhost:8080  (ISHGA_TUSHIRISH.bat)
-echo   [OK] Onlayn Web Sahifa:  https://talabalar-royhati.vercel.app/web
+echo   [OK] Asosiy Web Portal:  http://localhost:3000
+echo   [OK] Onlayn Portal:      https://talabalar-royhati.vercel.app
 echo.
-echo   Ikkala sahifa ham bir-biriga xalaqit bermasdan alohida ishlaydi.
+echo   Tahrirlash va saqlash uchun ma'lumot xizmati ham ishlashi kerak
+echo   (ISHGA_TUSHIRISH.bat ikkalasini birga ishga tushiradi).
 echo ======================================================================
 echo.
 

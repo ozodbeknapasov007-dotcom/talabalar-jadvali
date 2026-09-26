@@ -1,0 +1,9 @@
+{
+  "_izoh": "Foydalanuvchi tasdiqlagan istisnolar. Kalit — JSHSHIR. 'otkazish' — audit o'tkazib yuboradigan tekshiruv kodlari (bitirish_yoshi, ...). 'shablon_yillar' — qabul shablonidagi 'Boshlagan va tugatgan yili' qiymati.",
+  "42207935680042": {
+    "fio": "Yorboboyeva Mahliyo Xusan qizi",
+    "sabab": "Maktabni eksternat tarzida tamomlagan (26.09.2026 da tasdiqlandi)",
+    "otkazish": ["bitirish_yoshi"],
+    "shablon_yillar": "2025 (eksternat)"
+  }
+}

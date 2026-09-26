@@ -10,19 +10,24 @@ echo.
 
 cd /d "%~dp0"
 
-echo [1/2] Baza tekshirilmoqda va hisobotlar yangilanmoqda...
+echo [1/3] Baza tekshirilmoqda va hisobotlar yangilanmoqda...
 python qayta_tekshiruv\03_hisobot_yasat.py
-python scripts\generate_report.py
+
+echo [2/3] Qabul shabloni va shubhali ma'lumotlar hisoboti yangilanmoqda...
+python scripts\generate_qabul_shablon.py
+python scripts\shubhali_malumotlar_audit.py
 
 echo.
-echo [2/2] Veb-server ishga tushirilmoqda...
+echo [3/3] Ma'lumot xizmati ishga tushirilmoqda...
 echo.
 echo ======================================================================
-echo   ✅ TIZIM YANGILANDI VA ISHGA TUSHDI!
-echo   🌐 Manzil: http://localhost:8080/hisobot.html
+echo   ✅ TIZIM YANGILANDI!
+echo   📁 Qabul shabloni:   hisobotlar\qabul\
+echo   📁 Tekshiruvlar:     hisobotlar\tekshiruvlar\
+echo   🌐 Portal: ISHGA_TUSHIRISH.bat orqali (http://localhost:3000)
 echo ======================================================================
 echo.
 
-python telegram_sync_service.py 8080
+python xizmatlar\telegram_sync_service.py 8080
 
 pause

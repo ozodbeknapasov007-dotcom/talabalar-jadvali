@@ -14,7 +14,7 @@ import openpyxl, os, sys, re, shutil, datetime
 sys.stdout.reconfigure(encoding='utf-8')
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-EXCEL_PATH = os.path.join(BASE_DIR, 'Talabalar_Toliq_Royxati.xlsx')
+EXCEL_PATH = os.path.join(BASE_DIR, 'data', 'Talabalar_Toliq_Royxati.xlsx')
 DRY = '--dry-run' in sys.argv
 
 W = [7, 3, 1, 7, 3, 1, 7, 3, 1, 7, 3, 1, 7]
@@ -226,7 +226,7 @@ if DRY:
     sys.exit(0)
 
 stamp = datetime.datetime.now().strftime('%Y%m%d_%H%M%S')
-bp = os.path.join(BASE_DIR, 'backup', f'Talabalar_Toliq_Royxati_QOLDA_TUZATISHDAN_OLDIN_{stamp}.xlsx')
+bp = os.path.join(BASE_DIR, 'arxiv', 'backup', f'Talabalar_Toliq_Royxati_QOLDA_TUZATISHDAN_OLDIN_{stamp}.xlsx')
 shutil.copy2(EXCEL_PATH, bp)
 wb.save(EXCEL_PATH)
 print(f"✅ Zaxira: backup/{os.path.basename(bp)}")

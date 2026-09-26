@@ -15,7 +15,7 @@ import openpyxl
 
 sys.stdout.reconfigure(encoding='utf-8')
 BASE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-XLSX = os.path.join(BASE, 'Talabalar_Toliq_Royxati.xlsx')
+XLSX = os.path.join(BASE, 'data', 'Talabalar_Toliq_Royxati.xlsx')
 CSVP = os.path.join(os.path.expanduser('~'), 'Downloads', 'tekshiruv_natija.csv')
 DRY = '--dry' in sys.argv
 
@@ -28,7 +28,7 @@ C = dict(tr=1, ifo=2, yonalish=3, tolov=4, shartnoma=5, sana=6, otasi=7, toliq=8
 
 # ─── data.js ni o'qish ────────────────────────────────────────────────────
 def yozuvlar():
-    src = io.open(os.path.join(BASE, 'TEKSHIRUV', 'data.js'), encoding='utf-8').read()
+    src = io.open(os.path.join(BASE, 'hujjatlar', 'TEKSHIRUV', 'data.js'), encoding='utf-8').read()
     out = []
     for blok in src.split('\n{\n')[1:]:
         def sub(nom):
