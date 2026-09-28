@@ -22,5 +22,17 @@
     },
     "id": "chg_1790610558079_2t2zd",
     "created_at": "2026-09-28T15:49:18.079Z"
+  },
+  {
+    "type": "verify_student",
+    "data": {
+      "row": 88,
+      "status": "TASDIQLANDI",
+      "shnum": "",
+      "pinfl": "42405832640057",
+      "ism": "Niyozova Komila"
+    },
+    "id": "chg_1790610559393_pn6em",
+    "created_at": "2026-09-28T15:49:19.393Z"
   }
 ]
