@@ -46,5 +46,17 @@
     },
     "id": "chg_1790610559842_0b8dy",
     "created_at": "2026-09-28T15:49:19.842Z"
+  },
+  {
+    "type": "verify_student",
+    "data": {
+      "row": 179,
+      "status": "TASDIQLANDI",
+      "shnum": "52",
+      "pinfl": "60803048230011",
+      "ism": "Xurramova Sabina"
+    },
+    "id": "chg_1790610560842_vya1v",
+    "created_at": "2026-09-28T15:49:20.842Z"
   }
 ]
