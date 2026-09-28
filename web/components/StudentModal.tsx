@@ -1,11 +1,12 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
-import { AlertTriangle, ChevronLeft, ChevronRight, Link2, Pencil, Save, Trash2, X } from 'lucide-react'
+import { AlertTriangle, ChevronLeft, ChevronRight, FileText, Link2, Pencil, Save, Trash2, X } from 'lucide-react'
 import { GROUPS, WITHDRAWN_GROUP, YON_OPTIONS } from '@/lib/config'
 import { decodePinfl, dobFromPinfl, findDuplicates, formatPinfl, fullName, isWithdrawn, NAME_FLAGS } from '@/lib/student'
 import { EDIT_FIELDS, type EditFields, type Student } from '@/lib/types'
 import DocImages from './DocImages'
+import MalumotnomaModal from './MalumotnomaModal'
 import { cx, GroupBadge, Mono, StatusIcon, VerifyButton } from './ui'
 
 interface Props {
@@ -221,9 +222,10 @@ function ViewInfo({ s, onEdit, onToggleVerify }: { s: Student; onEdit: () => voi
 export default function StudentModal({ student: s, all, hasPrev, hasNext, onNav, onClose, onSave, onToggleVerify, onDelete, onOpenRow }: Props) {
   const [editing, setEditing] = useState(false)
   const [deleting, setDeleting] = useState(false)
+  const [cert, setCert] = useState(false)
 
   // Boshqa talabaga o'tilganda tahrirlash rejimidan chiqamiz
-  useEffect(() => { setEditing(false) }, [s.row])
+  useEffect(() => { setEditing(false); setCert(false) }, [s.row])
 
   // Sahifa orqada aylanib ketmasin
   useEffect(() => {
@@ -236,13 +238,14 @@ export default function StudentModal({ student: s, all, hasPrev, hasNext, onNav,
     const onKey = (e: KeyboardEvent) => {
       const tag = (e.target as HTMLElement)?.tagName
       const typing = tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT'
-      if (e.key === 'Escape') { if (editing) setEditing(false); else onClose() }
+      if (e.key === 'Escape') { if (cert) setCert(false); else if (editing) setEditing(false); else onClose() }
+      else if (cert) return
       else if (!typing && e.key === 'ArrowLeft' && hasPrev) onNav(-1)
       else if (!typing && e.key === 'ArrowRight' && hasNext) onNav(1)
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [editing, hasPrev, hasNext, onNav, onClose])
+  }, [cert, editing, hasPrev, hasNext, onNav, onClose])
 
   const dups = useMemo(() => findDuplicates(all, s.pv, s.pinfl, s.row), [all, s.pv, s.pinfl, s.row])
 
@@ -269,6 +272,7 @@ export default function StudentModal({ student: s, all, hasPrev, hasNext, onNav,
             </div>
           </div>
           <div className="ml-auto flex items-center gap-2">
+            {!isWithdrawn(s.group) && <button type="button" className="btn-ghost h-9" onClick={() => setCert(true)} title="O'qiyotganligi haqida ma'lumotnoma"><FileText size={15} /><span className="hidden sm:inline">Ma'lumotnoma</span></button>}
             {!editing && <button type="button" className="btn-ghost h-9" onClick={() => setEditing(true)}><Pencil size={15} /><span className="hidden sm:inline">Tahrirlash</span></button>}
             <button type="button" className="btn-danger h-9" onClick={del} disabled={deleting} title="Talabani bazadan o'chirish"><Trash2 size={15} /><span className="hidden md:inline">O'chirish</span></button>
             <button type="button" className="grid size-9 place-items-center rounded-xl text-fg-muted hover:bg-ink-700 hover:text-fg" onClick={onClose} title="Yopish (Esc)"><X size={20} /></button>
@@ -299,6 +303,7 @@ export default function StudentModal({ student: s, all, hasPrev, hasNext, onNav,
           </div>
         </div>
       </div>
+      {cert && <MalumotnomaModal student={s} onClose={() => setCert(false)} />}
     </div>
   )
 }

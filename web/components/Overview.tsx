@@ -2,9 +2,10 @@
 
 import { memo, useMemo } from 'react'
 import { BadgeCheck, Clock, FileWarning, UserMinus, Users } from 'lucide-react'
-import { GROUPS, GROUP_LEADERS, GROUP_TITLES, WITHDRAWN_GROUP } from '@/lib/config'
+import { GROUPS, WITHDRAWN_GROUP } from '@/lib/config'
 import { isOfficialGroup, type Filters } from '@/lib/student'
 import type { Student } from '@/lib/types'
+import GroupCards from './GroupCards'
 import { cx, ProgressBar } from './ui'
 
 interface Props {
@@ -84,37 +85,7 @@ function Overview({ students, filters, onFilter }: Props) {
           active={filters.group === WITHDRAWN_GROUP} onClick={() => onFilter({ group: filters.group === WITHDRAWN_GROUP ? '' : WITHDRAWN_GROUP })} />
       </div>
 
-      <div className="grid grid-cols-2 gap-3 md:grid-cols-4 xl:grid-cols-7">
-        {GROUPS.map((g) => {
-          const { total, ver } = stats.byGroup[g]
-          const p = total ? Math.round((ver / total) * 100) : 0
-          const active = filters.group === g
-          const farm = g === '26-01'
-          return (
-            <button
-              key={g}
-              type="button"
-              onClick={() => onFilter({ group: active ? '' : g })}
-              className={cx(
-                'panel relative overflow-hidden p-3.5 text-left transition-colors hover:border-line-strong hover:bg-ink-850',
-                active && 'border-sky/55 bg-ink-850 ring-1 ring-sky/35',
-              )}
-            >
-              <span className={cx('absolute inset-x-0 top-0 h-0.5', farm ? 'bg-gradient-to-r from-emerald to-emerald-soft' : 'bg-gradient-to-r from-blue to-sky')} />
-              <div className="flex items-baseline justify-between gap-2">
-                <span className={cx('mono text-[15px] font-bold', farm ? 'text-emerald-soft' : 'text-blue-soft')}>{g}</span>
-                <span className="text-[12px] font-semibold text-fg-muted tabular-nums">{total} nafar</span>
-              </div>
-              <div className="mt-0.5 truncate text-[12px] text-fg-muted">{GROUP_TITLES[g]}</div>
-              <div className="mt-0.5 truncate text-[12.5px] font-semibold text-fg">{GROUP_LEADERS[g]}</div>
-              <div className="mt-2.5 flex items-center gap-2">
-                <ProgressBar value={p} />
-                <span className={cx('text-[11.5px] font-bold tabular-nums', p === 100 ? 'text-emerald-soft' : 'text-fg-muted')}>{ver}/{total}</span>
-              </div>
-            </button>
-          )
-        })}
-      </div>
+      <GroupCards groups={GROUPS.map((g) => ({ g, ...stats.byGroup[g] }))} active={filters.group} onPick={(group) => onFilter({ group })} />
     </section>
   )
 }
