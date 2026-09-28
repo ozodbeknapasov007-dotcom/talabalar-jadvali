@@ -106,5 +106,17 @@
     },
     "id": "chg_1790610561377_s880v",
     "created_at": "2026-09-28T15:49:21.377Z"
+  },
+  {
+    "type": "verify_student",
+    "data": {
+      "row": 89,
+      "status": "TASDIQLANDI",
+      "shnum": "304",
+      "pinfl": "412068 9256 0120",
+      "ism": "Niyozova Sevara"
+    },
+    "id": "chg_1790610563465_fbo2l",
+    "created_at": "2026-09-28T15:49:23.465Z"
   }
 ]
