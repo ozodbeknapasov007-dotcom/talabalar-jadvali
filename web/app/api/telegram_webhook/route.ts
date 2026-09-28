@@ -1,6 +1,9 @@
 import type { NextRequest } from 'next/server'
 import { GROUPS, GROUP_LEADERS, GROUP_TITLES } from '@/lib/config'
+import { malumotnomaBlocker, malumotnomaData, malumotnomaFileName } from '@/lib/malumotnoma'
+import { renderMalumotnoma } from '@/lib/server/malumotnoma'
 import { REPO_PATHS, readRepoFile, readRepoFileIn } from '@/lib/server/source'
+import { tgSendPhoto } from '@/lib/server/telegram'
 import type { Student } from '@/lib/types'
 
 /*
@@ -8,7 +11,8 @@ import type { Student } from '@/lib/types'
 
   GET  ?action=kontingent   — 09:00 kontingent hisoboti (GitHub Actions chaqiradi)
   GET  ?action=backup_json  — 18:00 JSON baza + 4-Excel zahirasi
-  POST                      — Telegram'dan kelgan xabar (bot tugmalari, talaba qidiruvi)
+  POST                      — Telegram'dan kelgan xabar (bot tugmalari, talaba qidiruvi,
+                              /malumotnoma <shartnoma № yoki F.I.SH> — faqat TELEGRAM_CHAT_ID chatida)
 
   Ma'lumot: data/talabalar_bazasi.json, hisobotlar/rollar/*.xlsx, hisobotlar/pdf_jurnallar/
   (Vercel'da GitHub'dan, kompyuterda diskdan). Token: TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID.
@@ -155,6 +159,37 @@ async function searchText(query: string) {
   return lines.join('\n\n')
 }
 
+/** /malumotnoma 285 — bitta talaba topilsa ma'lumotnoma rasmini yuboradi */
+async function malumotnomaCommand(chatId: string | number, query: string) {
+  const q = query.trim().toLowerCase()
+  if (!q) {
+    await sendMessage(chatId, "📄 Ma'lumotnoma uchun shartnoma raqami yoki F.I.SH yozing:\n<code>/malumotnoma 285</code>")
+    return
+  }
+  const students = await loadStudentsDb()
+  const exact = students.filter((s) => String(s.shnum || '').toLowerCase() === q)
+  const found = exact.length ? exact : students.filter((s) => String(s.fish || '').toLowerCase().includes(q))
+  if (!found.length) {
+    await sendMessage(chatId, '❓ Bunday talaba topilmadi.')
+    return
+  }
+  if (found.length > 1) {
+    await sendMessage(chatId, `🔍 ${found.length} ta talaba topildi — shartnoma raqami bilan yozing:\n\n` +
+      found.slice(0, 10).map((s) => `• ${s.fish} (Guruh ${s.group || '—'}) — <code>/malumotnoma ${s.shnum || '—'}</code>`).join('\n'))
+    return
+  }
+  const s = found[0]
+  const blocker = malumotnomaBlocker(s)
+  if (blocker) {
+    await sendMessage(chatId, `❌ ${s.fish}: ${blocker}`)
+    return
+  }
+  const data = malumotnomaData(s)
+  await tgSendPhoto(chatId, await renderMalumotnoma(data), malumotnomaFileName(s),
+    `📄 <b>O‘qiyotganligi haqida ma’lumotnoma</b>\n👤 <b>${s.fish}</b>\n👥 Guruh ${s.group} · Shartnoma №${s.shnum || '—'}\n🗓 Sana: ${data.sana}`,
+    BOT_KEYBOARD)
+}
+
 const notConfigured = () =>
   Response.json({ ok: false, error: 'TELEGRAM_BOT_TOKEN / TELEGRAM_CHAT_ID sozlanmagan (Vercel → Settings → Environment Variables)' }, { status: 500 })
 
@@ -202,7 +237,15 @@ export async function POST(request: NextRequest) {
         '• <b>📦 JSON Baza (.json)</b> — To\'liq JSON baza fayli\n' +
         "• <b>⚠️ Kamchiliklar ro'yxati</b> — Hujjati to'liq bo'lmagan talabalar\n" +
         `• <b>📑 Guruh Jurnallari (PDF)</b> — Barcha ${OFFICIAL.length} ta guruh A4 PDF jurnallari\n\n` +
+        "📄 <b>/malumotnoma 285</b> — talabaning o'qiyotganligi haqida ma'lumotnomasi (rasm)\n\n" +
         "🔍 <i>Tezkor qidiruv:</i> Istalgan talabaning <b>Ism-familiyasi</b>, <b>Shartnoma №</b> yoki <b>Pasport seriyasini</b> yozib yuboring!")
+      return Response.json({ ok: true })
+    }
+    const cert = /^\/?ma['‘’`]?lumotnoma(?:@\w+)?(?:\s+(.*))?$/i.exec(text)
+    if (cert) {
+      // Muhrli hujjat — faqat hisobot chatida (TELEGRAM_CHAT_ID)
+      if (String(chatId) !== DEFAULT_CHAT_ID) await sendMessage(chatId, "⛔ Ma'lumotnoma faqat asosiy chatda beriladi.")
+      else await malumotnomaCommand(chatId, cert[1] ?? '')
       return Response.json({ ok: true })
     }
     if (t.includes('kontingent') || t.includes('kontengent')) {
