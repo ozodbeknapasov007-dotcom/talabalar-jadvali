@@ -4,15 +4,17 @@ import 'server-only'
 export const TG_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN || ''
 export const TG_CHAT_ID = process.env.TELEGRAM_CHAT_ID || ''
 
-/** Rasmni Telegram'ga rasm sifatida yuborish */
-export async function tgSendPhoto(chatId: string | number, img: Buffer, fileName: string, caption: string, replyMarkup?: unknown) {
+export const DOCX_MIME = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+
+/** Faylni Telegram'ga hujjat sifatida yuborish */
+export async function tgSendDocument(chatId: string | number, file: Buffer, fileName: string, caption: string, replyMarkup?: unknown) {
   const fd = new FormData()
   fd.append('chat_id', String(chatId))
   fd.append('caption', caption)
   fd.append('parse_mode', 'HTML')
   if (replyMarkup) fd.append('reply_markup', JSON.stringify(replyMarkup))
-  fd.append('photo', new Blob([new Uint8Array(img)], { type: 'image/jpeg' }), fileName)
-  const res = await fetch(`https://api.telegram.org/bot${TG_BOT_TOKEN}/sendPhoto`, { method: 'POST', body: fd })
+  fd.append('document', new Blob([new Uint8Array(file)], { type: DOCX_MIME }), fileName)
+  const res = await fetch(`https://api.telegram.org/bot${TG_BOT_TOKEN}/sendDocument`, { method: 'POST', body: fd })
   const data = await res.json().catch(() => ({ ok: false }))
   if (!data.ok) throw new Error(data.description || `Telegram ${res.status} qaytardi`)
   return data

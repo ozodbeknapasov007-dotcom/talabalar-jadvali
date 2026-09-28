@@ -41,19 +41,19 @@ Sayt har 45 soniyada (va oynaga qaytilganda) yangi ma'lumotni o'zi tortadi.
 | `lib/excel.ts` | 4 bo'limli Excel eksport (eski saytdagi bilan bir xil ustunlar) |
 | `components/StudentList.tsx` | Virtual ro'yxat — karta va jadval ko'rinishi |
 | `components/StudentModal.tsx` | Talaba oynasi: ko'rish, tahrirlash, hujjat rasmlari |
-| `lib/server/malumotnoma.tsx` | O'qiyotganligi haqida ma'lumotnoma — A4 rasm (`/api/malumotnoma`) |
-| `lib/server/scan.ts` | Muhrni matn ustiga siyoh kabi bosish va skaner effekti (qog'oz, donadorlik) → JPEG |
-| `assets/malumotnoma/` | Ma'lumotnoma shriftlari, logotip, muhr va imzo. Shrift — Liberation Serif (Times New Roman bilan bir xil o'lchamli); `times.ttf`, `timesbd.ttf`, `timesi.ttf` qo'yilsa, asl Times New Roman ishlatiladi |
+| `lib/server/malumotnoma.ts` | O'qiyotganligi haqida ma'lumotnoma — Word shablonini to'ldiradi (`/api/malumotnoma`) |
+| `assets/malumotnoma/shablon.docx` | Ma'lumotnoma shabloni (Word) |
 
 ## O'qiyotganligi haqida ma'lumotnoma
 
-- **Portal**: talaba oynasi → **Ma'lumotnoma** → sanani tanlash → **Yuklab olish** (JPEG, skaner qilingandek) yoki **Botga yuborish**.
-- **Bot**: `/malumotnoma 285` (shartnoma raqami yoki F.I.SH) — faqat `TELEGRAM_CHAT_ID` chatida ishlaydi.
+- **Portal**: talaba oynasi → **Ma'lumotnoma** → sanani tanlash → **Yuklab olish (.docx)** yoki **Botga yuborish**.
+- **Bot**: `/malumotnoma 285` (shartnoma raqami yoki F.I.SH) — faqat `TELEGRAM_CHAT_ID` chatida ishlaydi, `.docx` yuboradi.
 - Matn faqat bazadan olinadi (F.I.SH, yo'nalish, guruh); o'quv yili va bosqich sanadan hisoblanadi.
   Safdan chiqarilgan talabaga berilmaydi.
 - Botga yuborish uchun `TELEGRAM_BOT_TOKEN` va `TELEGRAM_CHAT_ID` kerak (Vercel'da yoki `.env.local` da).
-- Muhr/imzo yoki logotipni almashtirish: `assets/malumotnoma/muhr_imzo.png` (shaffof fon, 443×270 nisbatda)
-  va `logo.png` fayllarini xuddi shu nom bilan almashtiring.
+- **Shablonni o'zgartirish**: `assets/malumotnoma/shablon.docx` ni Word'da oching va tahrirlang.
+  `{{FISH}}`, `{{OQUV_YILI}}`, `{{YONALISH}}`, `{{BOSQICH}}`, `{{GURUH}}`, `{{SANA}}` belgilarini o'chirmang —
+  shu joylarga talaba ma'lumotlari qo'yiladi. Qolgan hammasi (rasmlar, shrift, joylashuv) o'zgarmaydi.
 
 ## Hali ko'chirilmagan (2-bosqich)
 
