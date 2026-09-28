@@ -4,6 +4,7 @@ import path from 'node:path'
 import { ImageResponse } from 'next/og'
 import opentype from 'opentype.js'
 import type { MalumotnomaData } from '@/lib/malumotnoma'
+import { decodePng, scanToJpeg, stampOnto, type Raster } from './scan'
 
 /*
   Ma'lumotnomani A4 PNG rasm qilib chizish (namuna: 1414×2000 px, ~171 dpi).
@@ -45,17 +46,24 @@ interface Assets {
   fontRegular: opentype.Font
   fontBold: opentype.Font
   logo: string
-  stamp: string
+  stamp: Raster
 }
 
 let assetsPromise: Promise<Assets> | null = null
 
 function loadAssets(): Promise<Assets> {
   assetsPromise ??= (async () => {
-    const [regular, bold, italic, logo, stamp] = await Promise.all(
-      ['LiberationSerif-Regular.ttf', 'LiberationSerif-Bold.ttf', 'LiberationSerif-Italic.ttf', 'logo.png', 'muhr_imzo.png']
-        .map((f) => readFile(path.join(ASSETS, f))),
-    )
+    // Asl Times New Roman (times.ttf, timesbd.ttf, timesi.ttf) papkaga qo'yilsa — o'shasi,
+    // bo'lmasa Liberation Serif (harf kengliklari Times New Roman bilan bir xil)
+    const font = (times: string, liberation: string) =>
+      readFile(path.join(ASSETS, times)).catch(() => readFile(path.join(ASSETS, liberation)))
+    const [regular, bold, italic, logo, stamp] = await Promise.all([
+      font('times.ttf', 'LiberationSerif-Regular.ttf'),
+      font('timesbd.ttf', 'LiberationSerif-Bold.ttf'),
+      font('timesi.ttf', 'LiberationSerif-Italic.ttf'),
+      readFile(path.join(ASSETS, 'logo.png')),
+      readFile(path.join(ASSETS, 'muhr_imzo.png')),
+    ])
     const ab = (b: Buffer) => b.buffer.slice(b.byteOffset, b.byteOffset + b.byteLength) as ArrayBuffer
     return {
       regular: ab(regular),
@@ -64,7 +72,7 @@ function loadAssets(): Promise<Assets> {
       fontRegular: opentype.parse(ab(regular)),
       fontBold: opentype.parse(ab(bold)),
       logo: `data:image/png;base64,${logo.toString('base64')}`,
-      stamp: `data:image/png;base64,${stamp.toString('base64')}`,
+      stamp: decodePng(stamp),
     }
   })().catch((e) => { assetsPromise = null; throw e })
   return assetsPromise
@@ -160,6 +168,13 @@ function BodyLine({ left, baseline, words, justify, space }: { left: number; bas
   )
 }
 
+function seedOf(s: string) {
+  let h = 2166136261
+  for (let i = 0; i < s.length; i++) h = Math.imul(h ^ s.charCodeAt(i), 16777619)
+  return h >>> 0
+}
+
+/** Tayyor ma'lumotnoma — skaner qilingandek JPEG */
 export async function renderMalumotnoma(d: MalumotnomaData): Promise<Buffer> {
   const a = await loadAssets()
 
@@ -206,8 +221,6 @@ export async function renderMalumotnoma(d: MalumotnomaData): Promise<Buffer> {
       <At x={253} baseline={1385 + shift} size={BODY} style={{ fontWeight: 700 }}>“Qarshi tibbiyot texnikumi”</At>
       <At x={269} baseline={1423 + shift} size={BODY} style={{ fontWeight: 700 }}>ijrochi direktori:</At>
       <At x={1030} baseline={1428 + shift} size={BODY} style={{ fontWeight: 700 }}>Sh.Raxmonov</At>
-      {/* eslint-disable-next-line @next/next/no-img-element, jsx-a11y/alt-text */}
-      <img src={a.stamp} width={u(443)} height={u(270)} style={{ position: 'absolute', left: u(585), top: u(1278 + shift) }} />
     </div>
   )
 
@@ -220,5 +233,8 @@ export async function renderMalumotnoma(d: MalumotnomaData): Promise<Buffer> {
       { name: 'Times', data: a.italic, weight: 400, style: 'italic' },
     ],
   })
-  return Buffer.from(await res.arrayBuffer())
+  const page = decodePng(Buffer.from(await res.arrayBuffer()))
+  // Muhr matndan keyin, siyoh kabi bosiladi (matn muhr ostida qoladi)
+  stampOnto(page, a.stamp, u(585), u(1278 + shift), u(443), u(270))
+  return scanToJpeg(page, seedOf(`${d.fish}|${d.sana}`))
 }

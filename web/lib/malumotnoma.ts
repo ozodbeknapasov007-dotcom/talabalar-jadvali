@@ -71,5 +71,5 @@ export function malumotnomaData(s: Student, sana = todayTashkent()): Malumotnoma
 
 export function malumotnomaFileName(s: Pick<Student, 'fish' | 'ism' | 'ota'>): string {
   const name = fullName(s).replace(/[\\/:*?"<>|]+/g, '').replace(/\s+/g, ' ').trim()
-  return `${name} O'qiyotganligi haqida ma'lumotnoma.png`
+  return `${name} O'qiyotganligi haqida ma'lumotnoma.jpg`
 }

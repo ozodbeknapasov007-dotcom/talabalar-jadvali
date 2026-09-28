@@ -8,6 +8,7 @@ va GitHub'ga yuboradi, onlayn portal (Vercel) GitHub'dan o'qiydi.
 
 | Fayl | Nima qiladi |
 |---|---|
+| `TEZ_ISHGA_TUSHIRISH.bat` | **Eng tez**: hisobotlarni qayta yasamaydi, portalni production rejimida ochadi (kod o'zgarganda bir marta yig'adi), ma'lumot xizmati (8080) ham yoqiladi |
 | `ISHGA_TUSHIRISH.bat` | Hisobotlarni yangilaydi, ma'lumot xizmatini (8080) va portalni (3000) ishga tushiradi, portalni ochadi |
 | `WEB_ISHGA_TUSHIRISH.bat` | Faqat web portal (localhost:3000) |
 | `BOTNI_ISHGA_TUSHIRISH.bat` | Faqat ma'lumot xizmati va Telegram bot |
