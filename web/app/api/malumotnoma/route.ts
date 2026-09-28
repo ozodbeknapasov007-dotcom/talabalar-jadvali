@@ -2,14 +2,18 @@ import type { NextRequest } from 'next/server'
 import { isValidSana, malumotnomaBlocker, malumotnomaData, malumotnomaFileName, todayTashkent } from '@/lib/malumotnoma'
 import { renderMalumotnoma } from '@/lib/server/malumotnoma'
 import { loadStudents } from '@/lib/server/source'
-import { DOCX_MIME, TG_BOT_TOKEN, TG_CHAT_ID, tgSendDocument } from '@/lib/server/telegram'
+import { renderMalumotnomaJpg } from '@/lib/server/malumotnoma-rasm'
+import { TG_BOT_TOKEN, TG_CHAT_ID, tgSendPhoto } from '@/lib/server/telegram'
+
+const DOCX_MIME = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
 import { fullName } from '@/lib/student'
 
 /*
-  O'qiyotganligi haqida ma'lumotnoma — Word shablonidan (.docx).
+  O'qiyotganligi haqida ma'lumotnoma — Word shabloni (shablon.docx) asosida.
 
-  GET  ?row=99[&sana=28.09.2026]  — .docx faylni yuklab olish
-  POST { row, sana? }             — .docx ni Telegram botga yuborish
+  GET  ?row=99[&sana=28.09.2026][&download=1]  — JPG rasm (ko'rish yoki yuklab olish)
+  GET  ...&format=docx                         — Word fayl
+  POST { row, sana? }                          — JPG ni Telegram botga yuborish
 
   Matn faqat bazadagi talaba ma'lumotidan olinadi — erkin F.I.SH qabul qilinmaydi.
 */
@@ -26,7 +30,7 @@ async function build(rowRaw: unknown, sanaRaw: unknown) {
   const blocker = malumotnomaBlocker(student)
   if (blocker) return { error: blocker, status: 422 } as const
   const data = malumotnomaData(student, sana)
-  return { student, data, docx: await renderMalumotnoma(data) } as const
+  return { student, data } as const
 }
 
 export async function GET(request: NextRequest) {
@@ -34,11 +38,14 @@ export async function GET(request: NextRequest) {
   try {
     const r = await build(q.get('row'), q.get('sana'))
     if ('error' in r) return Response.json({ error: r.error }, { status: r.status })
-    const name = malumotnomaFileName(r.student)
-    return new Response(new Uint8Array(r.docx), {
+    const docx = q.get('format') === 'docx'
+    const name = malumotnomaFileName(r.student, docx ? 'docx' : 'jpg')
+    const file = docx ? await renderMalumotnoma(r.data) : await renderMalumotnomaJpg(r.data)
+    const disposition = docx || q.get('download') ? 'attachment' : 'inline'
+    return new Response(new Uint8Array(file), {
       headers: {
-        'Content-Type': DOCX_MIME,
-        'Content-Disposition': `attachment; filename="malumotnoma.docx"; filename*=UTF-8''${encodeURIComponent(name).replace(/'/g, '%27')}`,
+        'Content-Type': docx ? DOCX_MIME : 'image/jpeg',
+        'Content-Disposition': `${disposition}; filename="malumotnoma.${docx ? 'docx' : 'jpg'}"; filename*=UTF-8''${encodeURIComponent(name).replace(/'/g, '%27')}`,
         'Cache-Control': 'no-store',
       },
     })
@@ -56,7 +63,7 @@ export async function POST(request: NextRequest) {
     const r = await build(body.row, body.sana)
     if ('error' in r) return Response.json({ error: r.error }, { status: r.status })
     const s = r.student
-    await tgSendDocument(TG_CHAT_ID, r.docx, malumotnomaFileName(s),
+    await tgSendPhoto(TG_CHAT_ID, await renderMalumotnomaJpg(r.data), malumotnomaFileName(s),
       `📄 <b>O‘qiyotganligi haqida ma’lumotnoma</b>\n` +
       `👤 <b>${fullName(s)}</b>\n` +
       `👥 Guruh ${s.group} · Shartnoma №${s.shnum || '—'}\n` +

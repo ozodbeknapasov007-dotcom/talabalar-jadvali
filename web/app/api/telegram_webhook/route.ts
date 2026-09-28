@@ -1,9 +1,9 @@
 import type { NextRequest } from 'next/server'
 import { GROUPS, GROUP_LEADERS, GROUP_TITLES } from '@/lib/config'
 import { malumotnomaBlocker, malumotnomaData, malumotnomaFileName } from '@/lib/malumotnoma'
-import { renderMalumotnoma } from '@/lib/server/malumotnoma'
+import { renderMalumotnomaJpg } from '@/lib/server/malumotnoma-rasm'
 import { REPO_PATHS, readRepoFile, readRepoFileIn } from '@/lib/server/source'
-import { tgSendDocument } from '@/lib/server/telegram'
+import { tgSendPhoto } from '@/lib/server/telegram'
 import type { Student } from '@/lib/types'
 
 /*
@@ -159,7 +159,7 @@ async function searchText(query: string) {
   return lines.join('\n\n')
 }
 
-/** /malumotnoma 285 — bitta talaba topilsa ma'lumotnoma (.docx) ni yuboradi */
+/** /malumotnoma 285 — bitta talaba topilsa ma'lumotnoma rasmini (JPG) yuboradi */
 async function malumotnomaCommand(chatId: string | number, query: string) {
   const q = query.trim().toLowerCase()
   if (!q) {
@@ -185,7 +185,7 @@ async function malumotnomaCommand(chatId: string | number, query: string) {
     return
   }
   const data = malumotnomaData(s)
-  await tgSendDocument(chatId, await renderMalumotnoma(data), malumotnomaFileName(s),
+  await tgSendPhoto(chatId, await renderMalumotnomaJpg(data), malumotnomaFileName(s),
     `📄 <b>O‘qiyotganligi haqida ma’lumotnoma</b>\n👤 <b>${s.fish}</b>\n👥 Guruh ${s.group} · Shartnoma №${s.shnum || '—'}\n🗓 Sana: ${data.sana}`,
     BOT_KEYBOARD)
 }
@@ -237,7 +237,7 @@ export async function POST(request: NextRequest) {
         '• <b>📦 JSON Baza (.json)</b> — To\'liq JSON baza fayli\n' +
         "• <b>⚠️ Kamchiliklar ro'yxati</b> — Hujjati to'liq bo'lmagan talabalar\n" +
         `• <b>📑 Guruh Jurnallari (PDF)</b> — Barcha ${OFFICIAL.length} ta guruh A4 PDF jurnallari\n\n` +
-        "📄 <b>/malumotnoma 285</b> — talabaning o'qiyotganligi haqida ma'lumotnomasi (Word fayl)\n\n" +
+        "📄 <b>/malumotnoma 285</b> — talabaning o'qiyotganligi haqida ma'lumotnomasi (rasm)\n\n" +
         "🔍 <i>Tezkor qidiruv:</i> Istalgan talabaning <b>Ism-familiyasi</b>, <b>Shartnoma №</b> yoki <b>Pasport seriyasini</b> yozib yuboring!")
       return Response.json({ ok: true })
     }
