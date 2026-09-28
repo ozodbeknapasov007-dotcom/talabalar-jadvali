@@ -190,5 +190,17 @@
     },
     "id": "chg_1790617548660_8qk3p",
     "created_at": "2026-09-28T17:45:48.660Z"
+  },
+  {
+    "type": "verify_student",
+    "data": {
+      "row": 87,
+      "status": "TASDIQLANDI",
+      "shnum": "",
+      "pinfl": "60212085680048",
+      "ism": "Ne'matova Sevinch"
+    },
+    "id": "chg_1790617549510_h0f8f",
+    "created_at": "2026-09-28T17:45:49.510Z"
   }
 ]
