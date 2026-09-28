@@ -1,1 +1,14 @@
-﻿[]
+[
+  {
+    "type": "verify_student",
+    "data": {
+      "row": 10,
+      "status": "TASDIQLANDI",
+      "shnum": "312",
+      "pinfl": "62707005740020",
+      "ism": "Alimova Sevinch"
+    },
+    "id": "chg_1790610540522_963i3",
+    "created_at": "2026-09-28T15:49:00.522Z"
+  }
+]
