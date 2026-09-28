@@ -41,12 +41,13 @@ Sayt har 45 soniyada (va oynaga qaytilganda) yangi ma'lumotni o'zi tortadi.
 | `lib/excel.ts` | 4 bo'limli Excel eksport (eski saytdagi bilan bir xil ustunlar) |
 | `components/StudentList.tsx` | Virtual ro'yxat — karta va jadval ko'rinishi |
 | `components/StudentModal.tsx` | Talaba oynasi: ko'rish, tahrirlash, hujjat rasmlari |
-| `lib/server/malumotnoma.tsx` | O'qiyotganligi haqida ma'lumotnoma — A4 PNG rasm (`/api/malumotnoma`) |
-| `assets/malumotnoma/` | Ma'lumotnoma shriftlari (Times o'rnida Liberation Serif), logotip, muhr va imzo |
+| `lib/server/malumotnoma.tsx` | O'qiyotganligi haqida ma'lumotnoma — A4 rasm (`/api/malumotnoma`) |
+| `lib/server/scan.ts` | Muhrni matn ustiga siyoh kabi bosish va skaner effekti (qog'oz, donadorlik) → JPEG |
+| `assets/malumotnoma/` | Ma'lumotnoma shriftlari, logotip, muhr va imzo. Shrift — Liberation Serif (Times New Roman bilan bir xil o'lchamli); `times.ttf`, `timesbd.ttf`, `timesi.ttf` qo'yilsa, asl Times New Roman ishlatiladi |
 
 ## O'qiyotganligi haqida ma'lumotnoma
 
-- **Portal**: talaba oynasi → **Ma'lumotnoma** → sanani tanlash → **Yuklab olish** (PNG) yoki **Botga yuborish**.
+- **Portal**: talaba oynasi → **Ma'lumotnoma** → sanani tanlash → **Yuklab olish** (JPEG, skaner qilingandek) yoki **Botga yuborish**.
 - **Bot**: `/malumotnoma 285` (shartnoma raqami yoki F.I.SH) — faqat `TELEGRAM_CHAT_ID` chatida ishlaydi.
 - Matn faqat bazadan olinadi (F.I.SH, yo'nalish, guruh); o'quv yili va bosqich sanadan hisoblanadi.
   Safdan chiqarilgan talabaga berilmaydi.

@@ -6,7 +6,7 @@ import { TG_BOT_TOKEN, TG_CHAT_ID, tgSendPhoto } from '@/lib/server/telegram'
 import { fullName } from '@/lib/student'
 
 /*
-  O'qiyotganligi haqida ma'lumotnoma (PNG, A4).
+  O'qiyotganligi haqida ma'lumotnoma (skaner qilingandek JPEG, A4).
 
   GET  ?row=99[&sana=28.09.2026][&download=1]  — rasm (ko'rish yoki yuklab olish)
   POST { row, sana? }                          — rasmni Telegram botga yuborish
@@ -26,7 +26,7 @@ async function build(rowRaw: unknown, sanaRaw: unknown) {
   const blocker = malumotnomaBlocker(student)
   if (blocker) return { error: blocker, status: 422 } as const
   const data = malumotnomaData(student, sana)
-  return { student, data, png: await renderMalumotnoma(data) } as const
+  return { student, data, jpg: await renderMalumotnoma(data) } as const
 }
 
 export async function GET(request: NextRequest) {
@@ -36,10 +36,10 @@ export async function GET(request: NextRequest) {
     if ('error' in r) return Response.json({ error: r.error }, { status: r.status })
     const name = malumotnomaFileName(r.student)
     const disposition = q.get('download') ? 'attachment' : 'inline'
-    return new Response(new Uint8Array(r.png), {
+    return new Response(new Uint8Array(r.jpg), {
       headers: {
-        'Content-Type': 'image/png',
-        'Content-Disposition': `${disposition}; filename="malumotnoma.png"; filename*=UTF-8''${encodeURIComponent(name).replace(/'/g, '%27')}`,
+        'Content-Type': 'image/jpeg',
+        'Content-Disposition': `${disposition}; filename="malumotnoma.jpg"; filename*=UTF-8''${encodeURIComponent(name).replace(/'/g, '%27')}`,
         'Cache-Control': 'no-store',
       },
     })
@@ -57,7 +57,7 @@ export async function POST(request: NextRequest) {
     const r = await build(body.row, body.sana)
     if ('error' in r) return Response.json({ error: r.error }, { status: r.status })
     const s = r.student
-    await tgSendPhoto(TG_CHAT_ID, r.png, malumotnomaFileName(s),
+    await tgSendPhoto(TG_CHAT_ID, r.jpg, malumotnomaFileName(s),
       `📄 <b>O‘qiyotganligi haqida ma’lumotnoma</b>\n` +
       `👤 <b>${fullName(s)}</b>\n` +
       `👥 Guruh ${s.group} · Shartnoma №${s.shnum || '—'}\n` +
