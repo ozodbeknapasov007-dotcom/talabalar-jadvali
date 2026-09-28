@@ -1,7 +1,8 @@
 'use client'
 
 import { Check } from 'lucide-react'
-import { GROUP_LEADERS, GROUP_TITLES } from '@/lib/config'
+import { GROUP_LEADERS } from '@/lib/config'
+import { groupTitle } from '@/lib/student'
 import { cx, ProgressBar } from './ui'
 
 /*
@@ -26,7 +27,7 @@ export default function GroupCards({ groups, active, onPick }: Props) {
       {groups.map(({ g, total, ver }) => {
         const p = total ? Math.round((ver / total) * 100) : 0
         const on = active === g
-        const farm = g === '26-01'
+        const farm = groupTitle(g).startsWith('Farmatsiya')
         return (
           <button
             key={g}
@@ -52,7 +53,7 @@ export default function GroupCards({ groups, active, onPick }: Props) {
               <span className={cx('mono text-[15px] font-bold', on ? 'text-sky-soft' : farm ? 'text-emerald-soft' : 'text-blue-soft')}>{g}</span>
               <span className={cx('text-[12px] font-semibold tabular-nums', on ? 'mr-6 text-fg' : 'text-fg-muted')}>{total} nafar</span>
             </div>
-            <div className="mt-0.5 truncate text-[12px] text-fg-muted">{GROUP_TITLES[g] || 'Hamshiralik ishi'}</div>
+            <div className="mt-0.5 truncate text-[12px] text-fg-muted">{groupTitle(g)}</div>
             <div className="mt-0.5 truncate text-[12.5px] font-semibold text-fg">{GROUP_LEADERS[g] || '—'}</div>
             <div className="mt-2.5 flex items-center gap-2">
               <ProgressBar value={p} />

@@ -1,13 +1,56 @@
-import { GROUPS } from './config'
+import { ACADEMIC_LEAVE_GROUP, COURSES, GROUPS, GROUP_TITLES, OQUV_YILI_BOSHI, WITHDRAWN_GROUP } from './config'
 import type { Student } from './types'
+
+/** Akademik guruh kodi: 26-01, 25-03 ... */
+const GROUP_CODE = /^\d{2}-\d{2}$/
 
 export function isWithdrawn(g: string | undefined): boolean {
   const gl = String(g || '').trim().toLowerCase()
-  return gl === 'n' || gl.includes('chiqaril')
+  return gl === 'n' || gl.includes('chiqaril') || gl.includes('chetlat')
 }
 
+export function isAcademicLeave(g: string | undefined): boolean {
+  return String(g || '').trim().toLowerCase().includes('akademik')
+}
+
+/** Rasmiy kontingentdagi akademik guruh (ro'yxatdagi yoki "YY-NN" ko'rinishidagi) */
 export function isOfficialGroup(g: string | undefined): boolean {
-  return (GROUPS as readonly string[]).includes(String(g || '').trim())
+  const t = String(g || '').trim()
+  return GROUPS.includes(t) || GROUP_CODE.test(t)
+}
+
+/** Safdan chiqarilgan yoki guruhsiz — na akademik guruhda, na akademik ta'tilda */
+export function isOutside(g: string | undefined): boolean {
+  return !isOfficialGroup(g) && !isAcademicLeave(g)
+}
+
+/** Guruh qaysi kursga tegishli: ro'yxatdan, bo'lmasa guruh kodidagi qabul yilidan */
+export function kursOf(g: string | undefined): number | null {
+  const t = String(g || '').trim()
+  const c = COURSES.find((x) => x.groups.includes(t))
+  if (c) return c.kurs
+  const m = /^(\d{2})-\d{2}$/.exec(t)
+  return m ? Math.max(1, OQUV_YILI_BOSHI - (2000 + Number(m[1])) + 1) : null
+}
+
+/** Akademik guruhlar (ro'yxatdagilar + bazada uchraganlar), kerak bo'lsa bitta kurs bo'yicha */
+export function academicGroups(students: Student[], kurs?: number | null): string[] {
+  const set = new Set<string>(GROUPS)
+  for (const s of students) if (isOfficialGroup(s.group)) set.add(s.group.trim())
+  return [...set].filter((g) => !kurs || kursOf(g) === kurs).sort()
+}
+
+export function groupTitle(g: string): string {
+  return GROUP_TITLES[g] || 'Hamshiralik ishi'
+}
+
+/** Guruh tanlash ro'yxati: akademik guruhlar va maxsus guruhlar */
+export function groupOptions(students: Student[]): [string, string][] {
+  return [
+    ...academicGroups(students).map((g) => [g, `${g} (${kursOf(g)}-kurs, ${groupTitle(g).replace(/ ishi$/, '')})`] as [string, string]),
+    [ACADEMIC_LEAVE_GROUP, ACADEMIC_LEAVE_GROUP],
+    [WITHDRAWN_GROUP, WITHDRAWN_GROUP],
+  ]
 }
 
 export function fullName(s: Pick<Student, 'fish' | 'ism' | 'ota'>): string {
@@ -146,7 +189,8 @@ export function scanDuplicates(students: Student[]): DuplicateGroup[] {
 
 export interface Filters {
   search: string
-  group: string // '' | '26-01' ... | WITHDRAWN
+  kurs: string // '' | '1' | '2' | '3'
+  group: string // '' | '26-01' ... | ACADEMIC_LEAVE | WITHDRAWN
   passType: string
   docType: string
   status: string
@@ -156,7 +200,7 @@ export interface Filters {
 }
 
 export const EMPTY_FILTERS: Filters = {
-  search: '', group: '', passType: '', docType: '', status: '', nameFlag: '', verified: '', yon: '',
+  search: '', kurs: '', group: '', passType: '', docType: '', status: '', nameFlag: '', verified: '', yon: '',
 }
 
 /** Qidiruv uchun bir marta tayyorlanadigan kichik harfli matn */
@@ -170,8 +214,13 @@ export function matches(s: Student, text: string, f: Filters, q: string): boolea
   if (q && !text.includes(q)) return false
   if (f.group) {
     if (isWithdrawn(f.group)) {
-      if (isOfficialGroup(s.group)) return false
+      if (!isOutside(s.group)) return false
+    } else if (isAcademicLeave(f.group)) {
+      if (!isAcademicLeave(s.group)) return false
     } else if (s.group !== f.group) return false
+  } else if (f.kurs && kursOf(s.group) !== Number(f.kurs)) {
+    // Kurs tanlanganda maxsus guruhlar faqat o'z filtri bilan ko'rinadi
+    return false
   }
   if (f.passType && s.pass_type !== f.passType) return false
   if (f.docType && s.doc_tur !== f.docType) return false

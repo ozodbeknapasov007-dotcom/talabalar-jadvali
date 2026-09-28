@@ -1,7 +1,8 @@
 import type { NextRequest } from 'next/server'
-import { GROUPS, GROUP_LEADERS, GROUP_TITLES } from '@/lib/config'
+import { COURSES, GROUPS, GROUP_LEADERS } from '@/lib/config'
 import { malumotnomaBlocker, malumotnomaData, malumotnomaFileName } from '@/lib/malumotnoma'
 import { renderMalumotnomaJpg } from '@/lib/server/malumotnoma-rasm'
+import { academicGroups, groupTitle, isAcademicLeave, isOfficialGroup, isOutside, kursOf } from '@/lib/student'
 import { REPO_PATHS, readRepoFile, readRepoFileIn } from '@/lib/server/source'
 import { tgSendPhoto } from '@/lib/server/telegram'
 import type { Student } from '@/lib/types'
@@ -39,7 +40,7 @@ const ROLE_FILES = [
   { match: ["to'liq", 'toliq', '4.', '/toliq'], file: '4_Toliq_Malumotlar_Bazasi.xlsx', title: "4. To'liq Ma'lumotlar (O'zim uchun barcha ustunlar)" },
 ]
 
-const OFFICIAL: readonly string[] = GROUPS
+const OFFICIAL: readonly string[] = GROUPS // PDF jurnallar shu guruhlar uchun yasaladi
 
 async function loadStudentsDb(): Promise<Student[]> {
   const buf = await readRepoFile(REPO_PATHS.baza)
@@ -83,8 +84,10 @@ function tashkentStamp() {
 
 async function kontingentText(reason: string) {
   const students = await loadStudentsDb()
-  const official = students.filter((s) => OFFICIAL.includes(s.group))
-  const withdrawn = students.filter((s) => !OFFICIAL.includes(s.group))
+  const groups = academicGroups(students)
+  const official = students.filter((s) => isOfficialGroup(s.group))
+  const leave = students.filter((s) => isAcademicLeave(s.group))
+  const withdrawn = students.filter((s) => isOutside(s.group))
   const ver = official.filter((s) => s.verified === 'TASDIQLANDI').length
   const { stamp, ddmm } = tashkentStamp()
   const lines = [
@@ -92,19 +95,22 @@ async function kontingentText(reason: string) {
     `📈 <b>TALABALAR KONTINGENTI MA'LUMOTI (${reason})</b>`,
     `🕒 Sana: <b>${stamp}</b>`,
     '━━━━━━━━━━━━━━━━━━━━━━',
-    `👥 <b>Faol kontingent (${OFFICIAL.length} ta guruh): ${official.length} nafar</b>`,
+    `👥 <b>Faol kontingent (${groups.length} ta guruh): ${official.length} nafar</b>`,
+    ...COURSES.map((c) => `   • ${c.kurs}-kurs: <b>${official.filter((s) => kursOf(s.group) === c.kurs).length} nafar</b>`),
     `✅ Tasdiqlangan hujjatlar: <b>${ver} / ${official.length} (${official.length ? Math.round((ver / official.length) * 100) : 0}%)</b>`,
+    `⏸ Akademik ta'tilda: <b>${leave.length} nafar</b>`,
     `🚫 Safdan chiqarilganlar: <b>${withdrawn.length} nafar</b>`,
     `📦 Umumiy bazada jami: <b>${students.length} nafar</b>`,
     '━━━━━━━━━━━━━━━━━━━━━━',
     '📋 <b>GURUHLAR VA RAHBARLAR KESIMIDA:</b>',
     '',
   ]
-  OFFICIAL.forEach((g, i) => {
-    const n = students.filter((s) => s.group === g).length
-    lines.push(`<b>${i + 1}. Guruh ${g}</b> (${GROUP_TITLES[g] || 'Hamshiralik ishi'})\n   👤 Rahbar: <b>${GROUP_LEADERS[g] || '—'}</b> — <b>${n} nafar</b>`)
+  groups.forEach((g, i) => {
+    const n = students.filter((s) => s.group.trim() === g).length
+    lines.push(`<b>${i + 1}. Guruh ${g}</b> (${kursOf(g)}-kurs, ${groupTitle(g)})\n   👤 Rahbar: <b>${GROUP_LEADERS[g] || '—'}</b> — <b>${n} nafar</b>`)
   })
-  if (withdrawn.length) lines.push(`\n🔸 <b>Safdan chiqarilganlar:</b> ${withdrawn.length} nafar`)
+  if (leave.length) lines.push(`\n⏸ <b>Akademik ta'tilda:</b> ${leave.length} nafar`)
+  if (withdrawn.length) lines.push(`${leave.length ? '' : '\n'}🔸 <b>Safdan chiqarilganlar:</b> ${withdrawn.length} nafar`)
   const bdays = official.filter((s) => String(s.dob || '').startsWith(`${ddmm}.`))
   if (bdays.length) {
     lines.push("\n🎂 <b>Bugun tug'ilgan kuni bo'lgan talabalar:</b>")
@@ -114,7 +120,7 @@ async function kontingentText(reason: string) {
 }
 
 async function kamchiliklarText() {
-  const students = (await loadStudentsDb()).filter((s) => OFFICIAL.includes(s.group))
+  const students = (await loadStudentsDb()).filter((s) => isOfficialGroup(s.group))
   const lines = [
     '⚠️ <b>HUJJATIDA KAMCHILIGI BOR TALABALAR HISOBOTI</b>',
     '━━━━━━━━━━━━━━━━━━━━━━',

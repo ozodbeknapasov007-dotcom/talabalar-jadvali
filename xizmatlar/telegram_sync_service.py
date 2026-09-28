@@ -431,11 +431,13 @@ def send_group_lists_to_telegram(target='channel', group_filter=None):
         "26-05": {"specialty": "Hamshiralik ishi", "leader": "Rayimova.X"},
         "26-06": {"specialty": "Hamshiralik ishi", "leader": "Yuldashev.O"},
         "26-07": {"specialty": "Hamshiralik ishi", "leader": "Asraliyev.A"},
+        "Akademik ta'til olganlar": {"specialty": "Maxsus ro'yxat", "leader": "Texnikum ma'muriyati"},
         "Talabalar safidan chiqarilganlar": {"specialty": "Maxsus ro'yxat", "leader": "Texnikum ma'muriyati"}
     }
 
     OFFICIAL_ORDER = [
         "26-01", "26-02", "26-03", "26-04", "26-05", "26-06",
+        "Akademik ta'til olganlar",
         "Talabalar safidan chiqarilganlar"
     ]
 
@@ -913,7 +915,8 @@ def build_kontingent_message_html(reason='So\'rov bo\'yicha'):
         "26-07": "Hamshiralik ishi"
     }
     official_students = [s for s in students if s.get('group') in official_groups]
-    withdrawn_students = [s for s in students if s.get('group') not in official_groups]
+    leave_students = [s for s in students if 'akademik' in str(s.get('group') or '').lower()]
+    withdrawn_students = [s for s in students if s.get('group') not in official_groups and s not in leave_students]
     ver_count = sum(1 for s in official_students if s.get('verified') == 'TASDIQLANDI')
 
     stamp = time.strftime('%d.%m.%Y | %H:%M')
@@ -922,8 +925,9 @@ def build_kontingent_message_html(reason='So\'rov bo\'yicha'):
         f"📈 <b>TALABALAR KONTINGENTI MA'LUMOTI ({reason})</b>",
         f"🕒 Sana: <b>{stamp}</b>",
         "━━━━━━━━━━━━━━━━━━━━━━",
-        f"👥 <b>Faol kontingent (7 ta guruh): {len(official_students)} nafar</b>",
+        f"👥 <b>Faol kontingent ({len(official_groups)} ta guruh): {len(official_students)} nafar</b>",
         f"✅ Tasdiqlangan hujjatlar: <b>{ver_count} / {len(official_students)} ({round(ver_count / len(official_students) * 100) if official_students else 0}%)</b>",
+        f"⏸ Akademik ta'tilda: <b>{len(leave_students)} nafar</b>",
         f"🚫 Safdan chiqarilganlar: <b>{len(withdrawn_students)} nafar</b>",
         f"📦 Umumiy bazada jami: <b>{len(students)} nafar</b>",
         "━━━━━━━━━━━━━━━━━━━━━━",
@@ -936,8 +940,10 @@ def build_kontingent_message_html(reason='So\'rov bo\'yicha'):
         spec = specialties.get(g, 'Hamshiralik ishi')
         lines.append(f"<b>{idx}. Guruh {g}</b> ({spec})\n   👤 Rahbar: <b>{leader}</b> — <b>{len(g_st)} nafar</b>")
 
+    if leave_students:
+        lines.append(f"\n⏸ <b>Akademik ta'tilda:</b> {len(leave_students)} nafar")
     if withdrawn_students:
-        lines.append(f"\n🔸 <b>Safdan chiqarilganlar:</b> {len(withdrawn_students)} nafar")
+        lines.append(f"{'' if leave_students else chr(10)}🔸 <b>Safdan chiqarilganlar:</b> {len(withdrawn_students)} nafar")
 
     return "\n".join(lines)
 

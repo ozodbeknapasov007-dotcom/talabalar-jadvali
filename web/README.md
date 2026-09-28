@@ -45,6 +45,13 @@ Sayt har 45 soniyada (va oynaga qaytilganda) yangi ma'lumotni o'zi tortadi.
 | `lib/server/malumotnoma.ts` | Word shablonini to'ldiradi (`/api/malumotnoma?format=docx`), shablondagi rasmlarni beradi |
 | `assets/malumotnoma/` | `shablon.docx` (Word shablon) va shriftlar (Liberation Serif = Times New Roman o'lchamlari) |
 
+## Kurslar va maxsus guruhlar
+
+- Kurslar va ularning guruhlari — `lib/config.ts` → `COURSES`. Guruh kodi qabul yilini bildiradi
+  (26-xx — 1-kurs, 25-xx — 2-kurs, 24-xx — 3-kurs); ro'yxatda yo'q "YY-NN" guruh ham avtomatik to'g'ri kursga tushadi.
+- Maxsus guruhlar (rasmiy kontingentga kirmaydi): **Akademik ta'til olganlar** va **Talabalar safidan chiqarilganlar**.
+  Talabani ularga o'tkazish — talaba oynasida "Akademik guruh" maydonidan.
+
 ## O'qiyotganligi haqida ma'lumotnoma
 
 - **Portal**: talaba oynasi → **Ma'lumotnoma** → sanani tanlash → rasm ko'rinadi → **Yuklab olish (.jpg)** yoki **Botga yuborish** (rasm). Tahrirlash uchun **Word (.docx)** havolasi ham bor.

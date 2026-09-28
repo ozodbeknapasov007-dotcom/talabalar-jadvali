@@ -1,7 +1,8 @@
 'use client'
 
 import { Check, Clock, AlertTriangle, XCircle, CheckCircle2 } from 'lucide-react'
-import { isWithdrawn } from '@/lib/student'
+import { GROUP_TITLES } from '@/lib/config'
+import { isAcademicLeave, isWithdrawn } from '@/lib/student'
 import type { Student } from '@/lib/types'
 
 export function cx(...parts: (string | false | null | undefined)[]) {
@@ -11,7 +12,8 @@ export function cx(...parts: (string | false | null | undefined)[]) {
 export function GroupBadge({ group, className, short }: { group: string; className?: string; short?: boolean }) {
   if (!group) return <span className={cx('chip border-amber/40 bg-amber/10 text-amber', className)}>Guruhsiz</span>
   if (isWithdrawn(group)) return <span className={cx('chip border-rose/40 bg-rose/10 text-rose', className)} title="Talabalar safidan chiqarilganlar">{short ? 'Chiqarilgan' : 'Safdan chiqarilgan'}</span>
-  const farm = group === '26-01'
+  if (isAcademicLeave(group)) return <span className={cx('chip border-violet/40 bg-violet/10 text-violet', className)} title="Akademik ta'til olganlar">{short ? "Akad. ta'til" : "Akademik ta'til"}</span>
+  const farm = GROUP_TITLES[group]?.startsWith('Farmatsiya')
   return (
     <span className={cx('chip mono', farm ? 'border-emerald/40 bg-emerald/10 text-emerald-soft' : 'border-blue/40 bg-blue/10 text-blue-soft', className)}>
       {group}

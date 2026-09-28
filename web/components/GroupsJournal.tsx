@@ -2,26 +2,35 @@
 
 import { memo, useMemo, useState } from 'react'
 import { Check, Download, FileSpreadsheet, FileText, Loader2, Printer, Send, UserRound } from 'lucide-react'
-import { GROUPS, GROUP_LEADERS, GROUP_TITLES, WITHDRAWN_GROUP } from '@/lib/config'
+import { ACADEMIC_LEAVE_GROUP, GROUP_LEADERS, WITHDRAWN_GROUP } from '@/lib/config'
 import { exportGroup, exportQabulShablonGroup, exportRole, sendGroupsToTelegram, type TgTarget } from '@/lib/excel'
-import { byName, fullName, isOfficialGroup } from '@/lib/student'
+import { byName, fullName, groupTitle, isAcademicLeave, isOutside } from '@/lib/student'
 import type { Student } from '@/lib/types'
 import type { Notify } from './Toast'
 import { cx } from './ui'
 
-function GroupCard({ code, title, leader, students, withdrawn, onOpen, notify }: {
-  code: string; title: string; leader?: string; students: Student[]; withdrawn?: boolean
+/** Maxsus guruhlar: kalit (Telegram tanlovida) va bazadagi nomi */
+const SPECIAL = {
+  akademik: { name: ACADEMIC_LEAVE_GROUP, label: "Akademik ta'til olganlar", tone: 'border-violet/45 bg-violet/10 text-violet', border: 'border-violet/35', text: 'text-violet' },
+  safdan: { name: WITHDRAWN_GROUP, label: 'Talabalar safidan chiqarilganlar', tone: 'border-rose/45 bg-rose/10 text-rose', border: 'border-rose/35', text: 'text-rose' },
+} as const
+type SpecialKey = keyof typeof SPECIAL
+
+function GroupCard({ code, title, leader, students, special, onOpen, notify }: {
+  code: string; title: string; leader?: string; students: Student[]; special?: SpecialKey
   onOpen: (s: Student) => void; notify: Notify
 }) {
   const [busy, setBusy] = useState(false)
   const [qabulBusy, setQabulBusy] = useState(false)
   const [tgBusy, setTgBusy] = useState(false)
-  const farm = code === '26-01'
+  const farm = groupTitle(code).startsWith('Farmatsiya')
+  const sp = special ? SPECIAL[special] : null
+  const name = sp ? sp.label : `Guruh ${code}`
   const download = async () => {
     setBusy(true)
     try {
-      const n = await exportGroup(students, withdrawn ? WITHDRAWN_GROUP : code)
-      notify(`${withdrawn ? 'Safdan chiqarilganlar' : `Guruh ${code}`}: ${n} nafar Excelga yuklandi`)
+      const n = await exportGroup(students, sp ? sp.name : code)
+      notify(`${name}: ${n} nafar Excelga yuklandi`)
     } catch (e) {
       notify(`Excel yaratilmadi: ${(e as Error).message}`, 'error')
     } finally {
@@ -44,8 +53,8 @@ function GroupCard({ code, title, leader, students, withdrawn, onOpen, notify }:
   const sendSingleTg = async () => {
     setTgBusy(true)
     try {
-      const res = await sendGroupsToTelegram(students, [withdrawn ? 'safdan' : code], 'both')
-      if (res.failed.length === 0) notify(`${withdrawn ? 'Safdan chiqarilganlar' : `Guruh ${code}`} Telegramga yuborildi!`)
+      const res = await sendGroupsToTelegram(students, [special ?? code], 'both')
+      if (res.failed.length === 0) notify(`${name} Telegramga yuborildi!`)
       else notify(`Qisman yuborildi (${res.sent.join(', ')}). Xato: ${res.failed.join('; ')}`, 'warning')
     } catch (e) {
       notify(`Telegramga yuborilmadi: ${(e as Error).message}`, 'error')
@@ -55,11 +64,11 @@ function GroupCard({ code, title, leader, students, withdrawn, onOpen, notify }:
   }
 
   return (
-    <article className={cx('panel overflow-hidden', withdrawn && 'border-rose/35')}>
+    <article className={cx('panel overflow-hidden', sp?.border)}>
       <header className="flex flex-wrap items-center gap-3 border-b border-line bg-ink-850/70 px-4 py-3">
         <span className={cx('chip mono text-[12.5px]',
-          withdrawn ? 'border-rose/45 bg-rose/10 text-rose' : farm ? 'border-emerald/45 bg-emerald/10 text-emerald-soft' : 'border-blue/45 bg-blue/10 text-blue-soft')}>
-          {withdrawn ? 'Maxsus' : `Guruh ${code}`}
+          sp ? sp.tone : farm ? 'border-emerald/45 bg-emerald/10 text-emerald-soft' : 'border-blue/45 bg-blue/10 text-blue-soft')}>
+          {sp ? 'Maxsus' : `Guruh ${code}`}
         </span>
         <div className="min-w-0 flex-1">
           <div className="truncate text-[14px] font-bold text-fg">{title}</div>
@@ -68,7 +77,7 @@ function GroupCard({ code, title, leader, students, withdrawn, onOpen, notify }:
           </div>
         </div>
         <div className="flex gap-1.5">
-          {!withdrawn && (
+          {!sp && (
             <>
               <button
                 type="button"
@@ -100,7 +109,7 @@ function GroupCard({ code, title, leader, students, withdrawn, onOpen, notify }:
             <li key={s.row}>
               <button type="button" onClick={() => onOpen(s)} className="grid w-full grid-cols-[34px_minmax(0,1fr)_auto] items-center gap-3 px-4 py-2 text-left text-[13px] transition-colors hover:bg-ink-800/70">
                 <span className="mono text-center text-[12px] font-bold text-fg-subtle tabular-nums">{i + 1}</span>
-                <span className={cx('truncate font-semibold', withdrawn ? 'text-rose' : 'text-fg')}>{fullName(s)}</span>
+                <span className={cx('truncate font-semibold', sp ? sp.text : 'text-fg')}>{fullName(s)}</span>
                 <span className="mono text-[12px] text-fg-muted tabular-nums">{s.dob || '—'}</span>
               </button>
             </li>
@@ -111,19 +120,28 @@ function GroupCard({ code, title, leader, students, withdrawn, onOpen, notify }:
   )
 }
 
-function GroupsJournal({ students, onOpen, notify }: { students: Student[]; onOpen: (s: Student) => void; notify: Notify }) {
+function GroupsJournal({ students, groups: list, onOpen, notify }: {
+  students: Student[]; groups: string[]; onOpen: (s: Student) => void; notify: Notify
+}) {
   const [tgOpen, setTgOpen] = useState(false)
   const [tgTarget, setTgTarget] = useState<TgTarget>('both')
-  const [selectedGroups, setSelectedGroups] = useState<string[]>(() => [...GROUPS])
+  const [selectedGroups, setSelectedGroups] = useState<string[]>(() => [...list])
   const [sendingTg, setSendingTg] = useState(false)
 
   const groups = useMemo(() => {
-    const map = new Map<string, Student[]>(GROUPS.map((g) => [g, []]))
-    const other: Student[] = []
-    for (const s of students) (isOfficialGroup(s.group) ? map.get(s.group)! : other).push(s)
-    for (const list of map.values()) list.sort(byName)
-    return { map, other: other.sort(byName) }
-  }, [students])
+    const map = new Map<string, Student[]>(list.map((g) => [g, []]))
+    const special: Record<SpecialKey, Student[]> = { akademik: [], safdan: [] }
+    for (const s of students) {
+      if (isAcademicLeave(s.group)) special.akademik.push(s)
+      else if (isOutside(s.group)) special.safdan.push(s)
+      else map.get(s.group.trim())?.push(s) // boshqa kurs guruhlari bu yerda ko'rinmaydi
+    }
+    for (const l of map.values()) l.sort(byName)
+    special.akademik.sort(byName)
+    special.safdan.sort(byName)
+    return { map, special }
+  }, [students, list])
+  const specialKeys = (Object.keys(SPECIAL) as SpecialKey[]).filter((k) => groups.special[k].length)
 
   const officialTotal = useMemo(() => {
     let sum = 0
@@ -163,9 +181,12 @@ function GroupsJournal({ students, onOpen, notify }: { students: Student[]; onOp
       <div className="panel flex flex-wrap items-center justify-between gap-3 px-4 py-3">
         <div className="flex flex-wrap items-center gap-2.5 text-[13px]">
           <span className="font-bold text-fg">Akademik guruhlar jurnali</span>
-          <span className="chip border-sky/35 bg-sky/10 text-sky-soft">{GROUPS.length} ta rasmiy guruh · {officialTotal} nafar talaba</span>
-          {groups.other.length > 0 && (
-            <span className="chip border-rose/35 bg-rose/10 text-rose">Safdan chiqarilgan: {groups.other.length} nafar</span>
+          <span className="chip border-sky/35 bg-sky/10 text-sky-soft">{list.length} ta rasmiy guruh · {officialTotal} nafar talaba</span>
+          {groups.special.akademik.length > 0 && (
+            <span className="chip border-violet/35 bg-violet/10 text-violet">Akademik ta'tilda: {groups.special.akademik.length} nafar</span>
+          )}
+          {groups.special.safdan.length > 0 && (
+            <span className="chip border-rose/35 bg-rose/10 text-rose">Safdan chiqarilgan: {groups.special.safdan.length} nafar</span>
           )}
         </div>
         <div className="flex flex-wrap items-center gap-2">
@@ -175,17 +196,17 @@ function GroupsJournal({ students, onOpen, notify }: { students: Student[]; onOp
             onClick={async () => {
               try {
                 await exportRole(students, 'qabul_shablon')
-                notify(`Qabul uchun shablon (${GROUPS.length} ta guruh) Excelga yuklandi!`)
+                notify(`Qabul uchun shablon (${list.length} ta guruh) Excelga yuklandi!`)
               } catch (e) {
                 notify(`Xatolik: ${(e as Error).message}`, 'error')
               }
             }}
             title="Barcha guruhlarni Qabul uchun shablon (2).xlsx formatida yuklab olish"
           >
-            <FileSpreadsheet size={15} /> Qabul shabloni ({GROUPS.length} guruh)
+            <FileSpreadsheet size={15} /> Qabul shabloni ({list.length} guruh)
           </button>
           <button type="button" className="btn-ghost h-9 text-[12.5px]" onClick={openAllPdfs} title="Barcha guruhlar PDF jurnalini (bitta fayl) yangi oynada ochish">
-            <FileText size={15} className="text-sky" /> Barcha PDF ({GROUPS.length})
+            <FileText size={15} className="text-sky" /> Barcha PDF ({list.length})
           </button>
           <button type="button" className="btn-ghost h-9 text-[12.5px]" onClick={() => window.print()} title="Jurnallarni chop etish (Ctrl+P)">
             <Printer size={15} /> Chop etish
@@ -205,15 +226,16 @@ function GroupsJournal({ students, onOpen, notify }: { students: Student[]; onOp
           <div className="flex flex-wrap items-center justify-between gap-2">
             <div className="text-[13.5px] font-bold text-fg">Tanlangan guruhlarni bitta Excel faylda Telegramga yuborish</div>
             <div className="flex items-center gap-1.5 text-[12px]">
-              <button type="button" className="btn-ghost h-7 px-2 text-[11.5px]" onClick={() => setSelectedGroups([...GROUPS])}>Barchasi ({GROUPS.length})</button>
+              <button type="button" className="btn-ghost h-7 px-2 text-[11.5px]" onClick={() => setSelectedGroups([...list])}>Barchasi ({list.length})</button>
               <button type="button" className="btn-ghost h-7 px-2 text-[11.5px]" onClick={() => setSelectedGroups([])}>Tozalash</button>
             </div>
           </div>
 
           <div className="flex flex-wrap gap-2">
-            {[...GROUPS, ...(groups.other.length ? ['safdan'] : [])].map((g) => {
+            {[...list, ...specialKeys].map((g) => {
               const active = selectedGroups.includes(g)
-              const count = g === 'safdan' ? groups.other.length : (groups.map.get(g)?.length ?? 0)
+              const sp = g in SPECIAL ? SPECIAL[g as SpecialKey] : null
+              const count = sp ? groups.special[g as SpecialKey].length : (groups.map.get(g)?.length ?? 0)
               return (
                 <button
                   key={g}
@@ -227,7 +249,7 @@ function GroupsJournal({ students, onOpen, notify }: { students: Student[]; onOp
                   )}
                 >
                   <Check size={13} className={active ? 'opacity-100 text-sky' : 'opacity-0'} />
-                  <span>{g === 'safdan' ? 'Safdan chiqarilganlar' : `Guruh ${g}`}</span>
+                  <span>{sp ? sp.label : `Guruh ${g}`}</span>
                   <span className="mono text-[11px] text-fg-subtle">({count})</span>
                 </button>
               )
@@ -268,13 +290,16 @@ function GroupsJournal({ students, onOpen, notify }: { students: Student[]; onOp
       )}
 
       <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
-        {GROUPS.map((g) => (
-          <GroupCard key={g} code={g} title={GROUP_TITLES[g]} leader={GROUP_LEADERS[g]} students={groups.map.get(g)!} onOpen={onOpen} notify={notify} />
+        {list.map((g) => (
+          <GroupCard key={g} code={g} title={groupTitle(g)} leader={GROUP_LEADERS[g]} students={groups.map.get(g)!} onOpen={onOpen} notify={notify} />
         ))}
       </div>
-      {groups.other.length > 0 && (
-        <GroupCard code="safdan" title="Talabalar safidan chiqarilganlar" students={groups.other} withdrawn onOpen={onOpen} notify={notify} />
+      {!list.length && (
+        <div className="panel px-5 py-6 text-center text-[13px] text-fg-muted">Bu kurs guruhlari hali kiritilmagan.</div>
       )}
+      {specialKeys.map((k) => (
+        <GroupCard key={k} code={k} title={SPECIAL[k].label} students={groups.special[k]} special={k} onOpen={onOpen} notify={notify} />
+      ))}
     </div>
   )
 }
