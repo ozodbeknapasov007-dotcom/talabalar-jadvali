@@ -130,5 +130,17 @@
     },
     "id": "chg_1790610564177_75m51",
     "created_at": "2026-09-28T15:49:24.177Z"
+  },
+  {
+    "type": "verify_student",
+    "data": {
+      "row": 178,
+      "status": "TASDIQLANDI",
+      "shnum": "",
+      "pinfl": "41507985590074",
+      "ism": ""
+    },
+    "id": "chg_1790610569129_sprix",
+    "created_at": "2026-09-28T15:49:29.129Z"
   }
 ]
