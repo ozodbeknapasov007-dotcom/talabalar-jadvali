@@ -82,5 +82,17 @@
     },
     "id": "chg_1790610562620_76f12",
     "created_at": "2026-09-28T15:49:22.620Z"
+  },
+  {
+    "type": "verify_student",
+    "data": {
+      "row": 177,
+      "status": "TASDIQLANDI",
+      "shnum": "",
+      "pinfl": "407129 0256 0079",
+      "ism": "Uzoqova Fazilat"
+    },
+    "id": "chg_1790610565037_rozgn",
+    "created_at": "2026-09-28T15:49:25.037Z"
   }
 ]
