@@ -2,8 +2,8 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import { AlertTriangle, ChevronLeft, ChevronRight, FileText, Link2, Pencil, Save, Trash2, X } from 'lucide-react'
-import { GROUPS, WITHDRAWN_GROUP, YON_OPTIONS } from '@/lib/config'
-import { decodePinfl, dobFromPinfl, findDuplicates, formatPinfl, fullName, isWithdrawn, NAME_FLAGS } from '@/lib/student'
+import { YON_OPTIONS } from '@/lib/config'
+import { decodePinfl, dobFromPinfl, findDuplicates, formatPinfl, fullName, groupOptions, isOfficialGroup, NAME_FLAGS } from '@/lib/student'
 import { EDIT_FIELDS, type EditFields, type Student } from '@/lib/types'
 import DocImages from './DocImages'
 import MalumotnomaModal from './MalumotnomaModal'
@@ -127,11 +127,7 @@ function EditForm({ student, all, onCancel, onSave }: { student: Student; all: S
     try { await onSave(changed) } finally { setSaving(false) }
   }
 
-  const groupOptions: [string, string][] = [
-    ['', 'Guruh belgilanmagan'],
-    ...GROUPS.map((g) => [g, `${g} (${g === '26-01' ? 'Farmatsiya' : 'Hamshiralik'})`] as [string, string]),
-    [WITHDRAWN_GROUP, 'Talabalar safidan chiqarilganlar'],
-  ]
+  const groupChoices: [string, string][] = [['', 'Guruh belgilanmagan'], ...groupOptions(all)]
 
   return (
     <form className="space-y-3" onSubmit={(e) => { e.preventDefault(); void submit() }}>
@@ -163,11 +159,11 @@ function EditForm({ student, all, onCancel, onSave }: { student: Student; all: S
       <Section n={3} title="Shartnoma va guruh" tone="sky">
         <div className="grid gap-3 sm:grid-cols-2">
           <Input label="Shartnoma raqami" value={f.shnum} onChange={set('shnum')} mono placeholder="203" />
-          <Choice label="Akademik guruh" value={f.group} onChange={set('group')} options={groupOptions} />
+          <Choice label="Akademik guruh" value={f.group} onChange={set('group')} options={groupChoices} />
           <div className="sm:col-span-2"><Input label="Telefon" value={f.tel} onChange={set('tel')} placeholder="+998 90 123 45 67" /></div>
         </div>
       </Section>
-      <div className="sticky bottom-0 -mx-1 flex gap-2 bg-gradient-to-t from-ink-900 via-ink-900 to-transparent px-1 pt-4 pb-1">
+      <div className="sticky -bottom-4 -mx-1 flex gap-2 bg-gradient-to-t from-ink-900 via-ink-900 to-transparent px-1 pt-4 pb-4 sm:-bottom-5 sm:pb-5">
         <button type="submit" className="btn-success flex-1 py-2.5" disabled={saving || !f.ism.trim()}>
           <Save size={16} /> {saving ? 'Saqlanmoqda…' : 'Saqlash'}
         </button>
@@ -268,11 +264,11 @@ export default function StudentModal({ student: s, all, hasPrev, hasNext, onNav,
             <div className="mt-0.5 flex flex-wrap items-center gap-2 text-[12px] text-fg-muted">
               <GroupBadge group={s.group} />
               <span className="mono">Shartnoma №{s.shnum || '—'}</span>
-              {isWithdrawn(s.group) && <span className="text-rose">rasmiy kontingentga kirmaydi</span>}
+              {!isOfficialGroup(s.group) && <span className="text-rose">rasmiy kontingentga kirmaydi</span>}
             </div>
           </div>
           <div className="ml-auto flex items-center gap-2">
-            {!isWithdrawn(s.group) && <button type="button" className="btn-ghost h-9" onClick={() => setCert(true)} title="O'qiyotganligi haqida ma'lumotnoma"><FileText size={15} /><span className="hidden sm:inline">Ma'lumotnoma</span></button>}
+            {isOfficialGroup(s.group) && <button type="button" className="btn-ghost h-9" onClick={() => setCert(true)} title="O'qiyotganligi haqida ma'lumotnoma"><FileText size={15} /><span className="hidden sm:inline">Ma'lumotnoma</span></button>}
             {!editing && <button type="button" className="btn-ghost h-9" onClick={() => setEditing(true)}><Pencil size={15} /><span className="hidden sm:inline">Tahrirlash</span></button>}
             <button type="button" className="btn-danger h-9" onClick={del} disabled={deleting} title="Talabani bazadan o'chirish"><Trash2 size={15} /><span className="hidden md:inline">O'chirish</span></button>
             <button type="button" className="grid size-9 place-items-center rounded-xl text-fg-muted hover:bg-ink-700 hover:text-fg" onClick={onClose} title="Yopish (Esc)"><X size={20} /></button>

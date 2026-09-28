@@ -4,7 +4,8 @@ import { useCallback, useDeferredValue, useEffect, useMemo, useState } from 'rea
 import { AlertTriangle, BookOpenCheck, Database, Loader2, ServerCrash } from 'lucide-react'
 import { exportFiltered } from '@/lib/excel'
 import { useStudents } from '@/lib/store'
-import { EMPTY_FILTERS, fullName, matches, scanDuplicates, searchText, type Filters } from '@/lib/student'
+import { COURSES } from '@/lib/config'
+import { academicGroups, EMPTY_FILTERS, fullName, isOfficialGroup, kursOf, matches, scanDuplicates, searchText, type Filters } from '@/lib/student'
 import type { EditFields, Student } from '@/lib/types'
 import FilterBar, { type DisplayMode } from './FilterBar'
 import GroupsJournal from './GroupsJournal'
@@ -62,6 +63,18 @@ export default function Portal() {
     const q = deferredFilters.search.trim().toLowerCase()
     return indexed.filter((x) => matches(x.s, x.text, deferredFilters, q)).map((x) => x.s)
   }, [indexed, deferredFilters])
+
+  const kurs = filters.kurs ? Number(filters.kurs) : null
+  const groups = useMemo(() => academicGroups(data.students, kurs), [data.students, kurs])
+  const kursCounts = useMemo(() => {
+    const c: Record<number, number> = {}
+    for (const s of data.students) {
+      if (!isOfficialGroup(s.group)) continue
+      const k = kursOf(s.group)
+      if (k) c[k] = (c[k] ?? 0) + 1
+    }
+    return c
+  }, [data.students])
 
   const dupGroups = useMemo(() => scanDuplicates(data.students), [data.students])
   const duplicateRows = useMemo(() => new Set(dupGroups.flatMap((g) => g.students.map((s) => s.row))), [dupGroups])
@@ -166,7 +179,7 @@ export default function Portal() {
         {data.state === 'ready' && (
           <>
             <nav className="flex flex-wrap items-center gap-2">
-              {([['database', Database, 'Umumiy baza', data.students.length], ['groups', BookOpenCheck, 'Guruhlar jurnali', 7]] as const).map(([v, Icon, t, n]) => (
+              {([['database', Database, 'Umumiy baza', data.students.length], ['groups', BookOpenCheck, 'Guruhlar jurnali', groups.length]] as const).map(([v, Icon, t, n]) => (
                 <button
                   key={v}
                   type="button"
@@ -178,12 +191,28 @@ export default function Portal() {
                   <span className="rounded-md bg-ink-700/80 px-1.5 text-[11.5px] tabular-nums">{n}</span>
                 </button>
               ))}
-              {data.error && <span className="ml-auto text-[12px] text-amber">Oxirgi yangilash xatosi: {data.error}</span>}
+              <div className="flex w-full gap-1 overflow-x-auto rounded-xl border border-line bg-ink-900/60 p-1 sm:ml-auto sm:w-auto" role="tablist" aria-label="Kurs">
+                {([['', 'Barchasi', Object.values(kursCounts).reduce((a, b) => a + b, 0)], ...COURSES.map((c) => [String(c.kurs), `${c.kurs}-kurs`, kursCounts[c.kurs] ?? 0])] as [string, string, number][]).map(([k, t, n]) => (
+                  <button
+                    key={k || 'all'}
+                    type="button"
+                    role="tab"
+                    aria-selected={filters.kurs === k}
+                    onClick={() => patchFilters({ kurs: k, group: '' })}
+                    className={cx('flex flex-1 items-center justify-center gap-1 whitespace-nowrap rounded-lg px-1.5 py-1.5 text-[12px] font-semibold transition-colors sm:flex-none sm:gap-1.5 sm:px-3 sm:text-[12.5px]',
+                      filters.kurs === k ? 'bg-gradient-to-r from-blue/80 to-sky/80 text-white' : 'text-fg-muted hover:text-fg')}
+                  >
+                    {t}
+                    <span className={cx('rounded-md px-1 text-[11px] tabular-nums sm:px-1.5', filters.kurs === k ? 'bg-white/20' : 'bg-ink-700/80')}>{n}</span>
+                  </button>
+                ))}
+              </div>
+              {data.error && <span className="w-full text-[12px] text-amber">Oxirgi yangilash xatosi: {data.error}</span>}
             </nav>
 
             {view === 'database' ? (
               <>
-                <Overview students={data.students} filters={filters} onFilter={patchFilters} />
+                <Overview students={data.students} groups={groups} filters={filters} onFilter={patchFilters} />
 
                 {dupGroups.length > 0 && (
                   <div className="panel border-rose/40 bg-rose/5 p-4">
@@ -205,11 +234,11 @@ export default function Portal() {
                   </div>
                 )}
 
-                <FilterBar filters={filters} onFilter={patchFilters} shown={shown.length} total={data.students.length} mode={mode} onMode={setMode} onExportShown={onExportShown} />
+                <FilterBar filters={filters} groups={groups} onFilter={patchFilters} shown={shown.length} total={data.students.length} mode={mode} onMode={setMode} onExportShown={onExportShown} />
                 <StudentList students={shown} mode={mode} duplicateRows={duplicateRows} onOpen={onOpen} onToggleVerify={onToggleVerify} onChangeGroup={onChangeGroup} />
               </>
             ) : (
-              <GroupsJournal students={data.students} onOpen={onOpen} notify={notify} />
+              <GroupsJournal key={filters.kurs || 'all'} students={data.students} groups={groups} onOpen={onOpen} notify={notify} />
             )}
 
             <footer className="pt-4 pb-8 text-center text-[12px] text-fg-subtle">

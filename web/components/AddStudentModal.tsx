@@ -3,8 +3,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { AlertTriangle, ClipboardPaste, Loader2, Plus, Save, Sparkles, Upload, UserPlus, X } from 'lucide-react'
 import { AI_MODELS, analyzeAndUploadDocs, getFilesFromClipboard, getSavedAiModel, setSavedAiModel, type AiModelId } from '@/lib/ai-doc'
-import { GROUPS, WITHDRAWN_GROUP, YON_OPTIONS } from '@/lib/config'
-import { decodePinfl, dobFromPinfl, findDuplicates, fullName } from '@/lib/student'
+import { YON_OPTIONS } from '@/lib/config'
+import { decodePinfl, dobFromPinfl, findDuplicates, fullName, groupOptions, isAcademicLeave, isOfficialGroup, isWithdrawn } from '@/lib/student'
 import type { EditFields, Student } from '@/lib/types'
 import { cx } from './ui'
 
@@ -45,7 +45,7 @@ function Choice({ label, value, onChange, options }: { label: string; value: str
 }
 
 function makeInitial(group?: string): EditFields {
-  const validGroup = group && (GROUPS as readonly string[]).includes(group) ? group : '26-02'
+  const validGroup = group && (isOfficialGroup(group) || isAcademicLeave(group) || isWithdrawn(group)) ? group : '26-02'
   return {
     ism: '',
     ota: '',
@@ -164,10 +164,7 @@ export default function AddStudentModal({ all, defaultGroup, onClose, onAdd }: P
     }
   }
 
-  const groupOptions: [string, string][] = [
-    ...GROUPS.map((g) => [g, `${g} (${g === '26-01' ? 'Farmatsiya' : 'Hamshiralik'})`] as [string, string]),
-    [WITHDRAWN_GROUP, 'Talabalar safidan chiqarilganlar'],
-  ]
+  const groupChoices = groupOptions(all)
 
   return (
     <div
@@ -298,12 +295,12 @@ export default function AddStudentModal({ all, defaultGroup, onClose, onAdd }: P
             </h4>
             <div className="grid gap-3 sm:grid-cols-3">
               <Input label="Shartnoma raqami" value={f.shnum || ''} onChange={set('shnum')} mono placeholder="319" />
-              <Choice label="Akademik guruh" value={f.group || '26-02'} onChange={onGroupChange} options={groupOptions} />
+              <Choice label="Akademik guruh" value={f.group || '26-02'} onChange={onGroupChange} options={groupChoices} />
               <Input label="Telefon raqami" value={f.tel || ''} onChange={set('tel')} placeholder="+998 90 123 45 67" />
             </div>
           </section>
 
-          <div className="sticky bottom-0 flex flex-wrap gap-2.5 border-t border-line bg-ink-900 pt-3">
+          <div className="sticky -bottom-5 -mx-5 flex flex-wrap gap-2.5 border-t border-line bg-ink-900 px-5 pt-3 pb-5">
             <button type="submit" className="btn-success flex-1 py-2.5" disabled={saving || !(f.ism || '').trim()}>
               <Save size={16} /> {saving ? 'Saqlanmoqda…' : "Talabani qo'shish"}
             </button>

@@ -2,7 +2,7 @@
 
 import { memo, useEffect, useRef } from 'react'
 import { FileDown, LayoutGrid, LayoutList, Rows3, Search, X } from 'lucide-react'
-import { GROUPS, WITHDRAWN_GROUP } from '@/lib/config'
+import { ACADEMIC_LEAVE_GROUP, WITHDRAWN_GROUP } from '@/lib/config'
 import { EMPTY_FILTERS, type Filters } from '@/lib/student'
 import { cx } from './ui'
 
@@ -10,6 +10,7 @@ export type DisplayMode = 'cards' | 'compact' | 'table'
 
 interface Props {
   filters: Filters
+  groups: string[]
   onFilter: (patch: Partial<Filters>) => void
   shown: number
   total: number
@@ -32,9 +33,10 @@ function Select({ label, value, onChange, options }: {
   )
 }
 
-function FilterBar({ filters, onFilter, shown, total, mode, onMode, onExportShown }: Props) {
+function FilterBar({ filters, groups, onFilter, shown, total, mode, onMode, onExportShown }: Props) {
   const searchRef = useRef<HTMLInputElement>(null)
-  const active = (Object.keys(EMPTY_FILTERS) as (keyof Filters)[]).some((k) => filters[k])
+  // Kurs — yuqoridagi alohida tanlagich, "tozalash" uni o'zgartirmaydi
+  const active = (Object.keys(EMPTY_FILTERS) as (keyof Filters)[]).some((k) => k !== 'kurs' && filters[k])
 
   // "/" yoki Ctrl+K — qidiruvga o'tish
   useEffect(() => {
@@ -89,7 +91,7 @@ function FilterBar({ filters, onFilter, shown, total, mode, onMode, onExportShow
 
       <div className="mt-3 grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
         <Select label="Guruh" value={filters.group} onChange={(v) => onFilter({ group: v })}
-          options={[...GROUPS.map((g) => [g, `Guruh ${g}`] as [string, string]), [WITHDRAWN_GROUP, 'Safdan chiqarilganlar']]} />
+          options={[...groups.map((g) => [g, `Guruh ${g}`] as [string, string]), [ACADEMIC_LEAVE_GROUP, "Akademik ta'tildagilar"], [WITHDRAWN_GROUP, 'Safdan chiqarilganlar']]} />
         <Select label="Tasdiq" value={filters.verified} onChange={(v) => onFilter({ verified: v })}
           options={[['TASDIQLANDI', 'Tasdiqlanganlar'], ['KUTILMOQDA', 'Kutilayotganlar']]} />
         <Select label="Hujjat holati" value={filters.status} onChange={(v) => onFilter({ status: v })}
@@ -108,7 +110,7 @@ function FilterBar({ filters, onFilter, shown, total, mode, onMode, onExportShow
           <span className="text-fg-subtle"> / {total}</span>
         </span>
         {active && (
-          <button type="button" className="btn-ghost h-8 px-2.5 text-[12px]" onClick={() => onFilter(EMPTY_FILTERS)}>
+          <button type="button" className="btn-ghost h-8 px-2.5 text-[12px]" onClick={() => onFilter({ ...EMPTY_FILTERS, kurs: filters.kurs })}>
             <X size={14} /> Filtrlarni tozalash
           </button>
         )}

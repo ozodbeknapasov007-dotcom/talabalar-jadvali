@@ -1,6 +1,22 @@
-// 26-07 guruhi 26.09.2026 da tugatildi (talabasi 26-03 ga o'tkazildi)
-export const GROUPS = ['26-01', '26-02', '26-03', '26-04', '26-05', '26-06'] as const
+/** Joriy o'quv yili boshlangan yil: 2026 → 2026/2027 */
+export const OQUV_YILI_BOSHI = 2026
 
+/**
+ * Kurslar va ularning akademik guruhlari. Guruh kodi qabul yilini bildiradi:
+ * 26-xx — 2026-yil qabuli (1-kurs), 25-xx — 2-kurs, 24-xx — 3-kurs.
+ * Ro'yxatda yo'q, lekin "YY-NN" ko'rinishidagi guruh ham avtomatik akademik guruh hisoblanadi.
+ */
+export const COURSES: { kurs: number; groups: readonly string[] }[] = [
+  // 26-07 guruhi 26.09.2026 da tugatildi (talabasi 26-03 ga o'tkazildi)
+  { kurs: 1, groups: ['26-01', '26-02', '26-03', '26-04', '26-05', '26-06'] },
+  { kurs: 2, groups: [] },
+  { kurs: 3, groups: [] },
+]
+
+export const GROUPS: readonly string[] = COURSES.flatMap((c) => c.groups)
+
+/** Maxsus guruhlar — rasmiy kontingentga kirmaydi */
+export const ACADEMIC_LEAVE_GROUP = "Akademik ta'til olganlar"
 export const WITHDRAWN_GROUP = 'Talabalar safidan chiqarilganlar'
 
 export const GROUP_LEADERS: Record<string, string> = {

@@ -257,7 +257,9 @@ total = len(students)
 GROUPS_LIST_OFFICIAL = ["26-01", "26-02", "26-03", "26-04", "26-05", "26-06"]
 official_students = [s for s in students if s['group'] in GROUPS_LIST_OFFICIAL]
 official_total = len(official_students)   # rasmiy kontingent soni (safdan chiqarilganlarsiz)
-withdrawn_students = [s for s in students if is_withdrawn_group(s['group']) or s['group'] not in GROUPS_LIST_OFFICIAL]
+# Akademik ta'til olganlar — alohida maxsus guruh (safdan chiqarilganlarga qo'shilmaydi)
+leave_students = [s for s in students if 'akademik' in str(s['group'] or '').lower()]
+withdrawn_students = [s for s in students if (is_withdrawn_group(s['group']) or s['group'] not in GROUPS_LIST_OFFICIAL) and s not in leave_students]
 withdrawn_count = len(withdrawn_students)
 
 full  = sum(1 for s in official_students if s['status'] == 'full')

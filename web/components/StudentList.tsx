@@ -3,8 +3,7 @@
 import { memo, useLayoutEffect, useRef, useState } from 'react'
 import { useWindowVirtualizer } from '@tanstack/react-virtual'
 import { FileText, Link2, Phone } from 'lucide-react'
-import { GROUPS, WITHDRAWN_GROUP } from '@/lib/config'
-import { formatPinfl, fullName, NAME_FLAGS, passTypeShort } from '@/lib/student'
+import { formatPinfl, fullName, groupOptions, NAME_FLAGS, passTypeShort } from '@/lib/student'
 import type { Student } from '@/lib/types'
 import type { DisplayMode } from './FilterBar'
 import { cx, GroupBadge, Mono, StatusIcon, VerifyButton } from './ui'
@@ -17,6 +16,8 @@ interface Props {
   onToggleVerify: (s: Student) => void
   onChangeGroup?: (s: Student, group: string) => void
 }
+
+const GROUP_CHOICES = groupOptions([])
 
 function QuickGroupBadge({ student, short, onChangeGroup }: { student: Student; short?: boolean; onChangeGroup?: (s: Student, group: string) => void }) {
   if (!onChangeGroup) return <GroupBadge group={student.group} short={short} />
@@ -34,10 +35,7 @@ function QuickGroupBadge({ student, short, onChangeGroup }: { student: Student; 
         className="absolute inset-0 cursor-pointer opacity-0"
       >
         <option value="">Guruh belgilanmagan</option>
-        {GROUPS.map((g) => (
-          <option key={g} value={g}>{g} ({g === '26-01' ? 'Farmatsiya' : 'Hamshiralik'})</option>
-        ))}
-        <option value={WITHDRAWN_GROUP}>Safdan chiqarilgan</option>
+        {GROUP_CHOICES.map(([g, t]) => <option key={g} value={g}>{t}</option>)}
       </select>
     </span>
   )
@@ -214,7 +212,7 @@ function CardGrid({ students, duplicateRows, compact, onOpen, onToggleVerify, on
   )
 }
 
-const COLS = '40px 80px 72px minmax(200px,1.6fr) 124px 148px 90px 128px minmax(120px,1fr) 46px 118px 36px'
+const COLS = '40px 80px 96px minmax(200px,1.6fr) 124px 148px 90px 128px minmax(120px,1fr) 46px 118px 36px'
 
 const TableRow = memo(function TableRow({ s, n, dup, onOpen, onToggleVerify, onChangeGroup }: {
   s: Student; n: number; dup: boolean; onOpen: (s: Student) => void; onToggleVerify: (s: Student) => void; onChangeGroup?: (s: Student, group: string) => void
@@ -250,7 +248,7 @@ function Table({ students, duplicateRows, onOpen, onToggleVerify, onChangeGroup 
 
   return (
     <div className="panel overflow-x-auto">
-      <div className="min-w-[1340px]">
+      <div className="min-w-[1364px]">
         <div
           className="grid items-center gap-2.5 border-b border-line-strong bg-ink-850 px-4 py-3 text-[11px] font-bold tracking-wider text-fg-subtle uppercase"
           style={{ gridTemplateColumns: COLS }}

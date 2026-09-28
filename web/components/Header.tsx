@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import { ChevronDown, CloudCheck, CloudUpload, FileSpreadsheet, Loader2, Moon, RefreshCw, Download, Send, Sun } from 'lucide-react'
+import { ChevronDown, CloudCheck, CloudUpload, FileSpreadsheet, Loader2, Moon, RefreshCw, Download, Send, Sun, UserPlus } from 'lucide-react'
 import { exportRole, ROLE_META, sendRoleToTelegram, type Role } from '@/lib/excel'
 import type { Student } from '@/lib/types'
 import type { Notify } from './Toast'
@@ -115,7 +115,7 @@ function ExportMenu({ students, notify }: { students: Student[]; notify: Notify 
     <div ref={ref} className="relative">
       <button type="button" className="btn-primary h-9" onClick={() => setOpen((o) => !o)} aria-expanded={open}>
         <FileSpreadsheet size={16} />
-        Excel<span className="hidden sm:inline"> eksport</span>
+        <span>Excel<span className="hidden sm:inline">&nbsp;eksport</span></span>
         <ChevronDown size={14} className={cx('transition-transform', open && 'rotate-180')} />
       </button>
       {open && (
@@ -208,7 +208,7 @@ export default function Header({
         <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto">
           <SyncBadge pendingCount={pendingCount} notify={notify} />
           <button type="button" className="btn-success h-9" onClick={onAdd} title="Yangi talaba qo'shish">
-            <span className="text-[15px] leading-none font-bold">+</span>
+            <UserPlus size={15} />
             <span>Talaba qo'shish</span>
           </button>
           <button type="button" className="btn-ghost h-9" onClick={onRefresh} disabled={refreshing} title="Serverdan eng yangi ma'lumotni olish">

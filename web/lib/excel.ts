@@ -1,7 +1,7 @@
 'use client'
 
 import { GROUPS, GROUP_LEADERS } from './config'
-import { byName, formatDate, fullName, isOfficialGroup, isWithdrawn, tugilganTuman } from './student'
+import { byName, formatDate, fullName, isAcademicLeave, isOfficialGroup, isOutside, isWithdrawn, tugilganTuman } from './student'
 import type { Student } from './types'
 import ISTISNOLAR from './qabul-istisnolar.json'
 import { QABUL_GROUP_HEADER, QABUL_GROUP_WIDTH, QABUL_HEADERS, QABUL_NAMUNA, QABUL_WIDTHS, REVIEW_COL, qabulCells, qabulRow, type QabulIstisno } from './qabul'
@@ -217,16 +217,27 @@ export async function exportQabulShablonGroup(students: Student[], group: string
   return list.length
 }
 
-/** Bitta guruh (yoki safdan chiqarilganlar) — guruh rahbari ustunlari bilan */
+/** Guruh tanlovi: guruh kodi yoki maxsus kalit — 'safdan' (safdan chiqarilgan / guruhsiz), 'akademik' */
+function inSelection(s: Student, key: string) {
+  if (key === 'safdan') return isOutside(s.group)
+  if (key === 'akademik') return isAcademicLeave(s.group)
+  return (s.group || '').trim() === key
+}
+
+function sheetName(key: string) {
+  const name = key === 'safdan' ? 'Safdan chiqarilganlar' : key === 'akademik' ? "Akademik ta'til" : /^\d/.test(key) ? `Guruh ${key}` : key
+  return name.replace(/[:\\/?*[\]]/g, ' ').slice(0, 31)
+}
+
+/** Bitta guruh (yoki maxsus guruh) — guruh rahbari ustunlari bilan */
 export async function exportGroup(students: Student[], group: string) {
   const X = await loadXlsx()
-  const withdrawn = isWithdrawn(group)
-  const list = students
-    .filter((s) => (withdrawn ? !isOfficialGroup(s.group) : s.group === group))
-    .sort(byName)
+  const key = isWithdrawn(group) ? 'safdan' : isAcademicLeave(group) ? 'akademik' : group
+  const list = students.filter((s) => inSelection(s, key)).sort(byName)
   const wb = X.utils.book_new()
-  X.utils.book_append_sheet(wb, buildSheet(X, list, 'guruh_rahbari'), withdrawn ? 'Safdan chiqarilganlar' : `Guruh ${group}`)
-  X.writeFile(wb, withdrawn ? 'Talabalar_Safidan_Chiqarilganlar.xlsx' : `Guruh_${group}_Talabalar_Royxati.xlsx`, { cellStyles: true, bookSST: false })
+  X.utils.book_append_sheet(wb, buildSheet(X, list, 'guruh_rahbari'), sheetName(key))
+  const file = key === 'safdan' ? 'Talabalar_Safidan_Chiqarilganlar.xlsx' : key === 'akademik' ? 'Akademik_Tatil_Olganlar.xlsx' : `Guruh_${group}_Talabalar_Royxati.xlsx`
+  X.writeFile(wb, file, { cellStyles: true, bookSST: false })
   return list.length
 }
 
@@ -304,10 +315,10 @@ export async function sendGroupsToTelegram(
   const subset = isAll && selected.length === 0
     ? [...students].sort((a, b) => groupOrder((a.group || '').trim(), (b.group || '').trim()) || byName(a, b))
     : students
-        .filter((s) => selected.some((g) => (g === 'safdan' ? !isOfficialGroup(s.group) : s.group === g)))
+        .filter((s) => selected.some((g) => inSelection(s, g)))
         .sort((a, b) => groupOrder((a.group || '').trim(), (b.group || '').trim()) || byName(a, b))
 
-  const mainSheetTitle = selected.length === 1 ? `Guruh ${selected[0]}`.slice(0, 31) : 'Jami talabalar'
+  const mainSheetTitle = selected.length === 1 ? sheetName(selected[0]) : 'Jami talabalar'
   X.utils.book_append_sheet(wb, buildSheet(X, subset, 'guruh_rahbari'), mainSheetTitle)
 
   if (selected.length !== 1) {
@@ -315,9 +326,8 @@ export async function sendGroupsToTelegram(
       ? selected
       : [...new Set(students.map((s) => (s.group || '').trim()).filter(Boolean))].sort(groupOrder)
     for (const g of groupsToInclude) {
-      const list = students.filter((s) => (g === 'safdan' ? !isOfficialGroup(s.group) : (s.group || '').trim() === g)).sort(byName)
-      const name = (g === 'safdan' ? 'Safdan chiqarilganlar' : /^\d/.test(g) ? `Guruh ${g}` : g).replace(/[:\\/?*[\]]/g, ' ').slice(0, 31)
-      X.utils.book_append_sheet(wb, buildSheet(X, list, 'guruh_rahbari'), name)
+      const list = students.filter((s) => inSelection(s, g)).sort(byName)
+      X.utils.book_append_sheet(wb, buildSheet(X, list, 'guruh_rahbari'), sheetName(g))
     }
   }
 
