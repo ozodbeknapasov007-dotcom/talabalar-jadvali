@@ -41,19 +41,22 @@ Sayt har 45 soniyada (va oynaga qaytilganda) yangi ma'lumotni o'zi tortadi.
 | `lib/excel.ts` | 4 bo'limli Excel eksport (eski saytdagi bilan bir xil ustunlar) |
 | `components/StudentList.tsx` | Virtual ro'yxat — karta va jadval ko'rinishi |
 | `components/StudentModal.tsx` | Talaba oynasi: ko'rish, tahrirlash, hujjat rasmlari |
-| `lib/server/malumotnoma.ts` | O'qiyotganligi haqida ma'lumotnoma — Word shablonini to'ldiradi (`/api/malumotnoma`) |
-| `assets/malumotnoma/shablon.docx` | Ma'lumotnoma shabloni (Word) |
+| `lib/server/malumotnoma-rasm.tsx` | Ma'lumotnoma JPG rasmi — shablon joylashuvi bo'yicha chiziladi (`/api/malumotnoma`) |
+| `lib/server/malumotnoma.ts` | Word shablonini to'ldiradi (`/api/malumotnoma?format=docx`), shablondagi rasmlarni beradi |
+| `assets/malumotnoma/` | `shablon.docx` (Word shablon) va shriftlar (Liberation Serif = Times New Roman o'lchamlari) |
 
 ## O'qiyotganligi haqida ma'lumotnoma
 
-- **Portal**: talaba oynasi → **Ma'lumotnoma** → sanani tanlash → **Yuklab olish (.docx)** yoki **Botga yuborish**.
-- **Bot**: `/malumotnoma 285` (shartnoma raqami yoki F.I.SH) — faqat `TELEGRAM_CHAT_ID` chatida ishlaydi, `.docx` yuboradi.
+- **Portal**: talaba oynasi → **Ma'lumotnoma** → sanani tanlash → rasm ko'rinadi → **Yuklab olish (.jpg)** yoki **Botga yuborish** (rasm). Tahrirlash uchun **Word (.docx)** havolasi ham bor.
+- **Bot**: `/malumotnoma 285` (shartnoma raqami yoki F.I.SH) — faqat `TELEGRAM_CHAT_ID` chatida ishlaydi, JPG rasm yuboradi.
 - Matn faqat bazadan olinadi (F.I.SH, yo'nalish, guruh); o'quv yili va bosqich sanadan hisoblanadi.
   Safdan chiqarilgan talabaga berilmaydi.
 - Botga yuborish uchun `TELEGRAM_BOT_TOKEN` va `TELEGRAM_CHAT_ID` kerak (Vercel'da yoki `.env.local` da).
 - **Shablonni o'zgartirish**: `assets/malumotnoma/shablon.docx` ni Word'da oching va tahrirlang.
   `{{FISH}}`, `{{OQUV_YILI}}`, `{{YONALISH}}`, `{{BOSQICH}}`, `{{GURUH}}`, `{{SANA}}` belgilarini o'chirmang —
-  shu joylarga talaba ma'lumotlari qo'yiladi. Qolgan hammasi (rasmlar, shrift, joylashuv) o'zgarmaydi.
+  shu joylarga talaba ma'lumotlari qo'yiladi. Word fayl shablonning o'zidan to'ldiriladi. JPG rasm esa logotip va
+  direktor bloki rasmini (o'lchami va chap-o'ng joyi bilan) shablondan oladi, matn joylashuvi esa kodda
+  (`malumotnoma-rasm.tsx`) — shablonda matn joyini o'zgartirsangiz, JPG uchun uni ham moslash kerak.
 
 ## Hali ko'chirilmagan (2-bosqich)
 

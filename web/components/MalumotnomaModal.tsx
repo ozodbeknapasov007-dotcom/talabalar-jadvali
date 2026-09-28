@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { Download, FileText, Loader2, Send, X } from 'lucide-react'
-import { malumotnomaBlocker, malumotnomaData, malumotnomaFileName, todayTashkent } from '@/lib/malumotnoma'
+import { malumotnomaBlocker, malumotnomaFileName, todayTashkent } from '@/lib/malumotnoma'
 import { fullName } from '@/lib/student'
 import type { Student } from '@/lib/types'
 import { cx } from './ui'
@@ -13,12 +13,12 @@ const fromIso = (d: string) => d.split('-').reverse().join('.')
 
 export default function MalumotnomaModal({ student: s, onClose }: { student: Student; onClose: () => void }) {
   const [sana, setSana] = useState(todayTashkent)
+  const [loaded, setLoaded] = useState(false)
   const [sending, setSending] = useState(false)
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null)
 
   const blocker = malumotnomaBlocker(s)
-  const d = malumotnomaData(s, sana)
-  const href = `/api/malumotnoma?row=${s.row}&sana=${encodeURIComponent(sana)}`
+  const src = `/api/malumotnoma?row=${s.row}&sana=${encodeURIComponent(sana)}`
 
   const send = async () => {
     setSending(true)
@@ -41,7 +41,7 @@ export default function MalumotnomaModal({ student: s, onClose }: { student: Stu
 
   return (
     <div className="animate-fade-in fixed inset-0 z-[60] flex items-stretch justify-center bg-ink-950/85 backdrop-blur-sm sm:items-center sm:p-4" onMouseDown={(e) => { if (e.target === e.currentTarget) onClose() }}>
-      <div className="animate-pop-in flex h-full w-full max-w-[720px] flex-col overflow-hidden border-line-strong bg-ink-900 shadow-2xl shadow-black/60 sm:h-auto sm:max-h-[94vh] sm:rounded-3xl sm:border" role="dialog" aria-modal="true" aria-label="Ma'lumotnoma">
+      <div className="animate-pop-in flex h-full w-full max-w-[720px] flex-col overflow-hidden border-line-strong bg-ink-900 shadow-2xl shadow-black/60 sm:h-[94vh] sm:rounded-3xl sm:border" role="dialog" aria-modal="true" aria-label="Ma'lumotnoma">
         <header className="flex items-center gap-3 border-b border-line bg-ink-850/80 px-4 py-3">
           <FileText size={18} className="shrink-0 text-sky" />
           <div className="min-w-0 flex-1">
@@ -62,14 +62,17 @@ export default function MalumotnomaModal({ student: s, onClose }: { student: Stu
                   type="date"
                   className="field mono w-[170px]"
                   value={toIso(sana)}
-                  onChange={(e) => { if (e.target.value) setSana(fromIso(e.target.value)) }}
+                  onChange={(e) => { if (e.target.value) { setSana(fromIso(e.target.value)); setLoaded(false) } }}
                 />
               </label>
-              <div className="ml-auto flex gap-2">
-                <a className="btn-primary h-[38px]" href={href} download={malumotnomaFileName(s)}>
-                  <Download size={15} /> Yuklab olish (.docx)
+              <div className="ml-auto flex flex-wrap items-center gap-2">
+                <a className="text-[12px] font-semibold text-fg-muted underline-offset-2 hover:text-fg hover:underline" href={`${src}&format=docx`} download={malumotnomaFileName(s, 'docx')} title="Tahrirlash uchun Word fayl">
+                  Word (.docx)
                 </a>
-                <button type="button" className="btn-ghost h-[38px] text-sky hover:text-sky-soft" onClick={send} disabled={sending}>
+                <a className={cx('btn-primary h-[38px]', !loaded && 'pointer-events-none opacity-50')} href={`${src}&download=1`} download={malumotnomaFileName(s)}>
+                  <Download size={15} /> Yuklab olish (.jpg)
+                </a>
+                <button type="button" className="btn-ghost h-[38px] text-sky hover:text-sky-soft" onClick={send} disabled={sending || !loaded}>
                   {sending ? <Loader2 size={15} className="animate-spin" /> : <Send size={15} />} Botga yuborish
                 </button>
               </div>
@@ -77,18 +80,19 @@ export default function MalumotnomaModal({ student: s, onClose }: { student: Stu
             {msg && (
               <div className={cx('border-b px-4 py-2 text-[12.5px] font-semibold', msg.ok ? 'border-emerald/30 bg-emerald/10 text-emerald-soft' : 'border-rose/30 bg-rose/10 text-rose')}>{msg.text}</div>
             )}
-            <div className="min-h-0 flex-1 overflow-y-auto bg-ink-950/60 p-4">
-              {/* Faqat matn — Word fayldagi shablon (logotip, imzo) o'zgarmaydi */}
-              <div className="mx-auto max-w-[620px] rounded-md bg-white px-7 py-6 text-[15px] leading-[2] text-black shadow-xl shadow-black/40" style={{ fontFamily: '"Times New Roman", Times, serif' }}>
-                <div className="flex justify-between text-[14px] leading-normal"><span>Qarshi shahri</span><span>{d.sana} y.</span></div>
-                <div className="my-4 text-center text-[17px] font-bold">MA’LUMOTNOMA</div>
-                <p className="indent-10 text-justify">
-                  Ushbu ma’lumotnoma shuni tasdiqlaydiki, haqiqatdan ham <b>{d.fish}</b> {d.oquvYili}-o‘quv yilida <b>{d.yon}</b> yo‘nalishiga
-                  to‘lov-shartnoma asosida o‘qishga qabul qilingan. Hozirgi kunda {d.bosqich}-bosqich <b>{d.group}-guruhda</b> tahsil olmoqda.
-                </p>
-                <p className="mt-2 indent-10 italic">Ma’lumotnoma so‘ralgan joyga taqdim etish uchun berildi</p>
-              </div>
-              <p className="mt-3 text-center text-[12px] text-fg-subtle">Bu — matn ko‘rinishi. Word faylda sarlavha, logotip va imzo qismi shablondagidek bo‘ladi.</p>
+            <div className="relative min-h-0 flex-1 overflow-y-auto bg-ink-950/60 p-3 sm:p-4">
+              {!loaded && (
+                <div className="absolute inset-0 grid place-items-center text-fg-muted"><Loader2 size={24} className="animate-spin" /></div>
+              )}
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                key={src}
+                src={src}
+                alt={`${fullName(s)} ma'lumotnomasi`}
+                className={cx('mx-auto w-full max-w-[640px] rounded-md bg-white shadow-xl shadow-black/40', !loaded && 'invisible')}
+                onLoad={() => setLoaded(true)}
+                onError={() => { setLoaded(false); setMsg({ ok: false, text: "Ma'lumotnoma yaratilmadi (server xatosi)" }) }}
+              />
             </div>
           </>
         )}
