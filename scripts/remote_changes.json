@@ -178,5 +178,17 @@
     },
     "id": "chg_1790617547840_3a0jj",
     "created_at": "2026-09-28T17:45:47.840Z"
+  },
+  {
+    "type": "verify_student",
+    "data": {
+      "row": 145,
+      "status": "TASDIQLANDI",
+      "shnum": "313",
+      "pinfl": "61109085590127",
+      "ism": "Ulugbekova Zara"
+    },
+    "id": "chg_1790617548660_8qk3p",
+    "created_at": "2026-09-28T17:45:48.660Z"
   }
 ]
