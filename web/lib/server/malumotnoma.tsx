@@ -171,7 +171,7 @@ export async function renderMalumotnoma(d: MalumotnomaData): Promise<Buffer> {
     { t: ' yo‘nalishiga to‘lov-shartnoma asosida o‘qishga qabul qilingan. Hozirgi kunda ' },
     { t: `${d.bosqich}-bosqich ` },
     { t: `${d.group}-guruhda`, b: true },
-    { t: ' taxsil olmoqda.' },
+    { t: ' tahsil olmoqda.' },
   ]), a, INDENT)
 
   const firstBaseline = 831
