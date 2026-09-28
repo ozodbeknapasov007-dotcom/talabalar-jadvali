@@ -12,6 +12,7 @@ va GitHub'ga yuboradi, onlayn portal (Vercel) GitHub'dan o'qiydi.
 | `ISHGA_TUSHIRISH.bat` | Hisobotlarni yangilaydi, ma'lumot xizmatini (8080) va portalni (3000) ishga tushiradi, portalni ochadi |
 | `WEB_ISHGA_TUSHIRISH.bat` | Faqat web portal (localhost:3000) |
 | `BOTNI_ISHGA_TUSHIRISH.bat` | Faqat ma'lumot xizmati va Telegram bot |
+| `TIMES_SHRIFTINI_QOSHISH.bat` | Bir martalik: Windows'dagi Times New Roman shriftini ma'lumotnoma uchun loyihaga nusxalaydi va GitHub'ga yuklaydi |
 | `YANGILASH.bat` | Hisobotlar, qabul shabloni va shubhali ma'lumotlar tekshiruvini qayta yaratadi |
 
 Onlayn: https://talabalar-royhati.vercel.app (Vercel → Root Directory: `web`)
