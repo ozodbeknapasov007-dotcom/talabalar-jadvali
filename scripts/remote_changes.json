@@ -118,5 +118,17 @@
     },
     "id": "chg_1790610563465_fbo2l",
     "created_at": "2026-09-28T15:49:23.465Z"
+  },
+  {
+    "type": "verify_student",
+    "data": {
+      "row": 178,
+      "status": "TASDIQLANDI",
+      "shnum": "",
+      "pinfl": "415079 8559 0074",
+      "ism": "Sayfieva Sarvinoz"
+    },
+    "id": "chg_1790610564177_75m51",
+    "created_at": "2026-09-28T15:49:24.177Z"
   }
 ]
