@@ -34,5 +34,17 @@
     },
     "id": "chg_1790610559393_pn6em",
     "created_at": "2026-09-28T15:49:19.393Z"
+  },
+  {
+    "type": "verify_student",
+    "data": {
+      "row": 114,
+      "status": "TASDIQLANDI",
+      "shnum": "205",
+      "pinfl": "60408085730030",
+      "ism": "Salayeva Dilroz"
+    },
+    "id": "chg_1790610559842_0b8dy",
+    "created_at": "2026-09-28T15:49:19.842Z"
   }
 ]
