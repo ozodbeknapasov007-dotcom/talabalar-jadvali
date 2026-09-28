@@ -10,5 +10,17 @@
     },
     "id": "chg_1790610540522_963i3",
     "created_at": "2026-09-28T15:49:00.522Z"
+  },
+  {
+    "type": "verify_student",
+    "data": {
+      "row": 47,
+      "status": "TASDIQLANDI",
+      "shnum": "383",
+      "pinfl": "42004975680094",
+      "ism": "Izzatulloyeva Vazira"
+    },
+    "id": "chg_1790610558079_2t2zd",
+    "created_at": "2026-09-28T15:49:18.079Z"
   }
 ]
