@@ -1,5 +1,8 @@
+import filecmp
+import glob
 import os
 import re
+import shutil
 import openpyxl
 from reportlab import rl_config
 # Ma'lumot o'zgarmagan bo'lsa PDF baytlari ham o'zgarmasligi shart.
@@ -283,6 +286,29 @@ def create_all_groups_combined_pdf(groups, students, output_pdf_path):
     doc.build(elements)
     return output_pdf_path
 
+def _replace_if_changed(tmp_path, path):
+    """tmp_path ni path o'rniga qo'yadi; mazmun avvalgidek bo'lsa False qaytaradi."""
+    if os.path.exists(path) and filecmp.cmp(tmp_path, path, shallow=False):
+        os.remove(tmp_path)
+        return False
+    os.replace(tmp_path, path)
+    return True
+
+
+def _jpgs_of(pdf_path):
+    """export_pdf_to_images yaratgan rasmlar: <nom>.jpg yoki <nom>_page_N.jpg"""
+    base = os.path.splitext(pdf_path)[0]
+    return sorted(glob.glob(glob.escape(base) + '.jpg') + glob.glob(glob.escape(base) + '_page_*.jpg'))
+
+
+def _mirror(src, dirs):
+    """Faylni boshqa papkalarga nusxalash (mazmun bir xil bo'lsa tegmaydi)."""
+    for d in dirs:
+        dst = os.path.join(d, os.path.basename(src))
+        if not (os.path.exists(dst) and filecmp.cmp(src, dst, shallow=False)):
+            shutil.copyfile(src, dst)
+
+
 def build_all_group_pdfs():
     excel_path = os.path.join(BASE_DIR, 'data', 'Talabalar_Toliq_Royxati.xlsx')
     if not os.path.exists(excel_path):
@@ -322,22 +348,35 @@ def build_all_group_pdfs():
         os.path.join(BASE_DIR, 'qayta_tekshiruv', 'pdf_jurnallar')
     ]
 
+    # Fayllar bitta papkada yaratiladi, qolganiga nusxalanadi (avval har papka uchun
+    # qaytadan yaratilardi). PDF baytlari invariant — shuning uchun PDF o'zgarmagan
+    # guruhning sekin JPG eksporti (~0.5 s/rasm) o'tkazib yuboriladi: bitta talaba
+    # tahrirlanganda faqat o'sha guruh rasmi qayta chiziladi.
+    primary, mirrors = target_dirs[0], target_dirs[1:]
     for tdir in target_dirs:
         os.makedirs(tdir, exist_ok=True)
-        # 1. Alohida guruh PDF lari va ularning yuqori sifatli JPG rasmlari
-        for g in groups:
-            fname = "Guruh_Talabalar_safidan_chiqarilganlar.pdf" if 'chiqaril' in g.lower() else f"Guruh_{g}.pdf"
-            out_file = os.path.join(tdir, fname)
-            create_single_group_pdf(g, students, out_file)
-            generated_files[g] = out_file
+
+    # 1. Alohida guruh PDF lari va ularning yuqori sifatli JPG rasmlari
+    for g in groups:
+        fname = "Guruh_Talabalar_safidan_chiqarilganlar.pdf" if 'chiqaril' in g.lower() else f"Guruh_{g}.pdf"
+        out_file = os.path.join(primary, fname)
+        tmp_file = out_file + '.tmp'
+        create_single_group_pdf(g, students, tmp_file)
+        changed = _replace_if_changed(tmp_file, out_file)
+        generated_files[g] = out_file
+        if changed or not _jpgs_of(out_file):
             # Yuqori sifatli JPG rasmga eksport qilish (250 DPI)
             export_pdf_to_images(out_file, dpi=250)
+        for p in [out_file] + _jpgs_of(out_file):
+            _mirror(p, mirrors)
 
-        # 2. Barcha 7 ta guruhni birlashtirgan YAGONA 1 ta A4 PDF (har bir guruh alohida varoqda)
-        official_groups = [g for g in groups if 'chiqaril' not in g.lower()]
-        combined_file = os.path.join(tdir, "Barcha_Guruhlar_Jurnali.pdf")
-        create_all_groups_combined_pdf(official_groups, students, combined_file)
-        generated_files["ALL"] = combined_file
+    # 2. Barcha 7 ta guruhni birlashtirgan YAGONA 1 ta A4 PDF (har bir guruh alohida varoqda)
+    official_groups = [g for g in groups if 'chiqaril' not in g.lower()]
+    combined_file = os.path.join(primary, "Barcha_Guruhlar_Jurnali.pdf")
+    create_all_groups_combined_pdf(official_groups, students, combined_file + '.tmp')
+    _replace_if_changed(combined_file + '.tmp', combined_file)
+    _mirror(combined_file, mirrors)
+    generated_files["ALL"] = combined_file
 
     print(f"[OK] Barcha {len(groups)} ta guruh uchun alohida A4 PDF jurnallar va yuqori sifatli rasmlar yaratildi!")
     return generated_files

@@ -1,9 +1,9 @@
 'use client'
 
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { Award, Check, ClipboardPaste, FileImage, IdCard, ImageOff, Loader2, Maximize2, QrCode, RotateCw, Sparkles, Upload } from 'lucide-react'
+import { Award, ClipboardPaste, FileImage, IdCard, ImageOff, Loader2, Maximize2, QrCode, RotateCw, Sparkles, Upload } from 'lucide-react'
 import { AI_MODELS, analyzeAndUploadDocs, getFilesFromClipboard, getSavedAiModel, scanQrFromDataUrls, setSavedAiModel, type AiModelId } from '@/lib/ai-doc'
-import type { EditFields } from '@/lib/types'
+import type { EditFields, Student } from '@/lib/types'
 import InlineZoomImage from './InlineZoomImage'
 import Lightbox from './Lightbox'
 import { cx } from './ui'
@@ -26,10 +26,11 @@ function classify(src: string): Promise<Kind> {
 interface Props {
   file: string
   studentRow?: number
+  student?: Pick<Student, 'ism' | 'ota' | 'group'>
   onApplyFields?: (fields: Partial<EditFields>) => Promise<void> | void
 }
 
-export default function DocImages({ file, studentRow, onApplyFields }: Props) {
+export default function DocImages({ file, studentRow, student, onApplyFields }: Props) {
   const [images, setImages] = useState<Img[] | null>(null)
   const [error, setError] = useState('')
   const [open, setOpen] = useState<number | null>(null)
@@ -95,21 +96,32 @@ export default function DocImages({ file, studentRow, onApplyFields }: Props) {
     try {
       const res = await analyzeAndUploadDocs({
         row: studentRow,
+        student,
+        docFile: file,
         passFiles,
         certFiles,
         existingImages: images?.map((i) => i.src) ?? [],
         model,
       })
-      setStatusMsg(res.message)
       if (res.qrFound) setQrResult(res.qrFound)
-      if (Object.keys(res.fields).length > 0) {
-        setExtracted(res.fields)
-      }
-      if (res.images.length > (images?.length ?? 0)) {
+      if (res.images.length) {
         const kinds = await Promise.all(res.images.map(classify))
         setImages(res.images.map((src, i) => ({ src, kind: kinds[i] })))
         if (file) cache.delete(file)
       }
+      // Eski portaldagidek: o'qilgan ma'lumot darhol kartaga yoziladi. Ism va otasining
+      // ismi — foydalanuvchining o'z ro'yxati, bor bo'lsa AI ularni almashtirmaydi.
+      const fields: Partial<EditFields> = { ...res.fields }
+      delete (fields as { sh_qr?: string }).sh_qr
+      if (student?.ism) delete fields.ism
+      if (student?.ota) delete fields.ota
+      if (Object.keys(fields).length && onApplyFields) {
+        await onApplyFields(fields)
+        setPassFiles([])
+        setCertFiles([])
+      }
+      setExtracted(Object.keys(res.fields).length ? res.fields : null)
+      setStatusMsg(res.message)
     } catch (e) {
       setStatusMsg(`Tahlil xatosi: ${(e as Error).message}`)
     } finally {
@@ -129,19 +141,6 @@ export default function DocImages({ file, studentRow, onApplyFields }: Props) {
       } else {
         setStatusMsg("Rasmlardan QR kod topilmadi (yoki AI Tahlil tugmasini bosing)")
       }
-    } finally {
-      setBusy(false)
-    }
-  }
-
-  const handleApply = async () => {
-    if (!extracted || !onApplyFields) return
-    setBusy(true)
-    try {
-      await onApplyFields(extracted)
-      setExtracted(null)
-      setShowUpload(false)
-      setStatusMsg("Ma'lumotlar talaba kartasiga muvaffaqiyatli saqlandi ✓")
     } finally {
       setBusy(false)
     }
@@ -255,20 +254,16 @@ export default function DocImages({ file, studentRow, onApplyFields }: Props) {
 
       {extracted && Object.keys(extracted).length > 0 && (
         <div className="animate-pop-in space-y-2 rounded-2xl border border-emerald/45 bg-emerald/10 p-3 text-[12px]">
-          <div className="font-bold text-emerald-soft">AI aniqlagan ma'lumotlar:</div>
+          <div className="font-bold text-emerald-soft">AI o'qigan ma'lumotlar (kartaga saqlandi):</div>
           <div className="grid grid-cols-2 gap-x-3 gap-y-1 text-fg">
-            {extracted.ism && <div><span className="text-fg-muted">Ism:</span> <b>{extracted.ism}</b></div>}
-            {extracted.pv && <div><span className="text-fg-muted">Pasport:</span> <b className="mono">{extracted.pv}</b></div>}
-            {extracted.pinfl && <div><span className="text-fg-muted">JSHSHIR:</span> <b className="mono">{extracted.pinfl}</b></div>}
-            {extracted.dob && <div><span className="text-fg-muted">Sana:</span> <b>{extracted.dob}</b></div>}
-            {extracted.sh_doc && <div><span className="text-fg-muted">Hujjat №:</span> <b className="mono">{extracted.sh_doc}</b></div>}
-            {extracted.yil && <div><span className="text-fg-muted">Yil:</span> <b>{extracted.yil}</b></div>}
+            {([
+              ['Ism', extracted.ism], ['Otasi', extracted.ota], ['Pasport', extracted.pv], ['JSHSHIR', extracted.pinfl],
+              ["Tug'ilgan", extracted.dob], ['Berilgan', extracted.ber], ['Hujjat №', extracted.sh_doc], ['Turi', extracted.doc_tur],
+              ['Maktab', extracted.mak], ['Yil', extracted.yil],
+            ] as const).filter(([, v]) => v).map(([k, v]) => (
+              <div key={k} className="truncate"><span className="text-fg-muted">{k}:</span> <b>{v}</b></div>
+            ))}
           </div>
-          {onApplyFields && (
-            <button type="button" className="btn-success mt-1 h-8 w-full justify-center text-[12px]" onClick={() => void handleApply()} disabled={busy}>
-              <Check size={14} /> Kartaga qo'llash va saqlash
-            </button>
-          )}
         </div>
       )}
 

@@ -1308,11 +1308,13 @@ def _run_rebuild_worker():
 # Har bir tahrirda hisobotni qayta yaratib GitHub'ga push qilish qimmat:
 # bitta sikl ~15 soniya. Shuning uchun tahrir darhol Excelga yoziladi
 # (ma'lumot yo'qolmaydi), og'ir qism esa guruhlanadi:
-#   - oxirgi tahrirdan 30 soniya o'tgach avtomatik yuboriladi
+#   - oxirgi tahrirdan 10 soniya o'tgach avtomatik yuboriladi
 #   - yoki "GitHub'ga yuborish" tugmasi bosilganda darhol
 # 10 ta tahrir = 1 ta commit (avval 10 ta bo'lardi).
-BATCH_DELAY = 30.0      # tahrirlar tinchigandan keyin qancha kutish
-BATCH_MAX_WAIT = 90.0   # uzluksiz tahrirlanganda ham shundan ko'p kutmaslik
+# (29.09.2026: guruh jurnallari faqat o'zgarganda chiziladigan bo'lgach sikl ~8 s ga
+#  tushdi, shuning uchun 30/90 s kutish "yuborilmoqda"da qotib qolgandek ko'rinardi)
+BATCH_DELAY = 10.0      # tahrirlar tinchigandan keyin qancha kutish
+BATCH_MAX_WAIT = 30.0   # uzluksiz tahrirlanganda ham shundan ko'p kutmaslik
 PENDING_SINCE = None    # birinchi yuborilmagan tahrir vaqti
 
 

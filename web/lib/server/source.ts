@@ -230,7 +230,10 @@ async function sendLocal(change: Change): Promise<void> {
     endpoint = '/api/delete_student'
     for (const [k, v] of Object.entries(change.data)) q.set(k, String(v))
   }
-  const res = await fetch(`${LOCAL_API}${endpoint}?${q}`, { cache: 'no-store' })
+  // URLSearchParams probelni "+" qiladi, Python xizmati esa unquote() bilan o'qiydi va
+  // "+" ni probelga qaytarmaydi ("Azamat+qizi") — shuning uchun %20 bilan kodlaymiz
+  const query = [...q].map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(v)}`).join('&')
+  const res = await fetch(`${LOCAL_API}${endpoint}?${query}`, { cache: 'no-store' })
   const body = await res.json().catch(() => ({}))
   if (!res.ok || body.success === false) {
     throw new Error(body.error || `Python xizmati ${res.status} qaytardi`)

@@ -159,13 +159,15 @@ export async function getFilesFromClipboard(): Promise<File[]> {
 
   // 2. Local Python server Windows Clipboard API (/api/get_clipboard_files)
   try {
-    const res = await fetch(`${LOCAL_PY_SERVER}/api/get_clipboard_files`, { method: 'POST' })
+    // Python bu endpointni faqat GET orqali qabul qiladi (eski portal ham GET ishlatgan)
+    const res = await fetch(`${LOCAL_PY_SERVER}/api/get_clipboard_files?t=${Date.now()}`, { cache: 'no-store' })
     const data = await res.json()
-    if (data.ok && Array.isArray(data.files)) {
+    // Javob: { success, files: [{ filename, base64: "data:...", mime }] }
+    if (data.success && Array.isArray(data.files)) {
       for (const f of data.files) {
-        const resp = await fetch(f.data)
+        const resp = await fetch(f.base64)
         const blob = await resp.blob()
-        files.push(new File([blob], f.name || 'clipboard.png', { type: f.mime || blob.type }))
+        files.push(new File([blob], f.filename || 'clipboard.jpg', { type: f.mime || blob.type }))
       }
     }
   } catch {
@@ -197,17 +199,134 @@ export async function scanQrFromDataUrls(dataUrls: string[]): Promise<string | n
   return null
 }
 
+type AiFields = Partial<EditFields> & { sh_qr?: string }
+
 export interface DocAnalysisResult {
-  fields: Partial<EditFields> & { sh_qr?: string }
+  fields: AiFields
   docFile?: string
   qrFound?: string
   images: string[]
   message: string
 }
 
-/** Talaba hujjatlarini (.docx yoki rasm) yuklash, QR va AI tahlil qilish */
+/** "IBODULLAYEVA ASILZODA" → "Ibodullayeva Asilzoda", "LATIF QIZI" → "Latif qizi" (Python clean_uz_name kabi) */
+function cleanUzName(text: string): string {
+  return text
+    .replace(/\s+/g, ' ')
+    .replace(/[`‘’ʻʼ´]/g, "'")
+    .trim()
+    .split(' ')
+    .map((w) => {
+      const low = w.toLowerCase()
+      if (low === 'qizi' || low === 'kizi') return 'qizi'
+      if (["o'g'li", 'ogli', 'ugli', "o'gli"].includes(low)) return "o'g'li"
+      return low.charAt(0).toUpperCase() + low.slice(1)
+    })
+    .join(' ')
+}
+
+/**
+ * Python xizmati (eski portal endpointlari) va /api/ai-analyze qaytaradigan kalitlar →
+ * portal maydonlari. Eski portaldagi applyAnalysisResultToForm / reanalyzeCurrentStudent
+ * bilan bir xil: pass_ser/pass_val → pv, pass_ber/ber_sana → ber, cert_val → sh_doc, maktab → mak.
+ */
+export function mapAiData(d: Record<string, unknown> | null | undefined): AiFields {
+  if (!d) return {}
+  const str = (v: unknown) => (v == null ? '' : String(v).trim())
+  const pairs: [keyof AiFields, unknown][] = [
+    ['ism', d.ism],
+    ['ota', d.ota],
+    ['pv', d.pass_ser ?? d.pass_val ?? d.pv],
+    ['pinfl', d.pinfl],
+    ['dob', d.dob],
+    ['ber', d.pass_ber ?? d.ber_sana ?? d.ber],
+    ['sh_doc', d.sh_doc ?? d.cert_val],
+    ['doc_tur', d.doc_tur ?? d.cert_tur],
+    ['mak', d.maktab ?? d.mak],
+    ['yil', d.yil],
+    ['tel', d.tel],
+    ['shnum', d.shnum],
+    ['sh_qr', d.sh_qr],
+  ]
+  const out: AiFields = {}
+  for (const [k, v] of pairs) {
+    const t = str(v)
+    if (t && t !== '—') out[k] = t
+  }
+  if (out.ism) out.ism = cleanUzName(out.ism)
+  if (out.ota) out.ota = cleanUzName(out.ota)
+  if (out.pv) out.pv = out.pv.replace(/\s/g, '').toUpperCase()
+  if (out.pinfl) {
+    out.pinfl = out.pinfl.replace(/\D/g, '')
+    const dob = out.dob || dobFromPinfl(out.pinfl)
+    if (dob) out.dob = dob
+  }
+  return out
+}
+
+const isDocx = (f: File) => f.name.toLowerCase().endsWith('.docx')
+const isImage = (f: File) => f.type.startsWith('image/') || /\.(png|jpe?g|webp)$/i.test(f.name)
+
+type PyResult = Record<string, unknown> & { success?: boolean; error?: string }
+
+/** Python xizmatiga so'rov; xizmat ishlamasa (yoki Vercel sahifasidan yetib bo'lmasa) null */
+async function py(path: string, body?: unknown): Promise<PyResult | null> {
+  try {
+    const res = await fetch(`${LOCAL_PY_SERVER}${path}`, body === undefined
+      ? { cache: 'no-store' }
+      : { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
+    return (await res.json()) as PyResult
+  } catch {
+    return null
+  }
+}
+
+async function toItems(files: File[]) {
+  return Promise.all(files.map(async (f) => ({ filename: f.name || `rasm_${Date.now()}.jpg`, base64: await fileToDataUrl(f) })))
+}
+
+/** Katta telefon rasmlarini serverga yuborishdan oldin kichraytirish (Vercel so'rov chegarasi ~4.5 MB) */
+async function shrinkDataUrl(src: string, max = 1800): Promise<string> {
+  try {
+    const bmp = await createImageBitmap(await (await fetch(src)).blob())
+    const k = Math.min(1, max / Math.max(bmp.width, bmp.height))
+    const canvas = document.createElement('canvas')
+    canvas.width = Math.round(bmp.width * k)
+    canvas.height = Math.round(bmp.height * k)
+    canvas.getContext('2d')!.drawImage(bmp, 0, 0, canvas.width, canvas.height)
+    return canvas.toDataURL('image/jpeg', 0.88)
+  } catch {
+    return src
+  }
+}
+
+/** Rasmlarni portal serveri orqali OpenRouter AI ga yuborish (eski portaldagi brauzer AI zaxirasi o'rnida) */
+async function analyzeImagesViaPortal(images: string[], model: AiModelId): Promise<AiFields> {
+  const res = await fetch('/api/ai-analyze', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ model, images: await Promise.all(images.slice(0, 6).map((s) => shrinkDataUrl(s))) }),
+  })
+  const body = (await res.json().catch(() => ({}))) as PyResult & { data?: Record<string, unknown> }
+  if (!res.ok || !body.success) throw new Error(body.error || `AI tahlil xatosi (${res.status})`)
+  return mapAiData(body.data)
+}
+
+const countFields = (fields: AiFields) => Object.keys(fields).filter((k) => k !== 'sh_qr').length
+const NOTHING_READ = "AI hujjatdan ma'lumot o'qiy olmadi — rasm aniqroq bo'lsin yoki boshqa modelni tanlang"
+
+/**
+ * Talaba hujjatlarini AI + QR orqali o'qish — eski portal (eski_portal/js/app.js) bilan bir xil yo'l:
+ *  - mavjud talaba, yangi fayllar: Python /api/upload_student_section_files (analyze: true)
+ *  - mavjud talaba, fayl tanlanmagan: Python /api/reanalyze_student (saqlangan .docx ni qayta o'qish)
+ *    (ikkalasi ham natijani Excelga o'zi yozadi)
+ *  - yangi talaba, .docx: Python /api/analyze_docx
+ *  - rasmlar yoki Python ishlamasa: /api/ai-analyze
+ */
 export async function analyzeAndUploadDocs(opts: {
   row?: number
+  student?: { ism?: string; ota?: string; group?: string }
+  docFile?: string
   passFiles?: File[]
   certFiles?: File[]
   generalFiles?: File[]
@@ -215,105 +334,95 @@ export async function analyzeAndUploadDocs(opts: {
   model?: AiModelId
 }): Promise<DocAnalysisResult> {
   const model = opts.model || getSavedAiModel()
-  const allFiles = [...(opts.passFiles || []), ...(opts.certFiles || []), ...(opts.generalFiles || [])]
-  const previewImages: string[] = [...(opts.existingImages || [])]
-  let extractedText = ''
+  const pass = opts.passFiles || []
+  const cert = opts.certFiles || []
+  const general = opts.generalFiles || []
+  const allFiles = [...pass, ...cert, ...general]
 
+  const fileImages: string[] = []
+  const docxImages: string[] = []
   for (const f of allFiles) {
-    if (f.name.toLowerCase().endsWith('.docx')) {
-      const { text, images } = await extractDocxClient(f)
-      if (text) extractedText += '\n' + text
-      previewImages.push(...images)
-    } else if (f.type.startsWith('image/') || /\.(png|jpe?g|webp)$/i.test(f.name)) {
-      previewImages.push(await fileToDataUrl(f))
-    }
+    if (isDocx(f)) docxImages.push(...(await extractDocxClient(f)).images)
+    else if (isImage(f)) fileImages.push(await fileToDataUrl(f))
   }
+  const previewImages = [...docxImages, ...fileImages]
 
-  // 1. Agar mavjud talaba (row) bo'lsa va local Python server ishlasa, /api/upload_student_doc ga yuboramiz
-  if (opts.row && (opts.passFiles?.length || opts.certFiles?.length)) {
-    try {
-      const fd = new FormData()
-      fd.append('row', String(opts.row))
-      fd.append('model', model)
-      opts.passFiles?.[0] && fd.append('pass_file_1', opts.passFiles[0])
-      opts.passFiles?.[1] && fd.append('pass_file_2', opts.passFiles[1])
-      opts.certFiles?.[0] && fd.append('cert_file_1', opts.certFiles[0])
-      opts.certFiles?.[1] && fd.append('cert_file_2', opts.certFiles[1])
-
-      const res = await fetch(`${LOCAL_PY_SERVER}/api/upload_student_doc`, { method: 'POST', body: fd })
-      const data = await res.json()
-      if (data.ok) {
-        const ext = data.extracted || {}
-        const fields: Partial<EditFields> & { sh_qr?: string } = {}
-        for (const k of ['ism', 'ota', 'pv', 'pinfl', 'dob', 'ber', 'doc_tur', 'sh_doc', 'mak', 'yil'] as const) {
-          if (ext[k]) fields[k] = String(ext[k])
-        }
-        if (ext.sh_qr) fields.sh_qr = String(ext.sh_qr)
-        return {
-          fields,
-          docFile: data.doc_file,
-          qrFound: data.qr_found || ext.sh_qr,
-          images: previewImages,
-          message: data.ai_error
-            ? `Hujjat saqlandi (${data.doc_file}). AI eslatmasi: ${data.ai_error}`
-            : `Hujjat saqlandi va AI tahlili bajarildi (${Object.keys(fields).length} ta maydon aniqlandi)`,
-        }
+  // 1. Mavjud talaba — eski portaldagi «⚡ AI Bilan Tahrir»
+  if (opts.row && opts.row >= 2 && (allFiles.length || opts.docFile)) {
+    const res = allFiles.length
+      ? await py('/api/upload_student_section_files', {
+          row: opts.row,
+          ism: opts.student?.ism || '',
+          ota: opts.student?.ota || '',
+          group: opts.student?.group || '',
+          doc_file: opts.docFile || '',
+          analyze: true,
+          model,
+          passport_files: await toItems([...pass, ...general]),
+          diploma_files: await toItems(cert),
+        })
+      : await py(`/api/reanalyze_student?file=${encodeURIComponent(opts.docFile || '')}&row=${opts.row}&model=${encodeURIComponent(model)}`)
+    if (res?.success && res.data) {
+      const fields = mapAiData(res.data as Record<string, unknown>)
+      const n = countFields(fields)
+      return {
+        fields,
+        docFile: typeof res.filename === 'string' ? res.filename : undefined,
+        qrFound: fields.sh_qr,
+        images: Array.isArray(res.images) && res.images.length ? (res.images as string[]) : previewImages,
+        message: n ? `AI ${n} ta maydonni o'qidi va Excelga saqladi${fields.sh_qr ? ' (QR-kod tasdiqlandi ✓)' : ''}` : NOTHING_READ,
       }
-    } catch {
-      // Local Python server o'chiq bo'lsa pastdagi universal tahlilga o'tadi
+    }
+    if (res) throw new Error(res.error || 'Python xizmati tahlil qila olmadi')
+    // res === null: Python xizmati ishlamayapti — pastdagi zaxira yo'l
+  }
+
+  let fields: AiFields = {}
+  let docxDone = false
+
+  // 2. Yangi talaba, Word (.docx) — Python /api/analyze_docx (jadval matni + ichidagi rasmlarni AI o'qiydi)
+  const docx = opts.row ? undefined : allFiles.find(isDocx)
+  if (docx) {
+    const res = await py('/api/analyze_docx', {
+      filename: docx.name,
+      file_base64: (await fileToDataUrl(docx)).split(',')[1] || '',
+      model,
+      use_pro: model.includes('pro'),
+    })
+    if (res && res.success !== false) {
+      fields = mapAiData(res)
+      docxDone = true
+    } else {
+      fields = parseFieldsFromText((await extractDocxClient(docx)).text)
     }
   }
 
-  // 2. Yangi talaba yoki umumiy fayl uchun /api/analyze_new_doc ni sinab ko'ramiz
-  if (allFiles.length > 0) {
+  // 3. Rasmlar — portal serveri orqali AI (Python .docx ni o'qigan bo'lsa, faqat alohida rasmlar)
+  const aiImages = docxDone ? fileImages : previewImages.length ? previewImages : opts.existingImages || []
+  let aiError = ''
+  if (aiImages.length) {
     try {
-      const fd = new FormData()
-      fd.append('file', allFiles[0])
-      allFiles.slice(1).forEach((f, idx) => fd.append(`extra_file_${idx}`, f))
-      fd.append('model', model)
-
-      const res = await fetch(`${LOCAL_PY_SERVER}/api/analyze_new_doc`, { method: 'POST', body: fd })
-      const data = await res.json()
-      if (data.ok && data.extracted) {
-        const ext = data.extracted
-        const fields: Partial<EditFields> & { sh_qr?: string } = {}
-        for (const k of ['ism', 'ota', 'pv', 'pinfl', 'dob', 'ber', 'doc_tur', 'sh_doc', 'mak', 'yil', 'shnum', 'tel'] as const) {
-          if (ext[k]) fields[k] = String(ext[k])
-        }
-        if (ext.sh_qr) fields.sh_qr = String(ext.sh_qr)
-        return {
-          fields,
-          docFile: data.saved_file,
-          qrFound: ext.sh_qr,
-          images: previewImages,
-          message: `AI tahlili muvaffaqiyatli bajarildi (${Object.keys(fields).length} ta maydon aniqlandi)`,
-        }
-      }
-    } catch {
-      // Local server ishlamasa client-side tahlilga o'tamiz
+      fields = { ...fields, ...(await analyzeImagesViaPortal(aiImages, model)) }
+    } catch (e) {
+      aiError = (e as Error).message
     }
   }
 
-  // 3. Client-side QR + Matn regex tahlili (Vercel / Offline rejim uchun)
-  const fields = parseFieldsFromText(extractedText)
-  const qr = await scanQrFromDataUrls(previewImages)
+  const qr = fields.sh_qr || (await scanQrFromDataUrls(previewImages.length ? previewImages : opts.existingImages || []))
   if (qr) {
     fields.sh_qr = qr
     const m = qr.match(/\b(UM|U|AB|AA|DT|K|S)\s*(\d{6,8})\b/i)
     if (m && !fields.sh_doc) fields.sh_doc = `${m[1].toUpperCase()} ${m[2]}`
   }
 
-  const count = Object.keys(fields).length
+  const n = countFields(fields)
+  if (!n && aiError) throw new Error(aiError)
   return {
     fields,
-    qrFound: qr || fields.sh_qr,
-    images: previewImages,
-    message: count > 0
-      ? `${count} ta maydon hujjatdan avtomatik aniqlandi${qr ? ' (QR kod topildi ✓)' : ''}`
-      : qr
-        ? `QR kod aniqlandi: ${qr}`
-        : previewImages.length > 0
-          ? "Rasmlar yuklandi (to'liq AI tahlil uchun lokal serverni yoqing)"
-          : "Ma'lumot topilmadi",
+    qrFound: qr || undefined,
+    images: previewImages.length ? previewImages : opts.existingImages || [],
+    message: n
+      ? `AI ${n} ta maydonni aniqladi${qr ? ' (QR-kod topildi ✓)' : ''}${aiError ? ` — eslatma: ${aiError}` : ''}`
+      : NOTHING_READ,
   }
 }
