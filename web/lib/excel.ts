@@ -4,14 +4,15 @@ import { GROUPS, GROUP_LEADERS } from './config'
 import { byName, formatDate, fullName, isAcademicLeave, isOfficialGroup, isOutside, isWithdrawn, tugilganTuman } from './student'
 import type { Student } from './types'
 import ISTISNOLAR from './qabul-istisnolar.json'
-import { QABUL_GROUP_HEADER, QABUL_GROUP_WIDTH, QABUL_HEADERS, QABUL_NAMUNA, QABUL_WIDTHS, REVIEW_COL, qabulCells, qabulRow, type QabulIstisno } from './qabul'
+import { ensureAiTranslations, withAiTranslation } from './qabul-ai'
+import { QABUL_FILE, QABUL_GROUP_HEADER, QABUL_GROUP_WIDTH, QABUL_HEADERS, QABUL_NAMUNA, QABUL_WIDTHS, REVIEW_COL, qabulCells, qabulRow, type QabulIstisno } from './qabul'
 
 /* Eski app.js dagi 4 bo'limli Excel eksportning aynan o'zi (ustunlar, ranglar, formatlar) */
 
 export type Role = 'qabul_shablon' | 'buxgalteriya' | 'admin' | 'guruh_rahbari' | 'toliq'
 
 export const ROLE_META: Record<Role, { file: string; title: string; sub: string }> = {
-  qabul_shablon: { file: 'Qabul uchun shablon (2).xlsx', title: 'Qabul uchun shablon', sub: "Guruhlar + Jami (Guruhi ustuni), rasmiy UZ / EN / RU tarjima" },
+  qabul_shablon: { file: `${QABUL_FILE}.xlsx`, title: QABUL_FILE, sub: "Jami (A ustunda guruh) + guruhlar, rasmiy UZ / EN / RU tarjima" },
   buxgalteriya: { file: '1_Buxgalteriya_Shartnoma_va_Pasport.xlsx', title: 'Buxgalteriya', sub: "Shartnoma № va pasport ma'lumotlari" },
   admin: { file: '2_Baza_Admin_Pasport_va_Shahodatnoma.xlsx', title: 'Baza administratori', sub: 'Pasport va shahodatnoma / diplom' },
   guruh_rahbari: { file: '3_Guruh_Rahbarlari_Talabalar_Malumotlari.xlsx', title: 'Guruh rahbarlari', sub: "Tug'ilgan sana, pasport, shahodatnoma" },
@@ -32,7 +33,7 @@ const numIf = (v: string) => {
   return /^\d{1,10}$/.test(s) ? Number(s) : s
 }
 
-/* --- Qabul uchun shablon (2).xlsx — qatorlar va rasmiy tarjimalar lib/qabul.ts da (Python skript bilan umumiy) --- */
+/* --- QABUL - 2026.xlsx — qatorlar va rasmiy tarjimalar lib/qabul.ts da (Python skript bilan umumiy) --- */
 function buildQabulShablonSheet(X: XLSXModule, students: Student[], titleNote: string, withGroup = false) {
   const thin = { style: 'thin', color: { rgb: '000000' } }
   const border = { top: thin, bottom: thin, left: thin, right: thin }
@@ -50,9 +51,11 @@ function buildQabulShablonSheet(X: XLSXModule, students: Student[], titleNote: s
   })
 
   const rows = students
-    .map((s) => qabulRow(s, (ISTISNOLAR as Record<string, QabulIstisno>)[String(s.pinfl || '').replace(/\D/g, '')]))
+    .map((s) => withAiTranslation(qabulRow(s, (ISTISNOLAR as Record<string, QabulIstisno>)[String(s.pinfl || '').replace(/\D/g, '')])))
     .sort((a, b) => a.fio.localeCompare(b.fio, 'uz', { sensitivity: 'base' }))
-  const headers = withGroup ? [...QABUL_HEADERS, QABUL_GROUP_HEADER] : QABUL_HEADERS
+  // "Jami" sahifasida A ustuni — Guruhi, qolganlari bittaga suriladi
+  const shift = withGroup ? 1 : 0
+  const headers = withGroup ? [QABUL_GROUP_HEADER, ...QABUL_HEADERS] : QABUL_HEADERS
   const aoa: (string | number)[][] = [
     ['', titleNote],
     ['', QABUL_NAMUNA],
@@ -63,7 +66,7 @@ function buildQabulShablonSheet(X: XLSXModule, students: Student[], titleNote: s
   const ws = X.utils.aoa_to_sheet(aoa)
   const range = X.utils.decode_range(ws['!ref'] || 'A1')
   for (let r = 2; r <= range.e.r; r++) {
-    const reviewCols = r === 2 ? [] : rows[r - 3].review.map((k) => REVIEW_COL[k]).filter((c) => c !== undefined)
+    const reviewCols = r === 2 ? [] : rows[r - 3].review.map((k) => REVIEW_COL[k]).filter((c) => c !== undefined).map((c) => c + shift)
     for (let c = 0; c < headers.length; c++) {
       const addr = X.utils.encode_cell({ r, c })
       if (!ws[addr]) ws[addr] = { t: 's', v: '' }
@@ -71,13 +74,13 @@ function buildQabulShablonSheet(X: XLSXModule, students: Student[], titleNote: s
       if (r === 2) {
         ref.s = headStyle
       } else {
-        const isCenter = [0, 2, 3, 4, 5, 11, 12, 13, 14].includes(c)
-        if (c === 2) ref.t = 's'
+        const isCenter = (withGroup && c === 0) || [0, 2, 3, 4, 5, 11, 12, 13].includes(c - shift)
+        if (c - shift === 2) ref.t = 's'
         ref.s = cellStyle(isCenter, reviewCols.includes(c))
       }
     }
   }
-  ws['!cols'] = [...QABUL_WIDTHS, ...(withGroup ? [QABUL_GROUP_WIDTH] : [])].map((wch) => ({ wch }))
+  ws['!cols'] = [...(withGroup ? [QABUL_GROUP_WIDTH] : []), ...QABUL_WIDTHS].map((wch) => ({ wch }))
   ws['!rows'] = [{ hpt: 18 }, { hpt: 16 }, { hpt: 63 }, ...rows.map(() => ({ hpt: 19 }))]
   return ws
 }
@@ -176,6 +179,16 @@ const groupOrder = (a: string, b: string) => {
   return a.localeCompare(b, 'uz')
 }
 
+/** QABUL - 2026: avval "Jami" (A ustunda guruh), keyin har bir guruh alohida sahifada */
+function appendQabulSheets(X: XLSXModule, wb: ReturnType<XLSXModule['utils']['book_new']>, official: Student[]) {
+  X.utils.book_append_sheet(wb, buildSheet(X, official, 'qabul_shablon', `Barcha guruhlar — Jami ${official.length} nafar`, true), `Jami (${official.length} nafar)`)
+  const groups = [...new Set(official.map((s) => (s.group || '').trim()).filter(Boolean))].sort(groupOrder)
+  for (const g of groups) {
+    const list = official.filter((s) => (s.group || '').trim() === g)
+    X.utils.book_append_sheet(wb, buildSheet(X, list, 'qabul_shablon', `Guruh ${g} — Qabul uchun ma'lumotlar (${list.length} nafar)`), `Guruh ${g}`)
+  }
+}
+
 /** 1-sahifa "Jami talabalar" (yoki qabul_shablon uchun har bir guruh alohida sahifada) */
 export async function exportRole(students: Student[], role: Role) {
   const X = await loadXlsx()
@@ -185,12 +198,8 @@ export async function exportRole(students: Student[], role: Role) {
   const all = [...sourceList].sort((a, b) => groupOrder((a.group || '').trim(), (b.group || '').trim()) || byName(a, b))
 
   if (role === 'qabul_shablon') {
-    const groups = [...new Set(official.map((s) => (s.group || '').trim()).filter(Boolean))].sort(groupOrder)
-    for (const g of groups) {
-      const list = official.filter((s) => (s.group || '').trim() === g).sort(byName)
-      X.utils.book_append_sheet(wb, buildSheet(X, list, role, `Guruh ${g} — Qabul uchun ma'lumotlar (${list.length} nafar)`), `Guruh ${g}`)
-    }
-    X.utils.book_append_sheet(wb, buildSheet(X, all, role, `Barcha guruhlar — Jami ${all.length} nafar`, true), `Jami (${all.length} nafar)`)
+    await ensureAiTranslations(official)
+    appendQabulSheets(X, wb, official)
   } else {
     X.utils.book_append_sheet(wb, buildSheet(X, all, role), 'Jami talabalar')
     const groups = [...new Set(students.map((s) => (s.group || '').trim()).filter(Boolean))].sort(groupOrder)
@@ -207,13 +216,14 @@ export async function exportRole(students: Student[], role: Role) {
   return wb.SheetNames.length
 }
 
-/** Bitta guruhni Qabul uchun shablon (2).xlsx formatida yuklab olish */
+/** Bitta guruhni QABUL - 2026 formatida yuklab olish */
 export async function exportQabulShablonGroup(students: Student[], group: string) {
   const X = await loadXlsx()
   const list = students.filter((s) => s.group === group).sort(byName)
+  await ensureAiTranslations(list)
   const wb = X.utils.book_new()
   X.utils.book_append_sheet(wb, buildQabulShablonSheet(X, list, `Guruh ${group} — Qabul shabloni (${list.length} nafar)`), `Guruh ${group}`)
-  X.writeFile(wb, `Qabul_uchun_shablon_Guruh_${group}.xlsx`, { cellStyles: true, bookSST: false })
+  X.writeFile(wb, `${QABUL_FILE} (${group}).xlsx`, { cellStyles: true, bookSST: false })
   return list.length
 }
 
@@ -262,12 +272,8 @@ export async function sendRoleToTelegram(students: Student[], role: Role) {
   const all = [...sourceList].sort((a, b) => groupOrder((a.group || '').trim(), (b.group || '').trim()) || byName(a, b))
 
   if (role === 'qabul_shablon') {
-    const groups = [...new Set(official.map((s) => (s.group || '').trim()).filter(Boolean))].sort(groupOrder)
-    for (const g of groups) {
-      const list = official.filter((s) => (s.group || '').trim() === g).sort(byName)
-      X.utils.book_append_sheet(wb, buildSheet(X, list, role, `Guruh ${g} — Qabul shabloni (${list.length} nafar)`), `Guruh ${g}`)
-    }
-    X.utils.book_append_sheet(wb, buildSheet(X, all, role, `Barcha guruhlar — Jami ${all.length} nafar`, true), `Jami (${all.length} nafar)`)
+    await ensureAiTranslations(official)
+    appendQabulSheets(X, wb, official)
   } else {
     X.utils.book_append_sheet(wb, buildSheet(X, all, role), 'Jami talabalar')
     const groups = [...new Set(students.map((s) => (s.group || '').trim()).filter(Boolean))].sort(groupOrder)

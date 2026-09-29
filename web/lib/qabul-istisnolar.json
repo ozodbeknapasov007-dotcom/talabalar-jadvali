@@ -1,9 +1,16 @@
 {
-  "_izoh": "Foydalanuvchi tasdiqlagan istisnolar. Kalit — JSHSHIR. 'otkazish' — audit o'tkazib yuboradigan tekshiruv kodlari (bitirish_yoshi, ...). 'shablon_yillar' — qabul shablonidagi 'Boshlagan va tugatgan yili' qiymati.",
+  "_izoh": "Foydalanuvchi tasdiqlagan istisnolar. Kalit — JSHSHIR. 'otkazish' — audit o'tkazib yuboradigan tekshiruv kodlari (bitirish_yoshi, ...). 'shablon_yillar' — 'Boshlagan va tugatgan yili' qiymati. 'viloyat' — aniq ma'lum yashash hududi.",
   "42207935680042": {
     "fio": "Yorboboyeva Mahliyo Xusan qizi",
     "sabab": "Maktabni eksternat tarzida tamomlagan (26.09.2026 da tasdiqlandi)",
-    "otkazish": ["bitirish_yoshi"],
+    "otkazish": [
+      "bitirish_yoshi"
+    ],
     "shablon_yillar": "2025 (eksternat)"
+  },
+  "60803048230011": {
+    "fio": "Xurramova Sabina Yuldosh qizi",
+    "sabab": "Yakkabog' tumanidan (foydalanuvchi tasdiqladi, 26.09.2026); JSHSHIR hudud kodi 823 noma'lum",
+    "viloyat": "Qashqadaryo, Yakkabog' tumani"
   }
 }

@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { Award, FileImage, IdCard, ImageOff, Loader2, Maximize2, QrCode, RotateCw, Sparkles, Upload } from 'lucide-react'
+import { Award, FileImage, FileText, IdCard, ImageOff, Loader2, Maximize2, QrCode, RotateCw, Sparkles, Upload } from 'lucide-react'
 import { AI_MODELS, analyzeAndUploadDocs, getSavedAiModel, scanQrFromDataUrls, setSavedAiModel, type AiModelId } from '@/lib/ai-doc'
 import type { EditFields, Student } from '@/lib/types'
 import DocDropZone from './DocDropZone'
@@ -42,6 +42,7 @@ export default function DocImages({ file, studentRow, student, onApplyFields }: 
   const [showUpload, setShowUpload] = useState(false)
   const [passFiles, setPassFiles] = useState<File[]>([])
   const [certFiles, setCertFiles] = useState<File[]>([])
+  const [docxFiles, setDocxFiles] = useState<File[]>([])
   const [model, setModel] = useState<AiModelId>(() => getSavedAiModel())
   const [busy, setBusy] = useState(false)
   const [statusMsg, setStatusMsg] = useState('')
@@ -59,6 +60,7 @@ export default function DocImages({ file, studentRow, student, onApplyFields }: 
     setStatusMsg('')
     setPassFiles([])
     setCertFiles([])
+    setDocxFiles([])
     if (!file) { setImages([]); return }
 
     const load = async () => {
@@ -85,6 +87,7 @@ export default function DocImages({ file, studentRow, student, onApplyFields }: 
         row: studentRow,
         student,
         docFile: file,
+        docxFile: docxFiles[0],
         passFiles,
         certFiles,
         existingImages: images?.map((i) => i.src) ?? [],
@@ -100,12 +103,13 @@ export default function DocImages({ file, studentRow, student, onApplyFields }: 
       // ismi — foydalanuvchining o'z ro'yxati, bor bo'lsa AI ularni almashtirmaydi.
       const fields: Partial<EditFields> = { ...res.fields }
       delete (fields as { sh_qr?: string }).sh_qr
-      if (student?.ism) delete fields.ism
-      if (student?.ota) delete fields.ota
+      if (student?.ism && !res.namesFromDoc) delete fields.ism
+      if (student?.ota && !res.namesFromDoc) delete fields.ota
       if (Object.keys(fields).length && onApplyFields) {
         await onApplyFields(fields)
         setPassFiles([])
         setCertFiles([])
+        setDocxFiles([])
       }
       setExtracted(Object.keys(res.fields).length ? res.fields : null)
       setStatusMsg(res.message)
@@ -173,6 +177,19 @@ export default function DocImages({ file, studentRow, student, onApplyFields }: 
 
       {showUpload && (
         <div className="animate-pop-in space-y-3 rounded-2xl border border-sky/35 bg-ink-900/90 p-3.5">
+          <DocDropZone
+            title="Shartnoma hujjati (.docx)"
+            icon={FileText}
+            tone="text-sky-soft"
+            max={1}
+            docxOnly
+            hint="Talabaga biriktiriladi — ichidagi pasport va shahodatnoma o'qiladi"
+            files={docxFiles}
+            onChange={setDocxFiles}
+            onMessage={setStatusMsg}
+            disabled={busy}
+          />
+          <div className="text-center text-[11px] text-fg-subtle">yoki hujjat rasmlarini alohida qo'ying</div>
           <div className="grid gap-2.5 sm:grid-cols-2">
             <DocDropZone title="Pasport / ID-karta" icon={IdCard} tone="text-blue-soft" max={2} hint="2 tagacha rasm (old va orqa tomoni)" files={passFiles} onChange={setPassFiles} onMessage={setStatusMsg} disabled={busy} />
             <DocDropZone title="Shahodatnoma / Diplom" icon={Award} tone="text-emerald-soft" max={1} files={certFiles} onChange={setCertFiles} onMessage={setStatusMsg} disabled={busy} />
@@ -185,7 +202,7 @@ export default function DocImages({ file, studentRow, student, onApplyFields }: 
             onClick={() => void handleRunAi()}
           >
             {busy ? <Loader2 size={15} className="animate-spin" /> : <Sparkles size={15} />}
-            {busy ? 'Tahlil qilinmoqda…' : passFiles.length || certFiles.length ? 'Yuklash va AI + QR Tahlil qilish' : 'Mavjud hujjatni AI + QR Tahlil qilish'}
+            {busy ? 'Tahlil qilinmoqda…' : docxFiles.length ? 'Shartnomani biriktirish va AI + QR Tahlil qilish' : passFiles.length || certFiles.length ? 'Yuklash va AI + QR Tahlil qilish' : 'Mavjud hujjatni AI + QR Tahlil qilish'}
           </button>
         </div>
       )}

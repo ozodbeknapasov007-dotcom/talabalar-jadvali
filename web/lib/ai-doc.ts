@@ -207,6 +207,8 @@ export interface DocAnalysisResult {
   qrFound?: string
   images: string[]
   message: string
+  /** Ism/otasining ismi yangi biriktirilgan shartnomadan olingan (Python ularni Excelga ham yozgan) */
+  namesFromDoc?: boolean
 }
 
 /** "IBODULLAYEVA ASILZODA" → "Ibodullayeva Asilzoda", "LATIF QIZI" → "Latif qizi" (Python clean_uz_name kabi) */
@@ -327,6 +329,8 @@ export async function analyzeAndUploadDocs(opts: {
   row?: number
   student?: { ism?: string; ota?: string; group?: string }
   docFile?: string
+  /** Mavjud talabaga biriktiriladigan shartnoma .docx */
+  docxFile?: File
   passFiles?: File[]
   certFiles?: File[]
   generalFiles?: File[]
@@ -347,7 +351,31 @@ export async function analyzeAndUploadDocs(opts: {
   }
   const previewImages = [...docxImages, ...fileImages]
 
-  // 1. Mavjud talaba — eski portaldagi «⚡ AI Bilan Tahrir»
+  // 1a. Mavjud talaba, shartnoma .docx — eski portaldagi «Hujjatni biriktirish»
+  if (opts.row && opts.row >= 2 && opts.docxFile) {
+    const res = await py('/api/upload_and_attach_to_student', {
+      row: opts.row,
+      filename: opts.docxFile.name,
+      file_base64: (await fileToDataUrl(opts.docxFile)).split(',')[1] || '',
+      model,
+    })
+    if (res?.success && res.data) {
+      const fields = mapAiData(res.data as Record<string, unknown>)
+      const n = countFields(fields)
+      return {
+        fields,
+        docFile: typeof res.filename === 'string' ? res.filename : undefined,
+        qrFound: fields.sh_qr,
+        images: Array.isArray(res.images) && res.images.length ? (res.images as string[]) : (await extractDocxClient(opts.docxFile)).images,
+        namesFromDoc: true,
+        message: n ? `Shartnoma biriktirildi, AI ${n} ta maydonni o'qib Excelga saqladi${fields.sh_qr ? ' (QR-kod tasdiqlandi ✓)' : ''}` : NOTHING_READ,
+      }
+    }
+    if (res) throw new Error(res.error || 'Python xizmati hujjatni biriktira olmadi')
+    throw new Error("Shartnomani biriktirish uchun kompyuterdagi Python xizmati (8080) ishlab turishi kerak")
+  }
+
+  // 1b. Mavjud talaba — eski portaldagi «⚡ AI Bilan Tahrir»
   if (opts.row && opts.row >= 2 && (allFiles.length || opts.docFile)) {
     const res = allFiles.length
       ? await py('/api/upload_student_section_files', {

@@ -210,9 +210,9 @@ export default function AddStudentModal({ all, defaultGroup, onClose, onAdd }: P
                 tone="text-sky-soft"
                 max={1}
                 docxOnly
-                hint="Bitta Word fayl — ichidagi jadval, pasport va shahodatnoma o'zi o'qiladi"
+                hint="Bitta Word fayl — jadval, pasport va shahodatnoma AI tugmasi bosilganda o'qiladi"
                 files={docxFiles}
-                onChange={(f) => { setDocxFiles(f); if (f.length) void runAutoFill(f) }}
+                onChange={setDocxFiles}
                 onMessage={setAiMsg}
                 disabled={aiBusy}
               />

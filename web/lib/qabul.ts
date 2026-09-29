@@ -1,8 +1,8 @@
 /*
- * "Qabul uchun shablon (2).xlsx" — 14 ustunli qabul jadvali qatorlari va rasmiy EN / RU tarjimalar.
+ * "QABUL - 2026.xlsx" (administrator shabloni asosida) — 14 ustunli qabul jadvali qatorlari va rasmiy EN / RU tarjimalar.
  *
  * Yagona manba: portal eksporti (lib/excel.ts) ham, scripts/generate_qabul_shablon.py ham
- * (node web/scripts/qabul-rows.ts orqali) shu fayldagi qoidalardan foydalanadi.
+ * (node web/scripts/qabul-rows.mjs orqali) shu fayldagi qoidalardan foydalanadi.
  * Tashqi importlar yo'q — Node o'zi to'g'ridan-to'g'ri ishga tushira olishi uchun.
  *
  * Tarjima qoidalari:
@@ -33,6 +33,8 @@ export interface QabulInput {
 export interface QabulIstisno {
   /** "Boshlagan va tugatgan yili" ustuniga aynan shu qiymat yoziladi (masalan "2025 (eksternat)") */
   shablon_yillar?: string
+  /** Yashash hududi aniq ma'lum bo'lsa (masalan "Qashqadaryo, Yakkabog' tumani") — JSHSHIR kodidan ustun turadi */
+  viloyat?: string
 }
 
 export interface QabulRow {
@@ -70,7 +72,7 @@ export const QABUL_HEADERS = [
   'Avval olgan diplom seriya+raqami',
   'Boshlagan va tugatgan yili',
 ]
-/** Faqat "Jami" sahifasida — shablonning 14 ustuni o'zgarmasligi uchun oxirida */
+/** Faqat "Jami" sahifasida — A ustunida, qolgan 14 ustun bittaga o'ngga suriladi */
 export const QABUL_GROUP_HEADER = 'Guruhi'
 export const QABUL_WIDTHS = [4.5, 36, 17.5, 15, 18, 18, 27, 18, 40, 44, 48, 15, 16.5, 15]
 export const QABUL_GROUP_WIDTH = 10
@@ -120,6 +122,9 @@ const byFull = (full: string) => DISTRICTS.find((d) => d.full === full) ?? null
 /** JSHSHIR 8–10 raqamlari — hujjat berilgan hudud kodi */
 const PINFL_DISTRICT: Record<string, string> = {
   '559': 'Qashqadaryo, Shahrisabz tumani',
+  // 573 — TAXMINIY (26.09.2026): shu kodli yagona talabaning muassasasi Yakkabog' kolleji,
+  // maktablari (69, 70, 75-son) ham shu hududga mos; rasmiy kod ro'yxati topilmadi.
+  '573': "Qashqadaryo, Yakkabog' tumani",
   '572': 'Qashqadaryo, Shahrisabz shahri',
   '568': 'Qashqadaryo, Kitob tumani',
   '264': 'Qashqadaryo, Kitob tumani',
@@ -244,20 +249,23 @@ function normalizeUz(raw: string): string {
     .replace(/^qashqadaryo viloyati,?\s*/i, '')
 }
 
-function districtOf(text: string, pinfl: string): District | null {
+/** Hudud: avval nomdagi tuman, keyin aniq ma'lum hudud (istisno), oxirida JSHSHIR kodi */
+function districtOf(text: string, pinfl: string, known?: string): District | null {
   const low = text.toLowerCase()
   for (const d of DISTRICTS) if (d.re.test(low)) return d
+  const k = known ? byFull(known) : null
+  if (k) return k
   if (pinfl.length === 14) return byFull(PINFL_DISTRICT[pinfl.slice(7, 10)] ?? '')
   return null
 }
 
-export function translateInstitution(makRaw: string, docTur: string, shDoc: string, pinfl: string): Institution {
+export function translateInstitution(makRaw: string, docTur: string, shDoc: string, pinfl: string, knownDistrict?: string): Institution {
   const uz0 = normalizeUz(makRaw)
   const low = uz0.toLowerCase()
   const ov = OVERRIDES[low]
   if (ov) return { uz: ov[0], en: ov[1], ru: ov[2], type: /litsey/.test(low) ? 'Litsey' : 'Kollej', review: false }
 
-  const dist = districtOf(uz0, pinfl)
+  const dist = districtOf(uz0, pinfl, knownDistrict)
   const dUz = dist ? `${dist.uz} ` : ''
   const dEn = dist ? `, ${dist.en}` : ''
   const dRu = dist ? ` ${dist.ru}` : ''
@@ -379,8 +387,8 @@ export function qabulRow(s: QabulInput, istisno?: QabulIstisno): QabulRow {
   const phones = splitPhones(s.tel)
   const all = phones.length ? phones : (s.extraPhones ?? []).filter((p) => /^\d{9}$/.test(p))
 
-  const residence = districtOf(mak, pinfl)
-  const inst = translateInstitution(mak, cleanText(s.doc_tur), shDoc, pinfl)
+  const residence = districtOf(mak, pinfl, istisno?.viloyat)
+  const inst = translateInstitution(mak, cleanText(s.doc_tur), shDoc, pinfl, istisno?.viloyat)
   const review: string[] = []
   if (inst.review) review.push('makEn', 'makRu')
   if (!residence) review.push('viloyat')
@@ -404,16 +412,17 @@ export function qabulRow(s: QabulInput, istisno?: QabulIstisno): QabulRow {
   }
 }
 
-/** Excel qatori (№ bilan). withGroup — "Jami" sahifasi uchun oxiriga "Guruhi" ustuni. */
+/** Excel qatori (№ bilan). withGroup — "Jami" sahifasi uchun A ustunida "Guruhi", qolganlari bittaga suriladi. */
 export function qabulCells(r: QabulRow, idx: number, withGroup = false): (string | number)[] {
   const num9 = (t: string) => (/^\d{9}$/.test(t) ? Number(t) : t)
   const cells: (string | number)[] = [
     idx + 1, r.fio, r.pinfl, r.pv, num9(r.tel1), num9(r.tel2), r.viloyat, r.manzil,
     r.makUz, r.makEn, r.makRu, r.eduType, r.diplom, r.yillar,
   ]
-  if (withGroup) cells.push(r.group)
-  return cells
+  return withGroup ? [r.group, ...cells] : cells
 }
 
 /** review maydon nomi → 0 dan boshlangan ustun indeksi */
 export const REVIEW_COL: Record<string, number> = { viloyat: 6, makEn: 9, makRu: 10 }
+/** "Jami" sahifasida (A ustunda Guruhi) ustunlar bittaga suriladi */
+export const QABUL_FILE = 'QABUL - 2026'

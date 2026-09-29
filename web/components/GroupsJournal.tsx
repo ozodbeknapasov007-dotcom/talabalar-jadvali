@@ -84,7 +84,7 @@ function GroupCard({ code, title, leader, students, special, onOpen, notify }: {
                 className="btn-ghost h-8 px-2.5 text-[12px] border-emerald/35 text-emerald-soft hover:bg-emerald/10"
                 onClick={downloadQabul}
                 disabled={qabulBusy || !students.length}
-                title="Shu guruhni Qabul uchun shablon (2).xlsx formatida yuklab olish"
+                title="Shu guruhni QABUL - 2026 formatida yuklab olish"
               >
                 {qabulBusy ? <Loader2 size={14} className="animate-spin" /> : <FileSpreadsheet size={14} />} Qabul
               </button>
@@ -196,12 +196,12 @@ function GroupsJournal({ students, groups: list, onOpen, notify }: {
             onClick={async () => {
               try {
                 await exportRole(students, 'qabul_shablon')
-                notify(`Qabul uchun shablon (${list.length} ta guruh) Excelga yuklandi!`)
+                notify(`QABUL - 2026 (${list.length} ta guruh) Excelga yuklandi!`)
               } catch (e) {
                 notify(`Xatolik: ${(e as Error).message}`, 'error')
               }
             }}
-            title="Barcha guruhlarni Qabul uchun shablon (2).xlsx formatida yuklab olish"
+            title="Barcha guruhlarni QABUL - 2026.xlsx formatida yuklab olish"
           >
             <FileSpreadsheet size={15} /> Qabul shabloni ({list.length} guruh)
           </button>
