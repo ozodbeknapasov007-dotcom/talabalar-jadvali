@@ -14,6 +14,7 @@ interface Props {
   groups: string[]
   filters: Filters
   onFilter: (patch: Partial<Filters>) => void
+  onGroupSettings: () => void
 }
 
 function Tile({
@@ -51,7 +52,7 @@ function Tile({
   )
 }
 
-function Overview({ students, groups, filters, onFilter }: Props) {
+function Overview({ students, groups, filters, onFilter, onGroupSettings }: Props) {
   const stats = useMemo(() => {
     const byGroup: Record<string, { total: number; ver: number }> = {}
     for (const g of groups) byGroup[g] = { total: 0, ver: 0 }
@@ -95,7 +96,7 @@ function Overview({ students, groups, filters, onFilter }: Props) {
       </div>
 
       {groups.length ? (
-        <GroupCards groups={groups.map((g) => ({ g, ...stats.byGroup[g] }))} active={filters.group} onPick={(group) => onFilter({ group })} />
+        <GroupCards groups={groups.map((g) => ({ g, ...stats.byGroup[g] }))} active={filters.group} onPick={(group) => onFilter({ group })} onSettings={onGroupSettings} />
       ) : (
         <div className="panel px-5 py-6 text-center text-[13px] text-fg-muted">
           {filters.kurs}-kurs guruhlari va talabalari hali kiritilmagan.

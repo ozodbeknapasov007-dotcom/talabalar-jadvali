@@ -1,8 +1,5 @@
-import { ACADEMIC_LEAVE_GROUP, COURSES, GROUPS, GROUP_TITLES, OQUV_YILI_BOSHI, WITHDRAWN_GROUP } from './config'
+import { ACADEMIC_LEAVE_GROUP, COURSES, GROUP_CODE, GROUPS, GROUP_TITLES, OQUV_YILI_BOSHI, WITHDRAWN_GROUP } from './config'
 import type { EditFields, Student } from './types'
-
-/** Akademik guruh kodi: 26-01, 25-03 ... */
-const GROUP_CODE = /^\d{2}-\d{2}$/
 
 export function isWithdrawn(g: string | undefined): boolean {
   const gl = String(g || '').trim().toLowerCase()
@@ -220,9 +217,16 @@ export function searchText(s: Student): string {
     .toLowerCase()
 }
 
+/** Filtrdagi guruhlar: Ctrl bilan bir nechtasi tanlanganda "24-11,24-12" */
+export function selectedGroups(group: string): string[] {
+  return group.includes(',') ? group.split(',').map((g) => g.trim()).filter(Boolean) : group ? [group] : []
+}
+
 export function matches(s: Student, text: string, f: Filters, q: string): boolean {
   if (q && !text.includes(q)) return false
-  if (f.group) {
+  if (f.group.includes(',')) {
+    if (!selectedGroups(f.group).includes(s.group)) return false
+  } else if (f.group) {
     if (isWithdrawn(f.group)) {
       if (!isOutside(s.group)) return false
     } else if (isAcademicLeave(f.group)) {

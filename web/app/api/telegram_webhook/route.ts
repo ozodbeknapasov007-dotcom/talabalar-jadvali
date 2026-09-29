@@ -1,9 +1,9 @@
 import type { NextRequest } from 'next/server'
-import { COURSES, GROUPS, GROUP_LEADERS } from '@/lib/config'
+import { COURSES, GROUP_LEADERS } from '@/lib/config'
 import { malumotnomaBlocker, malumotnomaData, malumotnomaFileName } from '@/lib/malumotnoma'
 import { renderMalumotnomaJpg } from '@/lib/server/malumotnoma-rasm'
 import { academicGroups, groupTitle, isAcademicLeave, isOfficialGroup, isOutside, kursOf } from '@/lib/student'
-import { REPO_PATHS, readRepoFile, readRepoFileIn } from '@/lib/server/source'
+import { loadGroupSettings, REPO_PATHS, readRepoFile, readRepoFileIn } from '@/lib/server/source'
 import { tgSendPhoto } from '@/lib/server/telegram'
 import type { Student } from '@/lib/types'
 
@@ -40,7 +40,8 @@ const ROLE_FILES = [
   { match: ["to'liq", 'toliq', '4.', '/toliq'], file: '4_Toliq_Malumotlar_Bazasi.xlsx', title: "4. To'liq Ma'lumotlar (O'zim uchun barcha ustunlar)" },
 ]
 
-const OFFICIAL: readonly string[] = GROUPS // PDF jurnallar shu guruhlar uchun yasaladi
+/** PDF jurnallar (Python generate_pdfs.py) faqat 1-kurs guruhlari uchun yasaladi */
+const pdfGroups = () => COURSES.find((c) => c.kurs === 1)?.groups ?? []
 
 async function loadStudentsDb(): Promise<Student[]> {
   const buf = await readRepoFile(REPO_PATHS.baza)
@@ -200,6 +201,7 @@ const notConfigured = () =>
   Response.json({ ok: false, error: 'TELEGRAM_BOT_TOKEN / TELEGRAM_CHAT_ID sozlanmagan (Vercel → Settings → Environment Variables)' }, { status: 500 })
 
 export async function GET(request: NextRequest) {
+  await loadGroupSettings()
   const action = (request.nextUrl.searchParams.get('action') || '').toLowerCase()
   if (!action) return Response.json({ ok: true, status: 'Telegram 24/7 Webhook Active' })
   if (!BOT_TOKEN || !DEFAULT_CHAT_ID) return notConfigured()
@@ -221,6 +223,7 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   if (!BOT_TOKEN) return notConfigured()
+  await loadGroupSettings().catch(() => null)
   // Telegram har doim 200 kutadi — aks holda xabarni qayta-qayta yuboradi
   try {
     const body = await request.json().catch(() => ({}))
@@ -242,7 +245,7 @@ export async function POST(request: NextRequest) {
         "• <b>📋 4. To'liq Ma'lumotlar (.xlsx)</b> — O'zingiz uchun to'liq baza\n" +
         '• <b>📦 JSON Baza (.json)</b> — To\'liq JSON baza fayli\n' +
         "• <b>⚠️ Kamchiliklar ro'yxati</b> — Hujjati to'liq bo'lmagan talabalar\n" +
-        `• <b>📑 Guruh Jurnallari (PDF)</b> — Barcha ${OFFICIAL.length} ta guruh A4 PDF jurnallari\n\n` +
+        `• <b>📑 Guruh Jurnallari (PDF)</b> — Barcha ${pdfGroups().length} ta guruh A4 PDF jurnallari\n\n` +
         "📄 <b>/malumotnoma 285</b> — talabaning o'qiyotganligi haqida ma'lumotnomasi (rasm)\n\n" +
         "🔍 <i>Tezkor qidiruv:</i> Istalgan talabaning <b>Ism-familiyasi</b>, <b>Shartnoma №</b> yoki <b>Pasport seriyasini</b> yozib yuboring!")
       return Response.json({ ok: true })
@@ -282,7 +285,7 @@ export async function POST(request: NextRequest) {
     }
     if (t.includes('guruh jurnallari') || t === '/guruhlar') {
       const buf = await readRepoFileIn(REPO_PATHS.pdfJurnallar, 'Barcha_Guruhlar_Jurnali.pdf')
-      if (buf) await sendDocument(chatId, buf, 'Barcha_Guruhlar_Jurnali.pdf', `📑 <b>Barcha ${OFFICIAL.length} ta guruh jurnallari (A4 PDF)</b>\n🕒 Sana: ${stamp}`)
+      if (buf) await sendDocument(chatId, buf, 'Barcha_Guruhlar_Jurnali.pdf', `📑 <b>Barcha ${pdfGroups().length} ta guruh jurnallari (A4 PDF)</b>\n🕒 Sana: ${stamp}`)
       else await sendMessage(chatId, '❌ PDF jurnal topilmadi.')
       return Response.json({ ok: true })
     }

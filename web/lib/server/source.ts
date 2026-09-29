@@ -1,6 +1,7 @@
 import 'server-only'
-import { readFile } from 'node:fs/promises'
+import { mkdir, readFile, writeFile } from 'node:fs/promises'
 import path from 'node:path'
+import { applyGroupSettings, DEFAULT_GROUP_SETTINGS, sanitizeGroupSettings, type GroupSettings } from '@/lib/config'
 import { buildAddedStudent, fullName } from '@/lib/student'
 import type { Change, Student } from '@/lib/types'
 
@@ -32,6 +33,7 @@ const GH_OWNER = process.env.GITHUB_OWNER || 'OzodbekNapasov'
 const GH_REPO = process.env.GITHUB_REPO || 'Talabalar-ro-yhati'
 const GH_BRANCH = process.env.GITHUB_BRANCH || 'main'
 const QUEUE_PATH = 'scripts/remote_changes.json'
+const GROUP_SETTINGS_PATH = 'data/guruhlar.json'
 
 /*
   Loyiha papkalari (26.09.2026 dan). GitHub'da ham, kompyuterda ham shu yo'llar.
@@ -298,4 +300,56 @@ export async function localFlush() {
 
 export async function loadDocFile(name: string): Promise<Buffer | null> {
   return readRepoFileIn(REPO_PATHS.hujjatlar, name)
+}
+
+/* ------------------------------ GURUH SOZLAMALARI ------------------------------ */
+
+/** data/guruhlar.json (bo'lmasa — config.ts dagi boshlang'ich qiymatlar) va server xotirasiga qo'llash */
+export async function loadGroupSettings(): Promise<GroupSettings> {
+  let settings = DEFAULT_GROUP_SETTINGS
+  try {
+    const buf = await readRepoFile([GROUP_SETTINGS_PATH])
+    if (buf) {
+      const parsed = sanitizeGroupSettings(JSON.parse(buf.toString('utf-8')))
+      if (Object.keys(parsed).length) settings = parsed
+    }
+  } catch { /* buzilgan fayl — boshlang'ich qiymatlar */ }
+  applyGroupSettings(settings)
+  return settings
+}
+
+/**
+ * Sozlamalarni saqlash. Lokal: faylni diskka yozib, Python xizmatiga GitHub'ga yuborishni
+ * aytadi. Vercel: GitHub'dagi faylni to'g'ridan-to'g'ri yangilaydi (xizmat uni git pull bilan oladi).
+ */
+export async function saveGroupSettings(raw: unknown): Promise<GroupSettings> {
+  const settings = sanitizeGroupSettings(raw)
+  if (!Object.keys(settings).length) throw new Error("Guruh sozlamalari bo'sh yoki noto'g'ri")
+  const text = JSON.stringify(settings, null, 2) + '\n'
+
+  if (syncMode() === 'local') {
+    const file = path.join(REPO_DIR, ...GROUP_SETTINGS_PATH.split('/'))
+    await mkdir(path.dirname(file), { recursive: true })
+    await writeFile(file, text, 'utf-8')
+    await fetch(`${LOCAL_API}/api/flush_to_git?t=${Date.now()}`, { cache: 'no-store' }).catch(() => null)
+  } else {
+    if (!process.env.GITHUB_TOKEN) throw new Error('GITHUB_TOKEN sozlanmagan')
+    let lastErr = ''
+    for (let attempt = 1; attempt <= 4; attempt++) {
+      const getRes = await fetch(`${contentsUrl(GROUP_SETTINGS_PATH)}?ref=${GH_BRANCH}`, { headers: ghHeaders(), cache: 'no-store' })
+      const sha = getRes.ok ? (await getRes.json()).sha : undefined
+      const putRes = await fetch(contentsUrl(GROUP_SETTINGS_PATH), {
+        method: 'PUT',
+        headers: { ...ghHeaders(), 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: 'Guruh sozlamalari yangilandi', content: Buffer.from(text, 'utf-8').toString('base64'), branch: GH_BRANCH, sha }),
+      })
+      if (putRes.ok) { lastErr = ''; break }
+      lastErr = `${putRes.status} ${(await putRes.text()).slice(0, 160)}`
+      if (putRes.status !== 409 && putRes.status !== 422) break
+      await new Promise((r) => setTimeout(r, 300 * attempt))
+    }
+    if (lastErr) throw new Error(`GitHub'ga yozilmadi: ${lastErr}`)
+  }
+  applyGroupSettings(settings)
+  return settings
 }

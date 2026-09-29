@@ -1,7 +1,7 @@
 'use client'
 
 import { GROUPS, GROUP_LEADERS } from './config'
-import { byName, formatDate, fullName, isAcademicLeave, isOfficialGroup, isOutside, isWithdrawn, tugilganTuman } from './student'
+import { byName, formatDate, fullName, isAcademicLeave, isOfficialGroup, isOutside, isWithdrawn, kursOf, tugilganTuman } from './student'
 import type { Student } from './types'
 import ISTISNOLAR from './qabul-istisnolar.json'
 import { ensureAiTranslations, withAiTranslation } from './qabul-ai'
@@ -166,7 +166,10 @@ const groupOrder = (a: string, b: string) => {
   return a.localeCompare(b, 'uz')
 }
 
-/** Admin shablonidagi rollar: bitta "Лист1" sahifa, rasmiy guruhlar (guruh tartibida, ichida alifbo bo'yicha) */
+/**
+ * Admin shablonidagi rollar: bitta "Лист1" sahifa, 1-kurs (joriy qabul) guruhlari — Python
+ * (generate_qabul_shablon.py) bilan bir xil; guruh tartibida, ichida alifbo bo'yicha.
+ */
 type QabulRole = 'qabul_shablon' | 'admin'
 const isQabulRole = (role: Role): role is QabulRole => role === 'qabul_shablon' || role === 'admin'
 
@@ -174,7 +177,7 @@ async function buildRoleWorkbook(X: XLSXModule, students: Student[], role: Role)
   const wb = X.utils.book_new()
   if (isQabulRole(role)) {
     const official = students
-      .filter((s) => isOfficialGroup(s.group))
+      .filter((s) => isOfficialGroup(s.group) && kursOf(s.group) === 1)
       .sort((a, b) => groupOrder((a.group || '').trim(), (b.group || '').trim()) || byName(a, b))
     await ensureAiTranslations(official)
     X.utils.book_append_sheet(wb, buildQabulShablonSheet(X, official), QABUL_SHEET)

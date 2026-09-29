@@ -4,10 +4,11 @@ import { useCallback, useDeferredValue, useEffect, useMemo, useState } from 'rea
 import { AlertTriangle, BookOpenCheck, Database, Loader2, ServerCrash } from 'lucide-react'
 import { exportFiltered } from '@/lib/excel'
 import { useStudents } from '@/lib/store'
-import { COURSES } from '@/lib/config'
-import { academicGroups, EMPTY_FILTERS, fullName, isOfficialGroup, kursOf, matches, needsOrder, scanDuplicates, searchText, type Filters } from '@/lib/student'
+import { applyGroupSettings, COURSES, GROUP_SETTINGS, type GroupSettings } from '@/lib/config'
+import { academicGroups, EMPTY_FILTERS, fullName, isOfficialGroup, kursOf, matches, needsOrder, scanDuplicates, searchText, selectedGroups, type Filters } from '@/lib/student'
 import type { EditFields, Student } from '@/lib/types'
 import FilterBar, { type DisplayMode } from './FilterBar'
+import GroupSettingsModal from './GroupSettingsModal'
 import GroupsJournal from './GroupsJournal'
 import Header from './Header'
 import Overview from './Overview'
@@ -43,6 +44,16 @@ export default function Portal() {
   const [openRow, setOpenRow] = useState<number | null>(null)
   const [adding, setAdding] = useState(false)
   const [refreshing, setRefreshing] = useState(false)
+  // Guruh sozlamalari (data/guruhlar.json): kurs, rahbar, yo'nalish — config.ts dagi qiymatlar ustiga
+  const [settingsVersion, setSettingsVersion] = useState(0)
+  const [groupSettingsOpen, setGroupSettingsOpen] = useState(false)
+
+  useEffect(() => {
+    fetch('/api/groups', { cache: 'no-store' })
+      .then((r) => r.json())
+      .then((b: { settings?: GroupSettings }) => { if (b.settings) { applyGroupSettings(b.settings); setSettingsVersion((v) => v + 1) } })
+      .catch(() => { /* boshlang'ich sozlamalar bilan ishlayveradi */ })
+  }, [])
 
   // Filtr, ko'rinish va rejim F5 dan keyin ham saqlanib qoladi
   useEffect(() => {
@@ -63,10 +74,10 @@ export default function Portal() {
   const shown = useMemo(() => {
     const q = deferredFilters.search.trim().toLowerCase()
     return indexed.filter((x) => matches(x.s, x.text, deferredFilters, q)).map((x) => x.s)
-  }, [indexed, deferredFilters])
+  }, [indexed, deferredFilters, settingsVersion]) // settingsVersion: kursOf guruh sozlamasiga bog'liq
 
   const kurs = filters.kurs ? Number(filters.kurs) : null
-  const groups = useMemo(() => academicGroups(data.students, kurs), [data.students, kurs])
+  const groups = useMemo(() => academicGroups(data.students, kurs), [data.students, kurs, settingsVersion])
   const kursCounts = useMemo(() => {
     const c: Record<number, number> = {}
     for (const s of data.students) {
@@ -75,7 +86,7 @@ export default function Portal() {
       if (k) c[k] = (c[k] ?? 0) + 1
     }
     return c
-  }, [data.students])
+  }, [data.students, settingsVersion])
 
   const dupGroups = useMemo(() => scanDuplicates(data.students), [data.students])
   const duplicateRows = useMemo(() => new Set(dupGroups.flatMap((g) => g.students.map((s) => s.row))), [dupGroups])
@@ -137,6 +148,21 @@ export default function Portal() {
     if (needsOrder(s.group, group)) { setOrderAsk({ s, group }); return }
     await applyGroup(s, { group })
   }, [applyGroup])
+
+  const groupCounts = useMemo(() => {
+    const c: Record<string, number> = {}
+    for (const s of data.students) c[s.group] = (c[s.group] ?? 0) + 1
+    return c
+  }, [data.students])
+
+  const onSaveGroupSettings = useCallback(async (settings: GroupSettings) => {
+    const res = await fetch('/api/groups', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ settings }) })
+    const body = await res.json().catch(() => ({}))
+    if (!res.ok || !body.success) throw new Error(body.error || `Server ${res.status} qaytardi`)
+    applyGroupSettings(body.settings)
+    setSettingsVersion((v) => v + 1)
+    notify('Guruh sozlamalari saqlandi')
+  }, [notify])
 
   const onDelete = useCallback(async (s: Student) => {
     const next = navList[navIdx + 1] ?? navList[navIdx - 1]
@@ -221,7 +247,7 @@ export default function Portal() {
 
             {view === 'database' ? (
               <>
-                <Overview students={data.students} groups={groups} filters={filters} onFilter={patchFilters} />
+                <Overview students={data.students} groups={groups} filters={filters} onFilter={patchFilters} onGroupSettings={() => setGroupSettingsOpen(true)} />
 
                 {dupGroups.length > 0 && (
                   <div className="panel border-rose/40 bg-rose/5 p-4">
@@ -287,6 +313,16 @@ export default function Portal() {
           group={orderAsk.group}
           onCancel={() => setOrderAsk(null)}
           onSubmit={(b) => { const { s, group } = orderAsk; setOrderAsk(null); void applyGroup(s, { group, ...b }) }}
+        />
+      )}
+
+      {groupSettingsOpen && (
+        <GroupSettingsModal
+          settings={GROUP_SETTINGS}
+          counts={groupCounts}
+          preselected={selectedGroups(filters.group)}
+          onClose={() => setGroupSettingsOpen(false)}
+          onSave={onSaveGroupSettings}
         />
       )}
 
