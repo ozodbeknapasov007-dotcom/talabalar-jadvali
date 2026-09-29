@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-09-29 13:55:54",
+  "updated_at": "2026-09-29 15:14:02",
   "total_students": 183,
   "students": [
     {
@@ -29,7 +29,9 @@
       "cert_fish": "Abdijalolova Dilnura Yusufjon qizi",
       "name_match": "Pasport: MOS | Shahodatnoma: MOS",
       "name_flag": "ok",
-      "verified": "TASDIQLANDI"
+      "verified": "TASDIQLANDI",
+      "buyruq": "",
+      "buyruq_sana": ""
     },
     {
       "row": 7,
@@ -58,7 +60,9 @@
       "cert_fish": "Abdurahmonova Parvinabonu Alisher qizi",
       "name_match": "Pasport: MOS | Shahodatnoma: MOS",
       "name_flag": "ok",
-      "verified": "TASDIQLANDI"
+      "verified": "TASDIQLANDI",
+      "buyruq": "",
+      "buyruq_sana": ""
     },
     {
       "row": 12,
@@ -87,7 +91,9 @@
       "cert_fish": "Arzikulova Amina Salohiddin qizi",
       "name_match": "Pasport: TRANSLIT | Shahodatnoma: TRANSLIT",
       "name_flag": "translit",
-      "verified": "TASDIQLANDI"
+      "verified": "TASDIQLANDI",
+      "buyruq": "",
+      "buyruq_sana": ""
     },
     {
       "row": 16,
@@ -116,7 +122,9 @@
       "cert_fish": "Azamatova Charos Abdiaziz qizi",
       "name_match": "Pasport: MOS | Shahodatnoma: MOS",
       "name_flag": "ok",
-      "verified": "TASDIQLANDI"
+      "verified": "TASDIQLANDI",
+      "buyruq": "",
+      "buyruq_sana": ""
     },
     {
       "row": 40,
@@ -145,7 +153,9 @@
       "cert_fish": "Hazratova Farzona Toshkand qizi",
       "name_match": "Pasport: MOS | Shahodatnoma: MOS",
       "name_flag": "ok",
-      "verified": "TASDIQLANDI"
+      "verified": "TASDIQLANDI",
+      "buyruq": "",
+      "buyruq_sana": ""
     },
     {
       "row": 42,
@@ -174,7 +184,9 @@
       "cert_fish": "Mavjud",
       "name_match": "TEKSHIRILMAGAN",
       "name_flag": "",
-      "verified": "TASDIQLANDI"
+      "verified": "TASDIQLANDI",
+      "buyruq": "",
+      "buyruq_sana": ""
     },
     {
       "row": 65,
@@ -203,7 +215,9 @@
       "cert_fish": "Majidova Namuna Shunqor qizi",
       "name_match": "TEKSHIRILMAGAN",
       "name_flag": "",
-      "verified": "TASDIQLANDI"
+      "verified": "TASDIQLANDI",
+      "buyruq": "",
+      "buyruq_sana": ""
     },
     {
       "row": 72,
@@ -232,7 +246,9 @@
       "cert_fish": "Meliyeva Umida Shavkat qizi",
       "name_match": "Pasport: MOS | Diplom: MOS",
       "name_flag": "ok",
-      "verified": "TASDIQLANDI"
+      "verified": "TASDIQLANDI",
+      "buyruq": "",
+      "buyruq_sana": ""
     },
     {
       "row": 78,
@@ -261,7 +277,9 @@
       "cert_fish": "Murodullayev Azizbek Odiljon o'g'li",
       "name_match": "Pasport: MOS | Shahodatnoma: MOS",
       "name_flag": "ok",
-      "verified": "TASDIQLANDI"
+      "verified": "TASDIQLANDI",
+      "buyruq": "",
+      "buyruq_sana": ""
     },
     {
       "row": 92,
@@ -290,7 +308,9 @@
       "cert_fish": "Numonova Jasmina Baxodir qizi",
       "name_match": "Pasport: MOS | Shahodatnoma: MOS",
       "name_flag": "ok",
-      "verified": "TASDIQLANDI"
+      "verified": "TASDIQLANDI",
+      "buyruq": "",
+      "buyruq_sana": ""
     },
     {
       "row": 109,
@@ -319,7 +339,9 @@
       "cert_fish": "Ravshanova Ruhshona Radju qizi",
       "name_match": "Shahodatnoma: TRANSLIT",
       "name_flag": "translit",
-      "verified": "TASDIQLANDI"
+      "verified": "TASDIQLANDI",
+      "buyruq": "",
+      "buyruq_sana": ""
     },
     {
       "row": 137,
@@ -348,7 +370,9 @@
       "cert_fish": "Turayeva Dilsuz Oybek qizi",
       "name_match": "Pasport: MOS | Shahodatnoma: MOS",
       "name_flag": "ok",
-      "verified": "TASDIQLANDI"
+      "verified": "TASDIQLANDI",
+      "buyruq": "",
+      "buyruq_sana": ""
     },
     {
       "row": 139,
@@ -377,7 +401,9 @@
       "cert_fish": "Turg'unova Jasmina Turg'un qizi",
       "name_match": "Pasport: MOS",
       "name_flag": "ok",
-      "verified": "TASDIQLANDI"
+      "verified": "TASDIQLANDI",
+      "buyruq": "",
+      "buyruq_sana": ""
     },
     {
       "row": 173,
@@ -406,7 +432,9 @@
       "cert_fish": "Ziyodullayeva Jasmina Alisher qizi",
       "name_match": "Pasport: MOS | Shahodatnoma: MOS",
       "name_flag": "ok",
-      "verified": "TASDIQLANDI"
+      "verified": "TASDIQLANDI",
+      "buyruq": "",
+      "buyruq_sana": ""
     },
     {
       "row": 10,
@@ -435,7 +463,9 @@
       "cert_fish": "Mavjud",
       "name_match": "",
       "name_flag": "",
-      "verified": "TASDIQLANDI"
+      "verified": "TASDIQLANDI",
+      "buyruq": "",
+      "buyruq_sana": ""
     },
     {
       "row": 20,
@@ -464,7 +494,9 @@
       "cert_fish": "Berdiqulova Gulshan Rustam qizi",
       "name_match": "Pasport: MOS",
       "name_flag": "ok",
-      "verified": "TASDIQLANDI"
+      "verified": "TASDIQLANDI",
+      "buyruq": "",
+      "buyruq_sana": ""
     },
     {
       "row": 26,
@@ -493,7 +525,9 @@
       "cert_fish": "Eshmurotova Charos Bekqul qizi",
       "name_match": "Pasport: MOS | Shahodatnoma: MOS",
       "name_flag": "ok",
-      "verified": "TASDIQLANDI"
+      "verified": "TASDIQLANDI",
+      "buyruq": "",
+      "buyruq_sana": ""
     },
     {
       "row": 32,
@@ -522,7 +556,9 @@
       "cert_fish": "G'aybullayeva Ruxsora Xusniddin qizi",
       "name_match": "Shahodatnoma: MOS",
       "name_flag": "ok",
-      "verified": "TASDIQLANDI"
+      "verified": "TASDIQLANDI",
+      "buyruq": "",
+      "buyruq_sana": ""
     },
     {
       "row": 36,
@@ -551,7 +587,9 @@
       "cert_fish": "Hamroqulova Farzona Odilovna",
       "name_match": "Pasport: MOS",
       "name_flag": "ok",
-      "verified": "TASDIQLANDI"
+      "verified": "TASDIQLANDI",
+      "buyruq": "",
+      "buyruq_sana": ""
     },
     {
       "row": 38,
@@ -580,7 +618,9 @@
       "cert_fish": "",
       "name_match": "Pasport: TRANSLIT",
       "name_flag": "translit",
-      "verified": "TASDIQLANDI"
+      "verified": "TASDIQLANDI",
+      "buyruq": "",
+      "buyruq_sana": ""
     },
     {
       "row": 39,
@@ -609,7 +649,9 @@
       "cert_fish": "Hasanova Marjona Xolmurod qizi",
       "name_match": "Shahodatnoma: MOS",
       "name_flag": "ok",
-      "verified": "TASDIQLANDI"
+      "verified": "TASDIQLANDI",
+      "buyruq": "",
+      "buyruq_sana": ""
     },
     {
       "row": 44,
@@ -638,7 +680,9 @@
       "cert_fish": "Ilhomova Zuhra Davron qizi",
       "name_match": "Pasport: MOS | Shahodatnoma: MOS",
       "name_flag": "ok",
-      "verified": "TASDIQLANDI"
+      "verified": "TASDIQLANDI",
+      "buyruq": "",
+      "buyruq_sana": ""
     },
     {
       "row": 45,
@@ -667,7 +711,9 @@
       "cert_fish": "Islomova Nilufar Abdulxafiz qizi",
       "name_match": "Pasport: MOS | Shahodatnoma: MOS",
       "name_flag": "ok",
-      "verified": "TASDIQLANDI"
+      "verified": "TASDIQLANDI",
+      "buyruq": "",
+      "buyruq_sana": ""
     },
     {
       "row": 52,
@@ -696,7 +742,9 @@
       "cert_fish": "Jalolova Rayxona Akmal qizi",
       "name_match": "Pasport: TRANSLIT | Shahodatnoma: TRANSLIT",
       "name_flag": "translit",
-      "verified": "TASDIQLANDI"
+      "verified": "TASDIQLANDI",
+      "buyruq": "",
+      "buyruq_sana": ""
     },
     {
       "row": 53,
@@ -725,7 +773,9 @@
       "cert_fish": "Javliyeva Nargiza Ortiq qizi",
       "name_match": "Shahodatnoma: MOS",
       "name_flag": "ok",
-      "verified": "TASDIQLANDI"
+      "verified": "TASDIQLANDI",
+      "buyruq": "",
+      "buyruq_sana": ""
     },
     {
       "row": 69,
@@ -754,7 +804,9 @@
       "cert_fish": "Maxmashoxova Feruza Bekmurod qizi",
       "name_match": "Pasport: MOS | Shahodatnoma: MOS",
       "name_flag": "ok",
-      "verified": "TASDIQLANDI"
+      "verified": "TASDIQLANDI",
+      "buyruq": "",
+      "buyruq_sana": ""
     },
     {
       "row": 71,
@@ -783,7 +835,9 @@
       "cert_fish": "Meyliqulova Hilola Farhod qizi",
       "name_match": "Pasport: MOS | Diplom: MOS",
       "name_flag": "ok",
-      "verified": "TASDIQLANDI"
+      "verified": "TASDIQLANDI",
+      "buyruq": "",
+      "buyruq_sana": ""
     },
     {
       "row": 93,
@@ -812,7 +866,9 @@
       "cert_fish": "Nu'monova Saidabonu Ulug'bek qizi",
       "name_match": "Pasport: MOS | Shahodatnoma: TUTUQ BELGISI",
       "name_flag": "farq",
-      "verified": "TASDIQLANDI"
+      "verified": "TASDIQLANDI",
+      "buyruq": "",
+      "buyruq_sana": ""
     },
     {
       "row": 184,
@@ -841,7 +897,9 @@
       "cert_fish": "",
       "name_match": "",
       "name_flag": "",
-      "verified": "KUTILMOQDA"
+      "verified": "KUTILMOQDA",
+      "buyruq": "",
+      "buyruq_sana": ""
     },
     {
       "row": 95,
@@ -870,7 +928,9 @@
       "cert_fish": "Ochildiyeva Dinora Otabek qizi",
       "name_match": "Pasport: FARQ | Shahodatnoma: FARQ",
       "name_flag": "farq",
-      "verified": "TASDIQLANDI"
+      "verified": "TASDIQLANDI",
+      "buyruq": "",
+      "buyruq_sana": ""
     },
     {
       "row": 180,
@@ -899,7 +959,9 @@
       "cert_fish": "Yo'q",
       "name_match": "",
       "name_flag": "",
-      "verified": "KUTILMOQDA"
+      "verified": "KUTILMOQDA",
+      "buyruq": "",
+      "buyruq_sana": ""
     },
     {
       "row": 107,
@@ -928,7 +990,9 @@
       "cert_fish": "Quysinova Rohshona To'lqin qizi",
       "name_match": "Pasport: TRANSLIT | Shahodatnoma: TRANSLIT",
       "name_flag": "translit",
-      "verified": "TASDIQLANDI"
+      "verified": "TASDIQLANDI",
+      "buyruq": "",
+      "buyruq_sana": ""
     },
     {
       "row": 111,
@@ -957,7 +1021,9 @@
       "cert_fish": "Ro'zimurodova Larisa Maxmatali qizi",
       "name_match": "Shahodatnoma: FARQ",
       "name_flag": "farq",
-      "verified": "TASDIQLANDI"
+      "verified": "TASDIQLANDI",
+      "buyruq": "",
+      "buyruq_sana": ""
     },
     {
       "row": 115,
@@ -986,7 +1052,9 @@
       "cert_fish": "Samadova Nigora Abdisamiyevna",
       "name_match": "Pasport: MOS",
       "name_flag": "ok",
-      "verified": "TASDIQLANDI"
+      "verified": "TASDIQLANDI",
+      "buyruq": "",
+      "buyruq_sana": ""
     },
     {
       "row": 183,
@@ -1015,7 +1083,9 @@
       "cert_fish": "",
       "name_match": "",
       "name_flag": "",
-      "verified": "KUTILMOQDA"
+      "verified": "KUTILMOQDA",
+      "buyruq": "",
+      "buyruq_sana": ""
     },
     {
       "row": 119,
@@ -1044,7 +1114,9 @@
       "cert_fish": "Saydalimova Ruxshona Sharofiddin qizi",
       "name_match": "Pasport: MOS | Shahodatnoma: MOS",
       "name_flag": "ok",
-      "verified": "TASDIQLANDI"
+      "verified": "TASDIQLANDI",
+      "buyruq": "",
+      "buyruq_sana": ""
     },
     {
       "row": 182,
@@ -1073,7 +1145,9 @@
       "cert_fish": "",
       "name_match": "",
       "name_flag": "",
-      "verified": "KUTILMOQDA"
+      "verified": "KUTILMOQDA",
+      "buyruq": "",
+      "buyruq_sana": ""
     },
     {
       "row": 125,
@@ -1102,7 +1176,9 @@
       "cert_fish": "Shukriyeva Nariye Redvanovna",
       "name_match": "Pasport: MOS",
       "name_flag": "ok",
-      "verified": "TASDIQLANDI"
+      "verified": "TASDIQLANDI",
+      "buyruq": "",
+      "buyruq_sana": ""
     },
     {
       "row": 129,
@@ -1131,7 +1207,9 @@
       "cert_fish": "Suyunova Maftuna Akbar qizi",
       "name_match": "Pasport: MOS | Diplom: MOS",
       "name_flag": "ok",
-      "verified": "TASDIQLANDI"
+      "verified": "TASDIQLANDI",
+      "buyruq": "",
+      "buyruq_sana": ""
     },
     {
       "row": 132,
@@ -1160,7 +1238,9 @@
       "cert_fish": "To'raboyeva Sabrina Ovlaqul qizi",
       "name_match": "Pasport: MOS | Shahodatnoma: FARQ",
       "name_flag": "farq",
-      "verified": "TASDIQLANDI"
+      "verified": "TASDIQLANDI",
+      "buyruq": "",
+      "buyruq_sana": ""
     },
     {
       "row": 133,
@@ -1189,7 +1269,9 @@
       "cert_fish": "Tosheva Aziza Sherzod qizi",
       "name_match": "Pasport: MOS",
       "name_flag": "ok",
-      "verified": "TASDIQLANDI"
+      "verified": "TASDIQLANDI",
+      "buyruq": "",
+      "buyruq_sana": ""
     },
     {
       "row": 136,
@@ -1218,7 +1300,9 @@
       "cert_fish": "",
       "name_match": "Pasport: MOS",
       "name_flag": "ok",
-      "verified": "TASDIQLANDI"
+      "verified": "TASDIQLANDI",
+      "buyruq": "",
+      "buyruq_sana": ""
     },
     {
       "row": 140,
@@ -1247,7 +1331,9 @@
       "cert_fish": "Tursunov Sohibjon Hakim o'g'li",
       "name_match": "Pasport: MOS | Shahodatnoma: MOS",
       "name_flag": "ok",
-      "verified": "TASDIQLANDI"
+      "verified": "TASDIQLANDI",
+      "buyruq": "",
+      "buyruq_sana": ""
     },
     {
       "row": 146,
@@ -1276,7 +1362,9 @@
       "cert_fish": "Umarova Iroda Muzaffar qizi",
       "name_match": "Pasport: MOS | Shahodatnoma: MOS",
       "name_flag": "ok",
-      "verified": "TASDIQLANDI"
+      "verified": "TASDIQLANDI",
+      "buyruq": "",
+      "buyruq_sana": ""
     },
     {
       "row": 148,
@@ -1305,7 +1393,9 @@
       "cert_fish": "Uroqova Jasmina Jasur qizi",
       "name_match": "Pasport: MOS | Shahodatnoma: MOS",
       "name_flag": "ok",
-      "verified": "TASDIQLANDI"
+      "verified": "TASDIQLANDI",
+      "buyruq": "",
+      "buyruq_sana": ""
     },
     {
       "row": 149,
@@ -1334,7 +1424,9 @@
       "cert_fish": "",
       "name_match": "Pasport: MOS",
       "name_flag": "ok",
-      "verified": "TASDIQLANDI"
+      "verified": "TASDIQLANDI",
+      "buyruq": "",
+      "buyruq_sana": ""
     },
     {
       "row": 166,
@@ -1363,7 +1455,9 @@
       "cert_fish": "Xurramova Shodiya Arol qizi",
       "name_match": "Pasport: MOS | Shahodatnoma: MOS",
       "name_flag": "ok",
-      "verified": "TASDIQLANDI"
+      "verified": "TASDIQLANDI",
+      "buyruq": "",
+      "buyruq_sana": ""
     },
     {
       "row": 169,
@@ -1392,7 +1486,9 @@
       "cert_fish": "Yorboboyeva Mahliyo Xusan qizi",
       "name_match": "Shahodatnoma: MOS",
       "name_flag": "ok",
-      "verified": "TASDIQLANDI"
+      "verified": "TASDIQLANDI",
+      "buyruq": "",
+      "buyruq_sana": ""
     },
     {
       "row": 11,
@@ -1421,7 +1517,9 @@
       "cert_fish": "Aliqulova Shaxzoda Anvar qizi",
       "name_match": "Pasport: MOS | Shahodatnoma: MOS",
       "name_flag": "ok",
-      "verified": "TASDIQLANDI"
+      "verified": "TASDIQLANDI",
+      "buyruq": "",
+      "buyruq_sana": ""
     },
     {
       "row": 13,
@@ -1450,7 +1548,9 @@
       "cert_fish": "Arziqulova Laylo Bahodir qizi",
       "name_match": "Pasport: MOS | Shahodatnoma: MOS",
       "name_flag": "ok",
-      "verified": "TASDIQLANDI"
+      "verified": "TASDIQLANDI",
+      "buyruq": "",
+      "buyruq_sana": ""
     },
     {
       "row": 27,
@@ -1479,7 +1579,9 @@
       "cert_fish": "",
       "name_match": "TEKSHIRILMAGAN",
       "name_flag": "",
-      "verified": "TASDIQLANDI"
+      "verified": "TASDIQLANDI",
+      "buyruq": "",
+      "buyruq_sana": ""
     },
     {
       "row": 30,
@@ -1508,7 +1610,9 @@
       "cert_fish": "Fayzullayeva Sarvinoz Sherbobo qizi",
       "name_match": "Shahodatnoma: MOS",
       "name_flag": "ok",
-      "verified": "TASDIQLANDI"
+      "verified": "TASDIQLANDI",
+      "buyruq": "",
+      "buyruq_sana": ""
     },
     {
       "row": 43,
@@ -1537,7 +1641,9 @@
       "cert_fish": "Ibragimova Gulnoza Isroil qizi",
       "name_match": "Pasport: MOS | Shahodatnoma: MOS",
       "name_flag": "ok",
-      "verified": "TASDIQLANDI"
+      "verified": "TASDIQLANDI",
+      "buyruq": "",
+      "buyruq_sana": ""
     },
     {
       "row": 47,
@@ -1566,7 +1672,9 @@
       "cert_fish": "Mavjud",
       "name_match": "",
       "name_flag": "",
-      "verified": "TASDIQLANDI"
+      "verified": "TASDIQLANDI",
+      "buyruq": "",
+      "buyruq_sana": ""
     },
     {
       "row": 56,
@@ -1595,7 +1703,9 @@
       "cert_fish": "Jurayeva Dilnoz G'oibnazarovna",
       "name_match": "Pasport: MOS",
       "name_flag": "ok",
-      "verified": "TASDIQLANDI"
+      "verified": "TASDIQLANDI",
+      "buyruq": "",
+      "buyruq_sana": ""
     },
     {
       "row": 67,
@@ -1624,7 +1734,9 @@
       "cert_fish": "Mavjud",
       "name_match": "TEKSHIRILMAGAN",
       "name_flag": "",
-      "verified": "TASDIQLANDI"
+      "verified": "TASDIQLANDI",
+      "buyruq": "",
+      "buyruq_sana": ""
     },
     {
       "row": 79,
@@ -1653,7 +1765,9 @@
       "cert_fish": "Murtazayeva Kamola Jamoliddin qizi",
       "name_match": "Pasport: MOS | Shahodatnoma: MOS",
       "name_flag": "ok",
-      "verified": "TASDIQLANDI"
+      "verified": "TASDIQLANDI",
+      "buyruq": "",
+      "buyruq_sana": ""
     },
     {
       "row": 80,
@@ -1682,7 +1796,9 @@
       "cert_fish": "Mustafayeva Madina Ortiq qizi",
       "name_match": "Pasport: MOS | Shahodatnoma: MOS",
       "name_flag": "ok",
-      "verified": "TASDIQLANDI"
+      "verified": "TASDIQLANDI",
+      "buyruq": "",
+      "buyruq_sana": ""
     },
     {
       "row": 88,
@@ -1711,7 +1827,9 @@
       "cert_fish": "Niyozova Komila Toshpulatovna",
       "name_match": "Pasport: MOS | Shahodatnoma: MOS",
       "name_flag": "ok",
-      "verified": "TASDIQLANDI"
+      "verified": "TASDIQLANDI",
+      "buyruq": "",
+      "buyruq_sana": ""
     },
     {
       "row": 90,
@@ -1740,7 +1858,9 @@
       "cert_fish": "Norboboyeva Farangiz Nuriddin qizi",
       "name_match": "Pasport: MOS | Shahodatnoma: MOS",
       "name_flag": "ok",
-      "verified": "TASDIQLANDI"
+      "verified": "TASDIQLANDI",
+      "buyruq": "",
+      "buyruq_sana": ""
     },
     {
       "row": 100,
@@ -1769,7 +1889,9 @@
       "cert_fish": "Pardaqulova Farzona Shovkatovna",
       "name_match": "Pasport: MOS",
       "name_flag": "ok",
-      "verified": "TASDIQLANDI"
+      "verified": "TASDIQLANDI",
+      "buyruq": "",
+      "buyruq_sana": ""
     },
     {
       "row": 101,
@@ -1798,7 +1920,9 @@
       "cert_fish": "Pardayeva Farangiz Norali qizi",
       "name_match": "Pasport: MOS | Shahodatnoma: MOS",
       "name_flag": "ok",
-      "verified": "TASDIQLANDI"
+      "verified": "TASDIQLANDI",
+      "buyruq": "",
+      "buyruq_sana": ""
     },
     {
       "row": 103,
@@ -1827,7 +1951,9 @@
       "cert_fish": "",
       "name_match": "TEKSHIRILMAGAN",
       "name_flag": "",
-      "verified": "TASDIQLANDI"
+      "verified": "TASDIQLANDI",
+      "buyruq": "",
+      "buyruq_sana": ""
     },
     {
       "row": 108,
@@ -1856,7 +1982,9 @@
       "cert_fish": "Rasulova Husnobod Bekmurod qizi",
       "name_match": "Pasport: MOS | Shahodatnoma: MOS",
       "name_flag": "ok",
-      "verified": "TASDIQLANDI"
+      "verified": "TASDIQLANDI",
+      "buyruq": "",
+      "buyruq_sana": ""
     },
     {
       "row": 110,
@@ -1885,7 +2013,9 @@
       "cert_fish": "",
       "name_match": "TEKSHIRILMAGAN",
       "name_flag": "",
-      "verified": "TASDIQLANDI"
+      "verified": "TASDIQLANDI",
+      "buyruq": "",
+      "buyruq_sana": ""
     },
     {
       "row": 112,
@@ -1914,7 +2044,9 @@
       "cert_fish": "Rustamova Charos O'ktam qizi",
       "name_match": "Pasport: MOS | Shahodatnoma: MOS",
       "name_flag": "ok",
-      "verified": "TASDIQLANDI"
+      "verified": "TASDIQLANDI",
+      "buyruq": "",
+      "buyruq_sana": ""
     },
     {
       "row": 114,
@@ -1943,7 +2075,9 @@
       "cert_fish": "",
       "name_match": "TEKSHIRILMAGAN",
       "name_flag": "",
-      "verified": "TASDIQLANDI"
+      "verified": "TASDIQLANDI",
+      "buyruq": "",
+      "buyruq_sana": ""
     },
     {
       "row": 121,
@@ -1972,7 +2106,9 @@
       "cert_fish": "Sayfiyeva Zarina Axmad qizi",
       "name_match": "Pasport: MOS | Shahodatnoma: MOS",
       "name_flag": "ok",
-      "verified": "TASDIQLANDI"
+      "verified": "TASDIQLANDI",
+      "buyruq": "",
+      "buyruq_sana": ""
     },
     {
       "row": 122,
@@ -2001,7 +2137,9 @@
       "cert_fish": "Sayidova Dilafro'z Qahramon qizi",
       "name_match": "Pasport: MOS | Shahodatnoma: MOS",
       "name_flag": "ok",
-      "verified": "TASDIQLANDI"
+      "verified": "TASDIQLANDI",
+      "buyruq": "",
+      "buyruq_sana": ""
     },
     {
       "row": 123,
@@ -2030,7 +2168,9 @@
       "cert_fish": "Shamsiyeva Fotima Sharofiddin qizi",
       "name_match": "Pasport: MOS | Shahodatnoma: MOS",
       "name_flag": "ok",
-      "verified": "TASDIQLANDI"
+      "verified": "TASDIQLANDI",
+      "buyruq": "",
+      "buyruq_sana": ""
     },
     {
       "row": 126,
@@ -2059,7 +2199,9 @@
       "cert_fish": "Shukurova Zilola Farhod qizi",
       "name_match": "Pasport: MOS",
       "name_flag": "ok",
-      "verified": "TASDIQLANDI"
+      "verified": "TASDIQLANDI",
+      "buyruq": "",
+      "buyruq_sana": ""
     },
     {
       "row": 131,
@@ -2088,7 +2230,9 @@
       "cert_fish": "Mavjud",
       "name_match": "TEKSHIRILMAGAN",
       "name_flag": "",
-      "verified": "TASDIQLANDI"
+      "verified": "TASDIQLANDI",
+      "buyruq": "",
+      "buyruq_sana": ""
     },
     {
       "row": 135,
@@ -2117,7 +2261,9 @@
       "cert_fish": "Toshpo'latova Asila Akmal qizi",
       "name_match": "Pasport: MOS | Shahodatnoma: MOS",
       "name_flag": "ok",
-      "verified": "TASDIQLANDI"
+      "verified": "TASDIQLANDI",
+      "buyruq": "",
+      "buyruq_sana": ""
     },
     {
       "row": 147,
@@ -2146,7 +2292,9 @@
       "cert_fish": "",
       "name_match": "Pasport: MOS",
       "name_flag": "ok",
-      "verified": "TASDIQLANDI"
+      "verified": "TASDIQLANDI",
+      "buyruq": "",
+      "buyruq_sana": ""
     },
     {
       "row": 152,
@@ -2175,7 +2323,9 @@
       "cert_fish": "Usmonova Yulduz Nu'mon qizi",
       "name_match": "Pasport: MOS | Shahodatnoma: MOS",
       "name_flag": "ok",
-      "verified": "TASDIQLANDI"
+      "verified": "TASDIQLANDI",
+      "buyruq": "",
+      "buyruq_sana": ""
     },
     {
       "row": 155,
@@ -2204,7 +2354,9 @@
       "cert_fish": "Xaydarova Iroda Zarif qizi",
       "name_match": "Pasport: MOS | Shahodatnoma: MOS",
       "name_flag": "ok",
-      "verified": "TASDIQLANDI"
+      "verified": "TASDIQLANDI",
+      "buyruq": "",
+      "buyruq_sana": ""
     },
     {
       "row": 156,
@@ -2233,7 +2385,9 @@
       "cert_fish": "Xayrullayeva Umida Safar qizi",
       "name_match": "TEKSHIRILMAGAN",
       "name_flag": "",
-      "verified": "TASDIQLANDI"
+      "verified": "TASDIQLANDI",
+      "buyruq": "",
+      "buyruq_sana": ""
     },
     {
       "row": 41,
@@ -2262,7 +2416,9 @@
       "cert_fish": "Xolmamatova Shoxista Sobir qizi",
       "name_match": "Pasport: MOS | Shahodatnoma: MOS",
       "name_flag": "ok",
-      "verified": "TASDIQLANDI"
+      "verified": "TASDIQLANDI",
+      "buyruq": "",
+      "buyruq_sana": ""
     },
     {
       "row": 158,
@@ -2291,7 +2447,9 @@
       "cert_fish": "Xolmaxmatova Sevinch Isomiddin qizi",
       "name_match": "Pasport: MOS | Shahodatnoma: MOS",
       "name_flag": "ok",
-      "verified": "TASDIQLANDI"
+      "verified": "TASDIQLANDI",
+      "buyruq": "",
+      "buyruq_sana": ""
     },
     {
       "row": 163,
@@ -2320,7 +2478,9 @@
       "cert_fish": "Xurramova Lobar Ural qizi",
       "name_match": "Pasport: MOS | Shahodatnoma: MOS",
       "name_flag": "ok",
-      "verified": "TASDIQLANDI"
+      "verified": "TASDIQLANDI",
+      "buyruq": "",
+      "buyruq_sana": ""
     },
     {
       "row": 179,
@@ -2349,7 +2509,9 @@
       "cert_fish": "Mavjud",
       "name_match": "",
       "name_flag": "",
-      "verified": "TASDIQLANDI"
+      "verified": "TASDIQLANDI",
+      "buyruq": "",
+      "buyruq_sana": ""
     },
     {
       "row": 4,
@@ -2378,7 +2540,9 @@
       "cert_fish": "Abdixalilova Shohzoda Bahodir qizi",
       "name_match": "Pasport: FARQ | Shahodatnoma: FARQ",
       "name_flag": "farq",
-      "verified": "TASDIQLANDI"
+      "verified": "TASDIQLANDI",
+      "buyruq": "",
+      "buyruq_sana": ""
     },
     {
       "row": 6,
@@ -2407,7 +2571,9 @@
       "cert_fish": "Abdiyeva Sabina G'ayrat qizi",
       "name_match": "Pasport: MOS | Shahodatnoma: MOS",
       "name_flag": "ok",
-      "verified": "TASDIQLANDI"
+      "verified": "TASDIQLANDI",
+      "buyruq": "",
+      "buyruq_sana": ""
     },
     {
       "row": 8,
@@ -2436,7 +2602,9 @@
       "cert_fish": "Abduraxmonova Zahrobonu Toxir qizi",
       "name_match": "Pasport: TRANSLIT | Shahodatnoma: TRANSLIT",
       "name_flag": "translit",
-      "verified": "TASDIQLANDI"
+      "verified": "TASDIQLANDI",
+      "buyruq": "",
+      "buyruq_sana": ""
     },
     {
       "row": 17,
@@ -2465,7 +2633,9 @@
       "cert_fish": "A'zamov Shohjaxon Sherali o'g'li",
       "name_match": "Pasport: TRANSLIT | Shahodatnoma: TRANSLIT",
       "name_flag": "translit",
-      "verified": "TASDIQLANDI"
+      "verified": "TASDIQLANDI",
+      "buyruq": "",
+      "buyruq_sana": ""
     },
     {
       "row": 28,
@@ -2494,7 +2664,9 @@
       "cert_fish": "Eshpulatova Shahnoza Sherali qizi",
       "name_match": "Pasport: MOS | Shahodatnoma: MOS",
       "name_flag": "ok",
-      "verified": "TASDIQLANDI"
+      "verified": "TASDIQLANDI",
+      "buyruq": "",
+      "buyruq_sana": ""
     },
     {
       "row": 29,
@@ -2523,7 +2695,9 @@
       "cert_fish": "Eshquvatova Yulduz Asliddin qizi",
       "name_match": "Pasport: MOS | Shahodatnoma: MOS",
       "name_flag": "ok",
-      "verified": "TASDIQLANDI"
+      "verified": "TASDIQLANDI",
+      "buyruq": "",
+      "buyruq_sana": ""
     },
     {
       "row": 31,
@@ -2552,7 +2726,9 @@
       "cert_fish": "G‘aniyeva Asila G‘ani qizi",
       "name_match": "Pasport: MOS | Shahodatnoma: MOS",
       "name_flag": "ok",
-      "verified": "TASDIQLANDI"
+      "verified": "TASDIQLANDI",
+      "buyruq": "",
+      "buyruq_sana": ""
     },
     {
       "row": 35,
@@ -2581,7 +2757,9 @@
       "cert_fish": "Halimova Sevinch Ravshan qizi",
       "name_match": "Pasport: MOS | Shahodatnoma: MOS",
       "name_flag": "ok",
-      "verified": "TASDIQLANDI"
+      "verified": "TASDIQLANDI",
+      "buyruq": "",
+      "buyruq_sana": ""
     },
     {
       "row": 37,
@@ -2610,7 +2788,9 @@
       "cert_fish": "Hamroqulova Marjona O'ktam qizi",
       "name_match": "Pasport: FARQ | Shahodatnoma: FARQ",
       "name_flag": "farq",
-      "verified": "TASDIQLANDI"
+      "verified": "TASDIQLANDI",
+      "buyruq": "",
+      "buyruq_sana": ""
     },
     {
       "row": 46,
@@ -2639,7 +2819,9 @@
       "cert_fish": "Isomiddinova Ruhshona Shavkat qizi",
       "name_match": "Pasport: MOS | Shahodatnoma: MOS",
       "name_flag": "ok",
-      "verified": "TASDIQLANDI"
+      "verified": "TASDIQLANDI",
+      "buyruq": "",
+      "buyruq_sana": ""
     },
     {
       "row": 51,
@@ -2668,7 +2850,9 @@
       "cert_fish": "",
       "name_match": "TEKSHIRILMAGAN",
       "name_flag": "",
-      "verified": "TASDIQLANDI"
+      "verified": "TASDIQLANDI",
+      "buyruq": "",
+      "buyruq_sana": ""
     },
     {
       "row": 59,
@@ -2697,7 +2881,9 @@
       "cert_fish": "",
       "name_match": "TEKSHIRILMAGAN",
       "name_flag": "",
-      "verified": "TASDIQLANDI"
+      "verified": "TASDIQLANDI",
+      "buyruq": "",
+      "buyruq_sana": ""
     },
     {
       "row": 63,
@@ -2726,7 +2912,9 @@
       "cert_fish": "Mahmudova Gulsanam Nigmatovna",
       "name_match": "Pasport: MOS | Shahodatnoma: MOS",
       "name_flag": "ok",
-      "verified": "TASDIQLANDI"
+      "verified": "TASDIQLANDI",
+      "buyruq": "",
+      "buyruq_sana": ""
     },
     {
       "row": 70,
@@ -2755,7 +2943,9 @@
       "cert_fish": "Maxmudova Musallam Qamariddin qizi",
       "name_match": "Pasport: MOS | Shahodatnoma: MOS",
       "name_flag": "ok",
-      "verified": "TASDIQLANDI"
+      "verified": "TASDIQLANDI",
+      "buyruq": "",
+      "buyruq_sana": ""
     },
     {
       "row": 77,
@@ -2784,7 +2974,9 @@
       "cert_fish": "Murodova Ruxshona Ilhomovna",
       "name_match": "Pasport: TRANSLIT",
       "name_flag": "translit",
-      "verified": "TASDIQLANDI"
+      "verified": "TASDIQLANDI",
+      "buyruq": "",
+      "buyruq_sana": ""
     },
     {
       "row": 84,
@@ -2813,7 +3005,9 @@
       "cert_fish": "Nafasova Sevinch Bollijon qizi",
       "name_match": "Pasport: MOS | Shahodatnoma: MOS",
       "name_flag": "ok",
-      "verified": "TASDIQLANDI"
+      "verified": "TASDIQLANDI",
+      "buyruq": "",
+      "buyruq_sana": ""
     },
     {
       "row": 102,
@@ -2842,7 +3036,9 @@
       "cert_fish": "Pirnazarova Jasmina Olim qizi",
       "name_match": "Pasport: MOS | Shahodatnoma: MOS",
       "name_flag": "ok",
-      "verified": "TASDIQLANDI"
+      "verified": "TASDIQLANDI",
+      "buyruq": "",
+      "buyruq_sana": ""
     },
     {
       "row": 105,
@@ -2871,7 +3067,9 @@
       "cert_fish": "",
       "name_match": "Pasport: MOS",
       "name_flag": "ok",
-      "verified": "TASDIQLANDI"
+      "verified": "TASDIQLANDI",
+      "buyruq": "",
+      "buyruq_sana": ""
     },
     {
       "row": 127,
@@ -2900,7 +3098,9 @@
       "cert_fish": "",
       "name_match": "TEKSHIRILMAGAN",
       "name_flag": "",
-      "verified": "TASDIQLANDI"
+      "verified": "TASDIQLANDI",
+      "buyruq": "",
+      "buyruq_sana": ""
     },
     {
       "row": 128,
@@ -2929,7 +3129,9 @@
       "cert_fish": "Suyarova Dinora Sodiq qizi",
       "name_match": "Pasport: MOS | Shahodatnoma: MOS",
       "name_flag": "ok",
-      "verified": "TASDIQLANDI"
+      "verified": "TASDIQLANDI",
+      "buyruq": "",
+      "buyruq_sana": ""
     },
     {
       "row": 130,
@@ -2958,7 +3160,9 @@
       "cert_fish": "Temirboyeva Iroda Baxtiyor qizi",
       "name_match": "Pasport: MOS | Shahodatnoma: MOS",
       "name_flag": "ok",
-      "verified": "TASDIQLANDI"
+      "verified": "TASDIQLANDI",
+      "buyruq": "",
+      "buyruq_sana": ""
     },
     {
       "row": 144,
@@ -2987,7 +3191,9 @@
       "cert_fish": "Tuychiyeva Farzona Dalerovna",
       "name_match": "Pasport: MOS | Shahodatnoma: MOS",
       "name_flag": "ok",
-      "verified": "TASDIQLANDI"
+      "verified": "TASDIQLANDI",
+      "buyruq": "",
+      "buyruq_sana": ""
     },
     {
       "row": 145,
@@ -3016,7 +3222,9 @@
       "cert_fish": "Mavjud",
       "name_match": "",
       "name_flag": "",
-      "verified": "TASDIQLANDI"
+      "verified": "TASDIQLANDI",
+      "buyruq": "",
+      "buyruq_sana": ""
     },
     {
       "row": 153,
@@ -3045,7 +3253,9 @@
       "cert_fish": "Xamdamova Madina Abdiqodir qizi",
       "name_match": "Pasport: MOS | Shahodatnoma: MOS",
       "name_flag": "ok",
-      "verified": "TASDIQLANDI"
+      "verified": "TASDIQLANDI",
+      "buyruq": "",
+      "buyruq_sana": ""
     },
     {
       "row": 154,
@@ -3074,7 +3284,9 @@
       "cert_fish": "",
       "name_match": "Pasport: TRANSLIT",
       "name_flag": "translit",
-      "verified": "TASDIQLANDI"
+      "verified": "TASDIQLANDI",
+      "buyruq": "",
+      "buyruq_sana": ""
     },
     {
       "row": 157,
@@ -3103,7 +3315,9 @@
       "cert_fish": "Xo'jaqulova Navbahor Azim qizi",
       "name_match": "Pasport: MOS | Shahodatnoma: MOS",
       "name_flag": "ok",
-      "verified": "TASDIQLANDI"
+      "verified": "TASDIQLANDI",
+      "buyruq": "",
+      "buyruq_sana": ""
     },
     {
       "row": 160,
@@ -3132,7 +3346,9 @@
       "cert_fish": "Xolmurodova Dilnura Dilmurod qizi",
       "name_match": "Pasport: MOS | Shahodatnoma: MOS",
       "name_flag": "ok",
-      "verified": "TASDIQLANDI"
+      "verified": "TASDIQLANDI",
+      "buyruq": "",
+      "buyruq_sana": ""
     },
     {
       "row": 162,
@@ -3161,7 +3377,9 @@
       "cert_fish": "Mavjud",
       "name_match": "",
       "name_flag": "",
-      "verified": "TASDIQLANDI"
+      "verified": "TASDIQLANDI",
+      "buyruq": "",
+      "buyruq_sana": ""
     },
     {
       "row": 164,
@@ -3190,7 +3408,9 @@
       "cert_fish": "Xurramova Shahnoza Shuhrat qizi",
       "name_match": "Pasport: MOS | Shahodatnoma: MOS",
       "name_flag": "ok",
-      "verified": "TASDIQLANDI"
+      "verified": "TASDIQLANDI",
+      "buyruq": "",
+      "buyruq_sana": ""
     },
     {
       "row": 165,
@@ -3219,7 +3439,9 @@
       "cert_fish": "Xurramova Shahrizoda Shuhrat qizi",
       "name_match": "Pasport: MOS | Shahodatnoma: MOS",
       "name_flag": "ok",
-      "verified": "TASDIQLANDI"
+      "verified": "TASDIQLANDI",
+      "buyruq": "",
+      "buyruq_sana": ""
     },
     {
       "row": 167,
@@ -3248,7 +3470,9 @@
       "cert_fish": "Xusanova Aziza Fazliddin qizi",
       "name_match": "Shahodatnoma: MOS",
       "name_flag": "ok",
-      "verified": "TASDIQLANDI"
+      "verified": "TASDIQLANDI",
+      "buyruq": "",
+      "buyruq_sana": ""
     },
     {
       "row": 172,
@@ -3277,7 +3501,9 @@
       "cert_fish": "Zayidova Shaboda Sodiqovna",
       "name_match": "Pasport: MOS",
       "name_flag": "ok",
-      "verified": "TASDIQLANDI"
+      "verified": "TASDIQLANDI",
+      "buyruq": "",
+      "buyruq_sana": ""
     },
     {
       "row": 3,
@@ -3306,7 +3532,9 @@
       "cert_fish": "Abdishukurova Gulsevar Xusniddin qizi",
       "name_match": "Pasport: MOS | Shahodatnoma: MOS",
       "name_flag": "ok",
-      "verified": "TASDIQLANDI"
+      "verified": "TASDIQLANDI",
+      "buyruq": "",
+      "buyruq_sana": ""
     },
     {
       "row": 9,
@@ -3335,7 +3563,9 @@
       "cert_fish": "Ahmadova Munisa Bekzod qizi",
       "name_match": "Pasport: TRANSLIT | Shahodatnoma: TRANSLIT",
       "name_flag": "translit",
-      "verified": "TASDIQLANDI"
+      "verified": "TASDIQLANDI",
+      "buyruq": "",
+      "buyruq_sana": ""
     },
     {
       "row": 14,
@@ -3364,7 +3594,9 @@
       "cert_fish": "Ashirova Gulsanam Abduvali qizi",
       "name_match": "Pasport: MOS | Shahodatnoma: MOS",
       "name_flag": "ok",
-      "verified": "TASDIQLANDI"
+      "verified": "TASDIQLANDI",
+      "buyruq": "",
+      "buyruq_sana": ""
     },
     {
       "row": 19,
@@ -3393,7 +3625,9 @@
       "cert_fish": "Berdimurodova Nafosat Javlon qizi",
       "name_match": "Shahodatnoma: MOS",
       "name_flag": "ok",
-      "verified": "TASDIQLANDI"
+      "verified": "TASDIQLANDI",
+      "buyruq": "",
+      "buyruq_sana": ""
     },
     {
       "row": 21,
@@ -3422,7 +3656,9 @@
       "cert_fish": "Choriyeva Zaxro Xayrullo qizi",
       "name_match": "Pasport: TRANSLIT",
       "name_flag": "translit",
-      "verified": "TASDIQLANDI"
+      "verified": "TASDIQLANDI",
+      "buyruq": "",
+      "buyruq_sana": ""
     },
     {
       "row": 23,
@@ -3451,7 +3687,9 @@
       "cert_fish": "Ergashova Shabbona Shodmon qizi",
       "name_match": "Pasport: FARQ",
       "name_flag": "farq",
-      "verified": "TASDIQLANDI"
+      "verified": "TASDIQLANDI",
+      "buyruq": "",
+      "buyruq_sana": ""
     },
     {
       "row": 24,
@@ -3480,7 +3718,9 @@
       "cert_fish": "Eshboboyeva Fotima Nurali qizi",
       "name_match": "Pasport: MOS",
       "name_flag": "ok",
-      "verified": "TASDIQLANDI"
+      "verified": "TASDIQLANDI",
+      "buyruq": "",
+      "buyruq_sana": ""
     },
     {
       "row": 33,
@@ -3509,7 +3749,9 @@
       "cert_fish": "G'ayratova Jasmina Sherali qizi",
       "name_match": "Pasport: MOS | Shahodatnoma: MOS",
       "name_flag": "ok",
-      "verified": "TASDIQLANDI"
+      "verified": "TASDIQLANDI",
+      "buyruq": "",
+      "buyruq_sana": ""
     },
     {
       "row": 174,
@@ -3538,7 +3780,9 @@
       "cert_fish": "Ixtiyorova Niginabonu Xolovna",
       "name_match": "Pasport: MOS | Shahodatnoma: MOS",
       "name_flag": "ok",
-      "verified": "TASDIQLANDI"
+      "verified": "TASDIQLANDI",
+      "buyruq": "",
+      "buyruq_sana": ""
     },
     {
       "row": 48,
@@ -3567,7 +3811,9 @@
       "cert_fish": "Jabborova Bahoroy Shukurullo qizi",
       "name_match": "Pasport: MOS | Shahodatnoma: MOS",
       "name_flag": "ok",
-      "verified": "TASDIQLANDI"
+      "verified": "TASDIQLANDI",
+      "buyruq": "",
+      "buyruq_sana": ""
     },
     {
       "row": 49,
@@ -3596,7 +3842,9 @@
       "cert_fish": "Jalilova Jasmina Jamshid qizi",
       "name_match": "Pasport: MOS | Shahodatnoma: MOS",
       "name_flag": "ok",
-      "verified": "TASDIQLANDI"
+      "verified": "TASDIQLANDI",
+      "buyruq": "",
+      "buyruq_sana": ""
     },
     {
       "row": 55,
@@ -3625,7 +3873,9 @@
       "cert_fish": "Jumayeva Muxlisa Komiljon qizi",
       "name_match": "Pasport: MOS | Diplom: MOS",
       "name_flag": "ok",
-      "verified": "TASDIQLANDI"
+      "verified": "TASDIQLANDI",
+      "buyruq": "",
+      "buyruq_sana": ""
     },
     {
       "row": 57,
@@ -3654,7 +3904,9 @@
       "cert_fish": "Jurayeva Madina Odil qizi",
       "name_match": "Shahodatnoma: MOS",
       "name_flag": "ok",
-      "verified": "TASDIQLANDI"
+      "verified": "TASDIQLANDI",
+      "buyruq": "",
+      "buyruq_sana": ""
     },
     {
       "row": 60,
@@ -3683,7 +3935,9 @@
       "cert_fish": "Luxmonova Nozima Ilhom qizi",
       "name_match": "Pasport: MOS | Shahodatnoma: MOS",
       "name_flag": "ok",
-      "verified": "TASDIQLANDI"
+      "verified": "TASDIQLANDI",
+      "buyruq": "",
+      "buyruq_sana": ""
     },
     {
       "row": 73,
@@ -3712,7 +3966,9 @@
       "cert_fish": "Muhammadiyeva Gulbahor Uchqun qizi",
       "name_match": "Pasport: MOS | Shahodatnoma: MOS",
       "name_flag": "ok",
-      "verified": "TASDIQLANDI"
+      "verified": "TASDIQLANDI",
+      "buyruq": "",
+      "buyruq_sana": ""
     },
     {
       "row": 76,
@@ -3741,7 +3997,9 @@
       "cert_fish": "Murodova Munisa Muxtor qizi",
       "name_match": "TEKSHIRILMAGAN",
       "name_flag": "",
-      "verified": "TASDIQLANDI"
+      "verified": "TASDIQLANDI",
+      "buyruq": "",
+      "buyruq_sana": ""
     },
     {
       "row": 83,
@@ -3770,7 +4028,9 @@
       "cert_fish": "Muzrapova Ruhshona Asrorxon qizi",
       "name_match": "Pasport: MOS | Shahodatnoma: MOS",
       "name_flag": "ok",
-      "verified": "TASDIQLANDI"
+      "verified": "TASDIQLANDI",
+      "buyruq": "",
+      "buyruq_sana": ""
     },
     {
       "row": 86,
@@ -3799,7 +4059,9 @@
       "cert_fish": "",
       "name_match": "Pasport: MOS",
       "name_flag": "ok",
-      "verified": "TASDIQLANDI"
+      "verified": "TASDIQLANDI",
+      "buyruq": "",
+      "buyruq_sana": ""
     },
     {
       "row": 87,
@@ -3828,7 +4090,9 @@
       "cert_fish": "",
       "name_match": "TEKSHIRILMAGAN",
       "name_flag": "",
-      "verified": "TASDIQLANDI"
+      "verified": "TASDIQLANDI",
+      "buyruq": "",
+      "buyruq_sana": ""
     },
     {
       "row": 91,
@@ -3857,7 +4121,9 @@
       "cert_fish": "Normurodova Gulsanam Elyor qizi",
       "name_match": "Pasport: MOS",
       "name_flag": "ok",
-      "verified": "TASDIQLANDI"
+      "verified": "TASDIQLANDI",
+      "buyruq": "",
+      "buyruq_sana": ""
     },
     {
       "row": 96,
@@ -3886,7 +4152,9 @@
       "cert_fish": "Omonova Charos Orif qizi",
       "name_match": "Pasport: MOS",
       "name_flag": "ok",
-      "verified": "TASDIQLANDI"
+      "verified": "TASDIQLANDI",
+      "buyruq": "",
+      "buyruq_sana": ""
     },
     {
       "row": 97,
@@ -3915,7 +4183,9 @@
       "cert_fish": "",
       "name_match": "TEKSHIRILMAGAN",
       "name_flag": "",
-      "verified": "TASDIQLANDI"
+      "verified": "TASDIQLANDI",
+      "buyruq": "",
+      "buyruq_sana": ""
     },
     {
       "row": 99,
@@ -3944,7 +4214,9 @@
       "cert_fish": "Ozodova Klara Fayzullayevna",
       "name_match": "Pasport: MOS | Shahodatnoma: MOS",
       "name_flag": "ok",
-      "verified": "TASDIQLANDI"
+      "verified": "TASDIQLANDI",
+      "buyruq": "",
+      "buyruq_sana": ""
     },
     {
       "row": 113,
@@ -3973,7 +4245,9 @@
       "cert_fish": "Saidova Dilso'z Ilyos qizi",
       "name_match": "Pasport: MOS | Shahodatnoma: MOS",
       "name_flag": "ok",
-      "verified": "TASDIQLANDI"
+      "verified": "TASDIQLANDI",
+      "buyruq": "",
+      "buyruq_sana": ""
     },
     {
       "row": 124,
@@ -4002,7 +4276,9 @@
       "cert_fish": "Sharipova Diyora Jasur qizi",
       "name_match": "Pasport: MOS | Shahodatnoma: MOS",
       "name_flag": "ok",
-      "verified": "TASDIQLANDI"
+      "verified": "TASDIQLANDI",
+      "buyruq": "",
+      "buyruq_sana": ""
     },
     {
       "row": 134,
@@ -4031,7 +4307,9 @@
       "cert_fish": "Toshmurodova Sarvara Ilxom qizi",
       "name_match": "Pasport: MOS",
       "name_flag": "ok",
-      "verified": "TASDIQLANDI"
+      "verified": "TASDIQLANDI",
+      "buyruq": "",
+      "buyruq_sana": ""
     },
     {
       "row": 141,
@@ -4060,7 +4338,9 @@
       "cert_fish": "Tursunova Aziza Anvarovna",
       "name_match": "Pasport: MOS",
       "name_flag": "ok",
-      "verified": "TASDIQLANDI"
+      "verified": "TASDIQLANDI",
+      "buyruq": "",
+      "buyruq_sana": ""
     },
     {
       "row": 142,
@@ -4089,7 +4369,9 @@
       "cert_fish": "Tursunova Fotima Qosim qizi",
       "name_match": "Pasport: MOS | Shahodatnoma: MOS",
       "name_flag": "ok",
-      "verified": "TASDIQLANDI"
+      "verified": "TASDIQLANDI",
+      "buyruq": "",
+      "buyruq_sana": ""
     },
     {
       "row": 143,
@@ -4118,7 +4400,9 @@
       "cert_fish": "Tursunova Zuhra Qosim qizi",
       "name_match": "Pasport: MOS | Shahodatnoma: MOS",
       "name_flag": "ok",
-      "verified": "TASDIQLANDI"
+      "verified": "TASDIQLANDI",
+      "buyruq": "",
+      "buyruq_sana": ""
     },
     {
       "row": 151,
@@ -4147,7 +4431,9 @@
       "cert_fish": "Usmonova Sabrina Baxtiyor qizi",
       "name_match": "Pasport: MOS | Shahodatnoma: MOS",
       "name_flag": "ok",
-      "verified": "TASDIQLANDI"
+      "verified": "TASDIQLANDI",
+      "buyruq": "",
+      "buyruq_sana": ""
     },
     {
       "row": 159,
@@ -4176,7 +4462,9 @@
       "cert_fish": "Xolmirzayeva Zebiniso Xushvaqt qizi",
       "name_match": "Pasport: FARQ",
       "name_flag": "farq",
-      "verified": "TASDIQLANDI"
+      "verified": "TASDIQLANDI",
+      "buyruq": "",
+      "buyruq_sana": ""
     },
     {
       "row": 170,
@@ -4205,7 +4493,9 @@
       "cert_fish": "Yo'ldosheva Ruxshona Xabibullo qizi",
       "name_match": "Pasport: TRANSLIT",
       "name_flag": "translit",
-      "verified": "TASDIQLANDI"
+      "verified": "TASDIQLANDI",
+      "buyruq": "",
+      "buyruq_sana": ""
     },
     {
       "row": 175,
@@ -4234,7 +4524,9 @@
       "cert_fish": "Abdinazarova Dilafro'z Burxon qizi",
       "name_match": "Pasport: MOS | Diplom: MOS",
       "name_flag": "ok",
-      "verified": "TASDIQLANDI"
+      "verified": "TASDIQLANDI",
+      "buyruq": "",
+      "buyruq_sana": ""
     },
     {
       "row": 5,
@@ -4263,7 +4555,9 @@
       "cert_fish": "Abdixoliqova Elmira Farxod qizi",
       "name_match": "Pasport: FARQ | Shahodatnoma: FARQ",
       "name_flag": "farq",
-      "verified": "TASDIQLANDI"
+      "verified": "TASDIQLANDI",
+      "buyruq": "",
+      "buyruq_sana": ""
     },
     {
       "row": 176,
@@ -4292,7 +4586,9 @@
       "cert_fish": "Mavjud",
       "name_match": "",
       "name_flag": "",
-      "verified": "TASDIQLANDI"
+      "verified": "TASDIQLANDI",
+      "buyruq": "",
+      "buyruq_sana": ""
     },
     {
       "row": 18,
@@ -4321,7 +4617,9 @@
       "cert_fish": "Bahodirova Asila Olmos qizi",
       "name_match": "Shahodatnoma: MOS",
       "name_flag": "ok",
-      "verified": "TASDIQLANDI"
+      "verified": "TASDIQLANDI",
+      "buyruq": "",
+      "buyruq_sana": ""
     },
     {
       "row": 22,
@@ -4350,7 +4648,9 @@
       "cert_fish": "Davlatova Gulnoza Husan qizi",
       "name_match": "Pasport: MOS | Shahodatnoma: MOS",
       "name_flag": "ok",
-      "verified": "TASDIQLANDI"
+      "verified": "TASDIQLANDI",
+      "buyruq": "",
+      "buyruq_sana": ""
     },
     {
       "row": 25,
@@ -4379,7 +4679,9 @@
       "cert_fish": "",
       "name_match": "Pasport: MOS",
       "name_flag": "ok",
-      "verified": "TASDIQLANDI"
+      "verified": "TASDIQLANDI",
+      "buyruq": "",
+      "buyruq_sana": ""
     },
     {
       "row": 181,
@@ -4408,7 +4710,9 @@
       "cert_fish": "",
       "name_match": "",
       "name_flag": "",
-      "verified": "KUTILMOQDA"
+      "verified": "KUTILMOQDA",
+      "buyruq": "",
+      "buyruq_sana": ""
     },
     {
       "row": 50,
@@ -4437,7 +4741,9 @@
       "cert_fish": "Jalilova Shabnam Ozodjon qizi",
       "name_match": "Pasport: MOS | Shahodatnoma: MOS",
       "name_flag": "ok",
-      "verified": "TASDIQLANDI"
+      "verified": "TASDIQLANDI",
+      "buyruq": "",
+      "buyruq_sana": ""
     },
     {
       "row": 54,
@@ -4466,7 +4772,9 @@
       "cert_fish": "Jumayeva Husnida Shovkat qizi",
       "name_match": "Pasport: TRANSLIT | Shahodatnoma: TRANSLIT",
       "name_flag": "translit",
-      "verified": "TASDIQLANDI"
+      "verified": "TASDIQLANDI",
+      "buyruq": "",
+      "buyruq_sana": ""
     },
     {
       "row": 58,
@@ -4495,7 +4803,9 @@
       "cert_fish": "Karimova Nozliya Rustamovna",
       "name_match": "Pasport: MOS",
       "name_flag": "ok",
-      "verified": "TASDIQLANDI"
+      "verified": "TASDIQLANDI",
+      "buyruq": "",
+      "buyruq_sana": ""
     },
     {
       "row": 61,
@@ -4524,7 +4834,9 @@
       "cert_fish": "Mahmamurodova Sevara Safarali qizi",
       "name_match": "Pasport: BOSHQA ODAM",
       "name_flag": "boshqa",
-      "verified": "TASDIQLANDI"
+      "verified": "TASDIQLANDI",
+      "buyruq": "",
+      "buyruq_sana": ""
     },
     {
       "row": 62,
@@ -4553,7 +4865,9 @@
       "cert_fish": "Mavjud",
       "name_match": "",
       "name_flag": "",
-      "verified": "TASDIQLANDI"
+      "verified": "TASDIQLANDI",
+      "buyruq": "",
+      "buyruq_sana": ""
     },
     {
       "row": 64,
@@ -4582,7 +4896,9 @@
       "cert_fish": "Mahmudova Maftuna To'ra qizi",
       "name_match": "Pasport: MOS | Shahodatnoma: MOS",
       "name_flag": "ok",
-      "verified": "TASDIQLANDI"
+      "verified": "TASDIQLANDI",
+      "buyruq": "",
+      "buyruq_sana": ""
     },
     {
       "row": 66,
@@ -4611,7 +4927,9 @@
       "cert_fish": "Mannonova Shahrizoda Nosir qizi",
       "name_match": "Pasport: MOS | Shahodatnoma: MOS",
       "name_flag": "ok",
-      "verified": "TASDIQLANDI"
+      "verified": "TASDIQLANDI",
+      "buyruq": "",
+      "buyruq_sana": ""
     },
     {
       "row": 68,
@@ -4640,7 +4958,9 @@
       "cert_fish": "Maxmarajabova Zerda Hasan qizi",
       "name_match": "Pasport: MOS | Shahodatnoma: MOS",
       "name_flag": "ok",
-      "verified": "TASDIQLANDI"
+      "verified": "TASDIQLANDI",
+      "buyruq": "",
+      "buyruq_sana": ""
     },
     {
       "row": 75,
@@ -4669,7 +4989,9 @@
       "cert_fish": "Muminova Sevinch Uchqun qizi",
       "name_match": "Pasport: MOS | Shahodatnoma: MOS",
       "name_flag": "ok",
-      "verified": "TASDIQLANDI"
+      "verified": "TASDIQLANDI",
+      "buyruq": "",
+      "buyruq_sana": ""
     },
     {
       "row": 81,
@@ -4698,7 +5020,9 @@
       "cert_fish": "Mustafayeva Nargiza Ulug‘bek qizi",
       "name_match": "Pasport: MOS | Shahodatnoma: MOS",
       "name_flag": "ok",
-      "verified": "TASDIQLANDI"
+      "verified": "TASDIQLANDI",
+      "buyruq": "",
+      "buyruq_sana": ""
     },
     {
       "row": 82,
@@ -4727,7 +5051,9 @@
       "cert_fish": "Muxtorova Xadicha Zaxriddin qizi",
       "name_match": "Pasport: MOS | Shahodatnoma: MOS",
       "name_flag": "ok",
-      "verified": "TASDIQLANDI"
+      "verified": "TASDIQLANDI",
+      "buyruq": "",
+      "buyruq_sana": ""
     },
     {
       "row": 85,
@@ -4756,7 +5082,9 @@
       "cert_fish": "Narziyeva Intizor Iskandar qizi",
       "name_match": "Pasport: MOS | Diplom: MOS",
       "name_flag": "ok",
-      "verified": "TASDIQLANDI"
+      "verified": "TASDIQLANDI",
+      "buyruq": "",
+      "buyruq_sana": ""
     },
     {
       "row": 89,
@@ -4785,7 +5113,9 @@
       "cert_fish": "",
       "name_match": "TEKSHIRILMAGAN",
       "name_flag": "",
-      "verified": "TASDIQLANDI"
+      "verified": "TASDIQLANDI",
+      "buyruq": "",
+      "buyruq_sana": ""
     },
     {
       "row": 94,
@@ -4814,7 +5144,9 @@
       "cert_fish": "Nurillayeva Sevinch Mashrab qizi",
       "name_match": "Pasport: MOS | Shahodatnoma: MOS",
       "name_flag": "ok",
-      "verified": "TASDIQLANDI"
+      "verified": "TASDIQLANDI",
+      "buyruq": "",
+      "buyruq_sana": ""
     },
     {
       "row": 98,
@@ -4843,7 +5175,9 @@
       "cert_fish": "Ortiqova Dilnoza Zokir qizi",
       "name_match": "Pasport: MOS",
       "name_flag": "ok",
-      "verified": "TASDIQLANDI"
+      "verified": "TASDIQLANDI",
+      "buyruq": "",
+      "buyruq_sana": ""
     },
     {
       "row": 104,
@@ -4872,7 +5206,9 @@
       "cert_fish": "Qarshiyeva Shahlo Talantjon qizi",
       "name_match": "Pasport: MOS | Shahodatnoma: MOS",
       "name_flag": "ok",
-      "verified": "TASDIQLANDI"
+      "verified": "TASDIQLANDI",
+      "buyruq": "",
+      "buyruq_sana": ""
     },
     {
       "row": 106,
@@ -4901,7 +5237,9 @@
       "cert_fish": "",
       "name_match": "Pasport: MOS",
       "name_flag": "ok",
-      "verified": "TASDIQLANDI"
+      "verified": "TASDIQLANDI",
+      "buyruq": "",
+      "buyruq_sana": ""
     },
     {
       "row": 116,
@@ -4930,7 +5268,9 @@
       "cert_fish": "Samiyeva Sevinchbonu Uyg'un qizi",
       "name_match": "Shahodatnoma: MOS",
       "name_flag": "ok",
-      "verified": "TASDIQLANDI"
+      "verified": "TASDIQLANDI",
+      "buyruq": "",
+      "buyruq_sana": ""
     },
     {
       "row": 117,
@@ -4959,7 +5299,9 @@
       "cert_fish": "Sanaqulova Muxtarama Xudoyqulovna",
       "name_match": "TEKSHIRILMAGAN",
       "name_flag": "",
-      "verified": "TASDIQLANDI"
+      "verified": "TASDIQLANDI",
+      "buyruq": "",
+      "buyruq_sana": ""
     },
     {
       "row": 118,
@@ -4988,7 +5330,9 @@
       "cert_fish": "Sanaqulova Nozliya G'ofur qizi",
       "name_match": "TEKSHIRILMAGAN",
       "name_flag": "",
-      "verified": "TASDIQLANDI"
+      "verified": "TASDIQLANDI",
+      "buyruq": "",
+      "buyruq_sana": ""
     },
     {
       "row": 178,
@@ -5017,7 +5361,9 @@
       "cert_fish": "Mavjud",
       "name_match": "",
       "name_flag": "",
-      "verified": "TASDIQLANDI"
+      "verified": "TASDIQLANDI",
+      "buyruq": "",
+      "buyruq_sana": ""
     },
     {
       "row": 120,
@@ -5046,7 +5392,9 @@
       "cert_fish": "Sayfillayeva Shodiyona Sayfilla qizi",
       "name_match": "Pasport: FARQ | Shahodatnoma: FARQ",
       "name_flag": "farq",
-      "verified": "TASDIQLANDI"
+      "verified": "TASDIQLANDI",
+      "buyruq": "",
+      "buyruq_sana": ""
     },
     {
       "row": 138,
@@ -5075,7 +5423,9 @@
       "cert_fish": "Turayeva Gulasal Jura qizi",
       "name_match": "Pasport: MOS | Shahodatnoma: MOS",
       "name_flag": "ok",
-      "verified": "TASDIQLANDI"
+      "verified": "TASDIQLANDI",
+      "buyruq": "",
+      "buyruq_sana": ""
     },
     {
       "row": 150,
@@ -5104,7 +5454,9 @@
       "cert_fish": "Usmonova Gulnoza Xamdam qizi",
       "name_match": "Pasport: MOS | Shahodatnoma: MOS",
       "name_flag": "ok",
-      "verified": "TASDIQLANDI"
+      "verified": "TASDIQLANDI",
+      "buyruq": "",
+      "buyruq_sana": ""
     },
     {
       "row": 177,
@@ -5133,7 +5485,9 @@
       "cert_fish": "",
       "name_match": "",
       "name_flag": "",
-      "verified": "TASDIQLANDI"
+      "verified": "TASDIQLANDI",
+      "buyruq": "",
+      "buyruq_sana": ""
     },
     {
       "row": 161,
@@ -5162,7 +5516,9 @@
       "cert_fish": "Xolmurodova Sabina A'zam qizi",
       "name_match": "Pasport: MOS",
       "name_flag": "ok",
-      "verified": "TASDIQLANDI"
+      "verified": "TASDIQLANDI",
+      "buyruq": "",
+      "buyruq_sana": ""
     },
     {
       "row": 168,
@@ -5191,7 +5547,9 @@
       "cert_fish": "Yahyomurodova Gulsanam Akmal qizi",
       "name_match": "Pasport: MOS | Shahodatnoma: MOS",
       "name_flag": "ok",
-      "verified": "TASDIQLANDI"
+      "verified": "TASDIQLANDI",
+      "buyruq": "",
+      "buyruq_sana": ""
     },
     {
       "row": 171,
@@ -5220,7 +5578,9 @@
       "cert_fish": "Zarifova Marjona Samijon qizi",
       "name_match": "Pasport: MOS | Shahodatnoma: MOS",
       "name_flag": "ok",
-      "verified": "TASDIQLANDI"
+      "verified": "TASDIQLANDI",
+      "buyruq": "",
+      "buyruq_sana": ""
     },
     {
       "row": 15,
@@ -5249,7 +5609,9 @@
       "cert_fish": "",
       "name_match": "Pasport: MOS",
       "name_flag": "ok",
-      "verified": "TASDIQLANDI"
+      "verified": "TASDIQLANDI",
+      "buyruq": "",
+      "buyruq_sana": ""
     },
     {
       "row": 34,
@@ -5278,7 +5640,9 @@
       "cert_fish": "",
       "name_match": "TEKSHIRILMAGAN",
       "name_flag": "",
-      "verified": "TASDIQLANDI"
+      "verified": "TASDIQLANDI",
+      "buyruq": "",
+      "buyruq_sana": ""
     },
     {
       "row": 74,
@@ -5307,7 +5671,9 @@
       "cert_fish": "",
       "name_match": "TEKSHIRILMAGAN",
       "name_flag": "",
-      "verified": "KUTILMOQDA"
+      "verified": "KUTILMOQDA",
+      "buyruq": "",
+      "buyruq_sana": ""
     }
   ]
 }
