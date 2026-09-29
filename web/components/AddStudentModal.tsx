@@ -1,11 +1,12 @@
 'use client'
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { AlertTriangle, ClipboardPaste, Loader2, Plus, Save, Sparkles, Upload, UserPlus, X } from 'lucide-react'
-import { AI_MODELS, analyzeAndUploadDocs, getFilesFromClipboard, getSavedAiModel, setSavedAiModel, type AiModelId } from '@/lib/ai-doc'
+import { useCallback, useEffect, useMemo, useState } from 'react'
+import { AlertTriangle, Award, FileText, IdCard, Loader2, Plus, Save, Sparkles, UserPlus, X } from 'lucide-react'
+import { AI_MODELS, analyzeAndUploadDocs, getSavedAiModel, setSavedAiModel, type AiModelId } from '@/lib/ai-doc'
 import { YON_OPTIONS } from '@/lib/config'
 import { decodePinfl, dobFromPinfl, findDuplicates, fullName, groupOptions, isAcademicLeave, isOfficialGroup, isWithdrawn } from '@/lib/student'
 import type { EditFields, Student } from '@/lib/types'
+import DocDropZone from './DocDropZone'
 import { cx } from './ui'
 
 interface Props {
@@ -71,16 +72,18 @@ export default function AddStudentModal({ all, defaultGroup, onClose, onAdd }: P
   const [aiBusy, setAiBusy] = useState(false)
   const [aiMsg, setAiMsg] = useState('')
   const [model, setModel] = useState<AiModelId>(() => getSavedAiModel())
-  const fileInputRef = useRef<HTMLInputElement>(null)
+  const [passFiles, setPassFiles] = useState<File[]>([])
+  const [certFiles, setCertFiles] = useState<File[]>([])
+  const [docxFiles, setDocxFiles] = useState<File[]>([])
 
   const set = (k: keyof EditFields) => (v: string) => setF((x) => ({ ...x, [k]: v }))
 
-  const runAutoFill = useCallback(async (files: File[]) => {
-    if (!files.length) return
+  const runAutoFill = useCallback(async (docx = docxFiles) => {
+    if (!docx.length && !passFiles.length && !certFiles.length) return
     setAiBusy(true)
     setAiMsg('Hujjat AI va QR orqali tahlil qilinmoqda…')
     try {
-      const res = await analyzeAndUploadDocs({ generalFiles: files, model })
+      const res = await analyzeAndUploadDocs({ generalFiles: docx, passFiles, certFiles, model })
       setAiMsg(res.message)
       if (Object.keys(res.fields).length > 0) {
         setF((prev) => {
@@ -100,16 +103,7 @@ export default function AddStudentModal({ all, defaultGroup, onClose, onAdd }: P
     } finally {
       setAiBusy(false)
     }
-  }, [model])
-
-  const handleClipboardFill = useCallback(async () => {
-    const files = await getFilesFromClipboard()
-    if (!files.length) {
-      setAiMsg("Buferda rasm yoki .docx topilmadi (avval rasm/faylni Ctrl+C qiling)")
-      return
-    }
-    await runAutoFill(files)
-  }, [runAutoFill])
+  }, [model, passFiles, certFiles, docxFiles])
 
   useEffect(() => {
     const prev = document.body.style.overflow
@@ -209,32 +203,33 @@ export default function AddStudentModal({ all, defaultGroup, onClose, onAdd }: P
             >
               {AI_MODELS.map(([id, name]) => <option key={id} value={id}>{name}</option>)}
             </select>
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept=".docx,image/*"
-              multiple
-              className="hidden"
-              onChange={(e) => {
-                const files = Array.from(e.target.files || [])
-                if (files.length) void runAutoFill(files)
-              }}
-            />
+            <div className="w-full pt-1">
+              <DocDropZone
+                title="Shartnoma hujjati (.docx)"
+                icon={FileText}
+                tone="text-sky-soft"
+                max={1}
+                docxOnly
+                hint="Bitta Word fayl — ichidagi jadval, pasport va shahodatnoma o'zi o'qiladi"
+                files={docxFiles}
+                onChange={(f) => { setDocxFiles(f); if (f.length) void runAutoFill(f) }}
+                onMessage={setAiMsg}
+                disabled={aiBusy}
+              />
+              <div className="mt-2 text-center text-[11px] text-fg-subtle">yoki hujjat rasmlarini alohida qo'ying</div>
+            </div>
+            <div className="grid w-full gap-2.5 sm:grid-cols-2">
+              <DocDropZone title="Pasport / ID-karta" icon={IdCard} tone="text-blue-soft" max={2} hint="2 tagacha rasm (old va orqa tomoni)" files={passFiles} onChange={setPassFiles} onMessage={setAiMsg} disabled={aiBusy} />
+              <DocDropZone title="Shahodatnoma / Diplom" icon={Award} tone="text-emerald-soft" max={1} files={certFiles} onChange={setCertFiles} onMessage={setAiMsg} disabled={aiBusy} />
+            </div>
             <button
               type="button"
-              className="btn-ghost h-8 px-2.5 text-[12px]"
-              disabled={aiBusy}
-              onClick={() => fileInputRef.current?.click()}
+              className="btn-primary h-9 w-full justify-center text-[12.5px]"
+              disabled={aiBusy || (!docxFiles.length && !passFiles.length && !certFiles.length)}
+              onClick={() => void runAutoFill()}
             >
-              {aiBusy ? <Loader2 size={14} className="animate-spin" /> : <Upload size={14} className="text-sky" />} .docx / Rasm tanlash
-            </button>
-            <button
-              type="button"
-              className="btn-ghost h-8 px-2.5 text-[12px]"
-              disabled={aiBusy}
-              onClick={() => void handleClipboardFill()}
-            >
-              <ClipboardPaste size={14} className="text-emerald-soft" /> Buferdan (Ctrl+V)
+              {aiBusy ? <Loader2 size={15} className="animate-spin" /> : <Sparkles size={15} />}
+              {aiBusy ? 'AI tahlil qilmoqda…' : "AI bilan maydonlarni to'ldirish"}
             </button>
             {aiMsg && <div className="w-full pt-1 text-[11.5px] text-sky-soft">{aiMsg}</div>}
           </div>

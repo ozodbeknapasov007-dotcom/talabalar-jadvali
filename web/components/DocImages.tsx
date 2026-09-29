@@ -1,9 +1,10 @@
 'use client'
 
-import { useCallback, useEffect, useRef, useState } from 'react'
-import { Award, ClipboardPaste, FileImage, IdCard, ImageOff, Loader2, Maximize2, QrCode, RotateCw, Sparkles, Upload } from 'lucide-react'
-import { AI_MODELS, analyzeAndUploadDocs, getFilesFromClipboard, getSavedAiModel, scanQrFromDataUrls, setSavedAiModel, type AiModelId } from '@/lib/ai-doc'
+import { useEffect, useState } from 'react'
+import { Award, FileImage, IdCard, ImageOff, Loader2, Maximize2, QrCode, RotateCw, Sparkles, Upload } from 'lucide-react'
+import { AI_MODELS, analyzeAndUploadDocs, getSavedAiModel, scanQrFromDataUrls, setSavedAiModel, type AiModelId } from '@/lib/ai-doc'
 import type { EditFields, Student } from '@/lib/types'
+import DocDropZone from './DocDropZone'
 import InlineZoomImage from './InlineZoomImage'
 import Lightbox from './Lightbox'
 import { cx } from './ui'
@@ -47,9 +48,6 @@ export default function DocImages({ file, studentRow, student, onApplyFields }: 
   const [extracted, setExtracted] = useState<Partial<EditFields> | null>(null)
   const [qrResult, setQrResult] = useState<string | null>(null)
 
-  const passInputRef = useRef<HTMLInputElement>(null)
-  const certInputRef = useRef<HTMLInputElement>(null)
-
   useEffect(() => {
     let alive = true
     setImages(null)
@@ -78,17 +76,6 @@ export default function DocImages({ file, studentRow, student, onApplyFields }: 
     load().catch((e) => { if (alive) { setError((e as Error).message); setImages([]) } })
     return () => { alive = false }
   }, [file, studentRow])
-
-  const handlePaste = useCallback(async (target: 'pass' | 'cert') => {
-    const files = await getFilesFromClipboard()
-    if (!files.length) {
-      setStatusMsg("Buferda rasm yoki fayl topilmadi (avval rasmni Ctrl+C qiling)")
-      return
-    }
-    if (target === 'pass') setPassFiles((prev) => [...prev, ...files].slice(0, 2))
-    else setCertFiles((prev) => [...prev, ...files].slice(0, 2))
-    setStatusMsg(`${files.length} ta fayl buferdan qo'shildi`)
-  }, [])
 
   const handleRunAi = async () => {
     setBusy(true)
@@ -187,45 +174,8 @@ export default function DocImages({ file, studentRow, student, onApplyFields }: 
       {showUpload && (
         <div className="animate-pop-in space-y-3 rounded-2xl border border-sky/35 bg-ink-900/90 p-3.5">
           <div className="grid gap-2.5 sm:grid-cols-2">
-            <div className="rounded-xl border border-line bg-ink-950/60 p-2.5">
-              <div className="mb-1.5 flex items-center justify-between text-[11.5px] font-bold text-blue-soft">
-                <span className="flex items-center gap-1.5"><IdCard size={13} /> Pasport (1–2 rasm/.docx)</span>
-                <button type="button" className="text-[11px] text-sky hover:underline" onClick={() => void handlePaste('pass')}>
-                  <ClipboardPaste size={11} className="mr-0.5 inline" /> Ctrl+V
-                </button>
-              </div>
-              <input
-                ref={passInputRef}
-                type="file"
-                accept="image/*,.docx"
-                multiple
-                onChange={(e) => setPassFiles(Array.from(e.target.files || []).slice(0, 2))}
-                className="hidden"
-              />
-              <button type="button" className="btn-ghost h-8 w-full justify-center text-[11.5px]" onClick={() => passInputRef.current?.click()}>
-                <Upload size={13} /> {passFiles.length ? `${passFiles.length} ta fayl tanlandi` : 'Fayl tanlash…'}
-              </button>
-            </div>
-
-            <div className="rounded-xl border border-line bg-ink-950/60 p-2.5">
-              <div className="mb-1.5 flex items-center justify-between text-[11.5px] font-bold text-emerald-soft">
-                <span className="flex items-center gap-1.5"><Award size={13} /> Shahodatnoma / Diplom</span>
-                <button type="button" className="text-[11px] text-sky hover:underline" onClick={() => void handlePaste('cert')}>
-                  <ClipboardPaste size={11} className="mr-0.5 inline" /> Ctrl+V
-                </button>
-              </div>
-              <input
-                ref={certInputRef}
-                type="file"
-                accept="image/*,.docx"
-                multiple
-                onChange={(e) => setCertFiles(Array.from(e.target.files || []).slice(0, 2))}
-                className="hidden"
-              />
-              <button type="button" className="btn-ghost h-8 w-full justify-center text-[11.5px]" onClick={() => certInputRef.current?.click()}>
-                <Upload size={13} /> {certFiles.length ? `${certFiles.length} ta fayl tanlandi` : 'Fayl tanlash…'}
-              </button>
-            </div>
+            <DocDropZone title="Pasport / ID-karta" icon={IdCard} tone="text-blue-soft" max={2} hint="2 tagacha rasm (old va orqa tomoni)" files={passFiles} onChange={setPassFiles} onMessage={setStatusMsg} disabled={busy} />
+            <DocDropZone title="Shahodatnoma / Diplom" icon={Award} tone="text-emerald-soft" max={1} files={certFiles} onChange={setCertFiles} onMessage={setStatusMsg} disabled={busy} />
           </div>
 
           <button
