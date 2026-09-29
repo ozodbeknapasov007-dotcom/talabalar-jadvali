@@ -1,5 +1,5 @@
 import { ACADEMIC_LEAVE_GROUP, COURSES, GROUPS, GROUP_TITLES, OQUV_YILI_BOSHI, WITHDRAWN_GROUP } from './config'
-import type { Student } from './types'
+import type { EditFields, Student } from './types'
 
 /** Akademik guruh kodi: 26-01, 25-03 ... */
 const GROUP_CODE = /^\d{2}-\d{2}$/
@@ -239,4 +239,43 @@ export const NAME_FLAGS: Record<string, { label: string; tone: 'ok' | 'warn' | '
   farq: { label: "Ro'yxatdan haqiqiy farq — tekshiring", tone: 'bad' },
   tekshir: { label: "Tekshiruvdan o'tmadi — qo'lda ko'rish kerak", tone: 'info' },
   boshqa: { label: 'Boshqa odamning hujjati', tone: 'bad' },
+}
+
+/** Yangi qo'shilgan (hali students.json ga tushmagan) talaba yozuvi */
+export function buildAddedStudent(f: EditFields, row: number): Student {
+  const ism = (f.ism || '').trim()
+  const ota = (f.ota || '').trim()
+  const fish = `${ism} ${ota}`.trim()
+  const pv = (f.pv || '').trim().toUpperCase()
+  const pass_type = pv.startsWith('AD') || pv.startsWith('AE') ? 'ID-karta' : /^A[ABC]/.test(pv) ? 'Biometrik Pasport' : ''
+  const hasFull = !!(pv && f.pinfl && f.dob && f.sh_doc)
+  return {
+    row,
+    tr: row - 1,
+    shnum: f.shnum || '',
+    sana: new Date().toLocaleDateString('ru-RU'),
+    ism,
+    ota,
+    fish,
+    yon: f.yon || 'Hamshiralik ishi - 3 yillik',
+    group: f.group || '26-02',
+    pv,
+    pass_type,
+    pinfl: f.pinfl || '',
+    dob: f.dob || '',
+    ber: f.ber || '',
+    sh_doc: f.sh_doc || '',
+    sh_qr: '',
+    mak: f.mak || '',
+    doc_tur: f.doc_tur || 'Shahodatnoma',
+    yil: f.yil || '2024',
+    tel: f.tel || '',
+    doc_file: '',
+    status: hasFull ? 'full' : (pv || f.sh_doc) ? 'chala' : 'yoq',
+    pass_fish: '',
+    cert_fish: '',
+    name_match: '',
+    name_flag: '',
+    verified: 'KUTILMOQDA',
+  }
 }

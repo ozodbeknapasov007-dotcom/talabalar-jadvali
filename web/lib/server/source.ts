@@ -1,6 +1,7 @@
 import 'server-only'
 import { readFile } from 'node:fs/promises'
 import path from 'node:path'
+import { buildAddedStudent, fullName } from '@/lib/student'
 import type { Change, Student } from '@/lib/types'
 
 /*
@@ -106,12 +107,80 @@ export function readRepoFileIn(dirs: readonly string[], name: string): Promise<B
   return readRepoFile(dirs.map((d) => (d ? `${d}/${name}` : name)))
 }
 
-export async function loadStudents(): Promise<Student[]> {
+async function loadBaseStudents(): Promise<Student[]> {
   const json = await readRepoFile(REPO_PATHS.students)
   if (json) return JSON.parse(json.toString('utf-8'))
   const html = await readRepoFile(REPO_PATHS.eskiIndex)
   if (!html) throw new Error("Talabalar ma'lumotini o'qib bo'lmadi (data/students.json topilmadi)")
   return parseFromIndexHtml(html.toString('utf-8'))
+}
+
+/** GitHub'dagi navbat: Vercel'dan yuborilgan, lekin Python xizmati hali Excelga qo'llamagan o'zgarishlar */
+async function loadQueue(): Promise<Change[]> {
+  const buf = await ghReadRaw(QUEUE_PATH).catch(() => null)
+  if (!buf) return []
+  try {
+    const list = JSON.parse(buf.toString('utf-8'))
+    return Array.isArray(list) ? list : []
+  } catch {
+    return []
+  }
+}
+
+/**
+ * Navbatdagi o'zgarishlarni students.json ustiga qo'yamiz — aks holda kompyuterdagi
+ * xizmat navbatni qo'llamaguncha (yoki kompyuter o'chiq bo'lsa) Vercel eski ma'lumotni
+ * ko'rsatadi va tahrir "joyiga qaytib qolgandek" bo'ladi. Qoidalar telegram_sync_service.py
+ * dagi process_remote_github_changes() bilan bir xil.
+ */
+function applyQueue(base: Student[], queue: Change[]): Student[] {
+  let list = base.slice()
+  let nextRow = list.reduce((m, s) => Math.max(m, s.row), 1) + 1
+  const pin = (v: unknown) => String(v ?? '').replace(/\s/g, '')
+
+  for (const chg of queue) {
+    if (!chg || typeof chg !== 'object' || !chg.data) continue
+    if (chg.type === 'add_student') {
+      if (!String(chg.data.ism || '').trim()) continue
+      list.push(buildAddedStudent(chg.data, nextRow++))
+      continue
+    }
+    if (chg.type === 'delete_student') {
+      const d = chg.data
+      const sh = String(d.shnum || '').trim()
+      const p = pin(d.pinfl)
+      const name = String(d.ism || d.fish || '').trim().toLowerCase()
+      const hit =
+        (sh && sh !== '—' && sh !== '-' ? list.find((s) => String(s.shnum || '').trim() === sh) : undefined) ??
+        (p ? list.find((s) => pin(s.pinfl) === p) : undefined) ??
+        (name ? list.find((s) => String(s.ism || '').trim().toLowerCase() === name || fullName(s).toLowerCase() === name) : undefined) ??
+        list.find((s) => s.row === Number(d.row))
+      if (hit) list = list.filter((s) => s !== hit)
+      continue
+    }
+    const i = list.findIndex((s) => s.row === Number(chg.data.row))
+    if (i === -1) continue
+    if (chg.type === 'verify_student') {
+      list[i] = { ...list[i], verified: chg.data.status }
+    } else if (chg.type === 'update_student') {
+      const f = { ...chg.data.fields }
+      // Xizmat bo'sh ism/otasining ismini yozmaydi
+      if (!f.ism) delete f.ism
+      if (!f.ota) delete f.ota
+      const s = { ...list[i], ...f }
+      s.fish = `${s.ism || ''} ${s.ota || ''}`.trim()
+      list[i] = s
+    }
+  }
+  return list
+}
+
+export async function loadStudents(): Promise<Student[]> {
+  const [students, queue] = await Promise.all([
+    loadBaseStudents(),
+    syncMode() === 'github' ? loadQueue() : Promise.resolve([]),
+  ])
+  return queue.length ? applyQueue(students, queue) : students
 }
 
 /* ------------------------------ YOZISH ------------------------------ */

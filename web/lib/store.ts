@@ -1,7 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { fullName } from './student'
+import { buildAddedStudent, fullName } from './student'
 import { EDIT_FIELDS, type Change, type EditFields, type Student, type StudentsPayload, type VerifyStatus } from './types'
 
 /*
@@ -71,45 +71,6 @@ function isSame(s: Student, id: Identity, altShnum?: string): boolean {
   return fullName(s).toLowerCase() === id.fish
 }
 
-function buildAddedStudent(a: PendingAdd, row: number): Student {
-  const f = a.fields
-  const ism = (f.ism || '').trim()
-  const ota = (f.ota || '').trim()
-  const fish = `${ism} ${ota}`.trim()
-  const pv = (f.pv || '').trim().toUpperCase()
-  const pass_type = pv.startsWith('AD') || pv.startsWith('AE') ? 'ID-karta' : /^A[ABC]/.test(pv) ? 'Biometrik Pasport' : ''
-  const hasFull = !!(pv && f.pinfl && f.dob && f.sh_doc)
-  return {
-    row,
-    tr: row - 1,
-    shnum: f.shnum || '',
-    sana: new Date().toLocaleDateString('ru-RU'),
-    ism,
-    ota,
-    fish,
-    yon: f.yon || 'Hamshiralik ishi - 3 yillik',
-    group: f.group || '26-02',
-    pv,
-    pass_type,
-    pinfl: f.pinfl || '',
-    dob: f.dob || '',
-    ber: f.ber || '',
-    sh_doc: f.sh_doc || '',
-    sh_qr: '',
-    mak: f.mak || '',
-    doc_tur: f.doc_tur || 'Shahodatnoma',
-    yil: f.yil || '2024',
-    tel: f.tel || '',
-    doc_file: '',
-    status: hasFull ? 'full' : (pv || f.sh_doc) ? 'chala' : 'yoq',
-    pass_fish: '',
-    cert_fish: '',
-    name_match: '',
-    name_flag: '',
-    verified: 'KUTILMOQDA',
-  }
-}
-
 /** Server ma'lumoti + kutilayotgan o'zgarishlar; server yetib olgan yozuvlar `next` ga tushmaydi */
 function merge(server: Student[], pending: Pending, now: number) {
   const next: Pending = { edits: {}, verifies: {}, deletes: [], adds: [] }
@@ -149,7 +110,7 @@ function merge(server: Student[], pending: Pending, now: number) {
     const id: Identity = { row: nextRow, shnum: (a.fields.shnum || '').trim(), pinfl: (a.fields.pinfl || '').replace(/\s/g, ''), fish: fishLow }
     if (server.some((s) => isSame(s, id))) continue
     next.adds.push(a)
-    list.push(buildAddedStudent(a, nextRow++))
+    list.push(buildAddedStudent(a.fields, nextRow++))
   }
 
   const changed =
