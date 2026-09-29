@@ -173,6 +173,24 @@ def schedule_git_push(delay=2.0):
         _git_push_timer.daemon = True
         _git_push_timer.start()
 
+# Safdan chiqarish / akademik ta'til buyrug'i — asosiy Excelning 26–27-ustunlari
+BUYRUQ_COL, BUYRUQ_SANA_COL = 26, 27
+
+
+def write_buyruq(ws, row_idx, raqam=None, sana=None):
+    """Buyruq raqami/sanasini yozadi (None — o'zgartirilmaydi). Sarlavhalar bo'lmasa qo'yiladi."""
+    if raqam is None and sana is None:
+        return
+    if ws.cell(row=1, column=BUYRUQ_COL).value != 'Buyruq raqami':
+        ws.cell(row=1, column=BUYRUQ_COL, value='Buyruq raqami')
+    if ws.cell(row=1, column=BUYRUQ_SANA_COL).value != 'Buyruq sanasi':
+        ws.cell(row=1, column=BUYRUQ_SANA_COL, value='Buyruq sanasi')
+    if raqam is not None:
+        ws.cell(row=row_idx, column=BUYRUQ_COL, value=str(raqam).strip())
+    if sana is not None:
+        ws.cell(row=row_idx, column=BUYRUQ_SANA_COL, value=str(sana).strip())
+
+
 def process_remote_github_changes():
     """Fonda GitHub'dagi remote_changes.json faylini tekshiradi.
     Agar Vercel/GitHub'dan yangi o'zgarishlar kelgan bo'lsa, lokal Excelga qo'llaydi."""
@@ -256,6 +274,7 @@ def process_remote_github_changes():
                             ws.cell(row=r_idx, column=20, value=str(fields['tel']).strip())
                         if 'group' in fields:
                             ws.cell(row=r_idx, column=23, value=str(fields['group']).strip())
+                        write_buyruq(ws, r_idx, fields.get('buyruq'), fields.get('buyruq_sana'))
 
                 elif chg_type == 'update_group':
                     r_idx = int(data.get('row', 0))
@@ -741,23 +760,11 @@ ROLE_EXCEL_CONFIG = {
         ]
     },
     'admin': {
+        # Ustunlar va ko'rinish — scripts/generate_qabul_shablon.py (admin shabloni, build_role_excel_file ga qarang)
         'file': '2_Baza_Admin_Pasport_va_Shahodatnoma.xlsx',
-        'title': '2. Baza Administratori (Pasport va Shahodatnoma/Diplom)',
+        'title': '2. Baza Administratori (Qabul uchun shablon)',
         'color': '1E3A8A',
-        'cols': [
-            ('T/R', 6, lambda s, i: i, True, True),
-            ('Guruh', 10, lambda s, i: s.get('group', ''), False, True),
-            ('F.I.SH (Talaba)', 34, lambda s, i: s.get('fish', ''), True, False),
-            ('Pasport seriya va raqami', 18, lambda s, i: s.get('pv', ''), True, True),
-            ('JSHSHIR (PINFL)', 18, lambda s, i: s.get('pinfl', ''), False, True),
-            ('Pasport berilgan sanasi', 16, lambda s, i: _fmt_date_ddmmyyyy(s.get('ber', '')), False, True),
-            ("Tug'ilgan sanasi", 16, lambda s, i: _fmt_date_ddmmyyyy(s.get('dob', '')), False, True),
-            ("Tug'ilgan tumani", 20, lambda s, i: _get_tuman_from_pinfl(s.get('pinfl', '')), False, False),
-            ('Hujjat turi (Shahodatnoma/Diplom)', 22, lambda s, i: s.get('doc_tur', ''), False, True),
-            ('Shahodatnoma / Diplom seriya №', 22, lambda s, i: s.get('sh_doc', ''), True, True),
-            ("Tugatgan ta'lim muassasasi", 38, lambda s, i: s.get('mak', ''), False, False),
-            ('Bitirgan yili', 14, lambda s, i: _to_int_if_digits(s.get('yil', '')), False, True),
-        ]
+        'cols': [],
     },
     'guruh_rahbari': {
         'file': '3_Guruh_Rahbarlari_Talabalar_Malumotlari.xlsx',
@@ -813,6 +820,19 @@ def build_role_excel_file(role='toliq'):
 
     role = role if role in ROLE_EXCEL_CONFIG else 'toliq'
     cfg = ROLE_EXCEL_CONFIG[role]
+
+    # Baza administratori — administratorning "Qabul uchun shablon.xlsx" fayli bilan aynan bir xil
+    # (portaldagi QABUL - 2026 / Baza administratori eksporti bilan ham): scripts/generate_qabul_shablon.py
+    if role == 'admin':
+        scripts_dir = os.path.join(BASE_DIR, 'scripts')
+        if scripts_dir not in sys.path:
+            sys.path.insert(0, scripts_dir)
+        import generate_qabul_shablon as gq
+        rows = gq.official_rows()
+        out_path = os.path.join(BASE_DIR, 'hisobotlar', 'rollar', cfg['file'])
+        gq.build_workbook(rows).save(out_path)
+        return out_path, cfg['title'], len(rows)
+
     json_path, _ = build_json_database_file()
     with open(json_path, 'r', encoding='utf-8') as f:
         students = json.load(f).get('students', [])
@@ -2634,7 +2654,10 @@ class WebServerHandler(BaseHTTPRequestHandler):
                 return
 
             try:
-                import openpyxl, urllib.request
+                # urllib.request fayl boshida import qilingan. Bu yerda "import urllib.request"
+                # yozilsa, urllib butun do_GET uchun mahalliy nomga aylanib, boshqa tarmoqlar
+                # (export_role_excel, send_role_excel_to_telegram) UnboundLocalError bilan yiqiladi.
+                import openpyxl
                 _, image_blobs, _ = extract_doc_images_with_crop(target_path)
 
                 if not image_blobs:
@@ -3026,6 +3049,8 @@ Aniq JSON formatda qaytar:
                 group = get_param('group')
                 shnum = get_param('shnum')
                 tel = get_param('tel')
+                buyruq = get_param('buyruq')
+                buyruq_sana = get_param('buyruq_sana')
                 verify = get_param('verify')
 
                 if verify:
@@ -3057,6 +3082,7 @@ Aniq JSON formatda qaytar:
                     if tel is not None: ws.cell(row=row_idx, column=20, value=tel)
                     if yon is not None: ws.cell(row=row_idx, column=3, value=yon)
                     if group is not None and group: ws.cell(row=row_idx, column=23, value=group)
+                    write_buyruq(ws, row_idx, buyruq, buyruq_sana)
                     
                     if verify is not None:
                         if ws.cell(row=1, column=25).value != "Operator Tasdig'i":

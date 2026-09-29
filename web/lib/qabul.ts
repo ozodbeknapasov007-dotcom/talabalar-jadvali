@@ -1,5 +1,6 @@
 /*
- * "QABUL - 2026.xlsx" (administrator shabloni asosida) — 14 ustunli qabul jadvali qatorlari va rasmiy EN / RU tarjimalar.
+ * "QABUL - 2026.xlsx" — administratorning "Qabul uchun shablon.xlsx" fayli bilan aynan bir xil 13 ustunli qabul
+ * jadvali (ruscha ustun yo'q). Ruscha nom (makRu) faqat AI tarjimada oraliq bosqich sifatida hisoblanadi.
  *
  * Yagona manba: portal eksporti (lib/excel.ts) ham, scripts/generate_qabul_shablon.py ham
  * (node web/scripts/qabul-rows.mjs orqali) shu fayldagi qoidalardan foydalanadi.
@@ -67,18 +68,14 @@ export const QABUL_HEADERS = [
   'UY manzili',
   'Avval o`qigan muassasa nomi(Uzbek tilida)',
   'Avval o`qigan muassasa nomi(Ingliz tilida)',
-  'Avval o`qigan muassasa nomi(Rus tilida)',
   'Maktab, kollej va HK',
   'Avval olgan diplom seriya+raqami',
   'Boshlagan va tugatgan yili',
 ]
-/** Faqat "Jami" sahifasida — A ustunida, qolgan 14 ustun bittaga o'ngga suriladi */
-export const QABUL_GROUP_HEADER = 'Guruhi'
-export const QABUL_WIDTHS = [4.5, 36, 17.5, 15, 18, 18, 27, 18, 40, 44, 48, 15, 16.5, 15]
-export const QABUL_GROUP_WIDTH = 10
-export const QABUL_NAMUNA =
-  'Namuna: Saydalimov Anvarjon Sarvarjon o`g`li | 517******0016 | AC1686958 | 990201527 | Qashqadaryo, Qarshi | ' +
-  '4-mittituman 21/23 | Qarshi shahar 1-maktab | Qarshi City School No. 1 | Школа №1 города Карши | Maktab | AA1775603 | 2008-2019'
+/** Admin shablonidagi ustun kengliklari (Excel birligida) */
+export const QABUL_WIDTHS = [3.14, 34.43, 17.29, 13.43, 17.86, 22.57, 21.71, 17.71, 36, 26.29, 13.86, 16.43, 11]
+/** Admin shablonidagi sahifa nomi */
+export const QABUL_SHEET = 'Лист1'
 
 /* ------------------------------------------------------------ hududlar */
 
@@ -412,17 +409,17 @@ export function qabulRow(s: QabulInput, istisno?: QabulIstisno): QabulRow {
   }
 }
 
-/** Excel qatori (№ bilan). withGroup — "Jami" sahifasi uchun A ustunida "Guruhi", qolganlari bittaga suriladi. */
-export function qabulCells(r: QabulRow, idx: number, withGroup = false): (string | number)[] {
+/** Excel qatori (№ bilan) — admin shablonidagi 13 ustun tartibida */
+export function qabulCells(r: QabulRow, idx: number): (string | number)[] {
   const num9 = (t: string) => (/^\d{9}$/.test(t) ? Number(t) : t)
-  const cells: (string | number)[] = [
+  return [
     idx + 1, r.fio, r.pinfl, r.pv, num9(r.tel1), num9(r.tel2), r.viloyat, r.manzil,
-    r.makUz, r.makEn, r.makRu, r.eduType, r.diplom, r.yillar,
+    r.makUz, r.makEn, r.eduType, r.diplom, r.yillar,
   ]
-  return withGroup ? [r.group, ...cells] : cells
 }
 
-/** review maydon nomi → 0 dan boshlangan ustun indeksi */
-export const REVIEW_COL: Record<string, number> = { viloyat: 6, makEn: 9, makRu: 10 }
-/** "Jami" sahifasida (A ustunda Guruhi) ustunlar bittaga suriladi */
+/** review maydon nomi → 0 dan boshlangan ustun indeksi (sariq — qo'lda tekshirish) */
+export const REVIEW_COL: Record<string, number> = { viloyat: 6, makEn: 9 }
+/** JSHSHIR ustuni (matn sifatida yoziladi) */
+export const QABUL_PINFL_COL = 2
 export const QABUL_FILE = 'QABUL - 2026'

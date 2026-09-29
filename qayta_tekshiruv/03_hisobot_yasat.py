@@ -162,6 +162,11 @@ for r in range(2, ws.max_row + 1):
     cert_fish = str(ws.cell(row=r, column=14).value or '').strip()
     name_match = str(ws.cell(row=r, column=24).value or '').strip()
     
+    # 26–27-ustunlar: safdan chiqarish / akademik ta'til buyrug'i
+    buyruq = str(ws.cell(row=r, column=26).value or '').strip()
+    _bs = ws.cell(row=r, column=27).value
+    buyruq_sana = _bs.strftime('%d.%m.%Y') if hasattr(_bs, 'strftime') else str(_bs or '').strip()
+
     # 25-ustun: Operator Tasdig'i
     raw_verified = str(ws.cell(row=r, column=25).value or 'KUTILMOQDA').strip().upper()
     verified_status = 'TASDIQLANDI' if 'TASDIQ' in raw_verified else 'KUTILMOQDA'
@@ -231,6 +236,9 @@ for r in range(2, ws.max_row + 1):
         'name_flag': name_flag(name_match),
         # Operator tekshiruvi va tasdig'i
         'verified': verified_status,
+        # Safdan chiqarish / akademik ta'til buyrug'i
+        'buyruq': buyruq,
+        'buyruq_sana': buyruq_sana,
     })
 
 # Talabalar safidan chiqarilganlar (maxsus guruh) — rasmiy kontingentga kirmaydi

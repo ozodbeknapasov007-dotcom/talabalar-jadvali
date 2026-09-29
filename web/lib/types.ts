@@ -27,12 +27,16 @@ export interface Student {
   name_match: string
   name_flag: '' | 'ok' | 'translit' | 'farq' | 'tekshir' | 'boshqa' | string
   verified: 'TASDIQLANDI' | 'KUTILMOQDA' | string
+  /** Safdan chiqarish / akademik ta'til buyrug'i (Excel 26–27-ustunlar) */
+  buyruq?: string
+  buyruq_sana?: string
 }
 
 /** Qo'lda tahrirlanadigan maydonlar (eski app.js dagi STUDENT_EDIT_FIELDS) */
 export const EDIT_FIELDS = [
   'ism', 'ota', 'group', 'pv', 'pinfl', 'dob', 'ber',
   'doc_tur', 'sh_doc', 'mak', 'yil', 'yon', 'shnum', 'tel',
+  'buyruq', 'buyruq_sana',
 ] as const
 export type EditField = (typeof EDIT_FIELDS)[number]
 export type EditFields = Partial<Record<EditField, string>>

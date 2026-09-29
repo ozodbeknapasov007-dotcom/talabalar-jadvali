@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { AlertTriangle, ChevronLeft, ChevronRight, FileText, Link2, Pencil, Save, Trash2, X } from 'lucide-react'
 import { YON_OPTIONS } from '@/lib/config'
-import { decodePinfl, dobFromPinfl, findDuplicates, formatPinfl, fullName, groupOptions, isOfficialGroup, NAME_FLAGS } from '@/lib/student'
+import { decodePinfl, dobFromPinfl, findDuplicates, formatPinfl, fullName, groupOptions, isAcademicLeave, isOfficialGroup, isWithdrawn, NAME_FLAGS, needsOrder, ORDER_DATE_RE } from '@/lib/student'
 import { EDIT_FIELDS, type EditFields, type Student } from '@/lib/types'
 import DocImages from './DocImages'
 import MalumotnomaModal from './MalumotnomaModal'
@@ -112,8 +112,21 @@ function EditForm({ student, all, onCancel, onSave }: { student: Student; all: S
     if (digits.length === 14 && dob) { setDobFlash(true); setTimeout(() => setDobFlash(false), 1200) }
   }
 
+  // Safdan chiqarish / akademik ta'tilga o'tkazish — buyruq raqami va sanasi majburiy
+  const orderGroup = isWithdrawn(f.group) || isAcademicLeave(f.group)
+  const orderRequired = needsOrder(student.group, f.group)
+  const orderError = !orderRequired ? ''
+    : !f.buyruq.trim() ? 'Buyruq raqamini kiriting'
+    : !ORDER_DATE_RE.test(f.buyruq_sana.trim()) ? "Buyruq sanasini KK.OO.YYYY ko'rinishida kiriting"
+    : ''
+
+  const onGroup = (g: string) => setF((x) => (needsOrder(student.group, g)
+    // Yangi buyruq — eski raqam/sana qolib ketmasin (sana bugungi kun bilan to'ldiriladi)
+    ? { ...x, group: g, buyruq: '', buyruq_sana: new Date().toLocaleDateString('ru-RU') }
+    : { ...x, group: g, buyruq: String(student.buyruq ?? ''), buyruq_sana: String(student.buyruq_sana ?? '') }))
+
   const submit = async () => {
-    if (!f.ism.trim()) return
+    if (!f.ism.trim() || orderError) return
     if (dups.length && !confirm(
       "Diqqat! Pasport yoki JSHSHIR boshqa talabada ham bor:\n\n" +
       dups.map((d) => `• ${fullName(d.student)} (${d.student.group || '—'}, №${d.student.shnum || '—'})`).join('\n') +
@@ -159,12 +172,24 @@ function EditForm({ student, all, onCancel, onSave }: { student: Student; all: S
       <Section n={3} title="Shartnoma va guruh" tone="sky">
         <div className="grid gap-3 sm:grid-cols-2">
           <Input label="Shartnoma raqami" value={f.shnum} onChange={set('shnum')} mono placeholder="203" />
-          <Choice label="Akademik guruh" value={f.group} onChange={set('group')} options={groupChoices} />
+          <Choice label="Akademik guruh" value={f.group} onChange={onGroup} options={groupChoices} />
           <div className="sm:col-span-2"><Input label="Telefon" value={f.tel} onChange={set('tel')} placeholder="+998 90 123 45 67" /></div>
+          {orderGroup && (
+            <>
+              <Input label={`Buyruq raqami${orderRequired ? ' *' : ''}`} value={f.buyruq} onChange={set('buyruq')} mono placeholder="123-T" highlight={orderRequired && !f.buyruq.trim()} />
+              <Input label={`Buyruq sanasi${orderRequired ? ' *' : ''}`} value={f.buyruq_sana} onChange={set('buyruq_sana')} mono placeholder="KK.OO.YYYY" />
+            </>
+          )}
         </div>
+        {orderError && (
+          <div className="mt-3 flex gap-2 rounded-xl border border-amber/45 bg-amber/10 p-3 text-[12.5px] text-amber">
+            <AlertTriangle size={16} className="mt-px shrink-0" />
+            <span>{isAcademicLeave(f.group) ? "Akademik ta'tilga o'tkazish" : 'Talabalar safidan chiqarish'} uchun buyruq kerak: {orderError}</span>
+          </div>
+        )}
       </Section>
       <div className="sticky -bottom-4 -mx-1 flex gap-2 bg-gradient-to-t from-ink-900 via-ink-900 to-transparent px-1 pt-4 pb-4 sm:-bottom-5 sm:pb-5">
-        <button type="submit" className="btn-success flex-1 py-2.5" disabled={saving || !f.ism.trim()}>
+        <button type="submit" className="btn-success flex-1 py-2.5" disabled={saving || !f.ism.trim() || !!orderError}>
           <Save size={16} /> {saving ? 'Saqlanmoqda…' : 'Saqlash'}
         </button>
         <button type="button" className="btn-ghost py-2.5" onClick={onCancel}>Bekor qilish</button>
@@ -204,6 +229,11 @@ function ViewInfo({ s, onEdit, onToggleVerify }: { s: Student; onEdit: () => voi
       <Section n={3} title="Shartnoma va aloqa" tone="sky">
         <Row label="Shartnoma raqami"><span className="mono text-blue-soft">#{s.shnum || '—'}</span></Row>
         <Row label="Akademik guruh"><GroupBadge group={s.group} /></Row>
+        {(isWithdrawn(s.group) || isAcademicLeave(s.group)) && (
+          <Row label="Buyruq">
+            {s.buyruq ? <span className="mono">№{s.buyruq}{s.buyruq_sana ? `, ${s.buyruq_sana}` : ''}</span> : <span className="text-amber">kiritilmagan</span>}
+          </Row>
+        )}
         <Row label="Telefon">{s.tel || '—'}</Row>
         <Row label="Shartnoma sanasi">{s.sana || '—'}</Row>
         <Row label="Hujjatlar holati"><span className="inline-flex items-center gap-1.5"><StatusIcon status={s.status} size={15} />{s.status === 'full' ? "To'liq" : s.status === 'chala' ? 'Chala' : "Yo'q"}</span></Row>

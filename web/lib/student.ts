@@ -45,6 +45,16 @@ export function groupTitle(g: string): string {
 }
 
 /** Guruh tanlash ro'yxati: akademik guruhlar va maxsus guruhlar */
+/** Safdan chiqarish yoki akademik ta'tilga o'tkazish — buyruq raqami va sanasi so'raladi */
+export function needsOrder(from: string | undefined, to: string | undefined): boolean {
+  const t = String(to || '').trim()
+  if (!t || t === String(from || '').trim()) return false
+  return isWithdrawn(t) || isAcademicLeave(t)
+}
+
+/** Buyruq sanasi: KK.OO.YYYY */
+export const ORDER_DATE_RE = /^\d{2}\.\d{2}\.\d{4}$/
+
 export function groupOptions(students: Student[]): [string, string][] {
   return [
     ...academicGroups(students).map((g) => [g, `${g} (${kursOf(g)}-kurs, ${groupTitle(g).replace(/ ishi$/, '')})`] as [string, string]),
