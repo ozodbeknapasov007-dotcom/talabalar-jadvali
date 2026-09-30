@@ -44,7 +44,7 @@ function SyncBadge({ pendingCount, notify }: { pendingCount: number; notify: Not
   let text: string
   if (offline) text = 'Python xizmati o\'chiq'
   else if (pendingCount > 0) text = `${pendingCount} ta o'zgarish saqlanmoqda`
-  else if (gitPending) text = info?.state === 'syncing' ? "GitHub'ga yuborilmoqda" : `GitHub navbatda${info?.pending_seconds ? ` (${info.pending_seconds}s)` : ''}`
+  else if (gitPending) text = info?.state === 'syncing' ? "Saqlandi • GitHub'ga yuborilmoqda" : `Saqlandi (GitHub navbatda${info?.pending_seconds ? ` ${info.pending_seconds}s` : ''})`
   else text = 'Hammasi saqlangan'
 
   return (
@@ -56,7 +56,13 @@ function SyncBadge({ pendingCount, notify }: { pendingCount: number; notify: Not
         )}
         title={local ? "Lokal rejim: o'zgarishlar kompyuterdagi Python xizmati orqali Excelga yoziladi" : "O'zgarishlar GitHub navbatiga yoziladi; kompyuterdagi xizmat ularni Excelga qo'llaydi"}
       >
-        {busy ? <Loader2 size={14} className="animate-spin" /> : <CloudCheck size={14} />}
+        {pendingCount > 0 ? (
+          <Loader2 size={14} className="animate-spin text-sky-soft" />
+        ) : gitPending ? (
+          <CloudUpload size={14} className="animate-pulse text-sky-soft" />
+        ) : (
+          <CloudCheck size={14} />
+        )}
         {text}
       </span>
       {local && !offline && (

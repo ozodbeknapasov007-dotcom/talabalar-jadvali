@@ -1344,6 +1344,90 @@ def save_baza_verification_atomic(row, b_status, shnum=None, pinfl=None):
         except Exception as e:
             print(f"verifications.json (baza) yozishda xato: {e}")
 
+STUDENTS_JSON_PATH = os.path.join(BASE_DIR, 'data', 'students.json')
+STUDENTS_JSON_LOCK = threading.Lock()
+
+def sync_students_json_atomic(action, data):
+    """
+    Tahrir yoki holat o'zgarishini data/students.json fayliga DARHOL (0.01s da)
+    yozadi. Natijada Next.js portali hisobot to'liq qayta hisoblanishini kutmasdan,
+    o'zgarishni darhol ko'radi va saqlangan deb belgilaydi.
+    """
+    with STUDENTS_JSON_LOCK:
+        if not os.path.exists(STUDENTS_JSON_PATH):
+            return
+        try:
+            with open(STUDENTS_JSON_PATH, 'r', encoding='utf-8') as f:
+                students = json.load(f)
+            if not isinstance(students, list):
+                return
+
+            row = int(data.get('row', 0))
+            shnum = str(data.get('shnum', '') or '').strip()
+            pinfl = str(data.get('pinfl', '') or '').replace(' ', '').strip()
+            name = str(data.get('ism', '') or '').strip().lower()
+
+            def match(s):
+                if row and int(s.get('row', 0)) == row:
+                    return True
+                s_sh = str(s.get('shnum', '') or '').strip()
+                if shnum and s_sh and s_sh == shnum:
+                    return True
+                s_pin = str(s.get('pinfl', '') or '').replace(' ', '').strip()
+                if pinfl and s_pin and s_pin == pinfl:
+                    return True
+                s_name = str(s.get('ism', '') or '').strip().lower()
+                s_fish = str(s.get('fish', '') or '').strip().lower()
+                if name and (s_name == name or s_fish == name):
+                    return True
+                return False
+
+            if action == 'delete':
+                students = [s for s in students if not match(s)]
+            elif action == 'verify':
+                status = data.get('status', 'KUTILMOQDA')
+                for s in students:
+                    if match(s):
+                        s['verified'] = status
+                        break
+            elif action == 'baza':
+                status = data.get('status', 'KIRITILDI')
+                for s in students:
+                    if match(s):
+                        s['baza'] = status
+                        break
+            elif action == 'update':
+                fields = data.get('fields', {})
+                for s in students:
+                    if match(s):
+                        for k, v in fields.items():
+                            s[k] = v
+                        cur_ism = s.get('ism', '') or ''
+                        cur_ota = s.get('ota', '') or ''
+                        s['fish'] = f"{cur_ism} {cur_ota}".strip()
+                        break
+            elif action == 'add':
+                st = dict(data)
+                if not st.get('row'):
+                    next_row = max([int(s.get('row', 0)) for s in students] or [1]) + 1
+                    st['row'] = next_row
+                if not st.get('fish'):
+                    st['fish'] = f"{st.get('ism', '')} {st.get('ota', '')}".strip()
+                if 'verified' not in st:
+                    st['verified'] = 'TASDIQLANDI'
+                if 'baza' not in st:
+                    st['baza'] = 'KIRITILDI'
+                students.append(st)
+
+            tmp_path = STUDENTS_JSON_PATH + '.tmp'
+            with open(tmp_path, 'w', encoding='utf-8') as f:
+                json.dump(students, f, ensure_ascii=False)
+            if os.path.exists(STUDENTS_JSON_PATH):
+                os.remove(STUDENTS_JSON_PATH)
+            os.rename(tmp_path, STUDENTS_JSON_PATH)
+        except Exception as e:
+            print(f"[WARN] students.json tezkor yozishda xato: {e}")
+
 def _run_rebuild_worker():
     global IS_REBUILDING, REBUILD_PENDING
     with REBUILD_LOCK:
@@ -1380,13 +1464,10 @@ def _run_rebuild_worker():
 # Har bir tahrirda hisobotni qayta yaratib GitHub'ga push qilish qimmat:
 # bitta sikl ~15 soniya. Shuning uchun tahrir darhol Excelga yoziladi
 # (ma'lumot yo'qolmaydi), og'ir qism esa guruhlanadi:
-#   - oxirgi tahrirdan 10 soniya o'tgach avtomatik yuboriladi
+#   - oxirgi tahrirdan 3 soniya o'tgach avtomatik yuboriladi
 #   - yoki "GitHub'ga yuborish" tugmasi bosilganda darhol
-# 10 ta tahrir = 1 ta commit (avval 10 ta bo'lardi).
-# (29.09.2026: guruh jurnallari faqat o'zgarganda chiziladigan bo'lgach sikl ~8 s ga
-#  tushdi, shuning uchun 30/90 s kutish "yuborilmoqda"da qotib qolgandek ko'rinardi)
-BATCH_DELAY = 10.0      # tahrirlar tinchigandan keyin qancha kutish
-BATCH_MAX_WAIT = 30.0   # uzluksiz tahrirlanganda ham shundan ko'p kutmaslik
+BATCH_DELAY = 3.0       # tahrirlar tinchigandan keyin qancha kutish
+BATCH_MAX_WAIT = 12.0   # uzluksiz tahrirlanganda ham shundan ko'p kutmaslik
 PENDING_SINCE = None    # birinchi yuborilmagan tahrir vaqti
 
 
@@ -2031,6 +2112,12 @@ def save_manual_students(students_list):
         ws.cell(row=nr, column=22, value="AI orqali tahlil qilinib qo'shildi")
         if group:
             ws.cell(row=nr, column=23, value=group)
+        sync_students_json_atomic('add', {
+            'row': nr, 'tr': nr - 1, 'ism': ism, 'ota': ota, 'fish': fish,
+            'shnum': shnum, 'pv': pass_val, 'pinfl': pinfl, 'dob': dob, 'ber': ber_sana,
+            'sh_doc': cert_val, 'doc_tur': cert_tur, 'mak': maktab, 'yil': yil,
+            'yon': yonalis, 'tel': tel, 'group': group or '26-02', 'verified': 'TASDIQLANDI', 'baza': 'KIRITILDI'
+        })
         added += 1
 
     wb.save(EXCEL_PATH)
@@ -3047,6 +3134,8 @@ Aniq JSON formatda qaytar:
                 except Exception:
                     pass
 
+                sync_students_json_atomic('delete', {'row': target_row, 'shnum': del_sh, 'pinfl': del_pinfl, 'ism': deleted_name})
+
                 # Hisobotni qayta yaratish
                 trigger_report_rebuild()
 
@@ -3144,7 +3233,14 @@ Aniq JSON formatda qaytar:
                     wb.save(excel_path)
                     wb.save(os.path.join(BASE_DIR, 'data', 'Talabalar_Yangilangan_Royxat.xlsx'))
 
-                # Guruhlangan qayta generatsiya: 30 soniyada yoki "GitHub'ga
+                fields_dict = {k: v for k, v in [
+                    ('ism', ism), ('ota', ota), ('pv', pv), ('pinfl', pinfl), ('dob', dob), ('ber', ber),
+                    ('sh_doc', sh_doc), ('doc_tur', doc_tur), ('mak', mak), ('yil', yil), ('yon', yon),
+                    ('group', group), ('shnum', shnum), ('tel', tel), ('buyruq', buyruq), ('buyruq_sana', buyruq_sana)
+                ] if v is not None}
+                sync_students_json_atomic('update', {'row': row_idx, 'shnum': shnum, 'pinfl': pinfl, 'fields': fields_dict})
+
+                # Guruhlangan qayta generatsiya: 3 soniyada yoki "GitHub'ga
                 # yuborish" tugmasi bosilganda (BATCH_DELAY ga qarang)
                 trigger_report_rebuild()
 
@@ -3242,6 +3338,8 @@ Aniq JSON formatda qaytar:
             if not excel_saved:
                 print(f"[OGOHLANTIRISH] Excel saqlashda vaqtinchalik ogohlantirish ({excel_err}), lekin JSON keshda 100% saqlandi!")
 
+            sync_students_json_atomic('verify', {'row': row_idx, 'shnum': target_shnum, 'pinfl': target_pinfl, 'status': v_status})
+
             # 3. Guruhlangan qayta hisobot yasash (ketma-ket kliklar bitta
             #    commit ga birlashadi — BATCH_DELAY ga qarang)
             trigger_report_rebuild()
@@ -3317,6 +3415,8 @@ Aniq JSON formatda qaytar:
 
             if not excel_saved:
                 print(f"[OGOHLANTIRISH] Excel saqlashda vaqtinchalik ogohlantirish ({excel_err}), lekin JSON keshda 100% saqlandi!")
+
+            sync_students_json_atomic('baza', {'row': row_idx, 'shnum': target_shnum, 'pinfl': target_pinfl, 'status': b_status})
 
             trigger_report_rebuild()
 
@@ -3399,6 +3499,13 @@ Aniq JSON formatda qaytar:
 
                 wb.save(os.path.join(BASE_DIR, 'data', 'Talabalar_Toliq_Royxati.xlsx'))
                 wb.save(os.path.join(BASE_DIR, 'data', 'Talabalar_Yangilangan_Royxat.xlsx'))
+
+                sync_students_json_atomic('add', {
+                    'row': new_row, 'tr': tr_num, 'ism': ism, 'ota': ota, 'fish': fish,
+                    'shnum': shnum, 'pv': pv, 'pinfl': pinfl, 'dob': dob, 'ber': ber,
+                    'sh_doc': sh_doc, 'doc_tur': doc_tur, 'mak': mak, 'yil': yil,
+                    'yon': yon, 'tel': tel, 'group': group, 'verified': 'TASDIQLANDI', 'baza': 'KIRITILDI'
+                })
 
                 # Fondada hisobot HTML larini ham yangilash
                 trigger_report_rebuild()
