@@ -1,6 +1,6 @@
 /*
- * "QABUL - 2026.xlsx" — administratorning "Qabul uchun shablon.xlsx" fayli bilan aynan bir xil 13 ustunli qabul
- * jadvali (ruscha ustun yo'q). Ruscha nom (makRu) faqat AI tarjimada oraliq bosqich sifatida hisoblanadi.
+ * "QABUL - 2026.xlsx" — administratorning qabul jadvali: 14 ustun (guruhi ustuni bilan, ruscha ustun yo'q).
+ * Ruscha nom (makRu) faqat AI tarjimada oraliq bosqich sifatida hisoblanadi.
  *
  * Yagona manba: portal eksporti (lib/excel.ts) ham, scripts/generate_qabul_shablon.py ham
  * (node web/scripts/qabul-rows.mjs orqali) shu fayldagi qoidalardan foydalanadi.
@@ -59,6 +59,7 @@ export interface QabulRow {
 
 export const QABUL_HEADERS = [
   '№',
+  'Guruhi',
   'F.I.O',
   'JSHSHIR',
   'Pasport seriya raqami',
@@ -73,7 +74,7 @@ export const QABUL_HEADERS = [
   'Boshlagan va tugatgan yili',
 ]
 /** Admin shablonidagi ustun kengliklari (Excel birligida) */
-export const QABUL_WIDTHS = [3.14, 34.43, 17.29, 13.43, 17.86, 22.57, 21.71, 17.71, 36, 26.29, 13.86, 16.43, 11]
+export const QABUL_WIDTHS = [3.14, 10.0, 34.43, 17.29, 13.43, 17.86, 22.57, 21.71, 17.71, 36, 26.29, 13.86, 16.43, 11]
 /** Admin shablonidagi sahifa nomi */
 export const QABUL_SHEET = 'Лист1'
 
@@ -409,17 +410,17 @@ export function qabulRow(s: QabulInput, istisno?: QabulIstisno): QabulRow {
   }
 }
 
-/** Excel qatori (№ bilan) — admin shablonidagi 13 ustun tartibida */
+/** Excel qatori (№ bilan) — admin shablonidagi 14 ustun tartibida */
 export function qabulCells(r: QabulRow, idx: number): (string | number)[] {
   const num9 = (t: string) => (/^\d{9}$/.test(t) ? Number(t) : t)
   return [
-    idx + 1, r.fio, r.pinfl, r.pv, num9(r.tel1), num9(r.tel2), r.viloyat, r.manzil,
+    idx + 1, r.group, r.fio, r.pinfl, r.pv, num9(r.tel1), num9(r.tel2), r.viloyat, r.manzil,
     r.makUz, r.makEn, r.eduType, r.diplom, r.yillar,
   ]
 }
 
 /** review maydon nomi → 0 dan boshlangan ustun indeksi (sariq — qo'lda tekshirish) */
-export const REVIEW_COL: Record<string, number> = { viloyat: 6, makEn: 9 }
+export const REVIEW_COL: Record<string, number> = { viloyat: 7, makEn: 10 }
 /** JSHSHIR ustuni (matn sifatida yoziladi) */
-export const QABUL_PINFL_COL = 2
+export const QABUL_PINFL_COL = 3
 export const QABUL_FILE = 'QABUL - 2026'

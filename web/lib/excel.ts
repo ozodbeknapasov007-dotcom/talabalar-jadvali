@@ -12,9 +12,9 @@ import { QABUL_FILE, QABUL_HEADERS, QABUL_PINFL_COL, QABUL_SHEET, QABUL_WIDTHS, 
 export type Role = 'qabul_shablon' | 'buxgalteriya' | 'admin' | 'guruh_rahbari' | 'toliq'
 
 export const ROLE_META: Record<Role, { file: string; title: string; sub: string }> = {
-  qabul_shablon: { file: `${QABUL_FILE}.xlsx`, title: QABUL_FILE, sub: "Admin shabloni: 13 ustun, rasmiy UZ / EN tarjima" },
+  qabul_shablon: { file: `${QABUL_FILE}.xlsx`, title: QABUL_FILE, sub: "Admin shabloni: 14 ustun (guruhi bilan), rasmiy UZ / EN tarjima" },
   buxgalteriya: { file: '1_Buxgalteriya_Shartnoma_va_Pasport.xlsx', title: 'Buxgalteriya', sub: "Shartnoma № va pasport ma'lumotlari" },
-  admin: { file: '2_Baza_Admin_Pasport_va_Shahodatnoma.xlsx', title: 'Baza administratori', sub: 'Admin shabloni (Qabul uchun shablon): 13 ustun' },
+  admin: { file: '2_Baza_Admin_Pasport_va_Shahodatnoma.xlsx', title: 'Baza administratori', sub: 'Admin shabloni (Qabul uchun shablon): 14 ustun' },
   guruh_rahbari: { file: '3_Guruh_Rahbarlari_Talabalar_Malumotlari.xlsx', title: 'Guruh rahbarlari', sub: "Tug'ilgan sana, pasport, shahodatnoma" },
   toliq: { file: '4_Toliq_Malumotlar_Bazasi.xlsx', title: "To'liq ma'lumotlar", sub: 'Barcha ustunlar jamlangan baza' },
 }
@@ -34,9 +34,9 @@ const numIf = (v: string) => {
 }
 
 /*
- * QABUL - 2026 / Baza administratori — administratorning "Qabul uchun shablon.xlsx" fayli bilan aynan bir xil:
+ * QABUL - 2026 / Baza administratori — administratorning qabul jadvali formati:
  * bitta "Лист1" sahifa, 1–2-qatorlar bo'sh, 3-qatorda sarlavha, 4-qatordan talabalar (№ 1 dan),
- * 13 ustun, Times New Roman 12, ingichka chegara. Qatorlar va tarjimalar lib/qabul.ts da (Python bilan umumiy).
+ * 14 ustun (guruhi bilan), Times New Roman 12, ingichka chegara. Qatorlar va tarjimalar lib/qabul.ts da (Python bilan umumiy).
  * Sariq katak — qoida ham, AI ham tarjima qila olmagan nom (qo'lda tekshirish).
  */
 function buildQabulShablonSheet(X: XLSXModule, students: Student[]) {

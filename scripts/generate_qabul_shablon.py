@@ -33,15 +33,15 @@ OUT_DIR_GROUPS = os.path.join(ROOT, 'hisobotlar', 'qabul', 'guruhlar')
 
 # web/lib/qabul.ts dagi QABUL_HEADERS / QABUL_WIDTHS / QABUL_SHEET bilan bir xil
 HEADERS = [
-    '№', 'F.I.O', 'JSHSHIR', 'Pasport seriya raqami',
+    '№', 'Guruhi', 'F.I.O', 'JSHSHIR', 'Pasport seriya raqami',
     'Tel raqam(pastdagi shablondagidek kiritilsin)', '2-Tel raqam(pastdagi shablondagidek kiritilsin)',
     'Yashash viloyat+tumani', 'UY manzili',
     'Avval o`qigan muassasa nomi(Uzbek tilida)', 'Avval o`qigan muassasa nomi(Ingliz tilida)',
     'Maktab, kollej va HK', 'Avval olgan diplom seriya+raqami', 'Boshlagan va tugatgan yili',
 ]
-WIDTHS = [3.14, 34.43, 17.29, 13.43, 17.86, 22.57, 21.71, 17.71, 36.0, 26.29, 13.86, 16.43, 11.0]
+WIDTHS = [3.14, 10.0, 34.43, 17.29, 13.43, 17.86, 22.57, 21.71, 17.71, 36.0, 26.29, 13.86, 16.43, 11.0]
 SHEET = 'Лист1'
-REVIEW_COL = {'viloyat': 7, 'makEn': 10}  # 1 dan boshlangan ustun
+REVIEW_COL = {'viloyat': 8, 'makEn': 11}  # 1 dan boshlangan ustun
 
 
 def qabul_rows(students: list[dict]) -> list[dict]:
@@ -60,7 +60,7 @@ def qabul_rows(students: list[dict]) -> list[dict]:
 
 def row_cells(r: dict, idx: int) -> list:
     num9 = lambda t: int(t) if len(t) == 9 and t.isdigit() else t  # noqa: E731
-    return [idx, r['fio'], r['pinfl'], r['pv'], num9(r['tel1']), num9(r['tel2']), r['viloyat'], r['manzil'],
+    return [idx, r['group'], r['fio'], r['pinfl'], r['pv'], num9(r['tel1']), num9(r['tel2']), r['viloyat'], r['manzil'],
             r['makUz'], r['makEn'], r['eduType'], r['diplom'], r['yillar']]
 
 
