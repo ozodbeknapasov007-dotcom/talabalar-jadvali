@@ -61,5 +61,16 @@
     },
     "id": "chg_1790766996254_f8eyt",
     "created_at": "2026-09-30T11:16:36.254Z"
+  },
+  {
+    "type": "update_student",
+    "data": {
+      "row": 562,
+      "fields": {
+        "group": "24-15"
+      }
+    },
+    "id": "chg_1790767031008_ffkkw",
+    "created_at": "2026-09-30T11:17:11.008Z"
   }
 ]
