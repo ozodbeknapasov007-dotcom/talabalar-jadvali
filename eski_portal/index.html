@@ -9557,7 +9557,7 @@ window.GitSyncManager = {
     this.pollTimer = setInterval(() => {
       attempts++;
       this.checkStatus((status) => {
-        if (status === 'synced' || attempts > 30) {
+        if (status === 'synced' || attempts > 60) {
           clearInterval(this.pollTimer);
           this.pollTimer = null;
           this.isUserInitiated = false;
@@ -9587,9 +9587,9 @@ window.GitSyncManager = {
         const showToast = !isInitialCheck && (this.isUserInitiated || state === 'syncing' || state === 'pending' || state === 'error' || (state === 'synced' && (prevStatus === 'syncing' || prevStatus === 'pending')));
 
         if (state === 'syncing') {
-          this.updateUI('syncing', "GitHub'ga yuklanmoqda...", "O'zgarishlar GitHub repozitoriyasiga yuborilmoqda...", showToast);
+          this.updateUI('syncing', "Saqlandi • GitHub'ga yuklanmoqda...", "O'zgarishlar saqlandi. GitHub bilan sinxronlanmoqda...", showToast);
         } else if (state === 'pending') {
-          this.updateUI('pending', "GitHub'ga tayyorlanmoqda...", "2-3 soniya ichida yuklash boshlanadi", showToast);
+          this.updateUI('pending', "Saqlandi (GitHub navbatda)...", "Excelga yozildi. Tez orada GitHub'ga yuklanadi", showToast);
         } else if (state === 'error') {
           this.updateUI('error', "GitHub xatosi", data.detail || msg, true);
         } else {
