@@ -181,6 +181,19 @@ for r in range(2, ws.max_row + 1):
         verified_status = verif_map[sh_key]
     elif r_key in verif_map:
         verified_status = verif_map[r_key]
+
+    # 28-ustun: Bazaga kiritilganligi (standart: KIRITILDI)
+    raw_baza = str(ws.cell(row=r, column=28).value or 'KIRITILDI').strip().upper()
+    baza_status = 'KIRITILMAGAN' if ('MAGAN' in raw_baza or 'YOQ' in raw_baza or "YO'Q" in raw_baza) else 'KIRITILDI'
+    b_r_key = f"baza_{r}"
+    b_sh_key = f"baza_sh_{shnum}" if shnum else None
+    b_pin_key = f"baza_pinfl_{pinfl}" if pinfl else None
+    if b_pin_key and b_pin_key in verif_map:
+        baza_status = verif_map[b_pin_key]
+    elif b_sh_key and b_sh_key in verif_map:
+        baza_status = verif_map[b_sh_key]
+    elif b_r_key in verif_map:
+        baza_status = verif_map[b_r_key]
     
     if not ism and not shnum:
         continue
@@ -236,6 +249,8 @@ for r in range(2, ws.max_row + 1):
         'name_flag': name_flag(name_match),
         # Operator tekshiruvi va tasdig'i
         'verified': verified_status,
+        # Bazaga kiritilganligi tasdig'i: KIRITILDI | KIRITILMAGAN
+        'baza': baza_status,
         # Safdan chiqarish / akademik ta'til buyrug'i
         'buyruq': buyruq,
         'buyruq_sana': buyruq_sana,

@@ -164,6 +164,8 @@ function applyQueue(base: Student[], queue: Change[]): Student[] {
     if (i === -1) continue
     if (chg.type === 'verify_student') {
       list[i] = { ...list[i], verified: chg.data.status }
+    } else if (chg.type === 'baza_student') {
+      list[i] = { ...list[i], baza: chg.data.status }
     } else if (chg.type === 'update_student') {
       const f = { ...chg.data.fields }
       // Xizmat bo'sh ism/otasining ismini yozmaydi
@@ -227,6 +229,9 @@ async function sendLocal(change: Change): Promise<void> {
     for (const [k, v] of Object.entries(change.data.fields)) q.set(k, v ?? '')
   } else if (change.type === 'verify_student') {
     endpoint = '/api/verify_student'
+    for (const [k, v] of Object.entries(change.data)) q.set(k, String(v))
+  } else if (change.type === 'baza_student') {
+    endpoint = '/api/baza_student'
     for (const [k, v] of Object.entries(change.data)) q.set(k, String(v))
   } else {
     endpoint = '/api/delete_student'

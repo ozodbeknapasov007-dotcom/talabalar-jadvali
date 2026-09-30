@@ -1,8 +1,8 @@
 'use client'
 
-import { Check, Clock, AlertTriangle, XCircle, CheckCircle2 } from 'lucide-react'
+import { Check, Clock, AlertTriangle, XCircle, CheckCircle2, Database } from 'lucide-react'
 import { GROUP_TITLES } from '@/lib/config'
-import { isAcademicLeave, isWithdrawn } from '@/lib/student'
+import { isAcademicLeave, isBazaEntered, isWithdrawn } from '@/lib/student'
 import type { Student } from '@/lib/types'
 
 export function cx(...parts: (string | false | null | undefined)[]) {
@@ -27,7 +27,7 @@ export function VerifyButton({ student, onToggle, compact }: { student: Student;
     <button
       type="button"
       onClick={(e) => { e.stopPropagation(); onToggle(student) }}
-      title={ok ? "Tasdiqlangan — bekor qilish uchun bosing" : 'Tasdiqlash uchun bosing'}
+      title={ok ? "Operator tasdig'i: Tasdiqlangan — bekor qilish uchun bosing" : "Operator tasdig'i: Tasdiqlash uchun bosing"}
       className={cx(
         'chip cursor-pointer transition-colors',
         ok
@@ -37,6 +37,26 @@ export function VerifyButton({ student, onToggle, compact }: { student: Student;
     >
       {ok ? <Check size={12} strokeWidth={3} /> : <Clock size={12} strokeWidth={2.5} />}
       {compact ? (ok ? 'OK' : 'Kutilmoqda') : ok ? 'Tasdiqlangan' : 'Kutilmoqda'}
+    </button>
+  )
+}
+
+export function BazaButton({ student, onToggle, compact }: { student: Student; onToggle: (s: Student) => void; compact?: boolean }) {
+  const ok = isBazaEntered(student)
+  return (
+    <button
+      type="button"
+      onClick={(e) => { e.stopPropagation(); onToggle(student) }}
+      title={ok ? "Bazaga kiritilgan — kiritilmagan deb belgilash uchun bosing" : "Bazaga kiritilmagan — kiritilgan deb belgilash uchun bosing"}
+      className={cx(
+        'chip cursor-pointer transition-colors',
+        ok
+          ? 'border-sky/45 bg-sky/12 text-sky-soft hover:bg-sky/20'
+          : 'border-rose/50 bg-rose/15 text-rose hover:bg-rose/25',
+      )}
+    >
+      {ok ? <Database size={12} strokeWidth={2.5} /> : <XCircle size={12} strokeWidth={2.5} />}
+      {compact ? (ok ? 'Bazada ✓' : 'Kirmagan') : ok ? 'Bazaga kiritilgan' : 'Bazaga kiritilmagan'}
     </button>
   )
 }

@@ -104,6 +104,7 @@ const ROLES: Record<Exclude<Role, QabulRole>, { bg: string; cols: Col[] }> = {
       C.tr, C.group, C.leader, C.shnum, C.fish, { ...C.dob, header: "Tug'ilgan sanasi (dd.mm.yyyy)", wch: 18, bold: true }, C.tuman,
       C.pv, C.pinfl, C.ber, C.docTur, C.shDoc, C.mak, C.yil, C.tel,
       { header: 'Holati', wch: 14, val: (s) => s.verified || 'KUTILMOQDA', center: true },
+      { header: 'Bazaga kiritilganligi', wch: 18, val: (s) => s.baza || 'KIRITILDI', center: true },
     ],
   },
 }

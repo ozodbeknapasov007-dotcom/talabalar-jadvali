@@ -235,6 +235,17 @@ def process_remote_github_changes():
                         ws.cell(row=r_idx, column=25, value=v_status)
                     save_verification_atomic(r_idx, v_status, shnum, pinfl)
 
+                elif chg_type == 'baza_student':
+                    r_idx = int(data.get('row', 0))
+                    b_status = data.get('status', 'KIRITILDI')
+                    shnum = data.get('shnum', '')
+                    pinfl = data.get('pinfl', '')
+                    if ws.cell(row=1, column=28).value != 'Bazaga kiritilganligi':
+                        ws.cell(row=1, column=28, value='Bazaga kiritilganligi')
+                    if 2 <= r_idx <= ws.max_row:
+                        ws.cell(row=r_idx, column=28, value=b_status)
+                    save_baza_verification_atomic(r_idx, b_status, shnum, pinfl)
+
                 elif chg_type == 'update_student':
                     r_idx = int(data.get('row', 0))
                     fields = data.get('fields', {})
@@ -313,6 +324,7 @@ def process_remote_github_changes():
                     ws.cell(row=nr, column=21, value="TOPILDI")
                     ws.cell(row=nr, column=23, value=data.get('group', '26-02'))
                     ws.cell(row=nr, column=25, value="KUTILMOQDA")
+                    ws.cell(row=nr, column=28, value="KIRITILDI")
 
                 elif chg_type == 'delete_student':
                     target_row = None
@@ -353,8 +365,13 @@ def process_remote_github_changes():
                                     with open(VERIFICATIONS_FILE, 'r', encoding='utf-8') as vf:
                                         vmap = json.load(vf)
                                     vmap.pop(str(target_row), None)
-                                    if del_sh: vmap.pop('sh_' + del_sh, None)
-                                    if del_pinfl: vmap.pop('pinfl_' + del_pinfl, None)
+                                    vmap.pop('baza_' + str(target_row), None)
+                                    if del_sh:
+                                        vmap.pop('sh_' + del_sh, None)
+                                        vmap.pop('baza_sh_' + del_sh, None)
+                                    if del_pinfl:
+                                        vmap.pop('pinfl_' + del_pinfl, None)
+                                        vmap.pop('baza_pinfl_' + del_pinfl, None)
                                     with open(VERIFICATIONS_FILE, 'w', encoding='utf-8') as vf:
                                         json.dump(vmap, vf, ensure_ascii=False, indent=2)
                         except Exception:
@@ -710,6 +727,9 @@ def build_json_database_file():
             tel = str(ws.cell(r, 20).value or '').strip()
             grp = str(ws.cell(r, 23).value or '').strip()
             ver_status = ver_map.get(str(r), str(ws.cell(r, 25).value or 'KUTILMOQDA').strip())
+            raw_baza = str(ws.cell(r, 28).value or 'KIRITILDI').strip().upper()
+            baza_status = 'KIRITILMAGAN' if ('MAGAN' in raw_baza or 'YOQ' in raw_baza or "YO'Q" in raw_baza) else 'KIRITILDI'
+            baza_status = ver_map.get(f"baza_pinfl_{pinfl}", ver_map.get(f"baza_sh_{shnum}", ver_map.get(f"baza_{r}", baza_status)))
             records.append({
                 'row': r,
                 'group': grp,
@@ -727,7 +747,8 @@ def build_json_database_file():
                 'mak': mak,
                 'yil': yil,
                 'tel': tel,
-                'verified': ver_status
+                'verified': ver_status,
+                'baza': baza_status
             })
         wb.close()
 
@@ -809,6 +830,7 @@ ROLE_EXCEL_CONFIG = {
             ('Bitirgan yili', 14, lambda s, i: _to_int_if_digits(s.get('yil', '')), False, True),
             ('Telefon raqami', 16, lambda s, i: s.get('tel', ''), False, True),
             ('Holati', 14, lambda s, i: s.get('verified', 'KUTILMOQDA'), False, True),
+            ('Bazaga kiritilganligi', 18, lambda s, i: s.get('baza', 'KIRITILDI'), False, True),
         ]
     }
 }
@@ -1292,6 +1314,35 @@ def save_verification_atomic(row, v_status, shnum=None, pinfl=None):
             os.rename(tmp_path, VERIFICATIONS_FILE)
         except Exception as e:
             print(f"verifications.json yozishda xato: {e}")
+
+def save_baza_verification_atomic(row, b_status, shnum=None, pinfl=None):
+    with VERIFICATIONS_LOCK:
+        os.makedirs(os.path.dirname(VERIFICATIONS_FILE), exist_ok=True)
+        vmap = {}
+        if os.path.exists(VERIFICATIONS_FILE):
+            try:
+                with open(VERIFICATIONS_FILE, 'r', encoding='utf-8') as f:
+                    vmap = json.load(f)
+            except Exception:
+                vmap = {}
+
+        val = 'KIRITILMAGAN' if b_status == 'KIRITILMAGAN' else 'KIRITILDI'
+        r_str = f"baza_{row}"
+        vmap[r_str] = val
+        if shnum:
+            vmap[f"baza_sh_{str(shnum).strip()}"] = val
+        if pinfl:
+            vmap[f"baza_pinfl_{str(pinfl).strip()}"] = val
+
+        tmp_path = VERIFICATIONS_FILE + '.tmp'
+        try:
+            with open(tmp_path, 'w', encoding='utf-8') as f:
+                json.dump(vmap, f, ensure_ascii=False, indent=2)
+            if os.path.exists(VERIFICATIONS_FILE):
+                os.remove(VERIFICATIONS_FILE)
+            os.rename(tmp_path, VERIFICATIONS_FILE)
+        except Exception as e:
+            print(f"verifications.json (baza) yozishda xato: {e}")
 
 def _run_rebuild_worker():
     global IS_REBUILDING, REBUILD_PENDING
@@ -3202,6 +3253,80 @@ Aniq JSON formatda qaytar:
             self.send_header('Access-Control-Allow-Headers', '*')
             self.end_headers()
             self.wfile.write(json.dumps({"success": True, "row": row_idx, "status": v_status}).encode('utf-8'))
+            return
+
+        if parsed_path.startswith('/api/baza_student'):
+            query = self.path.split('?')[-1] if '?' in self.path else ''
+            params = dict(qc.split('=') for qc in query.split('&') if '=' in qc)
+            row_idx = int(params.get('row', '0'))
+            raw_st = unquote(params.get('status', 'KIRITILDI')).strip().upper()
+            b_status = 'KIRITILMAGAN' if 'MAGAN' in raw_st else 'KIRITILDI'
+            target_shnum = unquote(params.get('shnum', '')).strip()
+            target_pinfl = unquote(params.get('pinfl', '')).strip()
+            target_name = unquote(params.get('ism', '')).strip()
+
+            if row_idx < 2 and not target_shnum and not target_pinfl and not target_name:
+                self.send_response(400)
+                self.send_header('Content-Type', 'application/json; charset=utf-8')
+                self.send_header('Access-Control-Allow-Origin', '*')
+                self.end_headers()
+                self.wfile.write(json.dumps({"success": False, "error": "Noto'g'ri qator yoki talaba ma'lumotlari"}).encode('utf-8'))
+                return
+
+            save_baza_verification_atomic(row_idx, b_status, target_shnum, target_pinfl)
+
+            excel_saved = False
+            excel_err = None
+            excel_path = os.path.join(BASE_DIR, 'data', 'Talabalar_Toliq_Royxati.xlsx')
+
+            with EXCEL_LOCK:
+                for attempt in range(3):
+                    try:
+                        import openpyxl
+                        wb = openpyxl.load_workbook(excel_path)
+                        main_ws = wb.worksheets[0]
+                        if row_idx <= main_ws.max_row:
+                            if not target_shnum:
+                                target_shnum = str(main_ws.cell(row=row_idx, column=5).value or '').strip()
+                            if not target_pinfl:
+                                target_pinfl = str(main_ws.cell(row=row_idx, column=11).value or '').strip()
+                            if not target_name:
+                                target_name = str(main_ws.cell(row=row_idx, column=2).value or '').strip()
+
+                        for sheet in wb.worksheets:
+                            if sheet.cell(row=1, column=28).value != 'Bazaga kiritilganligi':
+                                sheet.cell(row=1, column=28, value='Bazaga kiritilganligi')
+
+                            if sheet == main_ws and row_idx <= sheet.max_row:
+                                sheet.cell(row=row_idx, column=28, value=b_status)
+                            else:
+                                for r in range(2, sheet.max_row + 1):
+                                    s_shnum = str(sheet.cell(row=r, column=5).value or '').strip()
+                                    s_pinfl = str(sheet.cell(row=r, column=11).value or '').strip()
+                                    s_name = str(sheet.cell(row=r, column=2).value or '').strip()
+                                    if (target_shnum and s_shnum == target_shnum) or (target_pinfl and s_pinfl == target_pinfl) or (target_name and s_name == target_name):
+                                        sheet.cell(row=r, column=28, value=b_status)
+                                        break
+
+                        wb.save(excel_path)
+                        excel_saved = True
+                        break
+                    except Exception as ex:
+                        excel_err = ex
+                        time.sleep(0.2)
+
+            if not excel_saved:
+                print(f"[OGOHLANTIRISH] Excel saqlashda vaqtinchalik ogohlantirish ({excel_err}), lekin JSON keshda 100% saqlandi!")
+
+            trigger_report_rebuild()
+
+            self.send_response(200)
+            self.send_header('Content-Type', 'application/json; charset=utf-8')
+            self.send_header('Access-Control-Allow-Origin', '*')
+            self.send_header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
+            self.send_header('Access-Control-Allow-Headers', '*')
+            self.end_headers()
+            self.wfile.write(json.dumps({"success": True, "row": row_idx, "status": b_status}).encode('utf-8'))
             return
 
         if parsed_path.startswith('/api/add_new_student'):

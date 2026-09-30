@@ -102,7 +102,7 @@ export default function Portal() {
     if (next) setOpenRow(next.row)
   }, [navList, navIdx])
 
-  const { saveEdit, toggleVerify, remove, addStudent, refresh } = data
+  const { saveEdit, toggleVerify, toggleBaza, remove, addStudent, refresh } = data
 
   const onAdd = useCallback(async (fields: EditFields) => {
     try {
@@ -121,6 +121,18 @@ export default function Portal() {
       notify(`Tasdiq serverga yetmadi: ${(e as Error).message}. Brauzerda saqlandi, qayta yuboriladi.`, 'warning')
     }
   }, [toggleVerify, notify])
+
+  const onToggleBaza = useCallback(async (s: Student) => {
+    try {
+      const st = await toggleBaza(s)
+      notify(
+        st === 'KIRITILDI' ? `${s.ism}: Bazaga kiritilgan deb belgilandi` : `${s.ism}: Bazaga kiritilmagan deb belgilandi`,
+        st === 'KIRITILDI' ? 'success' : 'warning',
+      )
+    } catch (e) {
+      notify(`Baza holati serverga yetmadi: ${(e as Error).message}. Brauzerda saqlandi, qayta yuboriladi.`, 'warning')
+    }
+  }, [toggleBaza, notify])
 
   const onSave = useCallback(async (s: Student, fields: EditFields) => {
     try {
@@ -270,7 +282,7 @@ export default function Portal() {
                 )}
 
                 <FilterBar filters={filters} groups={groups} onFilter={patchFilters} shown={shown.length} total={data.students.length} mode={mode} onMode={setMode} onExportShown={onExportShown} />
-                <StudentList students={shown} mode={mode} duplicateRows={duplicateRows} onOpen={onOpen} onToggleVerify={onToggleVerify} onChangeGroup={onChangeGroup} />
+                <StudentList students={shown} allStudents={data.students} mode={mode} duplicateRows={duplicateRows} onOpen={onOpen} onToggleVerify={onToggleVerify} onToggleBaza={onToggleBaza} onChangeGroup={onChangeGroup} />
               </>
             ) : (
               <GroupsJournal key={filters.kurs || 'all'} students={data.students} groups={groups} onOpen={onOpen} notify={notify} />
@@ -293,6 +305,7 @@ export default function Portal() {
           onClose={onClose}
           onSave={onSave}
           onToggleVerify={onToggleVerify}
+          onToggleBaza={onToggleBaza}
           onDelete={onDelete}
           onOpenRow={setOpenRow}
         />

@@ -29,6 +29,10 @@ function parseChange(body: unknown): Change | null {
     const status = data.status === 'TASDIQLANDI' ? 'TASDIQLANDI' : 'KUTILMOQDA'
     return { type, data: { row, status, shnum: str(data.shnum), pinfl: str(data.pinfl), ism: str(data.ism) } }
   }
+  if (type === 'baza_student') {
+    const status = data.status === 'KIRITILMAGAN' ? 'KIRITILMAGAN' : 'KIRITILDI'
+    return { type, data: { row, status, shnum: str(data.shnum), pinfl: str(data.pinfl), ism: str(data.ism) } }
+  }
   if (type === 'delete_student') {
     return { type, data: { row, shnum: str(data.shnum), pinfl: str(data.pinfl), ism: str(data.ism), fish: str(data.fish) } }
   }

@@ -89,14 +89,16 @@ function FilterBar({ filters, groups, onFilter, shown, total, mode, onMode, onEx
         </div>
       </div>
 
-      <div className="mt-3 grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
+      <div className="mt-3 grid grid-cols-2 gap-3 md:grid-cols-4 xl:grid-cols-7">
         <Select label="Guruh" value={filters.group} onChange={(v) => onFilter({ group: v })}
           options={[
             // Kontingent plitkalarida Ctrl bilan bir nechta guruh tanlanganda
             ...(filters.group.includes(',') ? [[filters.group, `${filters.group.split(',').length} ta guruh: ${filters.group.replaceAll(',', ', ')}`] as [string, string]] : []),
             ...groups.map((g) => [g, `Guruh ${g}`] as [string, string]), [ACADEMIC_LEAVE_GROUP, "Akademik ta'tildagilar"], [WITHDRAWN_GROUP, 'Safdan chiqarilganlar']]} />
-        <Select label="Tasdiq" value={filters.verified} onChange={(v) => onFilter({ verified: v })}
+        <Select label="Operator tasdig'i" value={filters.verified} onChange={(v) => onFilter({ verified: v })}
           options={[['TASDIQLANDI', 'Tasdiqlanganlar'], ['KUTILMOQDA', 'Kutilayotganlar']]} />
+        <Select label="Baza holati" value={filters.baza} onChange={(v) => onFilter({ baza: v })}
+          options={[['KIRITILDI', 'Bazaga kiritilganlar'], ['KIRITILMAGAN', 'Bazaga kiritilmaganlar']]} />
         <Select label="Hujjat holati" value={filters.status} onChange={(v) => onFilter({ status: v })}
           options={[['full', "To'liq"], ['chala', 'Chala'], ['yoq', "Bo'sh (hujjat yo'q)"]]} />
         <Select label="Pasport turi" value={filters.passType} onChange={(v) => onFilter({ passType: v })}

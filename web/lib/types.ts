@@ -27,6 +27,8 @@ export interface Student {
   name_match: string
   name_flag: '' | 'ok' | 'translit' | 'farq' | 'tekshir' | 'boshqa' | string
   verified: 'TASDIQLANDI' | 'KUTILMOQDA' | string
+  /** Bazaga kiritilganligi tasdig'i (Excel 28-ustun, standart: KIRITILDI) */
+  baza?: 'KIRITILDI' | 'KIRITILMAGAN' | string
   /** Safdan chiqarish / akademik ta'til buyrug'i (Excel 26–27-ustunlar) */
   buyruq?: string
   buyruq_sana?: string
@@ -42,11 +44,13 @@ export type EditField = (typeof EDIT_FIELDS)[number]
 export type EditFields = Partial<Record<EditField, string>>
 
 export type VerifyStatus = 'TASDIQLANDI' | 'KUTILMOQDA'
+export type BazaStatus = 'KIRITILDI' | 'KIRITILMAGAN'
 
 /** Python xizmati tushunadigan o'zgarishlar (scripts/remote_changes.json formati) */
 export type Change =
   | { type: 'update_student'; data: { row: number; fields: EditFields } }
   | { type: 'verify_student'; data: { row: number; status: VerifyStatus; shnum: string; pinfl: string; ism: string } }
+  | { type: 'baza_student'; data: { row: number; status: BazaStatus; shnum: string; pinfl: string; ism: string } }
   | { type: 'delete_student'; data: { row: number; shnum: string; pinfl: string; ism: string; fish: string } }
   | { type: 'add_student'; data: EditFields }
 

@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { buildAddedStudent, fullName } from './student'
-import { EDIT_FIELDS, type Change, type EditFields, type Student, type StudentsPayload, type VerifyStatus } from './types'
+import { EDIT_FIELDS, type BazaStatus, type Change, type EditFields, type Student, type StudentsPayload, type VerifyStatus } from './types'
 
 /*
   Serverdagi ma'lumot tahrirdan ~30–90 soniya keyin yangilanadi (Python xizmati
@@ -27,6 +27,7 @@ interface Identity { row: number; shnum: string; pinfl: string; fish: string }
 interface Meta { id: Identity; ts: number; sent: boolean }
 interface PendingEdit extends Meta { fields: EditFields }
 interface PendingVerify extends Meta { status: VerifyStatus }
+interface PendingBaza extends Meta { status: BazaStatus }
 type PendingDelete = Meta
 
 interface PendingAdd { key: string; fields: EditFields; ts: number; sent: boolean }
@@ -34,16 +35,17 @@ interface PendingAdd { key: string; fields: EditFields; ts: number; sent: boolea
 interface Pending {
   edits: Record<string, PendingEdit>
   verifies: Record<string, PendingVerify>
+  bazas: Record<string, PendingBaza>
   deletes: PendingDelete[]
   adds: PendingAdd[]
 }
 
-const EMPTY: Pending = { edits: {}, verifies: {}, deletes: [], adds: [] }
+const EMPTY: Pending = { edits: {}, verifies: {}, bazas: {}, deletes: [], adds: [] }
 
 function readPending(): Pending {
   try {
     const raw = JSON.parse(localStorage.getItem(KEY) || 'null')
-    if (raw && typeof raw === 'object') return { ...EMPTY, ...raw, adds: Array.isArray(raw.adds) ? raw.adds : [] }
+    if (raw && typeof raw === 'object') return { ...EMPTY, ...raw, bazas: raw.bazas || {}, adds: Array.isArray(raw.adds) ? raw.adds : [] }
   } catch { /* shaxsiy oyna yoki buzilgan qiymat */ }
   return EMPTY
 }
@@ -73,7 +75,7 @@ function isSame(s: Student, id: Identity, altShnum?: string): boolean {
 
 /** Server ma'lumoti + kutilayotgan o'zgarishlar; server yetib olgan yozuvlar `next` ga tushmaydi */
 function merge(server: Student[], pending: Pending, now: number) {
-  const next: Pending = { edits: {}, verifies: {}, deletes: [], adds: [] }
+  const next: Pending = { edits: {}, verifies: {}, bazas: {}, deletes: [], adds: [] }
 
   for (const d of pending.deletes) {
     if (!expired(d, now) && server.some((s) => isSame(s, d.id))) next.deletes.push(d)
@@ -100,6 +102,12 @@ function merge(server: Student[], pending: Pending, now: number) {
       s = { ...s, verified: v.status }
       next.verifies[key] = v
     }
+
+    const b = pending.bazas?.[key]
+    if (b && !expired(b, now) && isSame(s0, b.id) && (s0.baza || 'KIRITILDI') !== b.status) {
+      s = { ...s, baza: b.status }
+      next.bazas[key] = b
+    }
     list.push(s)
   }
 
@@ -116,6 +124,7 @@ function merge(server: Student[], pending: Pending, now: number) {
   const changed =
     Object.keys(next.edits).length !== Object.keys(pending.edits).length ||
     Object.keys(next.verifies).length !== Object.keys(pending.verifies).length ||
+    Object.keys(next.bazas).length !== Object.keys(pending.bazas || {}).length ||
     next.deletes.length !== pending.deletes.length ||
     next.adds.length !== (pending.adds?.length ?? 0)
   return { list, next, changed }
@@ -159,11 +168,11 @@ export function useStudents() {
     })
   }, [])
 
-  const markSent = useCallback((kind: 'edits' | 'verifies' | 'deletes', key: string | Identity) => {
+  const markSent = useCallback((kind: 'edits' | 'verifies' | 'bazas' | 'deletes', key: string | Identity) => {
     updatePending((p) => {
       if (kind === 'deletes') return { ...p, deletes: p.deletes.map((d) => (d.id === key ? { ...d, sent: true, ts: Date.now() } : d)) }
       const k = key as string
-      const item = p[kind][k]
+      const item = p[kind]?.[k]
       return item ? { ...p, [kind]: { ...p[kind], [k]: { ...item, sent: true, ts: Date.now() } } } : p
     })
   }, [updatePending])
@@ -182,7 +191,24 @@ export function useStudents() {
         markSent('verifies', key)
       } catch { return }
     }
-  }, [markSent])
+    for (const [key, b] of Object.entries(p.bazas || {})) {
+      if (b.sent) continue
+      try {
+        await postChange({ type: 'baza_student', data: { row: b.id.row, status: b.status, shnum: b.id.shnum, pinfl: b.id.pinfl, ism: '' } })
+        markSent('bazas', key)
+      } catch { return }
+    }
+    for (const a of p.adds || []) {
+      if (a.sent) continue
+      try {
+        await postChange({ type: 'add_student', data: a.fields })
+        updatePending((prev) => ({
+          ...prev,
+          adds: (prev.adds || []).map((x) => (x.key === a.key ? { ...x, sent: true, ts: Date.now() } : x)),
+        }))
+      } catch { return }
+    }
+  }, [markSent, updatePending])
 
   const refresh = useCallback(async () => {
     if (inflight.current) return
@@ -279,6 +305,31 @@ export function useStudents() {
     return status
   }, [originalOf, updatePending, markSent])
 
+  const toggleBaza = useCallback(async (student: Student): Promise<BazaStatus> => {
+    const status: BazaStatus = (student.baza || 'KIRITILDI') === 'KIRITILMAGAN' ? 'KIRITILDI' : 'KIRITILMAGAN'
+    const key = String(student.row)
+    const prev = pendingRef.current.bazas?.[key]
+    updatePending((p) => ({ ...p, bazas: { ...p.bazas, [key]: { id: identityOf(originalOf(student)), status, ts: Date.now(), sent: false } } }))
+    try {
+      await postChange({
+        type: 'baza_student',
+        data: { row: student.row, status, shnum: student.shnum || '', pinfl: student.pinfl || '', ism: student.ism || '' },
+      })
+      markSent('bazas', key)
+    } catch (e) {
+      if (isRejected(e)) {
+        updatePending((p) => {
+          const bazas = { ...p.bazas }
+          if (prev) bazas[key] = prev
+          else delete bazas[key]
+          return { ...p, bazas }
+        })
+      }
+      throw e
+    }
+    return status
+  }, [originalOf, updatePending, markSent])
+
   const remove = useCallback(async (student: Student) => {
     const original = originalOf(student)
     const id = identityOf(original)
@@ -318,11 +369,16 @@ export function useStudents() {
     }
   }, [updatePending])
 
-  const pendingCount = Object.keys(pending.edits).length + Object.keys(pending.verifies).length + pending.deletes.length + (pending.adds?.length ?? 0)
+  const pendingCount =
+    Object.keys(pending.edits).length +
+    Object.keys(pending.verifies).length +
+    Object.keys(pending.bazas || {}).length +
+    pending.deletes.length +
+    (pending.adds?.length ?? 0)
 
   return {
     students: merged?.list ?? [],
     state, error, source, fetchedAt, pendingCount,
-    refresh, saveEdit, toggleVerify, remove, addStudent,
+    refresh, saveEdit, toggleVerify, toggleBaza, remove, addStudent,
   }
 }
