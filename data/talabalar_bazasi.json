@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-09-30 16:47:16",
+  "updated_at": "2026-09-30 16:48:45",
   "total_students": 561,
   "students": [
     {
@@ -7523,40 +7523,8 @@
       "buyruq_sana": ""
     },
     {
-      "row": 464,
-      "tr": 236,
-      "shnum": "",
-      "sana": "",
-      "ism": "Raxmonova Mahbuba",
-      "ota": "Tolib qizi",
-      "fish": "Raxmonova Mahbuba Tolib qizi",
-      "yon": "Hamshiralik ishi",
-      "group": "25-20",
-      "pv": "AB7943025",
-      "pass_type": "Biometrik Pasport",
-      "pinfl": "41607922640032",
-      "dob": "16.07.1992",
-      "ber": "19.10.2017",
-      "sh_doc": "K 0163976",
-      "sh_qr": "",
-      "mak": "Qarshi pedaggika kolleji",
-      "doc_tur": "Kollej",
-      "yil": "2012",
-      "tel": "886341692 / 973868774",
-      "doc_file": "",
-      "status": "full",
-      "pass_fish": "",
-      "cert_fish": "",
-      "name_match": "",
-      "name_flag": "",
-      "verified": "TASDIQLANDI",
-      "baza": "KIRITILDI",
-      "buyruq": "",
-      "buyruq_sana": ""
-    },
-    {
       "row": 465,
-      "tr": 237,
+      "tr": 236,
       "shnum": "",
       "sana": "",
       "ism": "Sadriddinova Dilfuza",
@@ -7588,7 +7556,7 @@
     },
     {
       "row": 466,
-      "tr": 238,
+      "tr": 237,
       "shnum": "",
       "sana": "",
       "ism": "Sattorova Intizor",
@@ -7620,7 +7588,7 @@
     },
     {
       "row": 467,
-      "tr": 239,
+      "tr": 238,
       "shnum": "",
       "sana": "",
       "ism": "Sayfullayeva Ruxshona",
@@ -7652,7 +7620,7 @@
     },
     {
       "row": 468,
-      "tr": 240,
+      "tr": 239,
       "shnum": "",
       "sana": "",
       "ism": "Shukurova Xurshida",
@@ -7684,7 +7652,7 @@
     },
     {
       "row": 469,
-      "tr": 241,
+      "tr": 240,
       "shnum": "",
       "sana": "",
       "ism": "To'rayeva Orzigul",
@@ -7716,7 +7684,7 @@
     },
     {
       "row": 470,
-      "tr": 242,
+      "tr": 241,
       "shnum": "",
       "sana": "",
       "ism": "Turdiqulova Sevinch",
@@ -7748,7 +7716,7 @@
     },
     {
       "row": 471,
-      "tr": 243,
+      "tr": 242,
       "shnum": "",
       "sana": "",
       "ism": "Xoliqulova Nozima",
@@ -7780,7 +7748,7 @@
     },
     {
       "row": 472,
-      "tr": 244,
+      "tr": 243,
       "shnum": "",
       "sana": "",
       "ism": "Xudoyorova Shahzoda",
@@ -7812,7 +7780,7 @@
     },
     {
       "row": 473,
-      "tr": 245,
+      "tr": 244,
       "shnum": "",
       "sana": "",
       "ism": "Yusupova Hosila",
@@ -7844,7 +7812,7 @@
     },
     {
       "row": 474,
-      "tr": 246,
+      "tr": 245,
       "shnum": "",
       "sana": "",
       "ism": "Abdig'aniyeva Aziza",
@@ -7876,7 +7844,7 @@
     },
     {
       "row": 475,
-      "tr": 247,
+      "tr": 246,
       "shnum": "",
       "sana": "",
       "ism": "Abdullayeva Charos",
@@ -7908,7 +7876,7 @@
     },
     {
       "row": 476,
-      "tr": 248,
+      "tr": 247,
       "shnum": "",
       "sana": "",
       "ism": "Axrorova Gulshoda",
@@ -7940,7 +7908,7 @@
     },
     {
       "row": 477,
-      "tr": 249,
+      "tr": 248,
       "shnum": "",
       "sana": "",
       "ism": "Bobomurodova Ozoda",
@@ -7972,7 +7940,7 @@
     },
     {
       "row": 478,
-      "tr": 250,
+      "tr": 249,
       "shnum": "",
       "sana": "",
       "ism": "Buriyeva Sitora",
@@ -8004,7 +7972,7 @@
     },
     {
       "row": 479,
-      "tr": 251,
+      "tr": 250,
       "shnum": "",
       "sana": "",
       "ism": "Daminova Nigina",
@@ -8036,7 +8004,7 @@
     },
     {
       "row": 480,
-      "tr": 252,
+      "tr": 251,
       "shnum": "",
       "sana": "",
       "ism": "Davlatova Muxlisa",
@@ -8068,7 +8036,7 @@
     },
     {
       "row": 481,
-      "tr": 253,
+      "tr": 252,
       "shnum": "",
       "sana": "",
       "ism": "Ibrohimova Gulasal",
@@ -8100,7 +8068,7 @@
     },
     {
       "row": 482,
-      "tr": 254,
+      "tr": 253,
       "shnum": "",
       "sana": "",
       "ism": "Jabborova Laylo",
@@ -8132,7 +8100,7 @@
     },
     {
       "row": 483,
-      "tr": 255,
+      "tr": 254,
       "shnum": "",
       "sana": "",
       "ism": "Mamasodiqova Durdona",
@@ -8164,7 +8132,7 @@
     },
     {
       "row": 484,
-      "tr": 256,
+      "tr": 255,
       "shnum": "",
       "sana": "",
       "ism": "Maxmudova Nigina",
@@ -8196,7 +8164,7 @@
     },
     {
       "row": 485,
-      "tr": 257,
+      "tr": 256,
       "shnum": "",
       "sana": "",
       "ism": "Muhammadiyeva Rayhon",
@@ -8228,7 +8196,7 @@
     },
     {
       "row": 486,
-      "tr": 258,
+      "tr": 257,
       "shnum": "",
       "sana": "",
       "ism": "Nimatova Nigina",
@@ -8260,7 +8228,7 @@
     },
     {
       "row": 487,
-      "tr": 259,
+      "tr": 258,
       "shnum": "",
       "sana": "",
       "ism": "Normo'minova Asal",
@@ -8292,7 +8260,7 @@
     },
     {
       "row": 488,
-      "tr": 260,
+      "tr": 259,
       "shnum": "",
       "sana": "",
       "ism": "Ochilova Xolidaxon",
@@ -8324,7 +8292,7 @@
     },
     {
       "row": 489,
-      "tr": 261,
+      "tr": 260,
       "shnum": "",
       "sana": "",
       "ism": "Orolova Xursanoy",
@@ -8356,7 +8324,7 @@
     },
     {
       "row": 490,
-      "tr": 262,
+      "tr": 261,
       "shnum": "",
       "sana": "",
       "ism": "Qodirova Sabrina",
@@ -8388,7 +8356,7 @@
     },
     {
       "row": 491,
-      "tr": 263,
+      "tr": 262,
       "shnum": "",
       "sana": "",
       "ism": "Rajabova Gulnora",
@@ -8407,6 +8375,38 @@
       "doc_tur": "Umumiy o'rta maktab",
       "yil": "",
       "tel": "",
+      "doc_file": "",
+      "status": "full",
+      "pass_fish": "",
+      "cert_fish": "",
+      "name_match": "",
+      "name_flag": "",
+      "verified": "TASDIQLANDI",
+      "baza": "KIRITILDI",
+      "buyruq": "",
+      "buyruq_sana": ""
+    },
+    {
+      "row": 464,
+      "tr": 263,
+      "shnum": "",
+      "sana": "",
+      "ism": "Raxmonova Mahbuba",
+      "ota": "Tolib qizi",
+      "fish": "Raxmonova Mahbuba Tolib qizi",
+      "yon": "Hamshiralik ishi",
+      "group": "25-21",
+      "pv": "AB7943025",
+      "pass_type": "Biometrik Pasport",
+      "pinfl": "41607922640032",
+      "dob": "16.07.1992",
+      "ber": "19.10.2017",
+      "sh_doc": "K 0163976",
+      "sh_qr": "",
+      "mak": "Qarshi pedaggika kolleji",
+      "doc_tur": "Kollej",
+      "yil": "2012",
+      "tel": "886341692 / 973868774",
       "doc_file": "",
       "status": "full",
       "pass_fish": "",
