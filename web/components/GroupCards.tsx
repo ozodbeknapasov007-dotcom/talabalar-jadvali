@@ -34,6 +34,10 @@ export default function GroupCards({ groups, active, onPick, onSettings }: Props
   const chosen = selectedGroups(active).filter((g) => groups.some((x) => x.g === g))
   const anyActive = chosen.length > 0
 
+  const chosenStats = groups.filter((x) => chosen.includes(x.g))
+  const chosenTotalStudents = chosenStats.reduce((a, x) => a + x.total, 0)
+  const chosenVerStudents = chosenStats.reduce((a, x) => a + x.ver, 0)
+
   const pick = (g: string, multi: boolean) => {
     if (!multi) return onPick(chosen.length === 1 && chosen[0] === g ? '' : g)
     const next = chosen.includes(g) ? chosen.filter((x) => x !== g) : [...chosen, g]
@@ -47,23 +51,57 @@ export default function GroupCards({ groups, active, onPick, onSettings }: Props
   const columns = [1, 2, 3]
     .map((k) => {
       const list = groups.filter((x) => kursOf(x.g) === k)
-      return { k, list, total: list.reduce((a, x) => a + x.total, 0), ver: list.reduce((a, x) => a + x.ver, 0) }
+      const chosenInKurs = list.filter((x) => chosen.includes(x.g))
+      const chosenKursTotal = chosenInKurs.reduce((a, x) => a + x.total, 0)
+      const chosenKursVer = chosenInKurs.reduce((a, x) => a + x.ver, 0)
+      return {
+        k,
+        list,
+        total: list.reduce((a, x) => a + x.total, 0),
+        ver: list.reduce((a, x) => a + x.ver, 0),
+        chosenCount: chosenInKurs.length,
+        chosenTotal: chosenKursTotal,
+        chosenVer: chosenKursVer,
+      }
     })
     .filter((c) => c.list.length)
 
   return (
     <div className="space-y-2.5">
-      <div className="flex flex-wrap items-center gap-2">
-        <span className="text-[13px] font-bold text-fg">Kontingent — guruhlar</span>
-        <span className="hidden text-[12px] text-fg-subtle sm:inline">
-          Bosing — bitta guruh · <kbd className="rounded border border-line bg-ink-800 px-1 font-mono text-[11px]">Ctrl</kbd> + bosing — bir nechta · kurs sarlavhasi — butun kurs
-        </span>
-        {chosen.length > 1 && (
-          <span className="chip border-sky/45 bg-sky/10 text-sky-soft">
-            {chosen.length} ta guruh tanlandi
-            <button type="button" className="ml-0.5 hover:text-fg" onClick={() => onPick('')} title="Tanlovni tozalash"><X size={13} /></button>
+      <div className="flex flex-wrap items-center justify-between gap-2.5">
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="text-[13px] font-bold text-fg">Kontingent — guruhlar</span>
+          <span className="hidden text-[12px] text-fg-subtle sm:inline">
+            Bosing — bitta guruh · <kbd className="rounded border border-line bg-ink-800 px-1 font-mono text-[11px]">Ctrl</kbd> + bosing — bir nechta · kurs sarlavhasi — butun kurs
           </span>
-        )}
+          {chosen.length > 0 && (
+            <div className="inline-flex items-center gap-2 rounded-xl border border-sky/40 bg-sky/15 px-3 py-1 text-[13px] font-semibold text-sky-soft shadow-sm animate-in fade-in duration-150">
+              <span className="flex items-center gap-1.5 font-bold text-sky">
+                <span className="grid size-5 place-items-center rounded-full bg-sky text-ink-950 text-[11px] font-black">
+                  {chosen.length}
+                </span>
+                {chosen.length} ta guruh tanlandi
+              </span>
+              <span className="text-sky/40">·</span>
+              <span className="font-extrabold text-fg tabular-nums">
+                {chosenTotalStudents} nafar talaba
+              </span>
+              {chosenVerStudents > 0 && (
+                <span className="text-[11.5px] font-medium text-emerald-soft tabular-nums">
+                  ({chosenVerStudents} tasdiqlangan)
+                </span>
+              )}
+              <button
+                type="button"
+                className="ml-1 inline-flex items-center gap-0.5 rounded-md bg-sky/20 px-1.5 py-0.5 text-[11.5px] font-bold text-sky-soft transition-colors hover:bg-rose/25 hover:text-rose"
+                onClick={() => onPick('')}
+                title="Tanlovni tozalash"
+              >
+                <X size={13} /> Tozalash
+              </button>
+            </div>
+          )}
+        </div>
         <button type="button" className="btn-ghost ml-auto h-8 px-2.5 text-[12px]" onClick={onSettings} title="Kurs, guruh rahbari va yo'nalishni o'zgartirish">
           <Settings2 size={14} className="text-sky" /> Guruh sozlamalari
         </button>
@@ -91,8 +129,21 @@ export default function GroupCards({ groups, active, onPick, onSettings }: Props
                   <span className="block text-[12px] text-fg-muted">{c.list.length} ta guruh</span>
                 </span>
                 <span className="text-right">
-                  <span className="block text-[22px] leading-none font-extrabold text-fg tabular-nums">{c.total}</span>
-                  <span className={cx('text-[11.5px] font-bold tabular-nums', cp === 100 ? 'text-emerald-soft' : 'text-fg-muted')}>{c.ver} tasdiqlangan</span>
+                  {c.chosenCount > 0 ? (
+                    <div>
+                      <span className="inline-flex items-center gap-1 rounded-md border border-sky/40 bg-sky/20 px-2 py-0.5 text-[12px] font-bold text-sky tabular-nums">
+                        {c.chosenCount} guruh · {c.chosenTotal} talaba
+                      </span>
+                      <span className="block text-[11px] text-fg-subtle tabular-nums mt-0.5">
+                        jami: {c.total} ({c.ver} tasdiqlangan)
+                      </span>
+                    </div>
+                  ) : (
+                    <>
+                      <span className="block text-[22px] leading-none font-extrabold text-fg tabular-nums">{c.total}</span>
+                      <span className={cx('text-[11.5px] font-bold tabular-nums', cp === 100 ? 'text-emerald-soft' : 'text-fg-muted')}>{c.ver} tasdiqlangan</span>
+                    </>
+                  )}
                 </span>
               </button>
 
