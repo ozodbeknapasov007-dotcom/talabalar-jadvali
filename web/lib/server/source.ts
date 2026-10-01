@@ -29,8 +29,8 @@ export function syncMode(): SyncMode {
 const REPO_DIR = process.env.REPO_DIR || path.resolve(process.cwd(), '..')
 const LOCAL_API = (process.env.LOCAL_API || 'http://localhost:8080').replace(/\/$/, '')
 
-const GH_OWNER = process.env.GITHUB_OWNER || 'OzodbekNapasov'
-const GH_REPO = process.env.GITHUB_REPO || 'Talabalar-ro-yhati'
+const GH_OWNER = process.env.GITHUB_OWNER || 'ozodbeknapasov007-dotcom'
+const GH_REPO = process.env.GITHUB_REPO || 'talabalar-jadvali'
 const GH_BRANCH = process.env.GITHUB_BRANCH || 'main'
 const QUEUE_PATH = 'scripts/remote_changes.json'
 const GROUP_SETTINGS_PATH = 'data/guruhlar.json'

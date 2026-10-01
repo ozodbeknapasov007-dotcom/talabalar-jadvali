@@ -13,8 +13,8 @@ module.exports = async function handler(req, res) {
   }
 
   const GITHUB_TOKEN = process.env.GITHUB_TOKEN || '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';
-  const REPO_OWNER = 'OzodbekNapasov';
-  const REPO_NAME = 'Talabalar-ro-yhati';
+  const REPO_OWNER = 'ozodbeknapasov007-dotcom';
+  const REPO_NAME = 'talabalar-jadvali';
   const FILE_PATH = 'scripts/remote_changes.json';
 
   if (!GITHUB_TOKEN) {

@@ -6,8 +6,8 @@ module.exports = async function handler(req, res) {
   res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
 
   const token = process.env.GITHUB_TOKEN || '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';
-  const repoOwner = 'OzodbekNapasov';
-  const repoName = 'Talabalar-ro-yhati';
+  const repoOwner = 'ozodbeknapasov007-dotcom';
+  const repoName = 'talabalar-jadvali';
 
   try {
     // 1. Try fresh students.json from GitHub API first so edits show up immediately
