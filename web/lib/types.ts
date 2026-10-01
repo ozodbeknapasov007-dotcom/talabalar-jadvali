@@ -56,6 +56,6 @@ export type Change =
 
 export interface StudentsPayload {
   students: Student[]
-  source: 'local' | 'github'
+  source: 'supabase' | 'local' | 'github'
   fetchedAt: string
 }

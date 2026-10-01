@@ -216,17 +216,17 @@ async function loadFromSupabase(): Promise<Student[] | null> {
   }
 }
 
-export async function loadStudents(): Promise<Student[]> {
+export async function loadStudentsWithSource(): Promise<{ students: Student[]; source: 'supabase' | 'local' | 'github' }> {
   // 1. Avval Supabase'dan o'qish (eng tezkor, jonli va real vaqt ma'lumot)
   const sbData = await loadFromSupabase()
   if (sbData && sbData.length > 0) {
-    return sbData
+    return { students: sbData, source: 'supabase' }
   }
 
   // 2. Agar Supabase vaqtincha mavjud bo'lmasa, zaxira sifatida fayllar/GitHub'dan o'qish (kesh bilan)
   const now = Date.now()
   if (cachedStudents && cachedStudents.expiresAt > now) {
-    return cachedStudents.data
+    return { students: cachedStudents.data, source: syncMode() }
   }
 
   const [students, queue] = await Promise.all([
@@ -235,7 +235,12 @@ export async function loadStudents(): Promise<Student[]> {
   ])
   const result = queue.length ? applyQueue(students, queue) : students
   cachedStudents = { data: result, expiresAt: now + CACHE_TTL_MS }
-  return result
+  return { students: result, source: syncMode() }
+}
+
+export async function loadStudents(): Promise<Student[]> {
+  const { students } = await loadStudentsWithSource()
+  return students
 }
 
 /* ------------------------------ YOZISH ------------------------------ */

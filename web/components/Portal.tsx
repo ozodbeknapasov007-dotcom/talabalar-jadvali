@@ -289,7 +289,7 @@ export default function Portal() {
             )}
 
             <footer className="pt-4 pb-8 text-center text-[12px] text-fg-subtle">
-              Manba: {data.source === 'local' ? "kompyuterdagi baza (lokal rejim)" : 'GitHub'} · yangilangan {data.fetchedAt ? new Date(data.fetchedAt).toLocaleTimeString('uz-UZ') : '—'}
+              Manba: {data.source === 'supabase' ? 'Supabase (jonli rejim ⚡)' : data.source === 'local' ? 'kompyuterdagi baza (lokal rejim)' : 'GitHub'} · yangilangan {data.fetchedAt ? new Date(data.fetchedAt).toLocaleTimeString('uz-UZ') : '—'}
             </footer>
           </>
         )}
