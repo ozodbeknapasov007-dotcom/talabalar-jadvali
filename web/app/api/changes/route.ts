@@ -23,7 +23,16 @@ function parseChange(body: unknown): Change | null {
     const fields: Record<string, string> = {}
     for (const f of EDIT_FIELDS) if (f in src) fields[f] = str(src[f]).trim()
     if (!Object.keys(fields).length) return null
-    return { type, data: { row, fields } }
+    return {
+      type,
+      data: {
+        row,
+        fields,
+        shnum: str(data.shnum),
+        pinfl: str(data.pinfl),
+        ism: str(data.ism),
+      },
+    }
   }
   if (type === 'verify_student') {
     const status = data.status === 'TASDIQLANDI' ? 'TASDIQLANDI' : 'KUTILMOQDA'

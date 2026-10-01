@@ -20,7 +20,7 @@ import { EDIT_FIELDS, type BazaStatus, type Change, type EditFields, type Studen
 const KEY = 'portal_v2_pending'
 const TTL_UNSENT = 7 * 24 * 60 * 60 * 1000
 const TTL_SENT = 20 * 60 * 1000
-const REFRESH_MS = 45_000
+const REFRESH_MS = 10_000
 
 /** Qator raqami o'chirishdan keyin surilishi mumkin — shuning uchun asl shaxsni ham eslab qolamiz */
 interface Identity { row: number; shnum: string; pinfl: string; fish: string }
@@ -182,7 +182,19 @@ export function useStudents() {
     const p = pendingRef.current
     for (const [key, e] of Object.entries(p.edits)) {
       if (e.sent) continue
-      try { await postChange({ type: 'update_student', data: { row: e.id.row, fields: e.fields } }); markSent('edits', key) } catch { return }
+      try {
+        await postChange({
+          type: 'update_student',
+          data: {
+            row: e.id.row,
+            fields: e.fields,
+            shnum: e.id.shnum,
+            pinfl: e.id.pinfl,
+            ism: e.id.fish,
+          },
+        })
+        markSent('edits', key)
+      } catch { return }
     }
     for (const [key, v] of Object.entries(p.verifies)) {
       if (v.sent) continue
@@ -239,8 +251,14 @@ export function useStudents() {
     void refresh()
     const t = setInterval(() => { if (document.visibilityState === 'visible') void refresh() }, REFRESH_MS)
     const onFocus = () => void refresh()
+    const onVisibility = () => { if (document.visibilityState === 'visible') void refresh() }
     window.addEventListener('focus', onFocus)
-    return () => { clearInterval(t); window.removeEventListener('focus', onFocus) }
+    document.addEventListener('visibilitychange', onVisibility)
+    return () => {
+      clearInterval(t)
+      window.removeEventListener('focus', onFocus)
+      document.removeEventListener('visibilitychange', onVisibility)
+    }
   }, [refresh])
 
   const merged = useMemo(() => (server ? merge(server, pending, Date.now()) : null), [server, pending])
@@ -265,7 +283,16 @@ export function useStudents() {
       edits: { ...p.edits, [key]: { id: prev?.id ?? identityOf(originalOf(student)), fields: { ...prev?.fields, ...clean }, ts: Date.now(), sent: false } },
     }))
     try {
-      await postChange({ type: 'update_student', data: { row: student.row, fields: clean } })
+      await postChange({
+        type: 'update_student',
+        data: {
+          row: student.row,
+          fields: clean,
+          shnum: student.shnum || '',
+          pinfl: student.pinfl || '',
+          ism: student.ism || '',
+        },
+      })
       markSent('edits', key)
     } catch (e) {
       if (isRejected(e)) {

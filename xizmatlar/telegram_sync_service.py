@@ -192,6 +192,68 @@ def write_buyruq(ws, row_idx, raqam=None, sana=None):
         ws.cell(row=row_idx, column=BUYRUQ_SANA_COL, value=str(sana).strip())
 
 
+def backup_excel_atomic():
+    """Excel faylining xavfsizlik nusxasini data/backups ga saqlaydi."""
+    try:
+        if not os.path.exists(EXCEL_PATH):
+            return
+        backup_dir = os.path.join(BASE_DIR, 'data', 'backups')
+        os.makedirs(backup_dir, exist_ok=True)
+        backup_file = os.path.join(backup_dir, f"Talabalar_Backup_{time.strftime('%Y%m%d')}.xlsx")
+        # Har kuni kamida 1 marta yoki birinchi yozishda nusxalaydi
+        if not os.path.exists(backup_file):
+            import shutil
+            shutil.copy2(EXCEL_PATH, backup_file)
+    except Exception as e:
+        print(f"[BACKUP] Zaxira olishda xato: {e}")
+
+
+def find_student_row_in_sheet(ws, r_idx, pinfl=None, shnum=None, ism=None):
+    """
+    Qator indeksi (r_idx) to'g'riligini PINFL yoki Shartnoma raqami orqali tekshiradi.
+    Agar qator surilgan bo'lsa, butun jadvaldan qidirib haqiqiy qatorni topadi.
+    """
+    pinfl_c = str(pinfl or '').replace(' ', '').strip()
+    sh_c = str(shnum or '').strip()
+    if sh_c in ('—', '-'):
+        sh_c = ''
+    ism_c = str(ism or '').strip().lower()
+
+    # 1. Avval berilgan r_idx ni tekshirish
+    if 2 <= r_idx <= ws.max_row:
+        cell_pinfl = str(ws.cell(row=r_idx, column=11).value or '').replace(' ', '').strip()
+        cell_shnum = str(ws.cell(row=r_idx, column=5).value or '').strip()
+        cell_ism = str(ws.cell(row=r_idx, column=2).value or '').strip().lower()
+        cell_fish = str(ws.cell(row=r_idx, column=8).value or '').strip().lower()
+        if (pinfl_c and cell_pinfl == pinfl_c) or (sh_c and cell_shnum == sh_c):
+            return r_idx
+        if not pinfl_c and not sh_c and ism_c and (ism_c in cell_ism or ism_c in cell_fish or cell_ism in ism_c):
+            return r_idx
+
+    # 2. Agar r_idx to'g'ri kelmasa yoki surilgan bo'lsa, jadval bo'ylab qidirish
+    if sh_c:
+        for r in range(2, ws.max_row + 1):
+            if str(ws.cell(row=r, column=5).value or '').strip() == sh_c:
+                return r
+
+    if pinfl_c:
+        for r in range(2, ws.max_row + 1):
+            if str(ws.cell(row=r, column=11).value or '').replace(' ', '').strip() == pinfl_c:
+                return r
+
+    if ism_c and len(ism_c) > 4:
+        for r in range(2, ws.max_row + 1):
+            c2 = str(ws.cell(row=r, column=2).value or '').strip().lower()
+            c8 = str(ws.cell(row=r, column=8).value or '').strip().lower()
+            if c2 == ism_c or c8 == ism_c or (len(ism_c) > 6 and ism_c in c8):
+                return r
+
+    # 3. Agar hech narsa topilmasa, r_idx chegarada bo'lsa uni qaytaramiz
+    if 2 <= r_idx <= ws.max_row:
+        return r_idx
+    return None
+
+
 def process_remote_github_changes():
     """Fonda GitHub'dagi remote_changes.json faylini tekshiradi.
     Agar Vercel/GitHub'dan yangi o'zgarishlar kelgan bo'lsa, lokal Excelga qo'llaydi."""
@@ -218,6 +280,8 @@ def process_remote_github_changes():
 
         print(f"[SYNC] 📥 GitHub'dan {len(changes)} ta yangi o'zgarish qabul qilindi! Lokal Excelga qo'llanmoqda...")
 
+        backup_excel_atomic()
+
         with EXCEL_LOCK:
             wb = openpyxl.load_workbook(EXCEL_PATH)
             ws = wb.worksheets[0]
@@ -231,25 +295,33 @@ def process_remote_github_changes():
                     v_status = data.get('status', 'TASDIQLANDI')
                     shnum = data.get('shnum', '')
                     pinfl = data.get('pinfl', '')
-                    if 2 <= r_idx <= ws.max_row:
+                    ism = data.get('ism', '')
+                    r_idx = find_student_row_in_sheet(ws, r_idx, pinfl=pinfl, shnum=shnum, ism=ism)
+                    if r_idx and 2 <= r_idx <= ws.max_row:
                         ws.cell(row=r_idx, column=25, value=v_status)
-                    save_verification_atomic(r_idx, v_status, shnum, pinfl)
+                        save_verification_atomic(r_idx, v_status, shnum, pinfl)
 
                 elif chg_type == 'baza_student':
                     r_idx = int(data.get('row', 0))
                     b_status = data.get('status', 'KIRITILDI')
                     shnum = data.get('shnum', '')
                     pinfl = data.get('pinfl', '')
+                    ism = data.get('ism', '')
+                    r_idx = find_student_row_in_sheet(ws, r_idx, pinfl=pinfl, shnum=shnum, ism=ism)
                     if ws.cell(row=1, column=28).value != 'Bazaga kiritilganligi':
                         ws.cell(row=1, column=28, value='Bazaga kiritilganligi')
-                    if 2 <= r_idx <= ws.max_row:
+                    if r_idx and 2 <= r_idx <= ws.max_row:
                         ws.cell(row=r_idx, column=28, value=b_status)
-                    save_baza_verification_atomic(r_idx, b_status, shnum, pinfl)
+                        save_baza_verification_atomic(r_idx, b_status, shnum, pinfl)
 
                 elif chg_type == 'update_student':
                     r_idx = int(data.get('row', 0))
                     fields = data.get('fields', {})
-                    if 2 <= r_idx <= ws.max_row:
+                    shnum_q = data.get('shnum') or fields.get('shnum')
+                    pinfl_q = data.get('pinfl') or fields.get('pinfl')
+                    ism_q = data.get('ism') or fields.get('ism')
+                    r_idx = find_student_row_in_sheet(ws, r_idx, pinfl=pinfl_q, shnum=shnum_q, ism=ism_q)
+                    if r_idx and 2 <= r_idx <= ws.max_row:
                         if 'ism' in fields and fields['ism']:
                             ws.cell(row=r_idx, column=2, value=clean_uz_name(fields['ism']))
                         if 'ota' in fields and fields['ota']:
@@ -291,7 +363,10 @@ def process_remote_github_changes():
                 elif chg_type == 'update_group':
                     r_idx = int(data.get('row', 0))
                     new_grp = str(data.get('group', '')).strip()
-                    if 2 <= r_idx <= ws.max_row and new_grp:
+                    shnum_g = data.get('shnum')
+                    pinfl_g = data.get('pinfl')
+                    r_idx = find_student_row_in_sheet(ws, r_idx, pinfl=pinfl_g, shnum=shnum_g)
+                    if r_idx and 2 <= r_idx <= ws.max_row and new_grp:
                         ws.cell(row=r_idx, column=23, value=new_grp)
 
                 elif chg_type == 'add_student':
@@ -3193,15 +3268,24 @@ Aniq JSON formatda qaytar:
                 buyruq = get_param('buyruq')
                 buyruq_sana = get_param('buyruq_sana')
                 verify = get_param('verify')
+                shnum_verify = get_param('shnum_verify') or shnum
+                pinfl_verify = get_param('pinfl_verify') or pinfl
+                ism_verify = get_param('ism_verify') or ism
 
-                if verify:
-                    save_verification_atomic(row_idx, verify, pinfl=pinfl)
+                backup_excel_atomic()
 
                 with EXCEL_LOCK:
                     import openpyxl
                     excel_path = os.path.join(BASE_DIR, 'data', 'Talabalar_Toliq_Royxati.xlsx')
                     wb = openpyxl.load_workbook(excel_path)
                     ws = wb.worksheets[0]
+
+                    found_row = find_student_row_in_sheet(ws, row_idx, pinfl=pinfl_verify, shnum=shnum_verify, ism=ism_verify)
+                    if found_row:
+                        row_idx = found_row
+
+                    if verify:
+                        save_verification_atomic(row_idx, verify, pinfl=pinfl)
 
                     if ism is not None: ws.cell(row=row_idx, column=2, value=ism)
                     if ota is not None: ws.cell(row=row_idx, column=7, value=ota)

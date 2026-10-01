@@ -3,7 +3,7 @@ import { mkdir, readFile, writeFile } from 'node:fs/promises'
 import path from 'node:path'
 import { applyGroupSettings, DEFAULT_GROUP_SETTINGS, sanitizeGroupSettings, type GroupSettings } from '@/lib/config'
 import { buildAddedStudent, fullName } from '@/lib/student'
-import type { Change, Student } from '@/lib/types'
+import type { Change, EditFields, Student } from '@/lib/types'
 
 /*
   Ma'lumot ikki xil yo'l bilan o'qiladi/yoziladi:
@@ -160,8 +160,26 @@ function applyQueue(base: Student[], queue: Change[]): Student[] {
       if (hit) list = list.filter((s) => s !== hit)
       continue
     }
-    const i = list.findIndex((s) => s.row === Number(chg.data.row))
+    const d = chg.data as unknown as Record<string, unknown>
+    const sh = pin(d.shnum)
+    const p = pin(d.pinfl)
+
+    // Aniq qatorni aniqlash: avval row bo'yicha qaraymiz, lekin PINFL yoki shartnoma raqamini tekshiramiz
+    let i = list.findIndex((s) => s.row === Number(d.row))
+    if (i !== -1 && (p || sh)) {
+      const s = list[i]
+      const s_p = pin(s.pinfl)
+      const s_sh = pin(s.shnum)
+      if ((p && s_p && p !== s_p) || (sh && s_sh && s_sh !== '—' && s_sh !== '-' && sh !== s_sh)) {
+        // Qator surilib qolgan! PINFL yoki shnum bo'yicha haqiqiy talabani topamiz
+        const found = list.findIndex((x) => (p && pin(x.pinfl) === p) || (sh && pin(x.shnum) === sh))
+        if (found !== -1) i = found
+      }
+    } else if (i === -1 && (p || sh)) {
+      i = list.findIndex((x) => (p && pin(x.pinfl) === p) || (sh && pin(x.shnum) === sh))
+    }
     if (i === -1) continue
+
     if (chg.type === 'verify_student') {
       list[i] = { ...list[i], verified: chg.data.status }
     } else if (chg.type === 'baza_student') {
@@ -179,12 +197,25 @@ function applyQueue(base: Student[], queue: Change[]): Student[] {
   return list
 }
 
+let cachedStudents: { data: Student[]; expiresAt: number } | null = null
+const CACHE_TTL_MS = 6_000 // 6 soniya server kesh (GitHub rate limit xatolarining oldini oladi)
+
+export function invalidateCache() {
+  cachedStudents = null
+}
+
 export async function loadStudents(): Promise<Student[]> {
+  const now = Date.now()
+  if (cachedStudents && cachedStudents.expiresAt > now) {
+    return cachedStudents.data
+  }
   const [students, queue] = await Promise.all([
     loadBaseStudents(),
     syncMode() === 'github' ? loadQueue() : Promise.resolve([]),
   ])
-  return queue.length ? applyQueue(students, queue) : students
+  const result = queue.length ? applyQueue(students, queue) : students
+  cachedStudents = { data: result, expiresAt: now + CACHE_TTL_MS }
+  return result
 }
 
 /* ------------------------------ YOZISH ------------------------------ */
@@ -225,8 +256,12 @@ async function sendLocal(change: Change): Promise<void> {
   let endpoint: string
   if (change.type === 'update_student') {
     endpoint = '/api/update_student'
-    q.set('row', String(change.data.row))
-    for (const [k, v] of Object.entries(change.data.fields)) q.set(k, v ?? '')
+    const d = change.data as { row: number; fields: EditFields; shnum?: string; pinfl?: string; ism?: string }
+    q.set('row', String(d.row))
+    if (d.shnum) q.set('shnum_verify', String(d.shnum))
+    if (d.pinfl) q.set('pinfl_verify', String(d.pinfl))
+    if (d.ism) q.set('ism_verify', String(d.ism))
+    for (const [k, v] of Object.entries(d.fields)) q.set(k, v != null ? String(v) : '')
   } else if (change.type === 'verify_student') {
     endpoint = '/api/verify_student'
     for (const [k, v] of Object.entries(change.data)) q.set(k, String(v))
@@ -286,7 +321,16 @@ async function sendGithub(change: Change): Promise<void> {
 }
 
 export async function sendChange(change: Change): Promise<void> {
-  return syncMode() === 'local' ? sendLocal(change) : sendGithub(change)
+  invalidateCache()
+  try {
+    if (syncMode() === 'local') {
+      await sendLocal(change)
+    } else {
+      await sendGithub(change)
+    }
+  } finally {
+    invalidateCache()
+  }
 }
 
 /* ------------------------------ HOLAT ------------------------------ */
