@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { buildAddedStudent, fullName } from './student'
 import { EDIT_FIELDS, type BazaStatus, type Change, type EditFields, type Student, type StudentsPayload, type VerifyStatus } from './types'
+import { supabase } from './supabase'
 
 /*
   Serverdagi ma'lumot tahrirdan ~30–90 soniya keyin yangilanadi (Python xizmati
@@ -258,6 +259,28 @@ export function useStudents() {
       clearInterval(t)
       window.removeEventListener('focus', onFocus)
       document.removeEventListener('visibilitychange', onVisibility)
+    }
+  }, [refresh])
+
+  // Supabase Real-time: boshqa har qanday qurilma yoki foydalanuvchi tahrir qilganda darhol (0.1s) ekranda jonli yangilanadi
+  useEffect(() => {
+    try {
+      const channel = supabase
+        .channel('realtime:students')
+        .on(
+          'postgres_changes',
+          { event: '*', schema: 'public', table: 'students' },
+          () => {
+            void refresh()
+          }
+        )
+        .subscribe()
+
+      return () => {
+        void supabase.removeChannel(channel)
+      }
+    } catch (e) {
+      console.warn('Realtime subscription error:', e)
     }
   }, [refresh])
 

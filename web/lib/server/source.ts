@@ -4,6 +4,7 @@ import path from 'node:path'
 import { applyGroupSettings, DEFAULT_GROUP_SETTINGS, sanitizeGroupSettings, type GroupSettings } from '@/lib/config'
 import { buildAddedStudent, fullName } from '@/lib/student'
 import type { Change, EditFields, Student } from '@/lib/types'
+import { getServiceSupabase } from '@/lib/supabase'
 
 /*
   Ma'lumot ikki xil yo'l bilan o'qiladi/yoziladi:
@@ -204,11 +205,30 @@ export function invalidateCache() {
   cachedStudents = null
 }
 
+async function loadFromSupabase(): Promise<Student[] | null> {
+  try {
+    const sb = getServiceSupabase()
+    const { data, error } = await sb.from('students').select('*').order('row', { ascending: true })
+    if (error || !data || data.length === 0) return null
+    return data as Student[]
+  } catch {
+    return null
+  }
+}
+
 export async function loadStudents(): Promise<Student[]> {
+  // 1. Avval Supabase'dan o'qish (eng tezkor, jonli va real vaqt ma'lumot)
+  const sbData = await loadFromSupabase()
+  if (sbData && sbData.length > 0) {
+    return sbData
+  }
+
+  // 2. Agar Supabase vaqtincha mavjud bo'lmasa, zaxira sifatida fayllar/GitHub'dan o'qish (kesh bilan)
   const now = Date.now()
   if (cachedStudents && cachedStudents.expiresAt > now) {
     return cachedStudents.data
   }
+
   const [students, queue] = await Promise.all([
     loadBaseStudents(),
     syncMode() === 'github' ? loadQueue() : Promise.resolve([]),
@@ -320,13 +340,74 @@ async function sendGithub(change: Change): Promise<void> {
   throw new Error(`GitHub navbatiga yozilmadi: ${lastErr.slice(0, 200)}`)
 }
 
+async function sendSupabase(change: Change): Promise<void> {
+  const sb = getServiceSupabase()
+  if (change.type === 'update_student') {
+    const d = change.data
+    const shnum = d.shnum
+    const pinfl = d.pinfl
+    const updateData: Record<string, unknown> = { ...d.fields, updated_at: new Date().toISOString() }
+    if (d.fields.ism || d.fields.ota) {
+      updateData.fish = `${d.fields.ism || ''} ${d.fields.ota || ''}`.trim()
+    }
+    let query = sb.from('students').update(updateData)
+    if (pinfl) query = query.eq('pinfl', pinfl.replace(/\s/g, ''))
+    else if (shnum && shnum !== '—' && shnum !== '-') query = query.eq('shnum', shnum)
+    else query = query.eq('row', d.row)
+    const { error } = await query
+    if (error) throw error
+  } else if (change.type === 'verify_student') {
+    const d = change.data
+    let query = sb.from('students').update({ verified: d.status, updated_at: new Date().toISOString() })
+    if (d.pinfl) query = query.eq('pinfl', d.pinfl.replace(/\s/g, ''))
+    else if (d.shnum && d.shnum !== '—' && d.shnum !== '-') query = query.eq('shnum', d.shnum)
+    else query = query.eq('row', d.row)
+    const { error } = await query
+    if (error) throw error
+  } else if (change.type === 'baza_student') {
+    const d = change.data
+    let query = sb.from('students').update({ baza: d.status, updated_at: new Date().toISOString() })
+    if (d.pinfl) query = query.eq('pinfl', d.pinfl.replace(/\s/g, ''))
+    else if (d.shnum && d.shnum !== '—' && d.shnum !== '-') query = query.eq('shnum', d.shnum)
+    else query = query.eq('row', d.row)
+    const { error } = await query
+    if (error) throw error
+  } else if (change.type === 'delete_student') {
+    const d = change.data
+    let query = sb.from('students').delete()
+    if (d.pinfl) query = query.eq('pinfl', d.pinfl.replace(/\s/g, ''))
+    else if (d.shnum && d.shnum !== '—' && d.shnum !== '-') query = query.eq('shnum', d.shnum)
+    else query = query.eq('row', d.row)
+    const { error } = await query
+    if (error) throw error
+  } else if (change.type === 'add_student') {
+    const d = change.data
+    const { count } = await sb.from('students').select('*', { count: 'exact', head: true })
+    const nextRow = (count || 562) + 1
+    const newStudent = buildAddedStudent(d, nextRow)
+    const { error } = await sb.from('students').insert(newStudent)
+    if (error) throw error
+  }
+}
+
 export async function sendChange(change: Change): Promise<void> {
   invalidateCache()
+  let supabaseOk = false
+  try {
+    await sendSupabase(change)
+    supabaseOk = true
+  } catch (err) {
+    console.error('Supabase write error, continuing to local/github:', err)
+  }
   try {
     if (syncMode() === 'local') {
       await sendLocal(change)
     } else {
       await sendGithub(change)
+    }
+  } catch (err) {
+    if (!supabaseOk) {
+      throw err
     }
   } finally {
     invalidateCache()
