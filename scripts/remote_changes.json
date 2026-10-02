@@ -14,5 +14,21 @@
     },
     "id": "chg_1790934895442_ale7i",
     "created_at": "2026-10-02T09:54:55.443Z"
+  },
+  {
+    "type": "update_student",
+    "data": {
+      "row": 558,
+      "fields": {
+        "sh_doc": "UM 03262899",
+        "mak": "10-sonli umumiy o'rta ta'lim maktabi",
+        "yil": "2025"
+      },
+      "shnum": "",
+      "pinfl": "61511075720098",
+      "ism": "Abdiraimova Shahzoda"
+    },
+    "id": "chg_1790935090238_misdt",
+    "created_at": "2026-10-02T09:58:10.238Z"
   }
 ]
