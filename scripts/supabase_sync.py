@@ -10,8 +10,24 @@ import urllib.error
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 STUDENTS_FILE = os.path.join(BASE_DIR, 'data', 'students.json')
 
+def _load_env_file(filepath):
+    if not os.path.exists(filepath):
+        return
+    with open(filepath, 'r', encoding='utf-8') as f:
+        for line in f:
+            line = line.strip()
+            if not line or line.startswith('#') or '=' not in line:
+                continue
+            k, v = line.split('=', 1)
+            k, v = k.strip(), v.strip()
+            if k and k not in os.environ:
+                os.environ[k] = v
+
+_load_env_file(os.path.join(BASE_DIR, '.env'))
+_load_env_file(os.path.join(BASE_DIR, 'web', '.env.local'))
+
 SUPABASE_URL = os.getenv("NEXT_PUBLIC_SUPABASE_URL", "https://ebzzfbifmorqqtdfvenz.supabase.co")
-SERVICE_KEY = os.getenv("SUPABASE_SERVICE_ROLE_KEY", "")
+SERVICE_KEY = os.getenv("SUPABASE_SERVICE_ROLE_KEY", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVienpmYmlmbW9ycXF0ZGZ2ZW56Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc5MDg0NjkxMSwiZXhwIjoyMTA2NDIyOTExfQ.h4WmIB4CgX2N7qtybjJ8qrEevvKRUc71esgVOiSzAL4")
 
 def upload_students():
     if not os.path.exists(STUDENTS_FILE):
@@ -82,7 +98,7 @@ def upload_students():
             print(f"Xatolik yuz berdi ({e.code}): {err}")
             return False
 
-    print(f"✅ MUVAFFAQIYATLI: Barcha {uploaded} ta talaba Supabase'ga to'liq yuklandi!")
+    print(f"[OK] MUVAFFAQIYATLI: Barcha {uploaded} ta talaba Supabase'ga to'liq yuklandi!")
     return True
 
 if __name__ == '__main__':
