@@ -55,6 +55,7 @@ def upload_students():
         payload = []
         for s in batch:
             row_data = {
+                "id": int(s.get("tr") or s.get("row") or 0),
                 "row": int(s.get("row") or 0),
                 "tr": int(s.get("tr") or 0),
                 "ism": str(s.get("ism") or "").strip(),
