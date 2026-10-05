@@ -30,5 +30,21 @@
     },
     "id": "chg_1790935090238_misdt",
     "created_at": "2026-10-02T09:58:10.238Z"
+  },
+  {
+    "type": "update_student",
+    "data": {
+      "row": 389,
+      "fields": {
+        "group": "Talabalar safidan chiqarilganlar",
+        "buyruq": "T-52",
+        "buyruq_sana": "05.10.2026"
+      },
+      "shnum": "",
+      "pinfl": "60907075590042",
+      "ism": "Shodiyeva Gulasal"
+    },
+    "id": "chg_1791194519811_qyhd3",
+    "created_at": "2026-10-05T10:01:59.811Z"
   }
 ]
