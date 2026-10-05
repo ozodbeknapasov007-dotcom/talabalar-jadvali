@@ -48,7 +48,7 @@ export type BazaStatus = 'KIRITILDI' | 'KIRITILMAGAN'
 
 /** Python xizmati tushunadigan o'zgarishlar (scripts/remote_changes.json formati) */
 export type Change =
-  | { type: 'update_student'; data: { row: number; fields: EditFields } }
+  | { type: 'update_student'; data: { row: number; fields: EditFields; shnum?: string; pinfl?: string; ism?: string } }
   | { type: 'verify_student'; data: { row: number; status: VerifyStatus; shnum: string; pinfl: string; ism: string } }
   | { type: 'baza_student'; data: { row: number; status: BazaStatus; shnum: string; pinfl: string; ism: string } }
   | { type: 'delete_student'; data: { row: number; shnum: string; pinfl: string; ism: string; fish: string } }
@@ -56,6 +56,6 @@ export type Change =
 
 export interface StudentsPayload {
   students: Student[]
-  source: 'local' | 'github'
+  source: 'supabase' | 'local' | 'github'
   fetchedAt: string
 }

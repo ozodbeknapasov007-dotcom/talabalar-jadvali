@@ -9,6 +9,7 @@
     "lint": "tsc --noEmit"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.117.2",
     "@tanstack/react-virtual": "^3.14.13",
     "fflate": "^0.8.3",
     "jpeg-js": "^0.4.4",
