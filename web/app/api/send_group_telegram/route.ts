@@ -74,7 +74,15 @@ export async function POST(request: NextRequest) {
           await tgSendPhoto(dest.id, imgBuf, fileName, caption)
           groupSentOk = true
         } catch (err) {
-          failed.push(`${gTrim} -> ${dest.label}: ${(err as Error).message}`)
+          const errMsg = (err as Error).message || ''
+          if (dest.label === 'Kanal' && errMsg.includes('chat not found')) {
+            console.warn(`[Telegram] ${gTrim} kanalga yuborilmadi: @shartnoma_editor_bot kanal admini qilinmagan.`)
+            if (target !== 'both') {
+              failed.push(`${gTrim} (Kanalda @shartnoma_editor_bot admin qilinmagan)`)
+            }
+          } else {
+            failed.push(`${gTrim} -> ${dest.label}: ${errMsg}`)
+          }
         }
       }
 

@@ -4,7 +4,7 @@ import { malumotnomaBlocker, malumotnomaData, malumotnomaFileName } from '@/lib/
 import { renderMalumotnomaJpg } from '@/lib/server/malumotnoma-rasm'
 import { academicGroups, groupTitle, isAcademicLeave, isOfficialGroup, isOutside, kursOf } from '@/lib/student'
 import { loadGroupSettings, REPO_PATHS, readRepoFile, readRepoFileIn } from '@/lib/server/source'
-import { tgSendPhoto } from '@/lib/server/telegram'
+import { TG_BOT_TOKEN, TG_CHAT_ID, tgSendPhoto } from '@/lib/server/telegram'
 import type { Student } from '@/lib/types'
 
 /*
@@ -12,15 +12,29 @@ import type { Student } from '@/lib/types'
 
   GET  ?action=kontingent   — 09:00 kontingent hisoboti (GitHub Actions chaqiradi)
   GET  ?action=backup_json  — 18:00 JSON baza + 4-Excel zahirasi
+  GET  ?action=migrate_bot  — Yangi bot webhookini tekshirish/sozlash
   POST                      — Telegram'dan kelgan xabar (bot tugmalari, talaba qidiruvi,
                               /malumotnoma <shartnoma № yoki F.I.SH> — faqat TELEGRAM_CHAT_ID chatida)
 
   Ma'lumot: data/talabalar_bazasi.json, hisobotlar/rollar/*.xlsx, hisobotlar/pdf_jurnallar/
-  (Vercel'da GitHub'dan, kompyuterda diskdan). Token: TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID.
+  (Vercel'da GitHub'dan, kompyuterda diskdan). Token: TG_BOT_TOKEN, TG_CHAT_ID.
 */
 
-const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN || ''
-const DEFAULT_CHAT_ID = process.env.TELEGRAM_CHAT_ID || ''
+const BOT_TOKEN = TG_BOT_TOKEN
+const DEFAULT_CHAT_ID = TG_CHAT_ID
+
+async function cleanupOldBotIfPresent() {
+  const rawEnvToken = process.env.TELEGRAM_BOT_TOKEN?.trim()
+  if (rawEnvToken && rawEnvToken.startsWith('8615940322')) {
+    try {
+      await fetch(`https://api.telegram.org/bot${rawEnvToken}/deleteWebhook`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ drop_pending_updates: true }),
+      })
+    } catch { /* jim */ }
+  }
+}
 
 const BOT_KEYBOARD = {
   keyboard: [
@@ -202,9 +216,25 @@ const notConfigured = () =>
 
 export async function GET(request: NextRequest) {
   await loadGroupSettings()
+  await cleanupOldBotIfPresent()
   const action = (request.nextUrl.searchParams.get('action') || '').toLowerCase()
-  if (!action) return Response.json({ ok: true, status: 'Telegram 24/7 Webhook Active' })
+  if (!action) return Response.json({ ok: true, status: 'Telegram 24/7 Webhook Active', bot: '@shartnoma_editor_bot' })
   if (!BOT_TOKEN || !DEFAULT_CHAT_ID) return notConfigured()
+
+  if (action === 'migrate_bot' || action === 'setup') {
+    const origin = request.nextUrl.origin
+    const webhookUrl = `${origin}/api/telegram_webhook`
+    const setNew = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/setWebhook`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        url: webhookUrl,
+        allowed_updates: ['message', 'callback_query']
+      })
+    }).then(r => r.json()).catch(e => ({ ok: false, error: (e as Error).message }))
+
+    return Response.json({ ok: true, active_bot: '@shartnoma_editor_bot', set_webhook: setNew })
+  }
 
   if (action === 'kontingent') {
     const result = await sendMessage(DEFAULT_CHAT_ID, await kontingentText('Kunlik 09:00 avto-hisobot'))
