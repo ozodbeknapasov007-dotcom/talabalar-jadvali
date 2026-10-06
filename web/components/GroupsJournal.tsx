@@ -97,6 +97,16 @@ function GroupCard({ code, title, leader, students, special, onOpen, notify }: {
           >
             <FileText size={14} /> PDF
           </a>
+          {code === '26-02' && (
+            <a
+              className="btn-ghost h-8 px-2.5 text-[12px] border-amber/35 text-amber hover:bg-amber/10"
+              href="/api/download_davomat?type=docx"
+              download
+              title="26-02 guruhining to'ldirilgan rasmiy Word davomat jurnalini yuklab olish"
+            >
+              <FileText size={14} /> Jurnal (.docx)
+            </a>
+          )}
           <button type="button" className="btn-ghost h-8 px-2.5 text-[12px]" onClick={download} disabled={busy || !students.length} title="Guruhni Excel (.xlsx) formatda yuklab olish">
             {busy ? <Loader2 size={14} className="animate-spin" /> : <Download size={14} />} .xlsx
           </button>
@@ -209,6 +219,14 @@ function GroupsJournal({ students, groups: list, onOpen, notify }: {
           >
             <FileSpreadsheet size={15} /> Qabul shabloni ({list.length} guruh)
           </button>
+          <a
+            href="/api/download_davomat?type=excel"
+            download
+            className="btn-ghost h-9 border-sky/40 bg-sky/10 text-[12.5px] text-sky-soft hover:bg-sky/20"
+            title="Barcha guruhlar uchun davomat jurnali andozasini Excel (.xlsx) da yuklab olish"
+          >
+            <FileSpreadsheet size={15} /> Davomat jurnali (.xlsx)
+          </a>
           <button type="button" className="btn-ghost h-9 text-[12.5px]" onClick={openAllPdfs} title="Barcha guruhlar PDF jurnalini (bitta fayl) yangi oynada ochish">
             <FileText size={15} className="text-sky" /> Barcha PDF ({list.length})
           </button>

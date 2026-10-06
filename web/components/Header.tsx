@@ -79,6 +79,7 @@ function ExportMenu({ students, notify }: { students: Student[]; notify: Notify 
   const [open, setOpen] = useState(false)
   const [busy, setBusy] = useState<Role | null>(null)
   const [tgBusy, setTgBusy] = useState<Role | null>(null)
+  const [docBusy, setDocBusy] = useState<string | null>(null)
   const ref = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -117,6 +118,27 @@ function ExportMenu({ students, notify }: { students: Student[]; notify: Notify 
     }
   }
 
+  const sendSpecialDoc = async (type: string, title: string) => {
+    setDocBusy(type)
+    try {
+      const res = await fetch('/api/download_davomat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type }),
+      })
+      const d = await res.json().catch(() => ({}))
+      if (res.ok && d.ok) {
+        notify(`${title} Telegramga yuborildi!`, 'success')
+      } else {
+        notify(`Yuborilmadi: ${d.error || 'Server xatosi'}`, 'error')
+      }
+    } catch (e) {
+      notify(`Telegramga yuborishda xato: ${(e as Error).message}`, 'error')
+    } finally {
+      setDocBusy(null)
+    }
+  }
+
   return (
     <div ref={ref} className="relative">
       <button type="button" className="btn-primary h-9" onClick={() => setOpen((o) => !o)} aria-expanded={open}>
@@ -125,7 +147,7 @@ function ExportMenu({ students, notify }: { students: Student[]; notify: Notify 
         <ChevronDown size={14} className={cx('transition-transform', open && 'rotate-180')} />
       </button>
       {open && (
-        <div className="animate-pop-in absolute right-0 z-50 mt-2 w-[min(370px,calc(100vw-2rem))] rounded-2xl border border-line-strong bg-ink-850 p-2 shadow-2xl shadow-black/50">
+        <div className="animate-pop-in absolute right-0 z-50 mt-2 w-[min(380px,calc(100vw-2rem))] rounded-2xl border border-line-strong bg-ink-850 p-2 shadow-2xl shadow-black/50">
           <div className="flex items-center justify-between px-3 pt-2 pb-2 text-[11px] font-bold tracking-wider text-fg-subtle uppercase">
             <span>4 bo'lim uchun .xlsx</span>
             <span>Yuklash / Telegram</span>
@@ -159,6 +181,90 @@ function ExportMenu({ students, notify }: { students: Student[]; notify: Notify 
               </button>
             </div>
           ))}
+
+          <div className="my-1.5 border-t border-line/70" />
+          <div className="flex items-center justify-between px-3 pt-1 pb-1 text-[11px] font-bold tracking-wider text-fg-subtle uppercase">
+            <span>Davomat jurnali & So'rovnoma</span>
+            <span>Yuklash / Telegram</span>
+          </div>
+
+          {/* Davomat Jurnali Excel */}
+          <div className="group flex w-full items-center gap-2 rounded-xl px-2.5 py-2 transition-colors hover:bg-ink-700/60">
+            <a
+              href="/api/download_davomat?type=excel"
+              download
+              className="flex min-w-0 flex-1 items-center gap-3 text-left"
+              onClick={() => notify("Davomat Jurnali (.xlsx) yuklanmoqda...")}
+            >
+              <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-emerald/15 text-[14px]">📝</span>
+              <span className="min-w-0 flex-1">
+                <span className="block text-[13.5px] font-semibold text-fg">Davomat jurnali (.xlsx)</span>
+                <span className="block truncate text-[12px] text-fg-muted">Barcha guruhlar jurnali andozasi</span>
+              </span>
+              <Download size={16} className="text-fg-subtle group-hover:text-sky" />
+            </a>
+            <button
+              type="button"
+              onClick={() => sendSpecialDoc('excel', 'Davomat jurnali (.xlsx)')}
+              disabled={!!docBusy}
+              title="Davomat Jurnali (.xlsx) faylini Telegramga yuborish"
+              className="grid size-8 shrink-0 place-items-center rounded-lg border border-sky/30 bg-sky/10 text-sky-soft transition-colors hover:bg-sky/25"
+            >
+              {docBusy === 'excel' ? <Loader2 size={14} className="animate-spin" /> : <Send size={14} />}
+            </button>
+          </div>
+
+          {/* Davomat 26-02 Word */}
+          <div className="group flex w-full items-center gap-2 rounded-xl px-2.5 py-2 transition-colors hover:bg-ink-700/60">
+            <a
+              href="/api/download_davomat?type=docx"
+              download
+              className="flex min-w-0 flex-1 items-center gap-3 text-left"
+              onClick={() => notify("Davomat jurnali 26-02 (.docx) yuklanmoqda...")}
+            >
+              <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-blue/15 text-[14px]">📄</span>
+              <span className="min-w-0 flex-1">
+                <span className="block text-[13.5px] font-semibold text-fg">Davomat 26-02 (.docx)</span>
+                <span className="block truncate text-[12px] text-fg-muted">To'ldirilgan rasmiy Word jurnali</span>
+              </span>
+              <Download size={16} className="text-fg-subtle group-hover:text-sky" />
+            </a>
+            <button
+              type="button"
+              onClick={() => sendSpecialDoc('docx', 'Davomat 26-02 (.docx)')}
+              disabled={!!docBusy}
+              title="Davomat jurnali 26-02 (.docx) faylini Telegramga yuborish"
+              className="grid size-8 shrink-0 place-items-center rounded-lg border border-sky/30 bg-sky/10 text-sky-soft transition-colors hover:bg-sky/25"
+            >
+              {docBusy === 'docx' ? <Loader2 size={14} className="animate-spin" /> : <Send size={14} />}
+            </button>
+          </div>
+
+          {/* 1-kurs So'rovnoma */}
+          <div className="group flex w-full items-center gap-2 rounded-xl px-2.5 py-2 transition-colors hover:bg-ink-700/60">
+            <a
+              href="/api/download_davomat?type=sorovnoma"
+              download
+              className="flex min-w-0 flex-1 items-center gap-3 text-left"
+              onClick={() => notify("1-kurs so'rovnoma (.xlsx) yuklanmoqda...")}
+            >
+              <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-amber/15 text-[14px]">📋</span>
+              <span className="min-w-0 flex-1">
+                <span className="block text-[13.5px] font-semibold text-fg">1-kurs So'rovnoma (.xlsx)</span>
+                <span className="block truncate text-[12px] text-fg-muted">Manzillar, ota-ona va telefonlar</span>
+              </span>
+              <Download size={16} className="text-fg-subtle group-hover:text-sky" />
+            </a>
+            <button
+              type="button"
+              onClick={() => sendSpecialDoc('sorovnoma', "1-kurs So'rovnoma (.xlsx)")}
+              disabled={!!docBusy}
+              title="1-kurs So'rovnoma faylini Telegramga yuborish"
+              className="grid size-8 shrink-0 place-items-center rounded-lg border border-sky/30 bg-sky/10 text-sky-soft transition-colors hover:bg-sky/25"
+            >
+              {docBusy === 'sorovnoma' ? <Loader2 size={14} className="animate-spin" /> : <Send size={14} />}
+            </button>
+          </div>
         </div>
       )}
     </div>

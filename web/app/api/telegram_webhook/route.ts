@@ -29,7 +29,7 @@ const BOT_KEYBOARD = {
     [{ text: '📊 1. Buxgalteriya (.xlsx)' }, { text: '🗂 2. Baza Admin (.xlsx)' }],
     [{ text: '👥 3. Guruh Rahbarlari (.xlsx)' }, { text: '📝 Davomat Jurnali (.xlsx)' }],
     [{ text: '📦 JSON Baza (.json)' }, { text: '📑 Guruh Jurnallari (PDF)' }],
-    [{ text: "⚠️ Kamchiliklar ro'yxati" }],
+    [{ text: "⚠️ Kamchiliklar ro'yxati" }, { text: "📋 1-kurs So'rovnoma (.xlsx)" }],
   ],
   resize_keyboard: true,
   is_persistent: true,
@@ -264,6 +264,8 @@ export async function POST(request: NextRequest) {
         '• <b>🗂 2. Baza Admin (.xlsx)</b> — Pasport va Shahodatnoma/Diplom\n' +
         "• <b>👥 3. Guruh Rahbarlari (.xlsx)</b> — Tug'ilgan sana, Pasport, Shahodatnoma\n" +
         "• <b>📋 4. To'liq Ma'lumotlar (.xlsx)</b> — O'zingiz uchun to'liq baza\n" +
+        "• <b>📝 Davomat Jurnali (.xlsx)</b> — Barcha guruhlar andozasi + 26-02 Word jurnali (yoki /davomat)\n" +
+        "• <b>📋 1-kurs So'rovnoma (.xlsx)</b> — Manzillar, ota-ona va telefonlar (yoki /sorovnoma)\n" +
         '• <b>📦 JSON Baza (.json)</b> — To\'liq JSON baza fayli\n' +
         "• <b>⚠️ Kamchiliklar ro'yxati</b> — Hujjati to'liq bo'lmagan talabalar\n" +
         `• <b>📑 Guruh Jurnallari (PDF)</b> — Barcha ${pdfGroups().length} ta guruh A4 PDF jurnallari\n\n` +
@@ -321,6 +323,15 @@ export async function POST(request: NextRequest) {
       }
       if (!excel && !docx) {
         await sendMessage(chatId, '❌ Davomat jurnali fayllari topilmadi.')
+      }
+      return Response.json({ ok: true })
+    }
+    if (t.includes('sorovnoma') || t.includes("so'rovnoma") || t === '/sorovnoma') {
+      const buf = await readRepoFileIn(['hisobotlar', ''], '1-kurs_Sorovnoma_Malumotlari.xlsx')
+      if (buf) {
+        await sendDocument(chatId, buf, '1-kurs_Sorovnoma_Malumotlari.xlsx', `📊 <b>1-kurs Talabalari So'rovnoma Ma'lumotlari (.xlsx)</b>\n🕒 Sana: ${stamp}\n✅ Manzillar, ota-ona ma'lumotlari va toza telefon raqamlar`)
+      } else {
+        await sendMessage(chatId, "❌ So'rovnoma fayli topilmadi.")
       }
       return Response.json({ ok: true })
     }
