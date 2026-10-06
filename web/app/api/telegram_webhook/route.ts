@@ -312,16 +312,42 @@ export async function POST(request: NextRequest) {
       else await sendMessage(chatId, '❌ PDF jurnal topilmadi.')
       return Response.json({ ok: true })
     }
-    if (t.includes('davomat') || t === '/davomat') {
-      const excel = await readRepoFileIn(['hisobotlar', ''], 'Davomat_Jurnali_Uchun_Malumotlar.xlsx')
-      const docx = await readRepoFileIn(['hisobotlar', ''], "Davomat jurnali 26-02 (TO'LDIRILGAN).docx")
+    if (t.includes('davomat') || t.startsWith('/davomat')) {
+      const dirs = ['hisobotlar/davomat_jurnallari', 'hisobotlar', '']
+      // 1. Agar foydalanuvchi ma'lum bir guruhni so'ragan bo'lsa (masalan /davomat 26-01 yoki /davomat 25-16)
+      const grpMatch = /(2[4-6]-\d{2})/i.exec(text)
+      if (grpMatch) {
+        const grp = grpMatch[1].toUpperCase()
+        const gDoc = await readRepoFileIn(dirs, `Davomat_jurnali_${grp}.docx`)
+        if (gDoc) {
+          await sendDocument(chatId, gDoc, `Davomat_jurnali_${grp}.docx`, `📄 <b>Guruh ${grp} Davomat jurnali (Word .docx)</b>\n🕒 Sana: ${stamp}\n✅ Barcha talabalar, telefonlar va manzillar to'ldirilgan`)
+          return Response.json({ ok: true })
+        }
+      }
+
+      // 2. Agar barcha guruhlar so'ralsa (/davomat all yoki /davomat barcha yoki zip)
+      if (t.includes('all') || t.includes('barcha') || t.includes('hamma')) {
+        const allZip = await readRepoFileIn(dirs, 'Barcha_Guruhlar_Davomat_Jurnallari_Word.zip')
+        if (allZip) {
+          await sendDocument(chatId, allZip, 'Barcha_Guruhlar_Davomat_Jurnallari_Word.zip', `📦 <b>Barcha 19 ta Guruh Davomat Jurnallari (Word .docx ZIP)</b>\n🕒 Sana: ${stamp}\n👥 1-kurs, 2-kurs va 3-kurs to'ldirilgan jurnallari`)
+          return Response.json({ ok: true })
+        }
+      }
+
+      // 3. Standart holatda: Excel andoza + 1-kurs jurnallari ZIP arxivi + 26-02 Word namunasi
+      const excel = await readRepoFileIn(dirs, 'Davomat_Jurnali_Uchun_Malumotlar.xlsx')
+      const c1Zip = await readRepoFileIn(dirs, '1-kurs_Guruhlar_Davomat_Jurnallari_Word.zip')
+      const docx = await readRepoFileIn(dirs, "Davomat jurnali 26-02 (TO'LDIRILGAN).docx")
+
       if (excel) {
         await sendDocument(chatId, excel, 'Davomat_Jurnali_Uchun_Malumotlar.xlsx', `📝 <b>Davomat Jurnali Uchun Talabalar Ma'lumotlari (.xlsx)</b>\n🕒 Sana: ${stamp}\n👥 Barcha 1-kurs va 26-02 guruhlari uchun andoza`)
       }
-      if (docx) {
+      if (c1Zip) {
+        await sendDocument(chatId, c1Zip, '1-kurs_Guruhlar_Davomat_Jurnallari_Word.zip', `📦 <b>1-kurs Guruhlari Davomat Jurnallari (Word .docx ZIP)</b>\n🕒 Sana: ${stamp}\n✅ Barcha 6 ta guruh (26-01 dan 26-06 gacha) to'liq to'ldirilgan jurnallari\n\n💡 <i>Barcha 19 ta guruhni olish uchun:</i> <code>/davomat barcha</code>\n💡 <i>Alohida guruh uchun:</i> <code>/davomat 26-03</code>`)
+      } else if (docx) {
         await sendDocument(chatId, docx, "Davomat jurnali 26-02 (TO'LDIRILGAN).docx", `📄 <b>Davomat jurnali 26-02 (Avtomatik to'ldirilgan Word hujjati)</b>\n🕒 Sana: ${stamp}\n✅ Barcha jadvallari to'liq to'ldirilgan`)
       }
-      if (!excel && !docx) {
+      if (!excel && !c1Zip && !docx) {
         await sendMessage(chatId, '❌ Davomat jurnali fayllari topilmadi.')
       }
       return Response.json({ ok: true })

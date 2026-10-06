@@ -97,12 +97,12 @@ function GroupCard({ code, title, leader, students, special, onOpen, notify }: {
           >
             <FileText size={14} /> PDF
           </a>
-          {code === '26-02' && (
+          {!sp && (
             <a
               className="btn-ghost h-8 px-2.5 text-[12px] border-amber/35 text-amber hover:bg-amber/10"
-              href="/api/download_davomat?type=docx"
+              href={`/api/download_davomat?type=docx&group=${encodeURIComponent(code)}`}
               download
-              title="26-02 guruhining to'ldirilgan rasmiy Word davomat jurnalini yuklab olish"
+              title={`Guruh ${code} to'ldirilgan rasmiy Word (.docx) davomat jurnalini yuklab olish`}
             >
               <FileText size={14} /> Jurnal (.docx)
             </a>
@@ -226,6 +226,14 @@ function GroupsJournal({ students, groups: list, onOpen, notify }: {
             title="Barcha guruhlar uchun davomat jurnali andozasini Excel (.xlsx) da yuklab olish"
           >
             <FileSpreadsheet size={15} /> Davomat jurnali (.xlsx)
+          </a>
+          <a
+            href="/api/download_davomat?type=zip"
+            download
+            className="btn-ghost h-9 border-amber/40 bg-amber/10 text-[12.5px] text-amber hover:bg-amber/20"
+            title="Barcha 19 ta guruhning to'ldirilgan Word (.docx) davomat jurnallarini bitta ZIP arxivda yuklab olish"
+          >
+            <Download size={15} /> Barcha Word jurnallar (.zip)
           </a>
           <button type="button" className="btn-ghost h-9 text-[12.5px]" onClick={openAllPdfs} title="Barcha guruhlar PDF jurnalini (bitta fayl) yangi oynada ochish">
             <FileText size={15} className="text-sky" /> Barcha PDF ({list.length})

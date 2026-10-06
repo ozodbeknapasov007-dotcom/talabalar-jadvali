@@ -214,6 +214,32 @@ function ExportMenu({ students, notify }: { students: Student[]; notify: Notify 
             </button>
           </div>
 
+          {/* Barcha Word Jurnallar ZIP */}
+          <div className="group flex w-full items-center gap-2 rounded-xl px-2.5 py-2 transition-colors hover:bg-ink-700/60">
+            <a
+              href="/api/download_davomat?type=zip"
+              download
+              className="flex min-w-0 flex-1 items-center gap-3 text-left"
+              onClick={() => notify("Barcha guruhlar Word jurnallari (.zip) yuklanmoqda...")}
+            >
+              <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-amber/15 text-[14px]">📦</span>
+              <span className="min-w-0 flex-1">
+                <span className="block text-[13.5px] font-semibold text-fg">Barcha Word jurnallar (.zip)</span>
+                <span className="block truncate text-[12px] text-fg-muted">19 ta guruh to'ldirilgan Word jurnali</span>
+              </span>
+              <Download size={16} className="text-fg-subtle group-hover:text-sky" />
+            </a>
+            <button
+              type="button"
+              onClick={() => sendSpecialDoc('zip', 'Barcha Word jurnallar (.zip)')}
+              disabled={!!docBusy}
+              title="Barcha Word jurnallar (.zip) arxivini Telegramga yuborish"
+              className="grid size-8 shrink-0 place-items-center rounded-lg border border-sky/30 bg-sky/10 text-sky-soft transition-colors hover:bg-sky/25"
+            >
+              {docBusy === 'zip' ? <Loader2 size={14} className="animate-spin" /> : <Send size={14} />}
+            </button>
+          </div>
+
           {/* Davomat 26-02 Word */}
           <div className="group flex w-full items-center gap-2 rounded-xl px-2.5 py-2 transition-colors hover:bg-ink-700/60">
             <a
