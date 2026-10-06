@@ -69,7 +69,9 @@ if os.path.exists(doc_path):
         set_cell_text(row.cells[0], str(idx), align=WD_ALIGN_PARAGRAPH.CENTER)
         set_cell_text(row.cells[1], s.get('fish', ''), bold=True)
         set_cell_text(row.cells[2], s.get('tel_shaxsiy') or s.get('tel', ''), align=WD_ALIGN_PARAGRAPH.CENTER)
-        b_txt = f"{s.get('buyruq', '')} {s.get('buyruq_sana', '')}".strip() or "№ 18, 04.09.2025"
+        b_num = s.get('buyruq') or 'T-40/2'
+        b_sana = s.get('buyruq_sana') or '02.09.2026'
+        b_txt = f"{b_num}, {b_sana}"
         set_cell_text(row.cells[3], b_txt, align=WD_ALIGN_PARAGRAPH.CENTER)
 
     # TABLE 2: Doimiy manzil va Tug'ilgan sana
@@ -80,7 +82,7 @@ if os.path.exists(doc_path):
         row = t2.rows[idx]
         set_cell_text(row.cells[0], str(idx), align=WD_ALIGN_PARAGRAPH.CENTER)
         set_cell_text(row.cells[1], s.get('fish', ''), bold=True)
-        manzil_txt = s.get('manzil_toliq') or s.get('manzil_tuman', '') or "Shahrisabz tumani"
+        manzil_txt = s.get('manzil_toliq') or s.get('manzil_tuman') or ""
         set_cell_text(row.cells[2], manzil_txt)
         set_cell_text(row.cells[3], s.get('dob', ''), align=WD_ALIGN_PARAGRAPH.CENTER)
 
@@ -93,11 +95,13 @@ if os.path.exists(doc_path):
         if r_idx >= len(t3.rows): break
         row = t3.rows[r_idx]
         set_cell_text(row.cells[0], str(idx), align=WD_ALIGN_PARAGRAPH.CENTER)
-        kim = s.get('tel_otaona_kim') or "Otasi / Onasi"
-        # Ota-onasi F.I.Sh agar bo'lsa otasining ismi bo'yicha taxmin yoki umumiy
-        ota_fish = f"{kim}: {s.get('ota', '')}".strip(': ')
-        set_cell_text(row.cells[1], ota_fish)
-        set_cell_text(row.cells[2], s.get('tel_otaona', ''), align=WD_ALIGN_PARAGRAPH.CENTER)
+        if s.get('tel_otaona'):
+            kim = s.get('tel_otaona_kim') or "Otasi / Onasi"
+            set_cell_text(row.cells[1], kim)
+            set_cell_text(row.cells[2], s.get('tel_otaona'), align=WD_ALIGN_PARAGRAPH.CENTER)
+        else:
+            set_cell_text(row.cells[1], "")
+            set_cell_text(row.cells[2], "")
         set_cell_text(row.cells[3], "")
         set_cell_text(row.cells[4], "")
 
@@ -108,9 +112,16 @@ if os.path.exists(doc_path):
         if idx >= len(t4.rows): break
         row = t4.rows[idx]
         set_cell_text(row.cells[0], str(idx), align=WD_ALIGN_PARAGRAPH.CENTER)
-        qat = s.get('qatnov') or "O'z uyidan"
-        manz = s.get('manzil_toliq', '')
-        full_qat = f"{qat} ({manz})" if manz else qat
+        qat = s.get('qatnov') or ""
+        manz = s.get('manzil_toliq') or ""
+        if qat and manz:
+            full_qat = f"{qat}: {manz}"
+        elif qat:
+            full_qat = qat
+        elif manz:
+            full_qat = manz
+        else:
+            full_qat = ""
         set_cell_text(row.cells[1], full_qat)
         set_cell_text(row.cells[2], s.get('tel_shaxsiy') or s.get('tel', ''), align=WD_ALIGN_PARAGRAPH.CENTER)
         set_cell_text(row.cells[3], "")
@@ -123,7 +134,7 @@ if os.path.exists(doc_path):
         set_cell_text(row.cells[0], str(idx), align=WD_ALIGN_PARAGRAPH.CENTER)
         set_cell_text(row.cells[1], s.get('fish', ''), bold=True)
         set_cell_text(row.cells[2], "Tanishtirildi", align=WD_ALIGN_PARAGRAPH.CENTER)
-        set_cell_text(row.cells[3], "02.09.2025", align=WD_ALIGN_PARAGRAPH.CENTER)
+        set_cell_text(row.cells[3], "02.09.2026", align=WD_ALIGN_PARAGRAPH.CENTER)
         set_cell_text(row.cells[4], "")
 
     # TABLES 6 to 23: Kunlik davomat jadvallari

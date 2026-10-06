@@ -175,12 +175,8 @@ function EditForm({ student, all, onCancel, onSave }: { student: Student; all: S
           <Input label="Shartnoma raqami" value={f.shnum} onChange={set('shnum')} mono placeholder="203" />
           <Choice label="Akademik guruh" value={f.group} onChange={onGroup} options={groupChoices} />
           <div className="sm:col-span-2"><Input label="Telefon" value={f.tel} onChange={set('tel')} placeholder="+998 90 123 45 67" /></div>
-          {orderGroup && (
-            <>
-              <Input label={`Buyruq raqami${orderRequired ? ' *' : ''}`} value={f.buyruq} onChange={set('buyruq')} mono placeholder="123-T" highlight={orderRequired && !f.buyruq.trim()} />
-              <Input label={`Buyruq sanasi${orderRequired ? ' *' : ''}`} value={f.buyruq_sana} onChange={set('buyruq_sana')} mono placeholder="KK.OO.YYYY" />
-            </>
-          )}
+          <Input label={`Buyruq raqami${orderRequired ? ' *' : ''}`} value={f.buyruq} onChange={set('buyruq')} mono placeholder="T-40/2" highlight={orderRequired && !f.buyruq.trim()} />
+          <Input label={`Buyruq sanasi${orderRequired ? ' *' : ''}`} value={f.buyruq_sana} onChange={set('buyruq_sana')} mono placeholder="02.09.2026" />
         </div>
         {orderError && (
           <div className="mt-3 flex gap-2 rounded-xl border border-amber/45 bg-amber/10 p-3 text-[12.5px] text-amber">
@@ -230,9 +226,15 @@ function ViewInfo({ s, onEdit, onToggleVerify, onToggleBaza }: { s: Student; onE
       <Section n={3} title="Shartnoma va aloqa" tone="sky">
         <Row label="Shartnoma raqami"><span className="mono text-blue-soft">#{s.shnum || '—'}</span></Row>
         <Row label="Akademik guruh"><GroupBadge group={s.group} /></Row>
-        {(isWithdrawn(s.group) || isAcademicLeave(s.group)) && (
-          <Row label="Buyruq">
-            {s.buyruq ? <span className="mono">№{s.buyruq}{s.buyruq_sana ? `, ${s.buyruq_sana}` : ''}</span> : <span className="text-amber">kiritilmagan</span>}
+        {(s.buyruq || isWithdrawn(s.group) || isAcademicLeave(s.group)) && (
+          <Row label="Qabul / Holat buyrug'i">
+            {s.buyruq ? (
+              <span className="mono font-bold text-sky-soft">
+                {s.buyruq}{s.buyruq_sana ? ` (${s.buyruq_sana})` : ''}
+              </span>
+            ) : (
+              <span className="text-amber">kiritilmagan</span>
+            )}
           </Row>
         )}
         <Row label="Telefon">{s.tel || '—'}</Row>
