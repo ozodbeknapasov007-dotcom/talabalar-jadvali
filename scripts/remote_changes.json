@@ -104,5 +104,17 @@
     },
     "id": "chg_1791272287326_8nb60",
     "created_at": "2026-10-06T07:38:07.326Z"
+  },
+  {
+    "type": "delete_student",
+    "data": {
+      "row": 564,
+      "shnum": "",
+      "pinfl": "60802085590029",
+      "ism": "Shermatova Gulsun",
+      "fish": "Shermatova Gulsun Xurshid qizi"
+    },
+    "id": "chg_1791273416281_srcce",
+    "created_at": "2026-10-06T07:56:56.281Z"
   }
 ]
