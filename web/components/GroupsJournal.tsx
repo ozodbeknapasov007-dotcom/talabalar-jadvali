@@ -3,7 +3,7 @@
 import { memo, useMemo, useState } from 'react'
 import { Check, Download, FileSpreadsheet, FileText, Loader2, Printer, Send, UserRound } from 'lucide-react'
 import { ACADEMIC_LEAVE_GROUP, GROUP_LEADERS, WITHDRAWN_GROUP } from '@/lib/config'
-import { exportGroup, exportQabulShablonGroup, exportRole, sendGroupsToTelegram, type TgTarget } from '@/lib/excel'
+import { exportGroup, exportQabulShablonGroup, exportQabulShablonGroups, exportRole, sendGroupsToTelegram, type TgTarget } from '@/lib/excel'
 import { byName, fullName, groupTitle, isAcademicLeave, isOutside } from '@/lib/student'
 import type { Student } from '@/lib/types'
 import type { Notify } from './Toast'
@@ -54,7 +54,7 @@ function GroupCard({ code, title, leader, students, special, onOpen, notify }: {
     setTgBusy(true)
     try {
       const res = await sendGroupsToTelegram(students, [special ?? code], 'both')
-      if (res.failed.length === 0) notify(`${name} Telegramga yuborildi!`)
+      if (res.failed.length === 0) notify(`${name} 1-varoqli jurnali Telegramga yuborildi!`)
       else notify(`Qisman yuborildi (${res.sent.join(', ')}). Xato: ${res.failed.join('; ')}`, 'warning')
     } catch (e) {
       notify(`Telegramga yuborilmadi: ${(e as Error).message}`, 'error')
@@ -78,25 +78,29 @@ function GroupCard({ code, title, leader, students, special, onOpen, notify }: {
         </div>
         <div className="flex gap-1.5">
           {!sp && (
-            <>
-              <button
-                type="button"
-                className="btn-ghost h-8 px-2.5 text-[12px] border-emerald/35 text-emerald-soft hover:bg-emerald/10"
-                onClick={downloadQabul}
-                disabled={qabulBusy || !students.length}
-                title="Shu guruhni QABUL - 2026 formatida yuklab olish"
-              >
-                {qabulBusy ? <Loader2 size={14} className="animate-spin" /> : <FileSpreadsheet size={14} />} Qabul
-              </button>
-              <a className="btn-ghost h-8 px-2.5 text-[12px]" href={`/api/view_group_pdf?group=${encodeURIComponent(code)}`} target="_blank" rel="noreferrer" title="Toza A4 PDF jurnal">
-                <FileText size={14} /> PDF
-              </a>
-            </>
+            <button
+              type="button"
+              className="btn-ghost h-8 px-2.5 text-[12px] border-emerald/35 text-emerald-soft hover:bg-emerald/10"
+              onClick={downloadQabul}
+              disabled={qabulBusy || !students.length}
+              title="Shu guruhni QABUL - 2026 formatida yuklab olish"
+            >
+              {qabulBusy ? <Loader2 size={14} className="animate-spin" /> : <FileSpreadsheet size={14} />} Qabul
+            </button>
           )}
+          <a
+            className="btn-ghost h-8 px-2.5 text-[12px]"
+            href={`/api/view_group_pdf?group=${encodeURIComponent(special ?? code)}`}
+            target="_blank"
+            rel="noreferrer"
+            title="Toza 1-varoqli A4 PDF jurnal"
+          >
+            <FileText size={14} /> PDF
+          </a>
           <button type="button" className="btn-ghost h-8 px-2.5 text-[12px]" onClick={download} disabled={busy || !students.length} title="Guruhni Excel (.xlsx) formatda yuklab olish">
             {busy ? <Loader2 size={14} className="animate-spin" /> : <Download size={14} />} .xlsx
           </button>
-          <button type="button" className="btn-ghost h-8 px-2 text-[12px] text-sky hover:text-sky-soft" onClick={sendSingleTg} disabled={tgBusy || !students.length} title="Shu guruhni Telegramga yuborish">
+          <button type="button" className="btn-ghost h-8 px-2 text-[12px] text-sky hover:text-sky-soft" onClick={sendSingleTg} disabled={tgBusy || !students.length} title="Shu guruhning 1-varoqli jurnal rasmini Telegramga yuborish">
             {tgBusy ? <Loader2 size={14} className="animate-spin" /> : <Send size={14} />}
           </button>
         </div>
@@ -159,7 +163,7 @@ function GroupsJournal({ students, groups: list, onOpen, notify }: {
     try {
       const res = await sendGroupsToTelegram(students, selectedGroups, tgTarget)
       if (res.failed.length === 0) {
-        notify(`${selectedGroups.length} ta guruh jurnali (${res.sent.join(' + ')}) Telegramga yuborildi!`)
+        notify(`${selectedGroups.length} ta guruhning 1-varoqli jurnallari (${res.sent.join(' + ')}) Telegramga yuborildi!`)
         setTgOpen(false)
       } else {
         notify(`Yuborildi: ${res.sent.join(', ') || 'yo\'q'}. Xato: ${res.failed.join('; ')}`, 'warning')
@@ -195,13 +199,13 @@ function GroupsJournal({ students, groups: list, onOpen, notify }: {
             className="btn-ghost h-9 border-emerald/40 bg-emerald/10 text-[12.5px] text-emerald-soft hover:bg-emerald/20"
             onClick={async () => {
               try {
-                await exportRole(students, 'qabul_shablon')
-                notify(`QABUL - 2026 (${list.length} ta guruh) Excelga yuklandi!`)
+                const n = await exportQabulShablonGroups(students, list)
+                notify(`QABUL - 2026 (${list.length} ta guruh, ${n} nafar talaba) Excelga yuklandi!`)
               } catch (e) {
                 notify(`Xatolik: ${(e as Error).message}`, 'error')
               }
             }}
-            title="Barcha guruhlarni QABUL - 2026.xlsx formatida yuklab olish"
+            title="Shu ko'rinishdagi barcha guruhlarni QABUL - 2026.xlsx formatida yuklab olish"
           >
             <FileSpreadsheet size={15} /> Qabul shabloni ({list.length} guruh)
           </button>
@@ -224,7 +228,7 @@ function GroupsJournal({ students, groups: list, onOpen, notify }: {
       {tgOpen && (
         <div className="panel animate-pop-in space-y-3 border-sky/35 bg-ink-900/90 p-4">
           <div className="flex flex-wrap items-center justify-between gap-2">
-            <div className="text-[13.5px] font-bold text-fg">Tanlangan guruhlarni bitta Excel faylda Telegramga yuborish</div>
+            <div className="text-[13.5px] font-bold text-fg">Tanlangan guruhlarning 1-varoqli PDF jurnallarini (rasm sifatida) Telegramga yuborish</div>
             <div className="flex items-center gap-1.5 text-[12px]">
               <button type="button" className="btn-ghost h-7 px-2 text-[11.5px]" onClick={() => setSelectedGroups([...list])}>Barchasi ({list.length})</button>
               <button type="button" className="btn-ghost h-7 px-2 text-[11.5px]" onClick={() => setSelectedGroups([])}>Tozalash</button>

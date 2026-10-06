@@ -8,10 +8,21 @@ import { REPO_PATHS, readRepoFileIn } from '@/lib/server/source'
  */
 export async function GET(request: NextRequest) {
   const group = (request.nextUrl.searchParams.get('group') || '').trim()
-  if (!group || !/^[\w-]+$/.test(group)) {
-    return Response.json({ error: "Guruh noto'g'ri" }, { status: 400 })
+  if (!group) {
+    return Response.json({ error: "Guruh ko'rsatilmadi" }, { status: 400 })
   }
-  const fileName = group.toLowerCase() === 'barcha' ? 'Barcha_Guruhlar_Jurnali.pdf' : `Guruh_${group}.pdf`
+
+  const gLower = group.toLowerCase()
+  let fileName = `Guruh_${group}.pdf`
+
+  if (gLower === 'barcha' || gLower === 'all') {
+    fileName = 'Barcha_Guruhlar_Jurnali.pdf'
+  } else if (gLower.includes('chiqaril') || gLower === 'safdan') {
+    fileName = 'Guruh_Talabalar_safidan_chiqarilganlar.pdf'
+  } else if (gLower.includes('akademik')) {
+    fileName = 'Guruh_Akademik_tatil_olganlar.pdf'
+  }
+
   const buf = await readRepoFileIn(REPO_PATHS.pdfJurnallar, fileName)
   if (!buf) return Response.json({ error: `${fileName} topilmadi` }, { status: 404 })
 

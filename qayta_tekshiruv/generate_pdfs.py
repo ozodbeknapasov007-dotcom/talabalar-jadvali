@@ -1,5 +1,6 @@
 import filecmp
 import glob
+import json
 import os
 import re
 import shutil
@@ -7,7 +8,7 @@ import openpyxl
 from reportlab import rl_config
 # Ma'lumot o'zgarmagan bo'lsa PDF baytlari ham o'zgarmasligi shart.
 # Aks holda ReportLab har safar yangi CreationDate/ModDate va /ID yozadi,
-# natijada har bir qayta generatsiyada 16 ta PDF "o'zgargan" bo'lib
+# natijada har bir qayta generatsiyada PDFlar "o'zgargan" bo'lib
 # git ga tushadi va har bir commit ~800 KB keraksiz ma'lumot bilan shishadi.
 rl_config.invariant = 1
 from reportlab.lib.pagesizes import A4
@@ -31,27 +32,23 @@ except Exception as e:
     FONT_NORMAL = 'Helvetica'
     FONT_BOLD = 'Helvetica-Bold'
 
-GROUP_LEADERS = {
-    "26-01": "Mirzayeva.D",
-    "26-02": "Ochilov.D",
-    "26-03": "A.Asraliyev",
-    "26-04": "Xamdamova.M",
-    "26-05": "Rayimova.X",
-    "26-06": "Yuldashev.O",
-    "26-07": "Asraliyev.A",
-    "Talabalar safidan chiqarilganlar": "Texnikum ma'muriyati"
-}
+def load_group_info():
+    """data/guruhlar.json dan guruhlar ma'lumotlarini yuklaydi."""
+    guruhlar_path = os.path.join(BASE_DIR, 'data', 'guruhlar.json')
+    leaders = {}
+    titles = {}
+    if os.path.exists(guruhlar_path):
+        try:
+            with open(guruhlar_path, 'r', encoding='utf-8') as f:
+                data = json.load(f)
+                for k, v in data.items():
+                    leaders[k] = v.get('rahbar', '—')
+                    titles[k] = v.get('yonalish', 'Hamshiralik ishi')
+        except Exception as e:
+            print(f"guruhlar.json yuklashda xatolik: {e}")
+    return leaders, titles
 
-GROUP_TITLES = {
-    "26-01": "Farmatsiya ishi",
-    "26-02": "Hamshiralik ishi",
-    "26-03": "Hamshiralik ishi",
-    "26-04": "Hamshiralik ishi",
-    "26-05": "Hamshiralik ishi",
-    "26-06": "Hamshiralik ishi",
-    "26-07": "Hamshiralik ishi",
-    "Talabalar safidan chiqarilganlar": "Safdan chiqarilganlar ro'yxati"
-}
+GROUP_LEADERS, GROUP_TITLES = load_group_info()
 
 def export_pdf_to_images(pdf_path, dpi=250):
     """PDF sahifalarini yuqori sifatli JPG rasm formatida saqlaydi."""
@@ -73,41 +70,48 @@ def export_pdf_to_images(pdf_path, dpi=250):
 
 def build_group_flowables(group_code, students, avail_width):
     is_withdrawn = ('chiqaril' in str(group_code).lower() or str(group_code) in ['N', 'n', 'WITHDRAWN'])
+    is_akademik = ('akademik' in str(group_code).lower())
+
     if is_withdrawn:
         g_students = [s for s in students if 'chiqaril' in str(s.get('group', '')).lower() or str(s.get('group', '')) in ['N', 'n', 'WITHDRAWN']]
         leader = "Texnikum ma'muriyati"
         g_title = "Safdan chiqarilganlar"
+    elif is_akademik:
+        g_students = [s for s in students if 'akademik' in str(s.get('group', '')).lower()]
+        leader = "Texnikum ma'muriyati"
+        g_title = "Akademik ta'til olganlar"
     else:
         g_students = [s for s in students if s.get('group') == group_code]
         leader = GROUP_LEADERS.get(group_code, "—")
-        g_title = GROUP_TITLES.get(group_code, "")
+        g_title = GROUP_TITLES.get(group_code, "Hamshiralik ishi")
     g_students.sort(key=lambda x: re.sub(r"['`‘’ʻʼ´\-_.]", "", str(x.get('fio') or x.get('ism', '')).lower()))
 
     elements = []
     count = len(g_students)
 
-    # Talabalar soniga qarab optimal, katta va chiroyli shrift o'lchamlari
+    # 1 TA VAROQQA (A4) ANIQ SIG'DIRISH LOGIKASI:
+    # 35 tagacha talaba to'liq 1 ta A4 varoqqa sig'adi
     if count <= 20:
         row_height = 25.0
         font_size = 10.5
         header_font_size = 11.0
         padding_size = 3.5
     elif count <= 27:
-        row_height = 23.0
-        font_size = 10.0
-        header_font_size = 10.5
-        padding_size = 3.0
-    else:
-        row_height = 22.0
+        row_height = 22.5
         font_size = 10.0
         header_font_size = 10.5
         padding_size = 2.8
+    else:
+        row_height = 19.5
+        font_size = 9.0
+        header_font_size = 9.5
+        padding_size = 2.0
 
     title_style = ParagraphStyle(
         'DocTitle',
         fontName=FONT_BOLD,
-        fontSize=16,
-        leading=20,
+        fontSize=15,
+        leading=18,
         alignment=1,
         textColor=colors.HexColor('#0f172a')
     )
@@ -115,8 +119,8 @@ def build_group_flowables(group_code, students, avail_width):
     info_left_style = ParagraphStyle(
         'InfoLeft',
         fontName=FONT_BOLD,
-        fontSize=11,
-        leading=14,
+        fontSize=10,
+        leading=13,
         alignment=0,
         textColor=colors.HexColor('#1e293b')
     )
@@ -124,8 +128,8 @@ def build_group_flowables(group_code, students, avail_width):
     info_right_style = ParagraphStyle(
         'InfoRight',
         fontName=FONT_BOLD,
-        fontSize=11,
-        leading=14,
+        fontSize=10,
+        leading=13,
         alignment=2,
         textColor=colors.HexColor('#1e293b')
     )
@@ -168,6 +172,17 @@ def build_group_flowables(group_code, students, avail_width):
                 Paragraph("Holati: <b>Safdan chiqarilgan</b>", info_right_style)
             ]
         ]
+    elif is_akademik:
+        header_table_data = [
+            [
+                Paragraph("Shahrisabz Tibbiyot Texnikumi", title_style),
+                ""
+            ],
+            [
+                Paragraph("Maxsus ro'yxat: <b>Akademik ta'til olganlar</b>", info_left_style),
+                Paragraph("Holati: <b>Akademik ta'tilda</b>", info_right_style)
+            ]
+        ]
     else:
         header_table_data = [
             [
@@ -184,9 +199,9 @@ def build_group_flowables(group_code, students, avail_width):
     ht.setStyle(TableStyle([
         ('SPAN', (0, 0), (1, 0)),
         ('ALIGN', (0, 0), (1, 0), 'CENTER'),
-        ('BOTTOMPADDING', (0, 0), (1, 0), 6),
+        ('BOTTOMPADDING', (0, 0), (1, 0), 4),
         ('TOPPADDING', (0, 0), (-1, -1), 0),
-        ('BOTTOMPADDING', (0, 1), (-1, 1), 6),
+        ('BOTTOMPADDING', (0, 1), (-1, 1), 5),
         ('LEFTPADDING', (0, 0), (-1, -1), 0),
         ('RIGHTPADDING', (0, 0), (-1, -1), 0),
     ]))
@@ -254,8 +269,8 @@ def create_single_group_pdf(group_code, students, output_pdf_path):
         pagesize=A4,
         leftMargin=24,
         rightMargin=24,
-        topMargin=20,
-        bottomMargin=16
+        topMargin=16,
+        bottomMargin=14
     )
     avail_width = A4[0] - 48
     elements = build_group_flowables(group_code, students, avail_width)
@@ -273,8 +288,8 @@ def create_all_groups_combined_pdf(groups, students, output_pdf_path):
         pagesize=A4,
         leftMargin=24,
         rightMargin=24,
-        topMargin=20,
-        bottomMargin=16
+        topMargin=16,
+        bottomMargin=14
     )
     avail_width = A4[0] - 48
     elements = []
@@ -294,12 +309,10 @@ def _replace_if_changed(tmp_path, path):
     os.replace(tmp_path, path)
     return True
 
-
 def _jpgs_of(pdf_path):
     """export_pdf_to_images yaratgan rasmlar: <nom>.jpg yoki <nom>_page_N.jpg"""
     base = os.path.splitext(pdf_path)[0]
     return sorted(glob.glob(glob.escape(base) + '.jpg') + glob.glob(glob.escape(base) + '_page_*.jpg'))
-
 
 def _mirror(src, dirs):
     """Faylni boshqa papkalarga nusxalash (mazmun bir xil bo'lsa tegmaydi)."""
@@ -308,77 +321,118 @@ def _mirror(src, dirs):
         if not (os.path.exists(dst) and filecmp.cmp(src, dst, shallow=False)):
             shutil.copyfile(src, dst)
 
-
 def build_all_group_pdfs():
+    # students.json yoki Excel bazasidan talabalarni o'qish
+    students_json_path = os.path.join(BASE_DIR, 'data', 'students.json')
     excel_path = os.path.join(BASE_DIR, 'data', 'Talabalar_Toliq_Royxati.xlsx')
-    if not os.path.exists(excel_path):
-        return {}
-
-    wb = openpyxl.load_workbook(excel_path, data_only=True)
-    ws = wb.active
 
     students = []
-    for r in range(2, ws.max_row + 1):
-        ism = str(ws.cell(row=r, column=2).value or '').strip()
-        shnum = str(ws.cell(row=r, column=5).value or '').strip()
-        ota = str(ws.cell(row=r, column=7).value or '').strip()
-        fish = str(ws.cell(row=r, column=8).value or '').strip()
-        dob = str(ws.cell(row=r, column=13).value or '').strip()
-        group = str(ws.cell(row=r, column=23).value or '').strip()
-        if not ism and not shnum: continue
-        full_fio = fish or f"{ism} {ota}".strip()
-        students.append({
-            'ism': ism,
-            'ota': ota,
-            'fio': full_fio,
-            'dob': dob,
-            'group': group,
-            'shnum': shnum
-        })
+    if os.path.exists(students_json_path):
+        try:
+            with open(students_json_path, 'r', encoding='utf-8') as f:
+                raw_st = json.load(f)
+                for s in raw_st:
+                    students.append({
+                        'ism': s.get('ism', ''),
+                        'ota': s.get('ota', ''),
+                        'fio': s.get('fish') or f"{s.get('ism', '')} {s.get('ota', '')}".strip(),
+                        'dob': s.get('dob', ''),
+                        'group': s.get('group', ''),
+                        'shnum': s.get('shnum', '')
+                    })
+        except Exception as e:
+            print(f"students.json o'qishda xatolik: {e}")
 
-    groups = ["26-01", "26-02", "26-03", "26-04", "26-05", "26-06"]
+    if not students and os.path.exists(excel_path):
+        wb = openpyxl.load_workbook(excel_path, data_only=True)
+        ws = wb.active
+        for r in range(2, ws.max_row + 1):
+            ism = str(ws.cell(row=r, column=2).value or '').strip()
+            shnum = str(ws.cell(row=r, column=5).value or '').strip()
+            ota = str(ws.cell(row=r, column=7).value or '').strip()
+            fish = str(ws.cell(row=r, column=8).value or '').strip()
+            dob = str(ws.cell(row=r, column=13).value or '').strip()
+            group = str(ws.cell(row=r, column=23).value or '').strip()
+            if not ism and not shnum: continue
+            full_fio = fish or f"{ism} {ota}".strip()
+            students.append({
+                'ism': ism,
+                'ota': ota,
+                'fio': full_fio,
+                'dob': dob,
+                'group': group,
+                'shnum': shnum
+            })
+
+    if not students:
+        print("[XATO] Talabalar ro'yxati topilmadi!")
+        return {}
+
+    global GROUP_LEADERS, GROUP_TITLES
+    GROUP_LEADERS, GROUP_TITLES = load_group_info()
+
+    # Barcha rasmiy guruhlar (guruhlar.json dan tartiblangan holda)
+    official_groups = sorted(GROUP_LEADERS.keys())
+    if not official_groups:
+        official_groups = sorted(list(set(
+            s['group'] for s in students
+            if s.get('group') and 'chiqaril' not in s['group'].lower() and 'akademik' not in s['group'].lower()
+        )))
+
+    groups = list(official_groups)
     withdrawn_students = [s for s in students if 'chiqaril' in str(s.get('group', '')).lower() or str(s.get('group', '')) in ['N', 'n', 'WITHDRAWN']]
     if withdrawn_students:
         groups.append("Talabalar safidan chiqarilganlar")
-
-    generated_files = {}
+    akademik_students = [s for s in students if 'akademik' in str(s.get('group', '')).lower()]
+    if akademik_students:
+        groups.append("Akademik ta'til olganlar")
 
     target_dirs = [
         os.path.join(BASE_DIR, 'hisobotlar', 'pdf_jurnallar'),
         os.path.join(BASE_DIR, 'qayta_tekshiruv', 'pdf_jurnallar')
     ]
 
-    # Fayllar bitta papkada yaratiladi, qolganiga nusxalanadi (avval har papka uchun
-    # qaytadan yaratilardi). PDF baytlari invariant — shuning uchun PDF o'zgarmagan
-    # guruhning sekin JPG eksporti (~0.5 s/rasm) o'tkazib yuboriladi: bitta talaba
-    # tahrirlanganda faqat o'sha guruh rasmi qayta chiziladi.
     primary, mirrors = target_dirs[0], target_dirs[1:]
     for tdir in target_dirs:
         os.makedirs(tdir, exist_ok=True)
+        # Eski bo'lingan sahifalar (_page_*.jpg) ni tozalash
+        for old_page in glob.glob(os.path.join(tdir, '*_page_*.jpg')):
+            try:
+                os.remove(old_page)
+            except Exception:
+                pass
 
-    # 1. Alohida guruh PDF lari va ularning yuqori sifatli JPG rasmlari
+    generated_files = {}
+
+    # 1. Alohida guruh PDF lari va ularning yuqori sifatli 1 ta varoqli JPG rasmlari
     for g in groups:
-        fname = "Guruh_Talabalar_safidan_chiqarilganlar.pdf" if 'chiqaril' in g.lower() else f"Guruh_{g}.pdf"
+        if 'chiqaril' in g.lower():
+            fname = "Guruh_Talabalar_safidan_chiqarilganlar.pdf"
+        elif 'akademik' in g.lower():
+            fname = "Guruh_Akademik_tatil_olganlar.pdf"
+        else:
+            fname = f"Guruh_{g}.pdf"
+
         out_file = os.path.join(primary, fname)
         tmp_file = out_file + '.tmp'
         create_single_group_pdf(g, students, tmp_file)
         changed = _replace_if_changed(tmp_file, out_file)
         generated_files[g] = out_file
-        if changed or not _jpgs_of(out_file):
-            # Yuqori sifatli JPG rasmga eksport qilish (250 DPI)
+
+        jpg_path = os.path.splitext(out_file)[0] + '.jpg'
+        if changed or not os.path.exists(jpg_path):
             export_pdf_to_images(out_file, dpi=250)
         for p in [out_file] + _jpgs_of(out_file):
             _mirror(p, mirrors)
 
-    # 2. Barcha 7 ta guruhni birlashtirgan YAGONA 1 ta A4 PDF (har bir guruh alohida varoqda)
-    official_groups = [g for g in groups if 'chiqaril' not in g.lower()]
+    # 2. Barcha rasmiy guruhlarni birlashtirgan YAGONA 1 ta A4 PDF (har bir guruh alohida varoqda)
     combined_file = os.path.join(primary, "Barcha_Guruhlar_Jurnali.pdf")
     create_all_groups_combined_pdf(official_groups, students, combined_file + '.tmp')
     _replace_if_changed(combined_file + '.tmp', combined_file)
     _mirror(combined_file, mirrors)
     generated_files["ALL"] = combined_file
 
-    print(f"[OK] Barcha {len(groups)} ta guruh uchun alohida A4 PDF jurnallar va yuqori sifatli rasmlar yaratildi!")
+    print(f"[OK] Barcha {len(groups)} ta guruh uchun 1-sahifali A4 PDF jurnallar va yuqori sifatli rasmlar yaratildi!")
     return generated_files
 
 if __name__ == '__main__':

@@ -212,6 +212,20 @@ export async function exportQabulShablonGroup(students: Student[], group: string
   return list.length
 }
 
+/** Tanlangan guruh(lar)ni QABUL - 2026 formatida yuklab olish */
+export async function exportQabulShablonGroups(students: Student[], groups: string[]) {
+  const X = await loadXlsx()
+  const list = students
+    .filter((s) => groups.includes((s.group || '').trim()))
+    .sort((a, b) => groupOrder((a.group || '').trim(), (b.group || '').trim()) || byName(a, b))
+  await ensureAiTranslations(list)
+  const wb = X.utils.book_new()
+  X.utils.book_append_sheet(wb, buildQabulShablonSheet(X, list), QABUL_SHEET)
+  const suffix = groups.length === 1 ? ` (${groups[0]})` : groups.length < GROUPS.length ? ` (${groups.length} guruh)` : ''
+  X.writeFile(wb, `${QABUL_FILE}${suffix}.xlsx`, { cellStyles: true, bookSST: false })
+  return list.length
+}
+
 /** Guruh tanlovi: guruh kodi yoki maxsus kalit — 'safdan' (safdan chiqarilgan / guruhsiz), 'akademik' */
 function inSelection(s: Student, key: string) {
   if (key === 'safdan') return isOutside(s.group)
@@ -244,11 +258,7 @@ export async function exportFiltered(students: Student[]) {
   X.writeFile(wb, 'Talabalar_Tanlangan_Royxat.xlsx', { cellStyles: true, bookSST: false })
 }
 
-const TG_BOT_TOKEN = '8645386410:AAGpMWubDaLI6KQ_hR9WuqkhCaoOAK2qWEM'
-const TG_CHAT_ID = '8135594558'
-const TG_CHANNEL_ID = '-1004375713276'
-
-/** Excel faylni to'g'ridan-to'g'ri Telegram botga yuborish */
+/** Excel faylni server orqali Telegram botga yuborish */
 export async function sendRoleToTelegram(students: Student[], role: Role) {
   const X = await loadXlsx()
   const { wb, count } = await buildRoleWorkbook(X, students, role)
@@ -258,82 +268,41 @@ export async function sendRoleToTelegram(students: Student[], role: Role) {
   const meta = ROLE_META[role]
 
   const formData = new FormData()
-  formData.append('chat_id', TG_CHAT_ID)
   formData.append('caption', `📊 ${meta.title} (${meta.sub})\n👥 Jami talabalar: ${count} nafar`)
-  formData.append('document', blob, meta.file)
+  formData.append('file', blob, meta.file)
 
-  const res = await fetch(`https://api.telegram.org/bot${TG_BOT_TOKEN}/sendDocument`, {
+  const res = await fetch('/api/send_role_telegram', {
     method: 'POST',
     body: formData,
   })
   const data = await res.json().catch(() => ({}))
   if (!res.ok || !data.ok) {
-    throw new Error(data.description || 'Telegramga yuborilmadi')
+    throw new Error(data.error || 'Telegramga yuborilmadi')
   }
 }
 
 export type TgTarget = 'channel' | 'bot' | 'both'
 
-/** Guruh(lar) ro'yxati va Excel jurnalini Telegram kanalga / shaxsiy botga yuborish */
+/** Guruh(lar) 1-varoqli A4 PDF rasm jurnalini Telegramga yuborish */
 export async function sendGroupsToTelegram(
-  students: Student[],
+  _students: Student[],
   groupFilter: string | string[],
   target: TgTarget = 'both',
 ): Promise<{ sent: string[]; failed: string[] }> {
-  const X = await loadXlsx()
-  const wb = X.utils.book_new()
-  const selected = Array.isArray(groupFilter) ? groupFilter : (!groupFilter || groupFilter === 'ALL' ? [] : [groupFilter])
-  const isAll = selected.length === 0 || selected.length >= GROUPS.length
+  const selected = Array.isArray(groupFilter)
+    ? groupFilter
+    : (!groupFilter || groupFilter === 'ALL' ? [] : [groupFilter])
 
-  const subset = isAll && selected.length === 0
-    ? [...students].sort((a, b) => groupOrder((a.group || '').trim(), (b.group || '').trim()) || byName(a, b))
-    : students
-        .filter((s) => selected.some((g) => inSelection(s, g)))
-        .sort((a, b) => groupOrder((a.group || '').trim(), (b.group || '').trim()) || byName(a, b))
-
-  const mainSheetTitle = selected.length === 1 ? sheetName(selected[0]) : 'Jami talabalar'
-  X.utils.book_append_sheet(wb, buildSheet(X, subset, 'guruh_rahbari'), mainSheetTitle)
-
-  if (selected.length !== 1) {
-    const groupsToInclude = selected.length > 0
-      ? selected
-      : [...new Set(students.map((s) => (s.group || '').trim()).filter(Boolean))].sort(groupOrder)
-    for (const g of groupsToInclude) {
-      const list = students.filter((s) => inSelection(s, g)).sort(byName)
-      X.utils.book_append_sheet(wb, buildSheet(X, list, 'guruh_rahbari'), sheetName(g))
-    }
+  const res = await fetch('/api/send_group_telegram', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ groups: selected, target }),
+  })
+  const data = await res.json().catch(() => ({}))
+  if (!res.ok) {
+    throw new Error(data.error || 'Telegramga yuborishda server xatosi yuz berdi')
   }
-
-  const wbout = X.write(wb, { bookType: 'xlsx', type: 'array', cellStyles: true })
-  const blob = new Blob([wbout], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
-  const fileName = selected.length === 1 ? `Guruh_${selected[0]}_Jurnali.xlsx` : 'Guruhlar_Jurnali_2026-2027.xlsx'
-
-  const dests: { id: string; label: string }[] =
-    target === 'both'
-      ? [{ id: TG_CHANNEL_ID, label: 'Kanal' }, { id: TG_CHAT_ID, label: 'Shaxsiy bot' }]
-      : target === 'bot'
-        ? [{ id: TG_CHAT_ID, label: 'Shaxsiy bot' }]
-        : [{ id: TG_CHANNEL_ID, label: 'Kanal' }]
-
-  const sent: string[] = []
-  const failed: string[] = []
-
-  for (const d of dests) {
-    try {
-      const fd = new FormData()
-      fd.append('chat_id', d.id)
-      fd.append('caption', `📋 ${selected.length === 1 ? `Guruh ${selected[0]} jurnali` : `Guruhlar jurnali (${selected.length || GROUPS.length} ta guruh)`}\n👥 Talabalar soni: ${subset.length} nafar`)
-      fd.append('document', blob, fileName)
-      const res = await fetch(`https://api.telegram.org/bot${TG_BOT_TOKEN}/sendDocument`, { method: 'POST', body: fd })
-      const data = await res.json()
-      if (res.ok && data.ok) sent.push(d.label)
-      else failed.push(`${d.label}: ${data.description || res.statusText}`)
-    } catch (e) {
-      failed.push(`${d.label}: ${(e as Error).message}`)
-    }
-  }
-
-  return { sent, failed }
+  return { sent: data.sent || [], failed: data.failed || [] }
 }
 
 
