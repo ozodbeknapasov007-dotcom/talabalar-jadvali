@@ -158,6 +158,7 @@ export function useStudents() {
   const [state, setState] = useState<LoadState>('loading')
   const [error, setError] = useState('')
   const inflight = useRef(false)
+  const inFlightAdds = useRef(new Set<string>())
   const pendingRef = useRef(pending)
   useEffect(() => { pendingRef.current = pending }, [pending])
 
@@ -212,7 +213,23 @@ export function useStudents() {
       } catch { return }
     }
     for (const a of p.adds || []) {
-      if (a.sent) continue
+      if (a.sent || inFlightAdds.current.has(a.key)) continue
+      // Agar talaba hali yaqindagina yuborilgan bo'lsa (15s ichida), shoshilib qayta yubormaymiz
+      if (Date.now() - a.ts < 15_000) continue
+
+      const fishLow = `${a.fields.ism || ''} ${a.fields.ota || ''}`.trim().toLowerCase()
+      const aPinfl = (a.fields.pinfl || '').replace(/\s/g, '')
+      const id: Identity = { row: 0, shnum: (a.fields.shnum || '').trim(), pinfl: aPinfl, fish: fishLow }
+      if (server?.some((s) => isSame(s, id))) {
+        // Allaqachon serverda mavjud bo'lsa, navbatdan olib tashlaymiz
+        updatePending((prev) => ({
+          ...prev,
+          adds: (prev.adds || []).filter((x) => x.key !== a.key),
+        }))
+        continue
+      }
+
+      inFlightAdds.current.add(a.key)
       try {
         await postChange({ type: 'add_student', data: a.fields })
         updatePending((prev) => ({
@@ -220,8 +237,11 @@ export function useStudents() {
           adds: (prev.adds || []).map((x) => (x.key === a.key ? { ...x, sent: true, ts: Date.now() } : x)),
         }))
       } catch { return }
+      finally {
+        inFlightAdds.current.delete(a.key)
+      }
     }
-  }, [markSent, updatePending])
+  }, [markSent, updatePending, server])
 
   const refresh = useCallback(async () => {
     if (inflight.current) return
@@ -400,7 +420,32 @@ export function useStudents() {
   const addStudent = useCallback(async (fields: EditFields) => {
     const clean: EditFields = {}
     for (const f of EDIT_FIELDS) if (fields[f] !== undefined) clean[f] = String(fields[f]).trim()
+    const cleanPinfl = (clean.pinfl || '').replace(/\s/g, '')
+    const cleanFish = `${clean.ism || ''} ${clean.ota || ''}`.trim().toLowerCase()
+    const cleanGroup = String(clean.group || '').trim()
+
+    // 1. Allaqachon serverda mavjud bo'lsa, xato berish (takroriy kiritishning oldini olish)
+    if (server?.some((s) => {
+      if (cleanPinfl && cleanPinfl.length === 14 && pinOf(s) === cleanPinfl) return true
+      if (cleanFish && fullName(s).toLowerCase() === cleanFish && (s.group || '').trim() === cleanGroup) return true
+      return false
+    })) {
+      throw new Error("Bu talaba bazada allaqachon mavjud!")
+    }
+
+    // 2. Allaqachon yuborilayotgan (kutilayotgan) bo'lsa, qayta bosishni to'xtatish
+    if (pendingRef.current.adds?.some((a) => {
+      const aP = (a.fields.pinfl || '').replace(/\s/g, '')
+      const aF = `${a.fields.ism || ''} ${a.fields.ota || ''}`.trim().toLowerCase()
+      if (cleanPinfl && cleanPinfl.length === 14 && aP === cleanPinfl) return true
+      if (cleanFish && aF === cleanFish && (a.fields.group || '').trim() === cleanGroup) return true
+      return false
+    })) {
+      throw new Error("Bu talaba hozirgina yuborildi, iltimos kuting...")
+    }
+
     const key = `add_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`
+    inFlightAdds.current.add(key)
     updatePending((p) => ({
       ...p,
       adds: [...(p.adds || []), { key, fields: clean, ts: Date.now(), sent: false }],
@@ -416,8 +461,10 @@ export function useStudents() {
         updatePending((p) => ({ ...p, adds: (p.adds || []).filter((a) => a.key !== key) }))
       }
       throw e
+    } finally {
+      inFlightAdds.current.delete(key)
     }
-  }, [updatePending])
+  }, [server, updatePending])
 
   const pendingCount =
     Object.keys(pending.edits).length +

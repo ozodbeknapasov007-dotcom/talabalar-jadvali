@@ -136,28 +136,6 @@
       "tel": ""
     },
     "id": "chg_1791273477012_dhlay",
-    "created_at": "2026-10-06T07:57:57.012Z"
-  },
-  {
-    "type": "add_student",
-    "data": {
-      "ism": "Shermatova Gulsun",
-      "ota": "Xurshid qizi",
-      "group": "26-01",
-      "pv": "AE5836574",
-      "pinfl": "60802085590029",
-      "dob": "08.02.2008",
-      "ber": "13.01.2026",
-      "doc_tur": "Shahodatnoma",
-      "sh_doc": "UM 03755479",
-      "mak": "Shahrisabz tumani 68-sonli umumiy o'rta ta'lim maktabi",
-      "yil": "2026",
-      "yon": "Farmatsiya ishi",
-      "shnum": "",
-      "tel": ""
-    },
-    "id": "chg_1791273478431_bpayk",
-    "created_at": "2026-10-06T07:57:58.431Z"
   },
   {
     "type": "add_student",

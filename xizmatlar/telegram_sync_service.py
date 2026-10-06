@@ -375,8 +375,27 @@ def process_remote_github_changes():
                     if not s_ism:
                         print("[SYNC] ⚠️ Bo'sh talaba ma'lumoti kelgani sababli e'tiborsiz qoldirildi.")
                         continue
-                    nr = ws.max_row + 1
                     s_fish = f"{s_ism} {s_ota}".strip() if s_ota else s_ism
+                    pinfl_chk = str(data.get('pinfl', '')).replace(' ', '').strip()
+                    group_chk = str(data.get('group', '26-02')).strip()
+
+                    # Excelda allaqachon mavjudligini tekshirish (takroriy qo'shilishdan himoya)
+                    already_exists = False
+                    for r_chk in range(2, ws.max_row + 1):
+                        p_val = str(ws.cell(row=r_chk, column=11).value or '').replace(' ', '').strip()
+                        if pinfl_chk and len(pinfl_chk) == 14 and p_val == pinfl_chk:
+                            already_exists = True
+                            break
+                        f_val = str(ws.cell(row=r_chk, column=8).value or '').strip().lower()
+                        g_val = str(ws.cell(row=r_chk, column=23).value or '').strip()
+                        if f_val == s_fish.lower() and g_val == group_chk:
+                            already_exists = True
+                            break
+                    if already_exists:
+                        print(f"[SYNC] ⚠️ Talaba allaqachon Excelda mavjud ({s_fish}, {group_chk}), takroriy yozish bekor qilindi.")
+                        continue
+
+                    nr = ws.max_row + 1
                     ws.cell(row=nr, column=1, value=nr - 1)
                     ws.cell(row=nr, column=2, value=s_ism)
                     ws.cell(row=nr, column=3, value=data.get('yon', 'Hamshiralik ishi - 3 yillik'))
@@ -2215,6 +2234,23 @@ def save_manual_students(students_list):
         maktab = str(st.get('maktab', '')).strip()
         yil = str(st.get('yil', '')).strip()
         yonalis = str(st.get('yonalis', 'Hamshiralik ishi - 3 yillik')).strip()
+        tel = str(st.get('tel', '')).strip()
+        group = str(st.get('group', '')).strip()
+
+        # Excelda allaqachon mavjudligini tekshirish (takroriy kiritishning oldini olish)
+        already_exists = False
+        for r_chk in range(2, ws.max_row + 1):
+            p_val = str(ws.cell(row=r_chk, column=11).value or '').replace(' ', '').strip()
+            if pinfl and len(pinfl) == 14 and p_val == pinfl:
+                already_exists = True
+                break
+            f_val = str(ws.cell(row=r_chk, column=8).value or '').strip().lower()
+            g_val = str(ws.cell(row=r_chk, column=23).value or '').strip()
+            if f_val == fish.lower() and g_val == (group or '26-02'):
+                already_exists = True
+                break
+        if already_exists:
+            continue
 
         nr = ws.max_row + 1
         ws.cell(row=nr, column=1, value=nr - 1)
@@ -2237,8 +2273,6 @@ def save_manual_students(students_list):
         ws.cell(row=nr, column=16, value=cqr)
         ws.cell(row=nr, column=17, value=maktab)
         ws.cell(row=nr, column=18, value="Umumiy o'rta maktab" if cert_tur == "Shahodatnoma" else "Kollej")
-        tel = str(st.get('tel', '')).strip()
-        group = str(st.get('group', '')).strip()
 
         ws.cell(row=nr, column=19, value=yil)
         ws.cell(row=nr, column=20, value=tel)

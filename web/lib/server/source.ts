@@ -353,6 +353,25 @@ async function sendGithub(change: Change): Promise<void> {
         if (Array.isArray(parsed)) list = parsed
       } catch { /* buzilgan fayl — bo'sh ro'yxatdan boshlaymiz */ }
     }
+    if (change.type === 'add_student') {
+      const d = change.data as Record<string, unknown>
+      const cleanPinfl = d.pinfl ? String(d.pinfl).replace(/\s/g, '') : ''
+      const cleanFish = `${d.ism || ''} ${d.ota || ''}`.trim().toLowerCase()
+      const cleanGroup = String(d.group || '').trim()
+      const alreadyInQueue = list.some((item: unknown) => {
+        const it = item as { type?: string; data?: Record<string, unknown> } | null
+        if (it?.type !== 'add_student' || !it.data) return false
+        const iP = it.data.pinfl ? String(it.data.pinfl).replace(/\s/g, '') : ''
+        if (cleanPinfl && cleanPinfl.length === 14 && iP === cleanPinfl) return true
+        const iF = `${it.data.ism || ''} ${it.data.ota || ''}`.trim().toLowerCase()
+        const iG = String(it.data.group || '').trim()
+        return cleanFish && iF === cleanFish && iG === cleanGroup
+      })
+      if (alreadyInQueue) {
+        return
+      }
+    }
+
     list.push(entry)
 
     const putRes = await fetch(contentsUrl(QUEUE_PATH), {
@@ -415,8 +434,37 @@ async function sendSupabase(change: Change): Promise<void> {
     if (error) throw error
   } else if (change.type === 'add_student') {
     const d = change.data
-    const { count } = await sb.from('students').select('*', { count: 'exact', head: true })
-    const nextRow = (count || 562) + 1
+    const cleanPinfl = d.pinfl ? String(d.pinfl).replace(/\s/g, '') : ''
+    const cleanFish = `${d.ism || ''} ${d.ota || ''}`.trim().toLowerCase()
+    const cleanGroup = String(d.group || '').trim()
+
+    // 1. Agar JSHSHIR (14 xonali) bo'yicha talaba mavjud bo'lsa, takroriy qo'shilmasin
+    if (cleanPinfl && cleanPinfl.length === 14) {
+      const { data: existing } = await sb.from('students').select('row').eq('pinfl', cleanPinfl).limit(1)
+      if (existing && existing.length > 0) {
+        console.warn(`[sendSupabase] Talaba PINFL ${cleanPinfl} bilan allaqachon mavjud, takroriy kiritish bekor qilindi`)
+        return
+      }
+    }
+
+    // 2. Agar F.I.SH va guruh bo'yicha allaqachon mavjud bo'lsa, takroriy qo'shilmasin
+    if (cleanFish) {
+      const { data: existing } = await sb.from('students').select('row, fish, group')
+      if (existing) {
+        const found = existing.some(
+          (s) => (s.fish || '').trim().toLowerCase() === cleanFish && (s.group || '').trim() === cleanGroup
+        )
+        if (found) {
+          console.warn(`[sendSupabase] Talaba ${cleanFish} (${cleanGroup}) allaqachon mavjud, takroriy kiritish bekor qilindi`)
+          return
+        }
+      }
+    }
+
+    // Row hisoblash: count emas, mavjud eng katta row + 1
+    const { data: maxRowData } = await sb.from('students').select('row').order('row', { ascending: false }).limit(1)
+    const maxRow = maxRowData && maxRowData.length > 0 ? Number(maxRowData[0].row) : 562
+    const nextRow = maxRow + 1
     const newStudent = buildAddedStudent(d, nextRow)
     const { error } = await sb.from('students').insert(newStudent)
     if (error) throw error

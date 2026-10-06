@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { AlertTriangle, Award, FileText, IdCard, Loader2, Plus, Save, Sparkles, UserPlus, X } from 'lucide-react'
 import { AI_MODELS, analyzeAndUploadDocs, getSavedAiModel, setSavedAiModel, type AiModelId } from '@/lib/ai-doc'
 import { YON_OPTIONS } from '@/lib/config'
@@ -138,13 +138,17 @@ export default function AddStudentModal({ all, defaultGroup, onClose, onAdd }: P
     }))
   }
 
+  const submittingRef = useRef(false)
+
   const submit = async (keepOpen = false) => {
+    if (submittingRef.current || saving) return
     if (!(f.ism || '').trim()) return
     if (dups.length && !confirm(
       "Diqqat! Pasport yoki JSHSHIR boshqa talabada ham bor:\n\n" +
       dups.map((d) => `• ${fullName(d.student)} (${d.student.group || '—'}, №${d.student.shnum || '—'})`).join('\n') +
       '\n\nBaribir qo\'shilsinmi?',
     )) return
+    submittingRef.current = true
     setSaving(true)
     try {
       await onAdd(f, keepOpen)
@@ -154,6 +158,7 @@ export default function AddStudentModal({ all, defaultGroup, onClose, onAdd }: P
         onClose()
       }
     } finally {
+      submittingRef.current = false
       setSaving(false)
     }
   }
