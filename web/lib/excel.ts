@@ -88,22 +88,73 @@ const C = {
   shDoc: { header: 'Shahodatnoma / Diplom seriya №', wch: 22, val: (s: Student) => s.sh_doc || '', bold: true, center: true } as Col,
   mak: { header: "Tugatgan ta'lim muassasasi", wch: 38, val: (s: Student) => s.mak || '' } as Col,
   yil: { header: 'Bitirgan yili', wch: 14, val: (s: Student) => numIf(s.yil), num: true, center: true } as Col,
-  tel: { header: 'Telefon raqami', wch: 18, val: (s: Student) => s.tel_shaxsiy || s.tel || '', center: true } as Col,
-  manzil: {
-    header: 'Yashash manzili (Doimiy)',
-    wch: 38,
-    val: (s: Student) => s.manzil_toliq || s.manzil_tuman || tugilganTuman(s.pinfl) || '',
+  viloyatTuman: {
+    header: 'Viloyat / Tuman',
+    wch: 22,
+    val: (s: Student) => s.manzil_tuman || tugilganTuman(s.pinfl) || '',
+  } as Col,
+  mfy: {
+    header: 'MFY / Mahalla',
+    wch: 22,
+    val: (s: Student) => s.manzil_mfy || '',
+  } as Col,
+  kochaUy: {
+    header: 'Ko‘cha va uy',
+    wch: 26,
+    val: (s: Student) => {
+      const parts = [
+        s.manzil_kocha,
+        s.manzil_uy ? (s.manzil_uy.toLowerCase().includes('uy') ? s.manzil_uy : `${s.manzil_uy}-uy`) : '',
+      ].filter(Boolean)
+      return parts.join(', ')
+    },
+  } as Col,
+  manzilToliq: {
+    header: 'To‘liq yashash manzili',
+    wch: 42,
+    val: (s: Student) => {
+      if (s.manzil_toliq) return s.manzil_toliq
+      const parts = [s.manzil_tuman || tugilganTuman(s.pinfl), s.manzil_mfy, s.manzil_kocha, s.manzil_uy]
+      return parts.filter(Boolean).join(', ')
+    },
   } as Col,
   qatnov: {
     header: 'Qatnov holati',
-    wch: 15,
+    wch: 16,
     val: (s: Student) => s.qatnov || '',
+    center: true,
+  } as Col,
+  telTalaba: {
+    header: 'Talaba telefoni',
+    wch: 18,
+    val: (s: Student) => {
+      if (s.tel_shaxsiy) return s.tel_shaxsiy
+      const t = String(s.tel || '').split('/')[0].split(',')[0].replace(/[^\d+]/g, '').trim()
+      return t || ''
+    },
     center: true,
   } as Col,
   telOtaona: {
     header: 'Ota-onasi telefoni',
-    wch: 24,
-    val: (s: Student) => (s.tel_otaona ? `${s.tel_otaona} (${s.tel_otaona_kim || 'Oila'})` : ''),
+    wch: 20,
+    val: (s: Student) => {
+      if (s.tel_otaona) return s.tel_otaona
+      const parts = String(s.tel || '').split('/')
+      if (parts.length > 1) {
+        return parts[1].replace(/[^\d+]/g, '').trim()
+      }
+      return ''
+    },
+    center: true,
+  } as Col,
+  telKim: {
+    header: 'Qarindoshligi',
+    wch: 16,
+    val: (s: Student) => {
+      if (s.tel_otaona_kim) return s.tel_otaona_kim
+      const m = String(s.tel || '').match(/\(([^)]+)\)/)
+      return m ? m[1].trim() : ''
+    },
     center: true,
   } as Col,
 }
@@ -113,9 +164,10 @@ const ROLES: Record<Exclude<Role, 'qabul_shablon'>, { bg: string; cols: Col[] }>
   guruh_rahbari: {
     bg: '4C1D95',
     cols: [
-      C.tr, C.group, C.leader, C.fish,
+      C.tr, C.group, C.leader, C.shnum, C.fish,
       { ...C.dob, header: "Tug'ilgan sanasi (dd.mm.yyyy)", wch: 20, bold: true },
-      C.manzil, C.qatnov, C.tel, C.telOtaona,
+      C.viloyatTuman, C.mfy, C.kochaUy, C.manzilToliq, C.qatnov,
+      C.telTalaba, C.telOtaona, C.telKim,
       C.pv, C.pinfl, C.ber, C.docTur, C.shDoc, C.mak, C.yil,
     ],
   },
@@ -124,7 +176,8 @@ const ROLES: Record<Exclude<Role, 'qabul_shablon'>, { bg: string; cols: Col[] }>
     cols: [
       C.tr, C.group, C.leader, C.shnum, C.fish,
       { ...C.dob, header: "Tug'ilgan sanasi (dd.mm.yyyy)", wch: 18, bold: true },
-      C.manzil, C.qatnov, C.tel, C.telOtaona,
+      C.viloyatTuman, C.mfy, C.kochaUy, C.manzilToliq, C.qatnov,
+      C.telTalaba, C.telOtaona, C.telKim,
       C.pv, C.pinfl, C.ber, C.docTur, C.shDoc, C.mak, C.yil,
       { header: 'Holati', wch: 14, val: (s) => s.verified || 'KUTILMOQDA', center: true },
       { header: 'Bazaga kiritilganligi', wch: 18, val: (s) => s.baza || 'KIRITILDI', center: true },

@@ -216,11 +216,38 @@ async function loadFromSupabase(): Promise<Student[] | null> {
   }
 }
 
+async function enrichSurveyData(students: Student[]): Promise<Student[]> {
+  try {
+    const buf = await readRepoFile(['data/sorovnoma_1kurs.json', 'sorovnoma_1kurs.json'])
+    if (buf) {
+      const map = JSON.parse(buf.toString('utf-8')) as Record<string, Partial<Student>>
+      for (const s of students) {
+        const sr = map[String(s.row)] || (s.tr ? map[String(s.tr)] : undefined)
+        if (sr) {
+          if (sr.manzil_tuman) s.manzil_tuman = sr.manzil_tuman
+          if (sr.manzil_mfy) s.manzil_mfy = sr.manzil_mfy
+          if (sr.manzil_kocha) s.manzil_kocha = sr.manzil_kocha
+          if (sr.manzil_uy) s.manzil_uy = sr.manzil_uy
+          if (sr.manzil_toliq) s.manzil_toliq = sr.manzil_toliq
+          if (sr.qatnov) s.qatnov = sr.qatnov
+          if (sr.tel_shaxsiy) s.tel_shaxsiy = sr.tel_shaxsiy
+          if (sr.tel_otaona) s.tel_otaona = sr.tel_otaona
+          if (sr.tel_otaona_kim) s.tel_otaona_kim = sr.tel_otaona_kim
+        }
+      }
+    }
+  } catch (e) {
+    console.error("So'rovnoma boyitishda xato:", e)
+  }
+  return students
+}
+
 export async function loadStudentsWithSource(): Promise<{ students: Student[]; source: 'supabase' | 'local' | 'github' }> {
   // 1. Avval Supabase'dan o'qish (eng tezkor, jonli va real vaqt ma'lumot)
   const sbData = await loadFromSupabase()
   if (sbData && sbData.length > 0) {
-    return { students: sbData, source: 'supabase' }
+    const enriched = await enrichSurveyData(sbData)
+    return { students: enriched, source: 'supabase' }
   }
 
   // 2. Agar Supabase vaqtincha mavjud bo'lmasa, zaxira sifatida fayllar/GitHub'dan o'qish (kesh bilan)
@@ -234,8 +261,9 @@ export async function loadStudentsWithSource(): Promise<{ students: Student[]; s
     syncMode() === 'github' ? loadQueue() : Promise.resolve([]),
   ])
   const result = queue.length ? applyQueue(students, queue) : students
-  cachedStudents = { data: result, expiresAt: now + CACHE_TTL_MS }
-  return { students: result, source: syncMode() }
+  const enriched = await enrichSurveyData(result)
+  cachedStudents = { data: enriched, expiresAt: now + CACHE_TTL_MS }
+  return { students: enriched, source: syncMode() }
 }
 
 export async function loadStudents(): Promise<Student[]> {
