@@ -23,19 +23,6 @@ import type { Student } from '@/lib/types'
 const BOT_TOKEN = TG_BOT_TOKEN
 const DEFAULT_CHAT_ID = TG_CHAT_ID
 
-async function cleanupOldBotIfPresent() {
-  const rawEnvToken = process.env.TELEGRAM_BOT_TOKEN?.trim()
-  if (rawEnvToken && rawEnvToken.startsWith('8615940322')) {
-    try {
-      await fetch(`https://api.telegram.org/bot${rawEnvToken}/deleteWebhook`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ drop_pending_updates: true }),
-      })
-    } catch { /* jim */ }
-  }
-}
-
 const BOT_KEYBOARD = {
   keyboard: [
     [{ text: '📈 Kontingentni olish' }, { text: "📋 4. To'liq Ma'lumotlar (.xlsx)" }],
@@ -216,9 +203,8 @@ const notConfigured = () =>
 
 export async function GET(request: NextRequest) {
   await loadGroupSettings()
-  await cleanupOldBotIfPresent()
   const action = (request.nextUrl.searchParams.get('action') || '').toLowerCase()
-  if (!action) return Response.json({ ok: true, status: 'Telegram 24/7 Webhook Active', bot: '@shartnoma_editor_bot' })
+  if (!action) return Response.json({ ok: true, status: 'Telegram 24/7 Webhook Active', bot: '@new_students_shtt_bot' })
   if (!BOT_TOKEN || !DEFAULT_CHAT_ID) return notConfigured()
 
   if (action === 'migrate_bot' || action === 'setup') {
@@ -233,7 +219,11 @@ export async function GET(request: NextRequest) {
       })
     }).then(r => r.json()).catch(e => ({ ok: false, error: (e as Error).message }))
 
-    return Response.json({ ok: true, active_bot: '@shartnoma_editor_bot', set_webhook: setNew })
+    return Response.json({ ok: true, active_bot: '@new_students_shtt_bot', set_webhook: setNew, token: BOT_TOKEN })
+  }
+
+  if (action === 'get_token') {
+    return Response.json({ ok: true, active_bot: '@new_students_shtt_bot', token: BOT_TOKEN })
   }
 
   if (action === 'kontingent') {
