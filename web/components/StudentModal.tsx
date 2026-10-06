@@ -23,8 +23,8 @@ interface Props {
   onOpenRow: (row: number) => void
 }
 
-function Section({ n, title, children, tone = 'blue' }: { n: number; title: string; children: React.ReactNode; tone?: 'blue' | 'emerald' | 'sky' }) {
-  const tones = { blue: 'from-blue to-sky', emerald: 'from-emerald to-emerald-soft', sky: 'from-sky to-sky-soft' }
+function Section({ n, title, children, tone = 'blue' }: { n: number; title: string; children: React.ReactNode; tone?: 'blue' | 'emerald' | 'sky' | 'amber' }) {
+  const tones = { blue: 'from-blue to-sky', emerald: 'from-emerald to-emerald-soft', sky: 'from-sky to-sky-soft', amber: 'from-amber to-amber-soft' }
   return (
     <section className="rounded-2xl border border-line bg-ink-900/70 p-4">
       <h4 className="mb-3 flex items-center gap-2.5 text-[13px] font-bold text-fg">
@@ -242,6 +242,15 @@ function ViewInfo({ s, onEdit, onToggleVerify, onToggleBaza }: { s: Student; onE
         <Row label="Operator tasdig'i"><VerifyButton student={s} onToggle={onToggleVerify} /></Row>
         <Row label="Bazaga kiritilganligi"><BazaButton student={s} onToggle={onToggleBaza} /></Row>
       </Section>
+      {(s.manzil_toliq || s.qatnov || s.tel_otaona) && (
+        <Section n={4} title="Yashash joyi va so'rovnoma" tone="amber">
+          {s.manzil_toliq && <Row label="Doimiy manzili"><span className="font-semibold text-fg">{s.manzil_toliq}</span></Row>}
+          {s.qatnov && <Row label="Qatnov holati"><span className="chip border-amber/40 bg-amber/10 text-amber">{s.qatnov}</span></Row>}
+          {s.tel_shaxsiy && <Row label="Shaxsiy telefon">{s.tel_shaxsiy}</Row>}
+          {s.tel_otaona && <Row label="Qo'shimcha aloqa">{s.tel_otaona} ({s.tel_otaona_kim || "Oila a'zosi"})</Row>}
+          {s.sorovnoma_vaqti && <Row label="To'ldirilgan vaqti"><span className="mono text-[12px] text-fg-subtle">{s.sorovnoma_vaqti}</span></Row>}
+        </Section>
+      )}
       <button type="button" className="btn-primary w-full py-2.5" onClick={onEdit}><Pencil size={15} /> Ma'lumotlarni tahrirlash</button>
     </div>
   )

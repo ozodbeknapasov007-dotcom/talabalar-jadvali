@@ -32,6 +32,17 @@ export interface Student {
   /** Safdan chiqarish / akademik ta'til buyrug'i (Excel 26–27-ustunlar) */
   buyruq?: string
   buyruq_sana?: string
+  /** So'rovnomadan kiritilgan qo'shimcha ma'lumotlar */
+  manzil_tuman?: string
+  manzil_mfy?: string
+  manzil_kocha?: string
+  manzil_uy?: string
+  manzil_toliq?: string
+  qatnov?: string
+  tel_shaxsiy?: string
+  tel_otaona?: string
+  tel_otaona_kim?: string
+  sorovnoma_vaqti?: string
 }
 
 /** Qo'lda tahrirlanadigan maydonlar (eski app.js dagi STUDENT_EDIT_FIELDS) */
