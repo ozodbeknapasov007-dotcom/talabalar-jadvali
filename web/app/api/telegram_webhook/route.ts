@@ -27,8 +27,9 @@ const BOT_KEYBOARD = {
   keyboard: [
     [{ text: '📈 Kontingentni olish' }, { text: "📋 4. To'liq Ma'lumotlar (.xlsx)" }],
     [{ text: '📊 1. Buxgalteriya (.xlsx)' }, { text: '🗂 2. Baza Admin (.xlsx)' }],
-    [{ text: '👥 3. Guruh Rahbarlari (.xlsx)' }, { text: '📦 JSON Baza (.json)' }],
-    [{ text: "⚠️ Kamchiliklar ro'yxati" }, { text: '📑 Guruh Jurnallari (PDF)' }],
+    [{ text: '👥 3. Guruh Rahbarlari (.xlsx)' }, { text: '📝 Davomat Jurnali (.xlsx)' }],
+    [{ text: '📦 JSON Baza (.json)' }, { text: '📑 Guruh Jurnallari (PDF)' }],
+    [{ text: "⚠️ Kamchiliklar ro'yxati" }],
   ],
   resize_keyboard: true,
   is_persistent: true,
@@ -307,6 +308,20 @@ export async function POST(request: NextRequest) {
       const buf = await readRepoFileIn(REPO_PATHS.pdfJurnallar, 'Barcha_Guruhlar_Jurnali.pdf')
       if (buf) await sendDocument(chatId, buf, 'Barcha_Guruhlar_Jurnali.pdf', `📑 <b>Barcha ${pdfGroups().length} ta guruh jurnallari (A4 PDF)</b>\n🕒 Sana: ${stamp}`)
       else await sendMessage(chatId, '❌ PDF jurnal topilmadi.')
+      return Response.json({ ok: true })
+    }
+    if (t.includes('davomat') || t === '/davomat') {
+      const excel = await readRepoFileIn(['hisobotlar', ''], 'Davomat_Jurnali_Uchun_Malumotlar.xlsx')
+      const docx = await readRepoFileIn(['hisobotlar', ''], "Davomat jurnali 26-02 (TO'LDIRILGAN).docx")
+      if (excel) {
+        await sendDocument(chatId, excel, 'Davomat_Jurnali_Uchun_Malumotlar.xlsx', `📝 <b>Davomat Jurnali Uchun Talabalar Ma'lumotlari (.xlsx)</b>\n🕒 Sana: ${stamp}\n👥 Barcha 1-kurs va 26-02 guruhlari uchun andoza`)
+      }
+      if (docx) {
+        await sendDocument(chatId, docx, "Davomat jurnali 26-02 (TO'LDIRILGAN).docx", `📄 <b>Davomat jurnali 26-02 (Avtomatik to'ldirilgan Word hujjati)</b>\n🕒 Sana: ${stamp}\n✅ Barcha jadvallari to'liq to'ldirilgan`)
+      }
+      if (!excel && !docx) {
+        await sendMessage(chatId, '❌ Davomat jurnali fayllari topilmadi.')
+      }
       return Response.json({ ok: true })
     }
     if (text.length >= 2) {

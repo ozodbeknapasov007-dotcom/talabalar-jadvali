@@ -1041,6 +1041,40 @@ def send_role_excel_to_telegram_chat(role='toliq', target_chat_id=None):
     return False, resp.text[:160]
 
 
+def send_davomat_reports_to_telegram_chat(target_chat_id=None):
+    """Davomat jurnali uchun to'ldirilgan Word va Excel fayllarini Telegram chatga yuboradi."""
+    import requests
+    cfg = load_backup_config()
+    if not cfg:
+        return False, "Telegram bot sozlanmagan"
+    chat_id = target_chat_id or cfg['chat_id']
+    excel_path = os.path.join(BASE_DIR, 'hisobotlar', 'Davomat_Jurnali_Uchun_Malumotlar.xlsx')
+    docx_path = os.path.join(BASE_DIR, 'Davomat jurnali 26-02 (TO\'LDIRILGAN).docx')
+    stamp = time.strftime('%d.%m.%Y %H:%M')
+    sent = 0
+    if os.path.exists(excel_path):
+        caption = f"📝 <b>Davomat Jurnali Uchun Talabalar Ma'lumotlari (.xlsx)</b>\n🕒 Sana: {stamp}\n👥 Barcha 1-kurs va 26-02 guruhlari uchun to'liq andoza"
+        with open(excel_path, 'rb') as fh:
+            requests.post(
+                f"https://api.telegram.org/bot{cfg['token']}/sendDocument",
+                data={'chat_id': chat_id, 'caption': caption, 'parse_mode': 'HTML'},
+                files={'document': ('Davomat_Jurnali_Uchun_Malumotlar.xlsx', fh)},
+                timeout=120
+            )
+            sent += 1
+    if os.path.exists(docx_path):
+        caption = f"📄 <b>Davomat jurnali 26-02 (Avtomatik to'ldirilgan Word hujjati)</b>\n🕒 Sana: {stamp}\n✅ Barcha jadvallari to'liq to'ldirilgan"
+        with open(docx_path, 'rb') as fh:
+            requests.post(
+                f"https://api.telegram.org/bot{cfg['token']}/sendDocument",
+                data={'chat_id': chat_id, 'caption': caption, 'parse_mode': 'HTML'},
+                files={'document': ('Davomat jurnali 26-02 (TO\'LDIRILGAN).docx', fh)},
+                timeout=120
+            )
+            sent += 1
+    return sent > 0, f"{sent} ta fayl yuborildi"
+
+
 def build_kontingent_message_html(reason='So\'rov bo\'yicha'):
     """Guruhlar va rahbarlar kesimida to'liq Kontingent hisobotini HTML matn sifatida qaytaradi."""
     json_path, _ = build_json_database_file()
