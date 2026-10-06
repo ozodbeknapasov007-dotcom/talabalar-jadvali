@@ -58,3 +58,5 @@ scripts/backup_state.json
 .env*.local
 *.env
 data/supabase_backup_before_cleanup.json
+~$*
+data/google_sheet_survey.*

@@ -88,20 +88,44 @@ const C = {
   shDoc: { header: 'Shahodatnoma / Diplom seriya №', wch: 22, val: (s: Student) => s.sh_doc || '', bold: true, center: true } as Col,
   mak: { header: "Tugatgan ta'lim muassasasi", wch: 38, val: (s: Student) => s.mak || '' } as Col,
   yil: { header: 'Bitirgan yili', wch: 14, val: (s: Student) => numIf(s.yil), num: true, center: true } as Col,
-  tel: { header: 'Telefon raqami', wch: 16, val: (s: Student) => s.tel || '', center: true } as Col,
+  tel: { header: 'Telefon raqami', wch: 18, val: (s: Student) => s.tel_shaxsiy || s.tel || '', center: true } as Col,
+  manzil: {
+    header: 'Yashash manzili (Doimiy)',
+    wch: 38,
+    val: (s: Student) => s.manzil_toliq || s.manzil_tuman || tugilganTuman(s.pinfl) || '',
+  } as Col,
+  qatnov: {
+    header: 'Qatnov holati',
+    wch: 15,
+    val: (s: Student) => s.qatnov || '',
+    center: true,
+  } as Col,
+  telOtaona: {
+    header: 'Ota-onasi telefoni',
+    wch: 24,
+    val: (s: Student) => (s.tel_otaona ? `${s.tel_otaona} (${s.tel_otaona_kim || 'Oila'})` : ''),
+    center: true,
+  } as Col,
 }
 
 const ROLES: Record<Exclude<Role, 'qabul_shablon'>, { bg: string; cols: Col[] }> = {
   buxgalteriya: { bg: '065F46', cols: [C.tr, C.group, C.fish, C.shnum, C.pv, C.pinfl, C.ber, C.dob] },
   guruh_rahbari: {
     bg: '4C1D95',
-    cols: [C.tr, C.group, C.leader, C.fish, { ...C.dob, header: "Tug'ilgan sanasi (dd.mm.yyyy)", wch: 20, bold: true }, C.tuman, C.pv, C.pinfl, C.ber, C.docTur, C.shDoc, C.mak, C.yil, C.tel],
+    cols: [
+      C.tr, C.group, C.leader, C.fish,
+      { ...C.dob, header: "Tug'ilgan sanasi (dd.mm.yyyy)", wch: 20, bold: true },
+      C.manzil, C.qatnov, C.tel, C.telOtaona,
+      C.pv, C.pinfl, C.ber, C.docTur, C.shDoc, C.mak, C.yil,
+    ],
   },
   toliq: {
     bg: '0F172A',
     cols: [
-      C.tr, C.group, C.leader, C.shnum, C.fish, { ...C.dob, header: "Tug'ilgan sanasi (dd.mm.yyyy)", wch: 18, bold: true }, C.tuman,
-      C.pv, C.pinfl, C.ber, C.docTur, C.shDoc, C.mak, C.yil, C.tel,
+      C.tr, C.group, C.leader, C.shnum, C.fish,
+      { ...C.dob, header: "Tug'ilgan sanasi (dd.mm.yyyy)", wch: 18, bold: true },
+      C.manzil, C.qatnov, C.tel, C.telOtaona,
+      C.pv, C.pinfl, C.ber, C.docTur, C.shDoc, C.mak, C.yil,
       { header: 'Holati', wch: 14, val: (s) => s.verified || 'KUTILMOQDA', center: true },
       { header: 'Bazaga kiritilganligi', wch: 18, val: (s) => s.baza || 'KIRITILDI', center: true },
     ],

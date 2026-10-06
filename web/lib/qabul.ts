@@ -29,6 +29,13 @@ export interface QabulInput {
   group?: string
   /** Bazada telefon bo'lmasa qo'shimcha manbadan (masalan shartnoma .docx) topilgan raqamlar */
   extraPhones?: string[]
+  manzil_tuman?: string
+  manzil_mfy?: string
+  manzil_kocha?: string
+  manzil_uy?: string
+  manzil_toliq?: string
+  tel_shaxsiy?: string
+  tel_otaona?: string
 }
 
 export interface QabulIstisno {
@@ -385,20 +392,41 @@ export function qabulRow(s: QabulInput, istisno?: QabulIstisno): QabulRow {
   const phones = splitPhones(s.tel)
   const all = phones.length ? phones : (s.extraPhones ?? []).filter((p) => /^\d{9}$/.test(p))
 
-  const residence = districtOf(mak, pinfl, istisno?.viloyat)
+  const cleanP = (p: string | undefined) => (p ? p.replace(/\D/g, '').slice(-9) : '')
+  const tel1 = cleanP(s.tel_shaxsiy) || (all[0] ?? '')
+  const tel2 = cleanP(s.tel_otaona) || (all[1] ?? '')
+
+  let viloyat = ''
+  if (s.manzil_tuman) {
+    viloyat = s.manzil_tuman.toLowerCase().includes('viloyat')
+      ? s.manzil_tuman
+      : `Qashqadaryo, ${s.manzil_tuman}`
+  } else {
+    const residence = districtOf(mak, pinfl, istisno?.viloyat)
+    viloyat = residence?.full ?? ''
+  }
+
+  let manzil = ''
+  if (s.manzil_mfy || s.manzil_kocha || s.manzil_uy) {
+    const parts = [s.manzil_mfy, s.manzil_kocha, s.manzil_uy].filter(Boolean)
+    manzil = parts.join(', ')
+  } else if (s.manzil_toliq) {
+    manzil = s.manzil_toliq
+  }
+
   const inst = translateInstitution(mak, cleanText(s.doc_tur), shDoc, pinfl, istisno?.viloyat)
   const review: string[] = []
   if (inst.review) review.push('makEn', 'makRu')
-  if (!residence) review.push('viloyat')
+  if (!viloyat) review.push('viloyat')
 
   return {
     fio,
     pinfl,
     pv: cleanText(s.pv).replace(/\s+/g, '').toUpperCase(),
-    tel1: all[0] ?? '',
-    tel2: all[1] ?? '',
-    viloyat: residence?.full ?? '',
-    manzil: '',
+    tel1,
+    tel2,
+    viloyat,
+    manzil,
     makUz: inst.uz,
     makEn: inst.en,
     makRu: inst.ru,
