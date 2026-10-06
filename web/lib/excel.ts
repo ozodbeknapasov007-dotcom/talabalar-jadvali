@@ -180,7 +180,6 @@ function buildSheet(X: XLSXModule, students: Student[], role: Exclude<Role, 'qab
   }
   ws['!cols'] = cols.map((c) => ({ wch: c.wch }))
   ws['!rows'] = [{ hpt: 28 }, ...students.map(() => ({ hpt: 22 }))]
-  ws['!autofilter'] = { ref: `A1:${X.utils.encode_col(cols.length - 1)}1` }
   return ws
 }
 
@@ -188,6 +187,28 @@ const groupOrder = (a: string, b: string) => {
   const na = /^\d/.test(a), nb = /^\d/.test(b)
   if (na !== nb) return na ? -1 : 1
   return a.localeCompare(b, 'uz')
+}
+
+/** Fayl nomiga bugungi sana va vaqtni kiritish (masalan: 3_Guruh_Rahbarlari_Talabalar_Malumotlari (06.10.2026 10-05).xlsx) */
+export function withTimestamp(baseName: string, ext = '.xlsx'): string {
+  const now = new Date()
+  const d = String(now.getDate()).padStart(2, '0')
+  const m = String(now.getMonth() + 1).padStart(2, '0')
+  const y = now.getFullYear()
+  const hh = String(now.getHours()).padStart(2, '0')
+  const mm = String(now.getMinutes()).padStart(2, '0')
+  const stamp = `(${d}.${m}.${y} ${hh}-${mm})`
+  const clean = baseName.replace(/\.xlsx$/i, '').trim()
+  return `${clean} ${stamp}${ext}`
+}
+
+/** Excel sahifa nomini xavfsiz qilish (apostrof, qavs, slash larni tozalash, 31 belgidan oshmaslik) */
+function safeSheetName(name: string): string {
+  return name
+    .replace(/[:\\/?*[\]'ʻʼ`"]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .slice(0, 31)
 }
 
 /**
@@ -204,12 +225,13 @@ async function buildRoleWorkbook(X: XLSXModule, students: Student[], role: Role)
     X.utils.book_append_sheet(wb, buildQabulShablonSheet(X, official), QABUL_SHEET)
     return { wb, count: official.length }
   }
+
   const all = [...students].sort((a, b) => groupOrder((a.group || '').trim(), (b.group || '').trim()) || byName(a, b))
   X.utils.book_append_sheet(wb, buildSheet(X, all, role), 'Jami talabalar')
   const groups = [...new Set(students.map((s) => (s.group || '').trim()).filter(Boolean))].sort(groupOrder)
   for (const g of groups) {
     const list = students.filter((s) => (s.group || '').trim() === g).sort(byName)
-    const name = (/^\d/.test(g) ? `Guruh ${g}` : g).replace(/[:\\/?*[\]]/g, ' ').slice(0, 31)
+    const name = safeSheetName(/^\d/.test(g) ? `Guruh ${g}` : g)
     X.utils.book_append_sheet(wb, buildSheet(X, list, role), name)
   }
   const noGroup = students.filter((s) => !(s.group || '').trim())
@@ -221,7 +243,8 @@ async function buildRoleWorkbook(X: XLSXModule, students: Student[], role: Role)
 export async function exportRole(students: Student[], role: Role) {
   const X = await loadXlsx()
   const { wb } = await buildRoleWorkbook(X, students, role)
-  X.writeFile(wb, ROLE_META[role].file, { cellStyles: true, bookSST: false })
+  const fileName = withTimestamp(ROLE_META[role].file)
+  X.writeFile(wb, fileName, { cellStyles: true, bookSST: false })
   return wb.SheetNames.length
 }
 
@@ -232,7 +255,8 @@ export async function exportQabulShablonGroup(students: Student[], group: string
   await ensureAiTranslations(list)
   const wb = X.utils.book_new()
   X.utils.book_append_sheet(wb, buildQabulShablonSheet(X, list), QABUL_SHEET)
-  X.writeFile(wb, `${QABUL_FILE} (${group}).xlsx`, { cellStyles: true, bookSST: false })
+  const fileName = withTimestamp(`${QABUL_FILE} (${group})`)
+  X.writeFile(wb, fileName, { cellStyles: true, bookSST: false })
   return list.length
 }
 
@@ -246,7 +270,8 @@ export async function exportQabulShablonGroups(students: Student[], groups: stri
   const wb = X.utils.book_new()
   X.utils.book_append_sheet(wb, buildQabulShablonSheet(X, list), QABUL_SHEET)
   const suffix = groups.length === 1 ? ` (${groups[0]})` : groups.length < GROUPS.length ? ` (${groups.length} guruh)` : ''
-  X.writeFile(wb, `${QABUL_FILE}${suffix}.xlsx`, { cellStyles: true, bookSST: false })
+  const fileName = withTimestamp(`${QABUL_FILE}${suffix}`)
+  X.writeFile(wb, fileName, { cellStyles: true, bookSST: false })
   return list.length
 }
 
@@ -258,8 +283,8 @@ function inSelection(s: Student, key: string) {
 }
 
 function sheetName(key: string) {
-  const name = key === 'safdan' ? 'Safdan chiqarilganlar' : key === 'akademik' ? "Akademik ta'til" : /^\d/.test(key) ? `Guruh ${key}` : key
-  return name.replace(/[:\\/?*[\]]/g, ' ').slice(0, 31)
+  const name = key === 'safdan' ? 'Safdan chiqarilganlar' : key === 'akademik' ? "Akademik tatil" : /^\d/.test(key) ? `Guruh ${key}` : key
+  return safeSheetName(name)
 }
 
 /** Bitta guruh (yoki maxsus guruh) — guruh rahbari ustunlari bilan */
@@ -269,8 +294,9 @@ export async function exportGroup(students: Student[], group: string) {
   const list = students.filter((s) => inSelection(s, key)).sort(byName)
   const wb = X.utils.book_new()
   X.utils.book_append_sheet(wb, buildSheet(X, list, 'guruh_rahbari'), sheetName(key))
-  const file = key === 'safdan' ? 'Talabalar_Safidan_Chiqarilganlar.xlsx' : key === 'akademik' ? 'Akademik_Tatil_Olganlar.xlsx' : `Guruh_${group}_Talabalar_Royxati.xlsx`
-  X.writeFile(wb, file, { cellStyles: true, bookSST: false })
+  const file = key === 'safdan' ? 'Talabalar_Safidan_Chiqarilganlar' : key === 'akademik' ? 'Akademik_Tatil_Olganlar' : `Guruh_${group}_Talabalar_Royxati`
+  const fileName = withTimestamp(file)
+  X.writeFile(wb, fileName, { cellStyles: true, bookSST: false })
   return list.length
 }
 
@@ -279,7 +305,8 @@ export async function exportFiltered(students: Student[]) {
   const X = await loadXlsx()
   const wb = X.utils.book_new()
   X.utils.book_append_sheet(wb, buildSheet(X, students, 'toliq'), 'Talabalar')
-  X.writeFile(wb, 'Talabalar_Tanlangan_Royxat.xlsx', { cellStyles: true, bookSST: false })
+  const fileName = withTimestamp('Talabalar_Tanlangan_Royxat')
+  X.writeFile(wb, fileName, { cellStyles: true, bookSST: false })
 }
 
 /** Excel faylni server orqali Telegram botga yuborish */
@@ -293,7 +320,7 @@ export async function sendRoleToTelegram(students: Student[], role: Role) {
 
   const formData = new FormData()
   formData.append('caption', `📊 ${meta.title} (${meta.sub})\n👥 Jami talabalar: ${count} nafar`)
-  formData.append('file', blob, meta.file)
+  formData.append('file', blob, withTimestamp(meta.file))
 
   const res = await fetch('/api/send_role_telegram', {
     method: 'POST',
