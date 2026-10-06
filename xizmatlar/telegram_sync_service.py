@@ -964,9 +964,28 @@ def build_role_excel_file(role='toliq'):
         gq.build_workbook(rows).save(out_path)
         return out_path, cfg['title'], len(rows)
 
-    json_path, _ = build_json_database_file()
-    with open(json_path, 'r', encoding='utf-8') as f:
-        students = json.load(f).get('students', [])
+    students_json_path = os.path.join(BASE_DIR, 'data', 'students.json')
+    if os.path.exists(students_json_path):
+        with open(students_json_path, 'r', encoding='utf-8') as f:
+            students = json.load(f)
+    else:
+        json_path, _ = build_json_database_file()
+        with open(json_path, 'r', encoding='utf-8') as f:
+            students = json.load(f).get('students', [])
+
+    sorov_path = os.path.join(BASE_DIR, 'data', 'sorovnoma_1kurs.json')
+    if os.path.exists(sorov_path):
+        try:
+            with open(sorov_path, 'r', encoding='utf-8') as sf:
+                smap = json.load(sf)
+            for s in students:
+                sr = smap.get(str(s.get('row'))) or (smap.get(str(s.get('tr'))) if s.get('tr') else None)
+                if sr:
+                    for k in ['tel_shaxsiy', 'tel_otaona', 'tel_otaona_kim', 'manzil_tuman', 'manzil_mfy', 'manzil_kocha', 'manzil_uy', 'manzil_toliq', 'qatnov']:
+                        if sr.get(k):
+                            s[k] = sr[k]
+        except Exception as e_sr:
+            print(f"[EXCEL] Sorovnoma enrichment error: {e_sr}")
 
     wb = openpyxl.Workbook()
     wb.remove(wb.active)
