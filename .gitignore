@@ -57,3 +57,4 @@ scripts/backup_state.json
 .env
 .env*.local
 *.env
+data/supabase_backup_before_cleanup.json

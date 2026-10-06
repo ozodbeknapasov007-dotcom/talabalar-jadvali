@@ -9,12 +9,11 @@ import { QABUL_FILE, QABUL_HEADERS, QABUL_PINFL_COL, QABUL_SHEET, QABUL_WIDTHS, 
 
 /* Eski app.js dagi 4 bo'limli Excel eksportning aynan o'zi (ustunlar, ranglar, formatlar) */
 
-export type Role = 'qabul_shablon' | 'buxgalteriya' | 'admin' | 'guruh_rahbari' | 'toliq'
+export type Role = 'qabul_shablon' | 'buxgalteriya' | 'guruh_rahbari' | 'toliq'
 
 export const ROLE_META: Record<Role, { file: string; title: string; sub: string }> = {
   qabul_shablon: { file: `${QABUL_FILE}.xlsx`, title: QABUL_FILE, sub: "Admin shabloni: 14 ustun (guruhi bilan), rasmiy UZ / EN tarjima" },
   buxgalteriya: { file: '1_Buxgalteriya_Shartnoma_va_Pasport.xlsx', title: 'Buxgalteriya', sub: "Shartnoma № va pasport ma'lumotlari" },
-  admin: { file: '2_Baza_Admin_Pasport_va_Shahodatnoma.xlsx', title: 'Baza administratori', sub: 'Admin shabloni (Qabul uchun shablon): 14 ustun' },
   guruh_rahbari: { file: '3_Guruh_Rahbarlari_Talabalar_Malumotlari.xlsx', title: 'Guruh rahbarlari', sub: "Tug'ilgan sana, pasport, shahodatnoma" },
   toliq: { file: '4_Toliq_Malumotlar_Bazasi.xlsx', title: "To'liq ma'lumotlar", sub: 'Barcha ustunlar jamlangan baza' },
 }
@@ -92,7 +91,7 @@ const C = {
   tel: { header: 'Telefon raqami', wch: 16, val: (s: Student) => s.tel || '', center: true } as Col,
 }
 
-const ROLES: Record<Exclude<Role, QabulRole>, { bg: string; cols: Col[] }> = {
+const ROLES: Record<Exclude<Role, 'qabul_shablon'>, { bg: string; cols: Col[] }> = {
   buxgalteriya: { bg: '065F46', cols: [C.tr, C.group, C.fish, C.shnum, C.pv, C.pinfl, C.ber, C.dob] },
   guruh_rahbari: {
     bg: '4C1D95',
@@ -114,7 +113,7 @@ type XLSXModule = typeof import('xlsx-js-style')
 /** Kutubxona faqat eksport bosilganda yuklanadi — sahifa og'irlashmasin */
 const loadXlsx = () => import('xlsx-js-style') as Promise<XLSXModule>
 
-function buildSheet(X: XLSXModule, students: Student[], role: Exclude<Role, QabulRole>) {
+function buildSheet(X: XLSXModule, students: Student[], role: Exclude<Role, 'qabul_shablon'>) {
   const { bg, cols } = ROLES[role]
   const grid = { style: 'thin', color: { rgb: '94A3B8' } }
   const border = { top: grid, bottom: grid, left: grid, right: grid }
@@ -168,15 +167,12 @@ const groupOrder = (a: string, b: string) => {
 }
 
 /**
- * Admin shablonidagi rollar: bitta "Лист1" sahifa, 1-kurs (joriy qabul) guruhlari — Python
+ * Qabul shabloni: bitta "Лист1" sahifa, 1-kurs (joriy qabul) guruhlari — Python
  * (generate_qabul_shablon.py) bilan bir xil; guruh tartibida, ichida alifbo bo'yicha.
  */
-type QabulRole = 'qabul_shablon' | 'admin'
-const isQabulRole = (role: Role): role is QabulRole => role === 'qabul_shablon' || role === 'admin'
-
 async function buildRoleWorkbook(X: XLSXModule, students: Student[], role: Role) {
   const wb = X.utils.book_new()
-  if (isQabulRole(role)) {
+  if (role === 'qabul_shablon') {
     const official = students
       .filter((s) => isOfficialGroup(s.group) && kursOf(s.group) === 1)
       .sort((a, b) => groupOrder((a.group || '').trim(), (b.group || '').trim()) || byName(a, b))
