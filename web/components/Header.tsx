@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import { ChevronDown, CloudCheck, CloudUpload, FileSpreadsheet, Loader2, Moon, RefreshCw, Download, Send, Sun, UserPlus } from 'lucide-react'
+import { Archive, ChevronDown, ClipboardList, CloudCheck, CloudUpload, FileSpreadsheet, FileText, Loader2, Moon, RefreshCw, Download, Send, Sun, UserPlus } from 'lucide-react'
 import { exportRole, ROLE_META, sendRoleToTelegram, type Role } from '@/lib/excel'
 import type { Student } from '@/lib/types'
 import type { Notify } from './Toast'
@@ -196,7 +196,7 @@ function ExportMenu({ students, notify }: { students: Student[]; notify: Notify 
               className="flex min-w-0 flex-1 items-center gap-3 text-left"
               onClick={() => notify("Davomat Jurnali (.xlsx) yuklanmoqda...")}
             >
-              <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-emerald/15 text-[14px]">📝</span>
+              <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-emerald/15 text-emerald"><FileText size={17} /></span>
               <span className="min-w-0 flex-1">
                 <span className="block text-[13.5px] font-semibold text-fg">Davomat jurnali (.xlsx)</span>
                 <span className="block truncate text-[12px] text-fg-muted">Barcha guruhlar jurnali andozasi</span>
@@ -222,7 +222,7 @@ function ExportMenu({ students, notify }: { students: Student[]; notify: Notify 
               className="flex min-w-0 flex-1 items-center gap-3 text-left"
               onClick={() => notify("Barcha guruhlar Word jurnallari (.zip) yuklanmoqda...")}
             >
-              <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-amber/15 text-[14px]">📦</span>
+              <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-amber/15 text-amber"><Archive size={17} /></span>
               <span className="min-w-0 flex-1">
                 <span className="block text-[13.5px] font-semibold text-fg">Barcha Word jurnallar (.zip)</span>
                 <span className="block truncate text-[12px] text-fg-muted">19 ta guruh to'ldirilgan Word jurnali</span>
@@ -248,7 +248,7 @@ function ExportMenu({ students, notify }: { students: Student[]; notify: Notify 
               className="flex min-w-0 flex-1 items-center gap-3 text-left"
               onClick={() => notify("Davomat jurnali 26-02 (.docx) yuklanmoqda...")}
             >
-              <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-blue/15 text-[14px]">📄</span>
+              <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-blue/15 text-blue-soft"><FileText size={17} /></span>
               <span className="min-w-0 flex-1">
                 <span className="block text-[13.5px] font-semibold text-fg">Davomat 26-02 (.docx)</span>
                 <span className="block truncate text-[12px] text-fg-muted">To'ldirilgan rasmiy Word jurnali</span>
@@ -274,7 +274,7 @@ function ExportMenu({ students, notify }: { students: Student[]; notify: Notify 
               className="flex min-w-0 flex-1 items-center gap-3 text-left"
               onClick={() => notify("1-kurs so'rovnoma (.xlsx) yuklanmoqda...")}
             >
-              <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-amber/15 text-[14px]">📋</span>
+              <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-amber/15 text-amber"><ClipboardList size={17} /></span>
               <span className="min-w-0 flex-1">
                 <span className="block text-[13.5px] font-semibold text-fg">1-kurs So'rovnoma (.xlsx)</span>
                 <span className="block truncate text-[12px] text-fg-muted">Manzillar, ota-ona va telefonlar</span>
