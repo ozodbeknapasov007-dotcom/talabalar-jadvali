@@ -881,7 +881,14 @@ ROLE_EXCEL_CONFIG = {
             ('Shahodatnoma / Diplom seriya №', 22, lambda s, i: s.get('sh_doc', ''), True, True),
             ("Tugatgan ta'lim muassasasi", 38, lambda s, i: s.get('mak', ''), False, False),
             ('Bitirgan yili', 14, lambda s, i: _to_int_if_digits(s.get('yil', '')), False, True),
-            ('Telefon raqami', 16, lambda s, i: s.get('tel', ''), False, True),
+            ('Talaba telefoni', 18, lambda s, i: s.get('tel_shaxsiy') or s.get('tel', ''), False, True),
+            ('Ota-onasi telefoni', 18, lambda s, i: s.get('tel_otaona', ''), False, True),
+            ('Qarindoshligi', 16, lambda s, i: s.get('tel_otaona_kim', ''), False, False),
+            ('Viloyat / Tuman', 20, lambda s, i: s.get('manzil_tuman') or _get_tuman_from_pinfl(s.get('pinfl', '')), False, False),
+            ('MFY / Mahalla', 22, lambda s, i: s.get('manzil_mfy', ''), False, False),
+            ('Ko‘cha va uy', 24, lambda s, i: f"{s.get('manzil_kocha', '')} {s.get('manzil_uy', '')}".strip(), False, False),
+            ('To‘liq yashash manzili', 36, lambda s, i: s.get('manzil_toliq', ''), False, False),
+            ('Qatnov holati', 16, lambda s, i: s.get('qatnov', ''), False, True),
         ]
     },
     'toliq': {
@@ -903,7 +910,14 @@ ROLE_EXCEL_CONFIG = {
             ('Shahodatnoma / Diplom seriya №', 22, lambda s, i: s.get('sh_doc', ''), True, True),
             ("Tugatgan ta'lim muassasasi", 38, lambda s, i: s.get('mak', ''), False, False),
             ('Bitirgan yili', 14, lambda s, i: _to_int_if_digits(s.get('yil', '')), False, True),
-            ('Telefon raqami', 16, lambda s, i: s.get('tel', ''), False, True),
+            ('Talaba telefoni', 18, lambda s, i: s.get('tel_shaxsiy') or s.get('tel', ''), False, True),
+            ('Ota-onasi telefoni', 18, lambda s, i: s.get('tel_otaona', ''), False, True),
+            ('Qarindoshligi', 16, lambda s, i: s.get('tel_otaona_kim', ''), False, False),
+            ('Viloyat / Tuman', 20, lambda s, i: s.get('manzil_tuman') or _get_tuman_from_pinfl(s.get('pinfl', '')), False, False),
+            ('MFY / Mahalla', 22, lambda s, i: s.get('manzil_mfy', ''), False, False),
+            ('Ko‘cha va uy', 24, lambda s, i: f"{s.get('manzil_kocha', '')} {s.get('manzil_uy', '')}".strip(), False, False),
+            ('To‘liq yashash manzili', 36, lambda s, i: s.get('manzil_toliq', ''), False, False),
+            ('Qatnov holati', 16, lambda s, i: s.get('qatnov', ''), False, True),
             ('Holati', 14, lambda s, i: s.get('verified', 'KUTILMOQDA'), False, True),
             ('Bazaga kiritilganligi', 18, lambda s, i: s.get('baza', 'KIRITILDI'), False, True),
         ]
@@ -973,18 +987,29 @@ def build_role_excel_file(role='toliq'):
                 cell.alignment = Alignment(horizontal='center' if is_center else 'left', vertical='center')
         ws.freeze_panes = 'A2'
 
-    sorted_all = sorted(students, key=lambda x: (0 if str(x.get('group', ''))[:1].isdigit() else 1, str(x.get('group', '')), str(x.get('fish', ''))))
+    # EXPORTDA t.s.ch va akademik olgan guruhlar olinmasin
+    def is_active_student(s):
+        grp = str(s.get('group', '')).strip().lower()
+        if not grp:
+            return False
+        if 'akademik' in grp or 'chiqarilgan' in grp or 't.s.ch' in grp or 'chetlatilgan' in grp:
+            return False
+        return True
+
+    active_students = [s for s in students if is_active_student(s)]
+
+    sorted_all = sorted(active_students, key=lambda x: (0 if str(x.get('group', ''))[:1].isdigit() else 1, str(x.get('group', '')), str(x.get('fish', ''))))
     fill_sheet(wb.create_sheet('Jami talabalar'), sorted_all)
 
-    groups = sorted(list({str(s.get('group', '')).strip() for s in students if str(s.get('group', '')).strip()}), key=lambda g: (0 if g[:1].isdigit() else 1, g))
+    groups = sorted(list({str(s.get('group', '')).strip() for s in active_students if str(s.get('group', '')).strip()}), key=lambda g: (0 if g[:1].isdigit() else 1, g))
     for g in groups:
-        g_list = sorted([s for s in students if str(s.get('group', '')).strip() == g], key=lambda x: str(x.get('fish', '')))
+        g_list = sorted([s for s in active_students if str(s.get('group', '')).strip() == g], key=lambda x: str(x.get('fish', '')))
         sh_name = (f'Guruh {g}' if g[:1].isdigit() else g)[:31]
         fill_sheet(wb.create_sheet(sh_name), g_list)
 
     out_path = os.path.join(BASE_DIR, 'hisobotlar', 'rollar', cfg['file'])
     wb.save(out_path)
-    return out_path, cfg['title'], len(students)
+    return out_path, cfg['title'], len(active_students)
 
 
 def build_all_4_role_excels():

@@ -1,7 +1,7 @@
 import 'server-only'
 
 /** Bot tokeni va hisobot chati — Foydalanuvchi talab qilgan rasmiy bot: @new_students_shtt_bot */
-export const TG_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN?.trim() || ''
+export const TG_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN?.trim() || '8615940322:AAHkeQ7MH9OE6uGXI7_24YE8KdEC-xz8P7o'
 export const TG_CHAT_ID = process.env.TELEGRAM_CHAT_ID?.trim() || '8135594558'
 export const TG_CHANNEL_ID = process.env.TELEGRAM_CHANNEL_ID?.trim() || '-1004375713276'
 

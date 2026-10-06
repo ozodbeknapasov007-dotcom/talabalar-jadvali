@@ -74,39 +74,56 @@ function buildQabulShablonSheet(X: XLSXModule, students: Student[]) {
 }
 
 const formatCleanPhone = (p: string) => {
-  const digits = p.replace(/\D/g, '')
-  if (digits.length === 9) {
-    return `+998 ${digits.slice(0, 2)} ${digits.slice(2, 5)}-${digits.slice(5, 7)}-${digits.slice(7, 9)}`
+  let s = String(p || '').trim()
+  if (s.endsWith('.0')) s = s.slice(0, -2)
+  if (s === '000' || s === '00' || s === '0' || s === '-' || s === '—') return ''
+  const digits = s.replace(/\D/g, '')
+  let d9 = digits
+  if (digits.startsWith('998') && digits.length >= 12) {
+    d9 = digits.slice(3, 12)
+  } else if (digits.startsWith('8') && digits.length === 10) {
+    d9 = digits.slice(1, 10)
+  } else if (digits.length === 9) {
+    d9 = digits
+  } else if (digits.length > 9) {
+    d9 = digits.slice(0, 9)
   }
-  if (digits.length === 12 && digits.startsWith('998')) {
-    return `+998 ${digits.slice(3, 5)} ${digits.slice(5, 8)}-${digits.slice(8, 10)}-${digits.slice(10, 12)}`
+  if (d9.length === 9) {
+    return `+998 ${d9.slice(0, 2)} ${d9.slice(2, 5)}-${d9.slice(5, 7)}-${d9.slice(7, 9)}`
   }
-  return p
+  return s === '000' ? '' : s
 }
 
 function parseStudentPhones(s: Student): { telShaxsiy: string; telOtaona: string; telKim: string } {
-  if (s.tel_shaxsiy || s.tel_otaona) {
-    return {
-      telShaxsiy: s.tel_shaxsiy ? formatCleanPhone(s.tel_shaxsiy) : '',
-      telOtaona: s.tel_otaona ? formatCleanPhone(s.tel_otaona) : '',
-      telKim: s.tel_otaona_kim || (s.tel_otaona ? 'Oila' : ''),
+  let t1 = s.tel_shaxsiy ? formatCleanPhone(s.tel_shaxsiy) : ''
+  let t2 = s.tel_otaona ? formatCleanPhone(s.tel_otaona) : ''
+  let kim = s.tel_otaona_kim || ''
+
+  // Agar tel maydonida 2 ta raqam bo'lsa (masalan 973350582 / 978635082):
+  if ((!t1 || !t2) && s.tel) {
+    const raw = String(s.tel).trim()
+    if (raw && raw !== '000' && raw !== '00') {
+      const mKim = raw.match(/\(([^)]+)\)/)
+      if (mKim && !kim) kim = mKim[1].trim()
+
+      const cleaned = raw.replace(/\([^)]*\)/g, '').trim()
+      const parts = cleaned.split(/[/,;]|\s{2,}/).map((p) => p.trim()).filter(Boolean)
+      if (!t1 && parts[0]) t1 = formatCleanPhone(parts[0])
+      if (!t2 && parts[1]) {
+        t2 = formatCleanPhone(parts[1])
+        if (!kim) kim = 'Otasi / Onasi'
+      }
     }
   }
 
-  const raw = String(s.tel || '').trim()
-  if (!raw) return { telShaxsiy: '', telOtaona: '', telKim: '' }
-
-  let kim = ''
-  const mKim = raw.match(/\(([^)]+)\)/)
-  if (mKim) kim = mKim[1].trim()
-
-  const cleaned = raw.replace(/\([^)]*\)/g, '').trim()
-  const parts = cleaned.split(/[/,]/).map((p) => p.trim()).filter(Boolean)
+  if (t2 && !kim) {
+    kim = 'Otasi / Onasi'
+  }
 
   return {
-    telShaxsiy: parts[0] ? formatCleanPhone(parts[0]) : '',
-    telOtaona: parts[1] ? formatCleanPhone(parts[1]) : '',
-    telKim: kim || (parts[1] ? 'Oila' : ''),
+    telShaxsiy: t1,
+    telOtaona: t2,
+    telKim: kim,
   }
 }
 
