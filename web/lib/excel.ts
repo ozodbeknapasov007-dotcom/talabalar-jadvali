@@ -73,6 +73,43 @@ function buildQabulShablonSheet(X: XLSXModule, students: Student[]) {
   return ws
 }
 
+const formatCleanPhone = (p: string) => {
+  const digits = p.replace(/\D/g, '')
+  if (digits.length === 9) {
+    return `+998 ${digits.slice(0, 2)} ${digits.slice(2, 5)}-${digits.slice(5, 7)}-${digits.slice(7, 9)}`
+  }
+  if (digits.length === 12 && digits.startsWith('998')) {
+    return `+998 ${digits.slice(3, 5)} ${digits.slice(5, 8)}-${digits.slice(8, 10)}-${digits.slice(10, 12)}`
+  }
+  return p
+}
+
+function parseStudentPhones(s: Student): { telShaxsiy: string; telOtaona: string; telKim: string } {
+  if (s.tel_shaxsiy || s.tel_otaona) {
+    return {
+      telShaxsiy: s.tel_shaxsiy ? formatCleanPhone(s.tel_shaxsiy) : '',
+      telOtaona: s.tel_otaona ? formatCleanPhone(s.tel_otaona) : '',
+      telKim: s.tel_otaona_kim || (s.tel_otaona ? 'Oila' : ''),
+    }
+  }
+
+  const raw = String(s.tel || '').trim()
+  if (!raw) return { telShaxsiy: '', telOtaona: '', telKim: '' }
+
+  let kim = ''
+  const mKim = raw.match(/\(([^)]+)\)/)
+  if (mKim) kim = mKim[1].trim()
+
+  const cleaned = raw.replace(/\([^)]*\)/g, '').trim()
+  const parts = cleaned.split(/[/,]/).map((p) => p.trim()).filter(Boolean)
+
+  return {
+    telShaxsiy: parts[0] ? formatCleanPhone(parts[0]) : '',
+    telOtaona: parts[1] ? formatCleanPhone(parts[1]) : '',
+    telKim: kim || (parts[1] ? 'Oila' : ''),
+  }
+}
+
 const C = {
   tr: { header: 'T/R', wch: 6, val: (_s: Student, i: number) => i + 1, num: true } as Col,
   group: { header: 'Guruh', wch: 10, val: (s: Student) => s.group || '', center: true } as Col,
@@ -126,35 +163,20 @@ const C = {
   } as Col,
   telTalaba: {
     header: 'Talaba telefoni',
-    wch: 18,
-    val: (s: Student) => {
-      if (s.tel_shaxsiy) return s.tel_shaxsiy
-      const t = String(s.tel || '').split('/')[0].split(',')[0].replace(/[^\d+]/g, '').trim()
-      return t || ''
-    },
+    wch: 20,
+    val: (s: Student) => parseStudentPhones(s).telShaxsiy,
     center: true,
   } as Col,
   telOtaona: {
     header: 'Ota-onasi telefoni',
     wch: 20,
-    val: (s: Student) => {
-      if (s.tel_otaona) return s.tel_otaona
-      const parts = String(s.tel || '').split('/')
-      if (parts.length > 1) {
-        return parts[1].replace(/[^\d+]/g, '').trim()
-      }
-      return ''
-    },
+    val: (s: Student) => parseStudentPhones(s).telOtaona,
     center: true,
   } as Col,
   telKim: {
     header: 'Qarindoshligi',
     wch: 16,
-    val: (s: Student) => {
-      if (s.tel_otaona_kim) return s.tel_otaona_kim
-      const m = String(s.tel || '').match(/\(([^)]+)\)/)
-      return m ? m[1].trim() : ''
-    },
+    val: (s: Student) => parseStudentPhones(s).telKim,
     center: true,
   } as Col,
 }
@@ -279,17 +301,19 @@ async function buildRoleWorkbook(X: XLSXModule, students: Student[], role: Role)
     return { wb, count: official.length }
   }
 
-  const all = [...students].sort((a, b) => groupOrder((a.group || '').trim(), (b.group || '').trim()) || byName(a, b))
-  X.utils.book_append_sheet(wb, buildSheet(X, all, role), 'Jami talabalar')
-  const groups = [...new Set(students.map((s) => (s.group || '').trim()).filter(Boolean))].sort(groupOrder)
+  // EXCPORTDA t.s.cH VA AKADEMIK OLGAN GURUHLAR OLINMASIN:
+  const activeStudents = students
+    .filter((s) => isOfficialGroup(s.group) && !isAcademicLeave(s.group) && !isOutside(s.group))
+    .sort((a, b) => groupOrder((a.group || '').trim(), (b.group || '').trim()) || byName(a, b))
+
+  X.utils.book_append_sheet(wb, buildSheet(X, activeStudents, role), 'Jami talabalar')
+  const groups = [...new Set(activeStudents.map((s) => (s.group || '').trim()).filter(Boolean))].sort(groupOrder)
   for (const g of groups) {
-    const list = students.filter((s) => (s.group || '').trim() === g).sort(byName)
+    const list = activeStudents.filter((s) => (s.group || '').trim() === g).sort(byName)
     const name = safeSheetName(/^\d/.test(g) ? `Guruh ${g}` : g)
     X.utils.book_append_sheet(wb, buildSheet(X, list, role), name)
   }
-  const noGroup = students.filter((s) => !(s.group || '').trim())
-  if (noGroup.length) X.utils.book_append_sheet(wb, buildSheet(X, noGroup, role), 'Guruhsizlar')
-  return { wb, count: students.length }
+  return { wb, count: activeStudents.length }
 }
 
 /** 1-sahifa "Jami talabalar" (yoki qabul_shablon uchun har bir guruh alohida sahifada) */
