@@ -158,5 +158,26 @@
     },
     "id": "chg_1791273478431_bpayk",
     "created_at": "2026-10-06T07:57:58.431Z"
+  },
+  {
+    "type": "add_student",
+    "data": {
+      "ism": "Ergasheva Madina",
+      "ota": "Tulqin qizi",
+      "group": "26-07",
+      "pv": "AC0429133",
+      "pinfl": "62501027890026",
+      "dob": "25.01.2002",
+      "ber": "07.12.2018",
+      "doc_tur": "Shahodatnoma",
+      "sh_doc": "UM 0074663",
+      "mak": "Shahrisabz shahar 21-sonli umumiy o'rta ta'lim maktabi",
+      "yil": "2019",
+      "yon": "Hamshiralik ishi - 3 yillik",
+      "shnum": "",
+      "tel": ""
+    },
+    "id": "chg_1791273662763_o5xib",
+    "created_at": "2026-10-06T08:01:02.763Z"
   }
 ]
