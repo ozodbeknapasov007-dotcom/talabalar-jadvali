@@ -12757,7 +12757,7 @@
     "mak": "Qashqadaryo viloyati Kitob tumani 21-sonli umumiy o'rta ta'lim maktabi",
     "doc_tur": "Shahodatnoma",
     "yil": "2000",
-    "tel": "",
+    "tel": "+998 99 217-47-52 / +998 95 528-40-81 (Turmush o'rtog'i)",
     "doc_file": "Niyozova Komila.docx",
     "status": "full",
     "pass_fish": "Niyozova Komila Toshpulatovna",
@@ -12767,7 +12767,16 @@
     "verified": "TASDIQLANDI",
     "baza": "KIRITILDI",
     "buyruq": "T-40/2",
-    "buyruq_sana": "02.09.2026"
+    "buyruq_sana": "02.09.2026",
+    "tel_shaxsiy": "+998 99 217-47-52",
+    "tel_otaona": "+998 95 528-40-81",
+    "tel_otaona_kim": "Turmush o'rtog'i",
+    "manzil_tuman": "Kitob tumani",
+    "manzil_mfy": "Alaqo'yliq MFY",
+    "manzil_kocha": "Mevali ko'chasi",
+    "manzil_uy": "109-uy",
+    "qatnov": "O'z uyidan",
+    "manzil_toliq": "Kitob tumani, Alaqo'yliq MFY, Mevali ko'chasi, 109-uy"
   },
   {
     "row": 90,

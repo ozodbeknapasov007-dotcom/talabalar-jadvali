@@ -188,6 +188,7 @@ ROW_MAPPING = {
     228: 121, # Sayfiyeva Zarina Ahmad qizi [26-03]
     229: 33,  # Gʻayratova Jasmina [26-05]
     230: 168, # Yahyomurodova Gulsanam Akmal qizi [26-06]
+    231: 88,  # Niyozova Komila Toshpo'latovna [26-03]
 }
 
 def main():
