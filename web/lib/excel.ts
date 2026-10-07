@@ -1,11 +1,52 @@
 'use client'
 
+import { unzipSync, zipSync, strFromU8, strToU8 } from 'fflate'
 import { GROUPS, GROUP_LEADERS } from './config'
 import { byName, formatDate, fullName, isAcademicLeave, isOfficialGroup, isOutside, isWithdrawn, kursOf, tugilganTuman } from './student'
 import type { Student } from './types'
 import ISTISNOLAR from './qabul-istisnolar.json'
 import { ensureAiTranslations, withAiTranslation } from './qabul-ai'
 import { QABUL_FILE, QABUL_HEADERS, QABUL_PINFL_COL, QABUL_SHEET, QABUL_WIDTHS, REVIEW_COL, qabulCells, qabulRow, type QabulIstisno } from './qabul'
+
+/**
+ * xlsx-js-style kutubxonasidagi OpenXML xatosini tozalovchi funksiya:
+ * xlsx-js-style makrosiz .xlsx fayllarida workbookPr ichiga noto'g'ri codeName="ThisWorkbook" yozib qo'yadi.
+ * Bu Microsoft Excel'da "Ошибка в части содержимого в книге... Выполнить попытку восстановления?"
+ * xatoligini keltirib chiqaradi. codeName olib tashlangach, Excel faylni toza ochadi.
+ */
+export function cleanXlsxBuffer(raw: ArrayBuffer | Uint8Array): Uint8Array {
+  try {
+    const unzipped = unzipSync(new Uint8Array(raw))
+    if (unzipped['xl/workbook.xml']) {
+      let wbXml = strFromU8(unzipped['xl/workbook.xml'])
+      wbXml = wbXml.replace(/\s+codeName=(["']).*?\1/g, '')
+      unzipped['xl/workbook.xml'] = strToU8(wbXml)
+    }
+    return zipSync(unzipped)
+  } catch (err) {
+    console.warn('XLSX fflate tozalashda xatolik:', err)
+    return new Uint8Array(raw)
+  }
+}
+
+export function downloadBlob(data: Uint8Array | ArrayBuffer | Blob, fileName: string, mime = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet') {
+  if (typeof window === 'undefined') return
+  const blob = data instanceof Blob ? data : new Blob([data as any], { type: mime })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = fileName
+  document.body.appendChild(a)
+  a.click()
+  document.body.removeChild(a)
+  URL.revokeObjectURL(url)
+}
+
+export function writeXlsxClean(X: XLSXModule, wb: any, fileName: string) {
+  const raw = X.write(wb, { bookType: 'xlsx', type: 'array', cellStyles: true, bookSST: false })
+  const cleaned = cleanXlsxBuffer(raw)
+  downloadBlob(cleaned, fileName)
+}
 
 /* Eski app.js dagi 4 bo'limli Excel eksportning aynan o'zi (ustunlar, ranglar, formatlar) */
 
@@ -335,27 +376,62 @@ async function buildRoleWorkbook(X: XLSXModule, students: Student[], role: Role)
 
 /** 1-sahifa "Jami talabalar" (yoki qabul_shablon uchun har bir guruh alohida sahifada) */
 export async function exportRole(students: Student[], role: Role) {
+  // 1. Avval serverdan toza va rasmiy openpyxl formatdagi faylni yuklab olishga urinamiz
+  try {
+    const res = await fetch(`/api/download_export?role=${encodeURIComponent(role)}`)
+    if (res.ok) {
+      const blob = await res.blob()
+      downloadBlob(blob, withTimestamp(ROLE_META[role].file))
+      return 20
+    }
+  } catch {
+    // Server o'chiq bo'lsa brauzer fallback
+  }
+
+  // 2. Lokal / oflayn fallback: tozalangan xlsx
   const X = await loadXlsx()
   const { wb } = await buildRoleWorkbook(X, students, role)
   const fileName = withTimestamp(ROLE_META[role].file)
-  X.writeFile(wb, fileName, { cellStyles: true, bookSST: false })
+  writeXlsxClean(X, wb, fileName)
   return wb.SheetNames.length
 }
 
 /** Bitta guruhni QABUL - 2026 formatida yuklab olish */
 export async function exportQabulShablonGroup(students: Student[], group: string) {
+  // Agar 1-kurs guruhi bo'lsa, serverdagi tayyor rasmiy faylga murojaat qilamiz
+  try {
+    const res = await fetch(`/api/download_export?type=qabul_group&group=${encodeURIComponent(group)}`)
+    if (res.ok) {
+      const blob = await res.blob()
+      downloadBlob(blob, withTimestamp(`${QABUL_FILE} (${group}).xlsx`))
+      return students.filter((s) => s.group === group).length
+    }
+  } catch {}
+
   const X = await loadXlsx()
   const list = students.filter((s) => s.group === group).sort(byName)
   await ensureAiTranslations(list)
   const wb = X.utils.book_new()
   X.utils.book_append_sheet(wb, buildQabulShablonSheet(X, list), QABUL_SHEET)
   const fileName = withTimestamp(`${QABUL_FILE} (${group})`)
-  X.writeFile(wb, fileName, { cellStyles: true, bookSST: false })
+  writeXlsxClean(X, wb, fileName)
   return list.length
 }
 
 /** Tanlangan guruh(lar)ni QABUL - 2026 formatida yuklab olish */
 export async function exportQabulShablonGroups(students: Student[], groups: string[]) {
+  // Agar barcha 1-kurs yoki barcha guruhlar bo'lsa, serverdagi toza fayldan olamiz
+  if (groups.length >= 6) {
+    try {
+      const res = await fetch('/api/download_export?role=qabul_shablon')
+      if (res.ok) {
+        const blob = await res.blob()
+        downloadBlob(blob, withTimestamp(`${QABUL_FILE}.xlsx`))
+        return students.filter((s) => groups.includes((s.group || '').trim())).length
+      }
+    } catch {}
+  }
+
   const X = await loadXlsx()
   const list = students
     .filter((s) => groups.includes((s.group || '').trim()))
@@ -365,7 +441,7 @@ export async function exportQabulShablonGroups(students: Student[], groups: stri
   X.utils.book_append_sheet(wb, buildQabulShablonSheet(X, list), QABUL_SHEET)
   const suffix = groups.length === 1 ? ` (${groups[0]})` : groups.length < GROUPS.length ? ` (${groups.length} guruh)` : ''
   const fileName = withTimestamp(`${QABUL_FILE}${suffix}`)
-  X.writeFile(wb, fileName, { cellStyles: true, bookSST: false })
+  writeXlsxClean(X, wb, fileName)
   return list.length
 }
 
@@ -390,7 +466,7 @@ export async function exportGroup(students: Student[], group: string) {
   X.utils.book_append_sheet(wb, buildSheet(X, list, 'guruh_rahbari'), sheetName(key))
   const file = key === 'safdan' ? 'Talabalar_Safidan_Chiqarilganlar' : key === 'akademik' ? 'Akademik_Tatil_Olganlar' : `Guruh_${group}_Talabalar_Royxati`
   const fileName = withTimestamp(file)
-  X.writeFile(wb, fileName, { cellStyles: true, bookSST: false })
+  writeXlsxClean(X, wb, fileName)
   return list.length
 }
 
@@ -400,7 +476,7 @@ export async function exportFiltered(students: Student[]) {
   const wb = X.utils.book_new()
   X.utils.book_append_sheet(wb, buildSheet(X, students, 'toliq'), 'Talabalar')
   const fileName = withTimestamp('Talabalar_Tanlangan_Royxat')
-  X.writeFile(wb, fileName, { cellStyles: true, bookSST: false })
+  writeXlsxClean(X, wb, fileName)
 }
 
 /** Excel faylni server orqali Telegram botga yuborish */
@@ -409,7 +485,8 @@ export async function sendRoleToTelegram(students: Student[], role: Role) {
   const { wb, count } = await buildRoleWorkbook(X, students, role)
 
   const wbout = X.write(wb, { bookType: 'xlsx', type: 'array', cellStyles: true })
-  const blob = new Blob([wbout], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
+  const cleaned = cleanXlsxBuffer(wbout)
+  const blob = new Blob([cleaned as any], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
   const meta = ROLE_META[role]
 
   const formData = new FormData()

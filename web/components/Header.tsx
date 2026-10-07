@@ -291,6 +291,58 @@ function ExportMenu({ students, notify }: { students: Student[]; notify: Notify 
               {docBusy === 'sorovnoma' ? <Loader2 size={14} className="animate-spin" /> : <Send size={14} />}
             </button>
           </div>
+
+          {/* 1-kurs So'rovnoma Topshirmaganlar Excel */}
+          <div className="group flex w-full items-center gap-2 rounded-xl px-2.5 py-2 transition-colors hover:bg-ink-700/60">
+            <a
+              href="/api/download_davomat?type=topshirmaganlar_xlsx"
+              download
+              className="flex min-w-0 flex-1 items-center gap-3 text-left"
+              onClick={() => notify("Topshirmaganlar hisoboti (.xlsx) yuklanmoqda...")}
+            >
+              <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-rose/15 text-rose"><FileSpreadsheet size={17} /></span>
+              <span className="min-w-0 flex-1">
+                <span className="block text-[13.5px] font-semibold text-fg">Topshirmaganlar (.xlsx)</span>
+                <span className="block truncate text-[12px] text-fg-muted">1-kurs guruhlar kesimida ro'yxat</span>
+              </span>
+              <Download size={16} className="text-fg-subtle group-hover:text-sky" />
+            </a>
+            <button
+              type="button"
+              onClick={() => sendSpecialDoc('topshirmaganlar', "Topshirmaganlar hisoboti (.xlsx)")}
+              disabled={!!docBusy}
+              title="Topshirmaganlar (.xlsx) faylini Telegramga yuborish"
+              className="grid size-8 shrink-0 place-items-center rounded-lg border border-sky/30 bg-sky/10 text-sky-soft transition-colors hover:bg-sky/25"
+            >
+              {docBusy === 'topshirmaganlar' ? <Loader2 size={14} className="animate-spin" /> : <Send size={14} />}
+            </button>
+          </div>
+
+          {/* 1-kurs So'rovnoma Topshirmaganlar Word */}
+          <div className="group flex w-full items-center gap-2 rounded-xl px-2.5 py-2 transition-colors hover:bg-ink-700/60">
+            <a
+              href="/api/download_davomat?type=topshirmaganlar_docx"
+              download
+              className="flex min-w-0 flex-1 items-center gap-3 text-left"
+              onClick={() => notify("Topshirmaganlar hisoboti (.docx) yuklanmoqda...")}
+            >
+              <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-rose/15 text-rose"><FileText size={17} /></span>
+              <span className="min-w-0 flex-1">
+                <span className="block text-[13.5px] font-semibold text-fg">Topshirmaganlar (.docx)</span>
+                <span className="block truncate text-[12px] text-fg-muted">Chop etishga tayyor rasmiy Word hisobot</span>
+              </span>
+              <Download size={16} className="text-fg-subtle group-hover:text-sky" />
+            </a>
+            <button
+              type="button"
+              onClick={() => sendSpecialDoc('topshirmaganlar_docx', "Topshirmaganlar hisoboti (.docx)")}
+              disabled={!!docBusy}
+              title="Topshirmaganlar (.docx) faylini Telegramga yuborish"
+              className="grid size-8 shrink-0 place-items-center rounded-lg border border-sky/30 bg-sky/10 text-sky-soft transition-colors hover:bg-sky/25"
+            >
+              {docBusy === 'topshirmaganlar_docx' ? <Loader2 size={14} className="animate-spin" /> : <Send size={14} />}
+            </button>
+          </div>
         </div>
       )}
     </div>
