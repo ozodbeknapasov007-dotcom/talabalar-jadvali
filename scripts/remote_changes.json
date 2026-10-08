@@ -1,1 +1,18 @@
-[]
+[
+  {
+    "type": "update_student",
+    "data": {
+      "row": 389,
+      "fields": {
+        "group": "Akademik ta'til olganlar",
+        "buyruq": "T-52",
+        "buyruq_sana": "05.10.2026"
+      },
+      "shnum": "",
+      "pinfl": "60907075590042",
+      "ism": "Shodiyeva Gulasal"
+    },
+    "id": "chg_1791438596192_0fgpp",
+    "created_at": "2026-10-08T05:49:56.192Z"
+  }
+]
