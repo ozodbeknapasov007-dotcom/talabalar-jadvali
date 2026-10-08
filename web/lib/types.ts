@@ -73,11 +73,15 @@ export interface StudentsPayload {
 
 export interface ContractStudent {
   id: string
+  tr?: number
+  file_tr?: number
   student_row: number | null
   fish: string
   contract_fio: string
+  base_fio?: string | null
   group: string
   contract_group: string
+  base_group?: string
   kurs: number
   pinfl: string
   tel: string
@@ -95,6 +99,7 @@ export interface ContractStudent {
 export interface ContractGroupSummary {
   group: string
   kurs: number
+  rahbar?: string
   total_students: number
   contracts_count: number
   total_req: number
@@ -108,9 +113,13 @@ export interface ContractGroupSummary {
 }
 
 export interface ContractKPI {
-  total_students_db: number
-  total_contract_records: number
-  active_contracts_count: number
+  date?: string
+  file_name?: string
+  total_students?: number
+  total_students_db?: number
+  total_groups?: number
+  total_contract_records?: number
+  active_contracts_count?: number
   total_req_sum: number
   total_paid_sum: number
   total_debt_sum: number
@@ -119,14 +128,24 @@ export interface ContractKPI {
   total_paid_full_count: number
   total_advance_count: number
   total_pay_percent: number
-  akademik_debt_sum: number
-  akademik_debtors_count: number
-  course1_count: number
+  akademik_debt_sum?: number
+  akademik_debtors_count?: number
+  course1_count?: number
   updated_at: string
+}
+
+export interface ContractTopSummary {
+  row: number
+  rahbar: string
+  group: string
+  kurs: number
+  students_count: number
+  total_debt: number
 }
 
 export interface ContractsPayload {
   kpi: ContractKPI
+  summary_table?: ContractTopSummary[]
   groups: ContractGroupSummary[]
   students: ContractStudent[]
 }

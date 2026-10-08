@@ -231,7 +231,7 @@ export default function Portal() {
               {([
                 ['database', Database, 'Umumiy baza', String(data.students.length)],
                 ['groups', BookOpenCheck, 'Guruhlar jurnali', String(groups.length)],
-                ['contracts', Wallet, 'Kontraktlar & Qarzdorlik', '201 qarz'],
+                ['contracts', Wallet, 'Kontraktlar & Qarzdorlik', '189 qarz'],
               ] as const).map(([v, Icon, t, n]) => (
                 <button
                   key={v}

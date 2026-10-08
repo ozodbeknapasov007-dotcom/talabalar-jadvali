@@ -65,8 +65,11 @@ export async function GET(request: NextRequest) {
       fileName = "Davomat jurnali 26-02 (TO'LDIRILGAN).docx"
     }
     mimeType = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+  } else if (type === 'contracts_file' || type === '02.10') {
+    fileName = '02.10.2026_GACHA_KONTRAKTLAR.xlsx'
+    mimeType = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
   } else if (type === 'contracts' || type === 'kontraktlar' || role === 'contracts') {
-    fileName = 'Talabalar_va_Kontraktlar_Taqqoslash_Hisoboti.xlsx'
+    fileName = '02.10.2026_GACHA_KONTRAKTLAR.xlsx'
     mimeType = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
   } else if (type === 'sorovnoma') {
     fileName = '1-kurs_Sorovnoma_Malumotlari.xlsx'
