@@ -530,16 +530,13 @@ export async function loadGroupSettings(): Promise<GroupSettings> {
 }
 
 /**
- * Sozlamalarni saqlash. Lokal: faylni diskka yozib, Python xizmatiga GitHub'ga yuborishni
- * aytadi. Vercel: GitHub'dagi faylni to'g'ridan-to'g'ri yangilaydi (xizmat uni git pull bilan oladi).
+ * Umumiy repo JSON faylini saqlash (Lokal yoki GitHub orqali)
  */
-export async function saveGroupSettings(raw: unknown): Promise<GroupSettings> {
-  const settings = sanitizeGroupSettings(raw)
-  if (!Object.keys(settings).length) throw new Error("Guruh sozlamalari bo'sh yoki noto'g'ri")
-  const text = JSON.stringify(settings, null, 2) + '\n'
+export async function saveRepoJsonFile(relPath: string, data: unknown, commitMsg: string): Promise<void> {
+  const text = JSON.stringify(data, null, 2) + '\n'
 
   if (syncMode() === 'local') {
-    const file = path.join(REPO_DIR, ...GROUP_SETTINGS_PATH.split('/'))
+    const file = path.join(REPO_DIR, ...relPath.split('/'))
     await mkdir(path.dirname(file), { recursive: true })
     await writeFile(file, text, 'utf-8')
     await fetch(`${LOCAL_API}/api/flush_to_git?t=${Date.now()}`, { cache: 'no-store' }).catch(() => null)
@@ -547,12 +544,12 @@ export async function saveGroupSettings(raw: unknown): Promise<GroupSettings> {
     if (!process.env.GITHUB_TOKEN) throw new Error('GITHUB_TOKEN sozlanmagan')
     let lastErr = ''
     for (let attempt = 1; attempt <= 4; attempt++) {
-      const getRes = await fetch(`${contentsUrl(GROUP_SETTINGS_PATH)}?ref=${GH_BRANCH}`, { headers: ghHeaders(), cache: 'no-store' })
+      const getRes = await fetch(`${contentsUrl(relPath)}?ref=${GH_BRANCH}`, { headers: ghHeaders(), cache: 'no-store' })
       const sha = getRes.ok ? (await getRes.json()).sha : undefined
-      const putRes = await fetch(contentsUrl(GROUP_SETTINGS_PATH), {
+      const putRes = await fetch(contentsUrl(relPath), {
         method: 'PUT',
         headers: { ...ghHeaders(), 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: 'Guruh sozlamalari yangilandi', content: Buffer.from(text, 'utf-8').toString('base64'), branch: GH_BRANCH, sha }),
+        body: JSON.stringify({ message: commitMsg, content: Buffer.from(text, 'utf-8').toString('base64'), branch: GH_BRANCH, sha }),
       })
       if (putRes.ok) { lastErr = ''; break }
       lastErr = `${putRes.status} ${(await putRes.text()).slice(0, 160)}`
@@ -561,6 +558,16 @@ export async function saveGroupSettings(raw: unknown): Promise<GroupSettings> {
     }
     if (lastErr) throw new Error(`GitHub'ga yozilmadi: ${lastErr}`)
   }
+}
+
+/**
+ * Sozlamalarni saqlash. Lokal: faylni diskka yozib, Python xizmatiga GitHub'ga yuborishni
+ * aytadi. Vercel: GitHub'dagi faylni to'g'ridan-to'g'ri yangilaydi (xizmat uni git pull bilan oladi).
+ */
+export async function saveGroupSettings(raw: unknown): Promise<GroupSettings> {
+  const settings = sanitizeGroupSettings(raw)
+  if (!Object.keys(settings).length) throw new Error("Guruh sozlamalari bo'sh yoki noto'g'ri")
+  await saveRepoJsonFile(GROUP_SETTINGS_PATH, settings, "Guruh sozlamalari yangilandi")
   applyGroupSettings(settings)
   return settings
 }

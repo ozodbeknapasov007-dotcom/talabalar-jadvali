@@ -84,13 +84,15 @@ export interface ContractStudent {
   base_group?: string
   kurs: number
   pinfl: string
-  tel: string
+  tel?: string
   shartnoma_summa: number
   tolangan_summa: number
   qarzdorlik: number
   tolov_foiz: number
   holat: 'qarzdor' | 'tolangan' | 'avans' | 'shartnoma_kutilmoqda' | 'topilmadi'
   toifa: 'aktiv' | 'akademik_tsg' | '1-kurs' | 'faqat_kontrakt' | 'shartnomasiz'
+  is_hidden?: boolean
+  hidden_reason?: string
   manba: string
   source_sheet: string | null
   source_row: number | null
@@ -105,10 +107,10 @@ export interface ContractGroupSummary {
   total_req: number
   total_paid: number
   total_debt: number
-  total_advance: number
+  total_advance?: number
   debtors_count: number
   paid_count: number
-  advance_count: number
+  advance_count?: number
   pay_percent: number
 }
 
@@ -116,6 +118,8 @@ export interface ContractKPI {
   date?: string
   file_name?: string
   total_students?: number
+  visible_students?: number
+  hidden_students_count?: number
   total_students_db?: number
   total_groups?: number
   total_contract_records?: number
@@ -123,10 +127,10 @@ export interface ContractKPI {
   total_req_sum: number
   total_paid_sum: number
   total_debt_sum: number
-  total_advance_sum: number
+  total_advance_sum?: number
   total_debtors_count: number
   total_paid_full_count: number
-  total_advance_count: number
+  total_advance_count?: number
   total_pay_percent: number
   akademik_debt_sum?: number
   akademik_debtors_count?: number
@@ -148,4 +152,5 @@ export interface ContractsPayload {
   summary_table?: ContractTopSummary[]
   groups: ContractGroupSummary[]
   students: ContractStudent[]
+  hidden_rows?: number[]
 }

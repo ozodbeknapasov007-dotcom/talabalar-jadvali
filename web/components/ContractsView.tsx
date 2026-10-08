@@ -4,9 +4,12 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import {
   AlertCircle,
   ArrowUpDown,
+  Check,
   ChevronDown,
   ChevronRight,
   Download,
+  Eye,
+  EyeOff,
   FileSpreadsheet,
   Layers,
   Loader2,
@@ -22,7 +25,7 @@ interface ContractsViewProps {
   notify: (msg: string, type?: 'success' | 'warning' | 'error' | 'info') => void
 }
 
-type StatusFilter = 'all' | 'qarzdor' | 'tolangan'
+type StatusFilter = 'all' | 'qarzdor' | 'tolangan' | 'yashirilgan'
 type SortMode = 'file_order' | 'debt_desc' | 'debt_asc' | 'fio_asc' | 'group_asc' | 'percent_asc' | 'percent_desc'
 
 function formatMoney(amount: number): string {
@@ -55,6 +58,12 @@ export default function ContractsView({ notify }: ContractsViewProps) {
   const [pageSize, setPageSize] = useState<number>(50)
   const [page, setPage] = useState<number>(1)
 
+  // Kontraktni yashirish/ko'rsatish holatlari
+  const [togglingId, setTogglingId] = useState<string | null>(null)
+  const [hideModalStudent, setHideModalStudent] = useState<ContractStudent | null>(null)
+  const [hideReason, setHideReason] = useState<string>('Davlat granti')
+  const [customReason, setCustomReason] = useState<string>('')
+
   const fetchData = useCallback(async (isRefresh = false) => {
     if (isRefresh) setRefreshing(true)
     else setLoading(true)
@@ -82,7 +91,41 @@ export default function ContractsView({ notify }: ContractsViewProps) {
     fetchData()
   }, [fetchData])
 
-  // Talabalarni filtrlash — Faqat 322 nafar faol talaba (Akademik va TSCH chiqarilgan)
+  // Kontraktni yashirish yoki qayta ko'rsatish
+  const handleToggleHide = async (student: ContractStudent, hidden: boolean, reason?: string) => {
+    setTogglingId(student.id)
+    try {
+      const res = await fetch('/api/contracts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: student.id,
+          studentRow: student.student_row,
+          hidden,
+          reason: reason || '',
+        }),
+      })
+      const result = await res.json()
+      if (!res.ok || !result.success) {
+        throw new Error(result.error || `Server ${res.status} xatolik qaytardi`)
+      }
+      if (result.payload) {
+        setData(result.payload)
+      }
+      if (hidden) {
+        notify(`${student.fish} kontrakti yashirildi (${reason || 'Imtiyoz'})`, 'info')
+      } else {
+        notify(`${student.fish} kontrakti qayta ko'rsatildi`, 'success')
+      }
+      setHideModalStudent(null)
+    } catch (e) {
+      notify(`Amal bajarilmadi: ${(e as Error).message}`, 'error')
+    } finally {
+      setTogglingId(null)
+    }
+  }
+
+  // Talabalarni filtrlash — Faqat bazadagi faol talabalar (Akademik va TSCH chiqarilgan)
   const filteredStudents = useMemo(() => {
     if (!data?.students) return []
     // Faol bo'lmagan (akademik yoki tsch) talabalar qat'iyan chiqarilmaydi
@@ -99,11 +142,16 @@ export default function ContractsView({ notify }: ContractsViewProps) {
       list = list.filter((s) => s.group === groupFilter)
     }
 
-    // Status
-    if (statusFilter === 'qarzdor') {
-      list = list.filter((s) => s.qarzdorlik > 0)
-    } else if (statusFilter === 'tolangan') {
-      list = list.filter((s) => s.qarzdorlik <= 0)
+    // Status: Yashirilganlar yoki faol ko'rinadiganlar
+    if (statusFilter === 'yashirilgan') {
+      list = list.filter((s) => Boolean(s.is_hidden))
+    } else {
+      list = list.filter((s) => !s.is_hidden)
+      if (statusFilter === 'qarzdor') {
+        list = list.filter((s) => s.qarzdorlik > 0)
+      } else if (statusFilter === 'tolangan') {
+        list = list.filter((s) => s.qarzdorlik <= 0)
+      }
     }
 
     // Qidiruv
@@ -207,7 +255,10 @@ export default function ContractsView({ notify }: ContractsViewProps) {
 
   const { kpi, summary_table = [] } = data
   const totalStudents = kpi.total_students || 322
-  const paidCount = totalStudents - kpi.total_debtors_count
+  const hiddenCount = kpi.hidden_students_count || 0
+  const visibleCount = kpi.visible_students ?? (totalStudents - hiddenCount)
+  const debtorsCount = kpi.total_debtors_count
+  const paidCount = kpi.total_paid_full_count ?? Math.max(visibleCount - debtorsCount, 0)
 
   return (
     <div className="space-y-6">
@@ -227,7 +278,13 @@ export default function ContractsView({ notify }: ContractsViewProps) {
               </div>
               <p className="text-[12.5px] text-fg-muted">
                 Yangilangan sanasi: <strong className="text-fg">02.10.2026</strong> · Faol talabalar kontingenti:{' '}
-                <strong className="text-fg">322 nafar</strong> (Akademik ta'til va safdan chiqarilganlar chiqarilgan)
+                <strong className="text-fg">{visibleCount} nafar</strong>
+                {hiddenCount > 0 && (
+                  <span className="ml-1.5 rounded-md bg-amber-500/20 border border-amber-500/30 px-1.5 py-0.5 text-[11px] font-semibold text-amber-300">
+                    {hiddenCount} ta yashirilgan
+                  </span>
+                )}{' '}
+                (Akademik ta'til va safdan chiqarilganlar chiqarilgan)
               </p>
             </div>
           </div>
@@ -483,9 +540,10 @@ export default function ContractsView({ notify }: ContractsViewProps) {
         <div className="flex flex-wrap items-center gap-1.5 border-t border-line/60 pt-2.5">
           {(
             [
-              ['all', 'Barcha faol talabalar', totalStudents],
-              ['qarzdor', '🔴 Qarzdorlar', kpi.total_debtors_count],
+              ['all', 'Barcha faol talabalar', visibleCount],
+              ['qarzdor', '🔴 Qarzdorlar', debtorsCount],
               ['tolangan', "🟢 Qarzi yo'qlar (To'langan)", paidCount],
+              ['yashirilgan', "🚫 Yashirilganlar (Imtiyoz/Grant)", hiddenCount],
             ] as const
           ).map(([val, label, count]) => (
             <button
@@ -499,6 +557,8 @@ export default function ContractsView({ notify }: ContractsViewProps) {
                     ? 'bg-rose-500/20 text-rose-300 border border-rose-500/40'
                     : val === 'tolangan'
                     ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
+                    : val === 'yashirilgan'
+                    ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40'
                     : 'bg-sky/20 text-sky border border-sky/40'
                   : 'bg-ink-800/60 text-fg-muted hover:text-fg hover:bg-ink-800'
               )}
@@ -528,9 +588,14 @@ export default function ContractsView({ notify }: ContractsViewProps) {
             <span>
               2. Asosiy Jadval (Faylning 18–340 qatorlari): <strong>{filteredStudents.length}</strong> nafar talaba
             </span>
-            {filteredTotals.debtors > 0 && (
+            {filteredTotals.debtors > 0 && statusFilter !== 'yashirilgan' && (
               <span className="rounded-md bg-rose-500/15 px-2 py-0.5 text-rose-300 font-medium">
                 {filteredTotals.debtors} qarzdor
+              </span>
+            )}
+            {statusFilter === 'yashirilgan' && (
+              <span className="rounded-md bg-amber-500/15 px-2 py-0.5 text-amber-300 font-medium">
+                Kontrakti yashirilgan talabalar
               </span>
             )}
           </div>
@@ -561,13 +626,14 @@ export default function ContractsView({ notify }: ContractsViewProps) {
                 <th className="py-3 px-3 text-right">Jami</th>
                 <th className="py-3 px-3 text-right">Shu vaqtgacha qarzi</th>
                 <th className="py-3 px-3 text-center">To'lov %</th>
-                <th className="py-3 pr-4 pl-3 text-center">Holati</th>
+                <th className="py-3 px-3 text-center">Holati</th>
+                <th className="py-3 pr-4 pl-3 text-center w-28">Amal</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-line/40">
               {paginatedStudents.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="py-16 text-center text-fg-muted">
+                  <td colSpan={9} className="py-16 text-center text-fg-muted">
                     Tanlangan filtrlar bo'yicha talabalar topilmadi.
                   </td>
                 </tr>
@@ -582,7 +648,7 @@ export default function ContractsView({ notify }: ContractsViewProps) {
                       key={s.id}
                       className={cx(
                         'transition-colors hover:bg-ink-800/40',
-                        isDebtor && 'bg-rose-950/5'
+                        s.is_hidden ? 'bg-amber-950/10 opacity-80' : isDebtor ? 'bg-rose-950/5' : ''
                       )}
                     >
                       {/* GURUHI */}
@@ -599,7 +665,14 @@ export default function ContractsView({ notify }: ContractsViewProps) {
 
                       {/* Familiiyasi Ismi va Sharfi */}
                       <td className="py-3 px-3">
-                        <div className="font-semibold text-fg">{s.fish}</div>
+                        <div className="font-semibold text-fg flex items-center gap-1.5">
+                          {s.fish}
+                          {s.is_hidden && (
+                            <span className="rounded bg-amber-500/20 px-1 py-0.2 text-[10px] text-amber-300 font-medium">
+                              Yashirilgan
+                            </span>
+                          )}
+                        </div>
                         {s.pinfl && <div className="text-[10.5px] text-fg-muted/60">PINFL: {s.pinfl}</div>}
                       </td>
 
@@ -651,8 +724,15 @@ export default function ContractsView({ notify }: ContractsViewProps) {
                       </td>
 
                       {/* Holati */}
-                      <td className="py-3 pr-4 pl-3 text-center whitespace-nowrap">
-                        {isDebtor ? (
+                      <td className="py-3 px-3 text-center whitespace-nowrap">
+                        {s.is_hidden ? (
+                          <span
+                            className="rounded-md bg-amber-950/80 border border-amber-500/30 px-2 py-0.5 text-[11px] font-semibold text-amber-300"
+                            title={s.hidden_reason || 'Kontrakti yashirilgan'}
+                          >
+                            🚫 {s.hidden_reason || 'Yashirilgan'}
+                          </span>
+                        ) : isDebtor ? (
                           <span className="rounded-md bg-rose-950/80 border border-rose-500/30 px-2 py-0.5 text-[11px] font-semibold text-rose-300">
                             Qarzdor
                           </span>
@@ -660,6 +740,37 @@ export default function ContractsView({ notify }: ContractsViewProps) {
                           <span className="rounded-md bg-emerald-950/80 border border-emerald-500/30 px-2 py-0.5 text-[11px] font-semibold text-emerald-300">
                             To'liq to'langan
                           </span>
+                        )}
+                      </td>
+
+                      {/* Amal */}
+                      <td className="py-3 pr-4 pl-3 text-center whitespace-nowrap">
+                        {s.is_hidden ? (
+                          <button
+                            type="button"
+                            onClick={() => handleToggleHide(s, false)}
+                            disabled={togglingId === s.id}
+                            className="inline-flex items-center gap-1 rounded-lg border border-sky/40 bg-sky/15 px-2.5 py-1 text-[11px] font-semibold text-sky transition hover:bg-sky/25 disabled:opacity-50"
+                            title="Ushbu talabaning kontraktini qayta ko'rsatish"
+                          >
+                            {togglingId === s.id ? <Loader2 size={12} className="animate-spin" /> : <Eye size={12} />}
+                            Ko'rsatish
+                          </button>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setHideModalStudent(s)
+                              setHideReason('Davlat granti')
+                              setCustomReason('')
+                            }}
+                            disabled={togglingId === s.id}
+                            className="inline-flex items-center gap-1 rounded-lg border border-line bg-ink-800/80 px-2.5 py-1 text-[11px] font-medium text-fg-muted transition hover:border-amber-500/50 hover:text-amber-300 hover:bg-amber-950/20 disabled:opacity-50"
+                            title="Kontrakti ko'rinmasin deb belgilash (Grant, imtiyoz yoki ozod qilingan)"
+                          >
+                            {togglingId === s.id ? <Loader2 size={12} className="animate-spin" /> : <EyeOff size={12} />}
+                            Yashirish
+                          </button>
                         )}
                       </td>
                     </tr>
@@ -701,6 +812,97 @@ export default function ContractsView({ notify }: ContractsViewProps) {
           </div>
         )}
       </div>
+
+      {/* 5. Kontraktni yashirish modali */}
+      {hideModalStudent && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm">
+          <div className="w-full max-w-md rounded-2xl border border-line bg-ink-900 p-6 shadow-2xl space-y-4">
+            <div className="flex items-start justify-between">
+              <div className="space-y-1">
+                <h3 className="text-[16px] font-bold text-fg">Kontraktni yashirish</h3>
+                <p className="text-[12.5px] text-fg-muted">
+                  Talaba: <strong className="text-fg">{hideModalStudent.fish}</strong> ({hideModalStudent.group})
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setHideModalStudent(null)}
+                className="rounded-lg p-1 text-fg-muted hover:bg-ink-800 hover:text-fg"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <div className="rounded-xl border border-amber-500/30 bg-amber-950/20 p-3 text-[12px] text-amber-200 space-y-1">
+              <div className="font-semibold flex items-center gap-1.5">
+                <AlertCircle size={15} />
+                Eslatma
+              </div>
+              <div>
+                Ushbu talabaning shartnomasi va qarzdorligi ({formatMoney(hideModalStudent.qarzdorlik)} so'm) faol hisobotlardan va asosiy jadvaldan chiqariladi.
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-[12.5px] font-semibold text-fg">Yashirish / Imtiyoz sababi:</label>
+              <div className="grid grid-cols-1 gap-2">
+                {['Davlat granti', 'To‘lovdan ozod (Imtiyoz)', 'Xususiy kelishuv / Homiylik', 'Boshqa sabab'].map((reasonOption) => (
+                  <label
+                    key={reasonOption}
+                    className={cx(
+                      'flex items-center gap-2.5 rounded-xl border p-2.5 text-[12.5px] cursor-pointer transition',
+                      hideReason === reasonOption
+                        ? 'border-amber-500/60 bg-amber-500/10 text-amber-200 font-semibold'
+                        : 'border-line bg-ink-950/50 text-fg-muted hover:bg-ink-800'
+                    )}
+                  >
+                    <input
+                      type="radio"
+                      name="hideReason"
+                      checked={hideReason === reasonOption}
+                      onChange={() => setHideReason(reasonOption)}
+                      className="text-amber-500 focus:ring-0"
+                    />
+                    <span>{reasonOption}</span>
+                  </label>
+                ))}
+              </div>
+
+              {hideReason === 'Boshqa sabab' && (
+                <input
+                  type="text"
+                  value={customReason}
+                  onChange={(e) => setCustomReason(e.target.value)}
+                  placeholder="Sababni yozing…"
+                  className="w-full mt-2 rounded-xl border border-line bg-ink-950 p-2.5 text-[12.5px] text-fg placeholder:text-fg-muted/60 focus:border-amber-500 focus:outline-none"
+                />
+              )}
+            </div>
+
+            <div className="flex items-center justify-end gap-2 pt-2">
+              <button
+                type="button"
+                onClick={() => setHideModalStudent(null)}
+                className="rounded-xl border border-line bg-ink-800 px-4 py-2 text-[12.5px] font-semibold text-fg transition hover:bg-ink-700"
+              >
+                Bekor qilish
+              </button>
+              <button
+                type="button"
+                disabled={togglingId === hideModalStudent.id}
+                onClick={() => {
+                  const finalReason = hideReason === 'Boshqa sabab' ? (customReason.trim() || 'Boshqa sabab') : hideReason
+                  handleToggleHide(hideModalStudent, true, finalReason)
+                }}
+                className="flex items-center gap-1.5 rounded-xl border border-amber-500/40 bg-amber-600 px-4 py-2 text-[12.5px] font-semibold text-white transition hover:bg-amber-500 disabled:opacity-60"
+              >
+                {togglingId === hideModalStudent.id ? <Loader2 size={14} className="animate-spin" /> : <EyeOff size={14} />}
+                Yashirish deb belgilash
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

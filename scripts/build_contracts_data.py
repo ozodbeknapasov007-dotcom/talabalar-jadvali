@@ -3,8 +3,10 @@
 KONTRAKTLAR VA QARZDORLIK MA'LUMOTLARINI YIG'ISH VA TAYYORLASH SKRIPTI
 =====================================================================
 Buxgalteriya fayli: 02.10.2026_GACHA_KONTRAKTLAR.xlsx
-Aynan fayldagi ko'rinish va tartib asosida ma'lumotlarni chiqaradi.
-Akademik ta'tildagi va safdan chiqarilgan (TSCH) talabalar kiritilmaydi.
+- Faqat talabalar bazasidagi (data/students.json) faol talabalar bog'lanadi.
+- TSCH (safdan chiqarilganlar) va akademik ta'tildagilar QAT'IYAN chiqarilmaydi.
+- Kontrakti ko'rinmasligi kerak bo'lgan talabalar (data/hidden_contracts.json)
+  orqali yashiriladi va ularning holati belgilanadi.
 """
 
 import os
@@ -19,6 +21,7 @@ sys.stdout.reconfigure(encoding='utf-8')
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 STUDENTS_PATH = os.path.join(BASE_DIR, 'data', 'students.json')
+HIDDEN_CONTRACTS_PATH = os.path.join(BASE_DIR, 'data', 'hidden_contracts.json')
 
 # 02.10.2026 faylini izlash
 candidate_paths = [
@@ -66,26 +69,53 @@ def kurs_of_group(group_code):
         return 3
     return 0
 
+def is_academic_or_withdrawn(g):
+    gl = str(g or '').strip().lower()
+    return 'akademik' in gl or 'chiqaril' in gl or 'chetlat' in gl or gl == 'n'
+
 def build_contracts_data():
     if not EXCEL_PATH:
         raise FileNotFoundError("02.10.2026_GACHA_KONTRAKTLAR.xlsx fayli topilmadi")
     print(f"Manba fayl: {EXCEL_PATH}")
 
+    # 1. Bazadagi talabalarni yuklash va faqat faollarni olish
     students_db = []
     if os.path.exists(STUDENTS_PATH):
         with open(STUDENTS_PATH, 'r', encoding='utf-8') as f:
             students_db = json.load(f)
 
+    # Yashirilgan talabalar ro'yxati
+    hidden_rows = set()
+    hidden_records = {}
+    if os.path.exists(HIDDEN_CONTRACTS_PATH):
+        try:
+            with open(HIDDEN_CONTRACTS_PATH, 'r', encoding='utf-8') as f:
+                h_data = json.load(f)
+                hidden_rows = set(h_data.get('hidden_student_rows', []))
+                hidden_records = h_data.get('records', {})
+        except Exception:
+            pass
+
+    # Faqat 2-3 kurs faol talabalari (Akademik va TSCH chiqarilgan!)
+    active_students_db = []
     for s in students_db:
+        grp = s.get('group', '')
+        if is_academic_or_withdrawn(grp):
+            continue
+        if grp.startswith('26-'):
+            # 1-kurs talabalari buxgalteriyaning ushbu varag'ida emas
+            continue
         s_fio = s.get('fish') or f"{s.get('ism', '')} {s.get('ota', '')}".strip()
         s['fio'] = s_fio
         s['parts'] = clean_short(s_fio)
+        active_students_db.append(s)
+
+    print(f"Bazada faol 2-3 kurs talabalari soni: {len(active_students_db)}")
 
     wb_in = openpyxl.load_workbook(EXCEL_PATH, data_only=True)
     ws_k = wb_in['KONTRAKTLAR']
 
-    # 1. YUQORI XULOSA JADVALI (Qatorlar 2 dan 14 gacha)
-    # Ustun 3: Guruh rahbari, Ustun 4: Guruh, Ustun 5: Talabalar soni, Ustun 6: Qarzdorligi
+    # 2. YUQORI XULOSA JADVALI (Qatorlar 2 dan 14 gacha)
     top_summary = []
     for r in range(2, 15):
         rahbar = ws_k.cell(r, 3).value
@@ -103,14 +133,7 @@ def build_contracts_data():
                 'total_debt': float(qarz),
             })
 
-    jami_soni = ws_k.cell(15, 5).value or 322
-    jami_qarz = ws_k.cell(15, 6).value or 329229816.53
-
-    # 2. ASOSIY TALABALAR JADVALI (Qatorlar 19 dan boshlab)
-    # Ustun 1: GURUHI, Ustun 2: №, Ustun 3: Familiiyasi Ismi va Sharfi
-    # Ustun 4: Shu vaqtgacha bo'lishi kerak bo'lgan to'lov
-    # Ustun 5: Jami (to'langan)
-    # Ustun 6: Shu vaqtgacha qarzi
+    # 3. ASOSIY TALABALAR JADVALI (Qatorlar 19 dan 340 gacha)
     kontrakt_rows = []
     for r in range(19, ws_k.max_row + 1):
         grp = ws_k.cell(row=r, column=1).value
@@ -135,109 +158,97 @@ def build_contracts_data():
                 'parts': clean_short(fio_str)
             })
 
-    print(f"KONTRAKTLAR varag'idan o'qilgan talabalar soni: {len(kontrakt_rows)}")
+    print(f"Buxgalteriya KONTRAKTLAR varag'idan o'qildi: {len(kontrakt_rows)} ta qator")
 
-    # Bazadagi talabalar bilan moslashtirish (telefon, PINFL olish uchun)
+    # Baza talabalari bilan moslashtirish (Bijective)
     matched_to_db = {}
+    matched_db_to_kr = {}
     used_db_rows = set()
 
-    # Pass 1: exact parts match in same group
+    # Pass 1: exact parts & exact group
     for kr in kontrakt_rows:
-        for s in students_db:
+        for s in active_students_db:
             if s['row'] in used_db_rows: continue
             if kr['parts'] == s['parts'] and kr['group'] == s.get('group'):
                 matched_to_db[kr['file_row']] = s
+                matched_db_to_kr[s['row']] = kr
                 used_db_rows.add(s['row'])
                 break
 
-    # Pass 2: exact parts match in any group
+    # Pass 2: exact parts & any group
     for kr in kontrakt_rows:
         if kr['file_row'] in matched_to_db: continue
-        for s in students_db:
+        for s in active_students_db:
             if s['row'] in used_db_rows: continue
             if kr['parts'] == s['parts']:
                 matched_to_db[kr['file_row']] = s
+                matched_db_to_kr[s['row']] = kr
                 used_db_rows.add(s['row'])
                 break
 
-    # Pass 3: fuzzy in same group
+    # Pass 3: fuzzy match
     for kr in kontrakt_rows:
         if kr['file_row'] in matched_to_db: continue
         best_sim = 0
         best_s = None
-        for s in students_db:
-            if s['row'] in used_db_rows: continue
-            if kr['group'] == s.get('group'):
-                sim = SequenceMatcher(None, ' '.join(kr['parts']), ' '.join(s['parts'])).ratio()
-                if sim > best_sim and sim >= 0.70:
-                    best_sim = sim
-                    best_s = s
-        if best_s:
-            matched_to_db[kr['file_row']] = best_s
-            used_db_rows.add(best_s['row'])
-
-    # Pass 4: fuzzy cross group
-    for kr in kontrakt_rows:
-        if kr['file_row'] in matched_to_db: continue
-        best_sim = 0
-        best_s = None
-        for s in students_db:
+        for s in active_students_db:
             if s['row'] in used_db_rows: continue
             sim = SequenceMatcher(None, ' '.join(kr['parts']), ' '.join(s['parts'])).ratio()
-            if sim > best_sim and sim >= 0.72:
+            if sim > best_sim and sim >= 0.70:
                 best_sim = sim
                 best_s = s
         if best_s:
             matched_to_db[kr['file_row']] = best_s
+            matched_db_to_kr[best_s['row']] = kr
             used_db_rows.add(best_s['row'])
 
-    print(f"Bazadagi talabalar bilan moslandi: {len(matched_to_db)} / {len(kontrakt_rows)}")
+    print(f"Baza bilan 100% bog'langan talabalar: {len(matched_to_db)} / {len(kontrakt_rows)}")
 
-    # 3. YAKUNIY TALABALAR RO'YXATI (Aynan fayldagi 322 talaba, fayldagi tartibda!)
+    # 4. Yagona ro'yxatni shakllantirish (Aynan fayldagi 322 talaba)
     contract_items = []
     for idx, kr in enumerate(kontrakt_rows, start=1):
         db_s = matched_to_db.get(kr['file_row'])
+        s_row = db_s['row'] if db_s else None
         req = kr['req']
         paid = kr['paid']
         debt = kr['debt']
         pct = round((paid / req * 100), 1) if req > 0 else (100.0 if paid >= req else 0.0)
 
-        if debt > 0:
-            fin_status = 'qarzdor'
-        elif debt < 0:
-            fin_status = 'avans'
-        else:
-            fin_status = 'tolangan'
+        is_hidden = s_row in hidden_rows if s_row else False
+        hidden_meta = hidden_records.get(str(s_row), {}) if s_row else {}
 
         contract_items.append({
             'id': f"k_{kr['file_row']}",
             'tr': idx,
             'file_tr': kr['file_tr'],
-            'student_row': db_s['row'] if db_s else None,
-            'fish': kr['fio'],
+            'student_row': s_row,
+            'fish': db_s.get('fish') if db_s else kr['fio'],
             'contract_fio': kr['fio'],
-            'base_fio': db_s.get('fish') if db_s else None,
-            'group': kr['group'],
+            'base_fio': db_s.get('fish') if db_s else kr['fio'],
+            'group': db_s.get('group') if db_s else kr['group'],
             'contract_group': kr['group'],
             'base_group': db_s.get('group') if db_s else kr['group'],
             'kurs': kr['kurs'],
             'pinfl': db_s.get('pinfl', '') if db_s else '',
-            'tel': (db_s.get('tel_shaxsiy') or db_s.get('tel', '')) if db_s else '',
             'shartnoma_summa': req,
             'tolangan_summa': paid,
             'qarzdorlik': debt,
             'tolov_foiz': pct,
-            'holat': fin_status,
+            'holat': 'qarzdor' if debt > 0 else 'tolangan',
             'toifa': 'aktiv',
+            'is_hidden': is_hidden,
+            'hidden_reason': hidden_meta.get('reason', ''),
             'manba': f"KONTRAKTLAR (qator {kr['file_row']})",
             'source_sheet': 'KONTRAKTLAR',
             'source_row': kr['file_row']
         })
 
-    # 4. GURUHLAR BO'YICHA STATISTIKA
-    # Fayldagi yuqori jadval bilan to'liq boyitilgan
+    # 5. Guruhlar bo'yicha agregat hisobot (Ko'rinadigan talabalar bo'yicha)
+    visible_items = [it for it in contract_items if not it['is_hidden']]
+    hidden_items = [it for it in contract_items if it['is_hidden']]
+
     groups_dict = {}
-    for item in contract_items:
+    for item in visible_items:
         g = item['group']
         if g not in groups_dict:
             groups_dict[g] = {
@@ -249,10 +260,8 @@ def build_contracts_data():
                 'total_req': 0.0,
                 'total_paid': 0.0,
                 'total_debt': 0.0,
-                'total_advance': 0.0,
                 'debtors_count': 0,
                 'paid_count': 0,
-                'advance_count': 0,
             }
         gr = groups_dict[g]
         gr['total_students'] += 1
@@ -262,13 +271,9 @@ def build_contracts_data():
         if item['qarzdorlik'] > 0:
             gr['total_debt'] += item['qarzdorlik']
             gr['debtors_count'] += 1
-        elif item['qarzdorlik'] < 0:
-            gr['total_advance'] += abs(item['qarzdorlik'])
-            gr['advance_count'] += 1
         else:
             gr['paid_count'] += 1
 
-    # Guruh rahbarlarini yuqori jadvaldan biriktirish
     leader_map = {ts['group']: ts['rahbar'] for ts in top_summary}
     for g, gr in groups_dict.items():
         gr['rahbar'] = leader_map.get(g, '')
@@ -277,27 +282,26 @@ def build_contracts_data():
     group_summaries = list(groups_dict.values())
     group_summaries.sort(key=lambda x: (x['kurs'], x['group']))
 
-    # 5. KPI HISOBLASH
-    total_req = sum(item['shartnoma_summa'] for item in contract_items)
-    total_paid = sum(item['tolangan_summa'] for item in contract_items)
-    total_debt = sum(item['qarzdorlik'] for item in contract_items if item['qarzdorlik'] > 0)
-    total_advance = abs(sum(item['qarzdorlik'] for item in contract_items if item['qarzdorlik'] < 0))
-    debtors_count = sum(1 for item in contract_items if item['qarzdorlik'] > 0)
-    paid_full_count = sum(1 for item in contract_items if item['qarzdorlik'] == 0)
-    advance_count = sum(1 for item in contract_items if item['qarzdorlik'] < 0)
+    # 6. KPI hisoblash
+
+    total_req = sum(item['shartnoma_summa'] for item in visible_items)
+    total_paid = sum(item['tolangan_summa'] for item in visible_items)
+    total_debt = sum(item['qarzdorlik'] for item in visible_items if item['qarzdorlik'] > 0)
+    debtors_count = sum(1 for item in visible_items if item['qarzdorlik'] > 0)
+    paid_full_count = sum(1 for item in visible_items if item['qarzdorlik'] <= 0)
 
     kpi = {
         'date': '02.10.2026',
         'file_name': os.path.basename(EXCEL_PATH),
         'total_students': len(contract_items),
+        'visible_students': len(visible_items),
+        'hidden_students_count': len(hidden_items),
         'total_groups': len(group_summaries),
         'total_req_sum': total_req,
         'total_paid_sum': total_paid,
         'total_debt_sum': total_debt,
-        'total_advance_sum': total_advance,
         'total_debtors_count': debtors_count,
         'total_paid_full_count': paid_full_count,
-        'total_advance_count': advance_count,
         'total_pay_percent': round((total_paid / total_req * 100), 1) if total_req > 0 else 0.0,
         'updated_at': '02.10.2026'
     }
@@ -306,21 +310,17 @@ def build_contracts_data():
         'kpi': kpi,
         'summary_table': top_summary,
         'groups': group_summaries,
-        'students': contract_items
+        'students': contract_items,
+        'hidden_rows': list(hidden_rows)
     }
 
     with open(OUTPUT_JSON_PATH, 'w', encoding='utf-8') as f:
         json.dump(result, f, ensure_ascii=False, indent=2)
 
-    print(f"\n✅ data/contracts.json muvaffaqiyatli yaratildi:")
-    print(f"   Sana: {kpi['date']}")
-    print(f"   Aktiv talabalar soni: {len(contract_items)} (akademik va chetlatilganlar chiqarildi)")
-    print(f"   Guruhlar soni: {len(group_summaries)}")
-    print(f"   Shartnoma summasi: {total_req:,.2f} so'm")
-    print(f"   To'langan summa: {total_paid:,.2f} so'm ({kpi['total_pay_percent']}%)")
+    print(f"\n✅ data/contracts.json muvaffaqiyatli saqlandi:")
+    print(f"   Bazada mavjud va bog'langan talabalar: {len(contract_items)}")
+    print(f"   Ko'rsatiladigan: {len(visible_items)}, Yashirilgan: {len(hidden_items)}")
     print(f"   Qarzdorlik: {total_debt:,.2f} so'm ({debtors_count} nafar)")
-    print(f"   Ortiqcha to'lov (avans): {total_advance:,.2f} so'm ({advance_count} nafar)")
-    print(f"   To'liq to'lagan: {paid_full_count} nafar")
 
 if __name__ == '__main__':
     build_contracts_data()

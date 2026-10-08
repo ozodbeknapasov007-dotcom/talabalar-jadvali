@@ -517,7 +517,9 @@ export async function exportContractsExcel(
     totalPaid += c.tolangan_summa || 0
     if (c.qarzdorlik > 0) totalDebt += c.qarzdorlik
 
-    const holatText = c.qarzdorlik > 0 ? 'Qarzdor' : "To'liq to'langan"
+    const holatText = c.is_hidden
+      ? (c.hidden_reason ? `Yashirilgan (${c.hidden_reason})` : 'Yashirilgan / Imtiyoz')
+      : (c.qarzdorlik > 0 ? 'Qarzdor' : "To'liq to'langan")
 
     rows.push([
       c.group || c.contract_group || '—',
