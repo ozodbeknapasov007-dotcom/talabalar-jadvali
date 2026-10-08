@@ -5,6 +5,7 @@ import { applyGroupSettings, DEFAULT_GROUP_SETTINGS, sanitizeGroupSettings, type
 import { buildAddedStudent, fullName } from '@/lib/student'
 import type { Change, EditFields, Student } from '@/lib/types'
 import { getServiceSupabase } from '@/lib/supabase'
+import { syncStudentsToWebJurnal } from '@/lib/server/webjurnal'
 
 /*
   Ma'lumot ikki xil yo'l bilan o'qiladi/yoziladi:
@@ -492,6 +493,20 @@ export async function sendChange(change: Change): Promise<void> {
     }
   } finally {
     invalidateCache()
+  }
+
+  // ── Web Jurnal webhook: yangi talaba muvaffaqiyatli saqlangach, Web Jurnalga avtomatik yuborish ──
+  if (change.type === 'add_student') {
+    const d = change.data
+    const groupName = String(d.group || '26-02').trim()
+    const studentName = `${d.ism || ''} ${d.ota || ''}`.trim()
+    if (groupName && studentName) {
+      try {
+        await syncStudentsToWebJurnal(groupName, [studentName])
+      } catch (syncErr) {
+        console.warn('[WebJurnal Auto-Sync Error]', syncErr)
+      }
+    }
   }
 }
 

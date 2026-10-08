@@ -419,6 +419,7 @@ def process_remote_github_changes():
                     ws.cell(row=nr, column=23, value=data.get('group', '26-02'))
                     ws.cell(row=nr, column=25, value="KUTILMOQDA")
                     ws.cell(row=nr, column=28, value="KIRITILDI")
+                    sync_to_webjurnal_bg(data.get('group', '26-02'), [s_fish])
 
                 elif chg_type == 'delete_student':
                     target_row = None
@@ -2220,6 +2221,43 @@ Aniq JSON formatda qaytar:
         
     return result
 
+def sync_to_webjurnal_bg(group_name, students_list):
+    """
+    Yangi kiritilgan talabani avtomatik tarzda tashqi Web Jurnal tizimiga yuborish.
+    So'rov orqa fonda (daemon thread) yuboriladi, xatolik bo'lsa ham xizmat to'xtamaydi.
+    """
+    if not group_name or not students_list:
+        return
+    import threading
+    def _worker():
+        try:
+            import json, urllib.request
+            sync_url = os.environ.get('WEB_JURNAL_SYNC_URL', 'https://webjurnal.vercel.app/api/students/sync')
+            api_key = os.environ.get('WEB_JURNAL_API_KEY', 'lCRKqFGks6_TjfkfDNCPsvi1lL60l6nYH3GCG7mibEA')
+            clean_students = [str(s).strip() for s in students_list if str(s).strip()]
+            if not clean_students:
+                return
+            payload = {
+                "groupName": str(group_name).strip(),
+                "students": clean_students
+            }
+            req = urllib.request.Request(
+                sync_url,
+                data=json.dumps(payload).encode('utf-8'),
+                headers={
+                    'Content-Type': 'application/json',
+                    'x-api-key': api_key
+                },
+                method='POST'
+            )
+            with urllib.request.urlopen(req, timeout=10) as resp:
+                print(f"[WEB_JURNAL] ✅ Avtomatik sinxronlandi ({group_name}): {len(clean_students)} ta talaba")
+        except Exception as e:
+            print(f"[WEB_JURNAL] ⚠️ Sinxronlashda ogohlantirish ({group_name}): {e}")
+
+    t = threading.Thread(target=_worker, daemon=True)
+    t.start()
+
 def save_manual_students(students_list):
     if not os.path.exists(EXCEL_PATH):
         return 0
@@ -2305,6 +2343,7 @@ def save_manual_students(students_list):
             'sh_doc': cert_val, 'doc_tur': cert_tur, 'mak': maktab, 'yil': yil,
             'yon': yonalis, 'tel': tel, 'group': group or '26-02', 'verified': 'TASDIQLANDI', 'baza': 'KIRITILDI'
         })
+        sync_to_webjurnal_bg(group or '26-02', [fish])
         added += 1
 
     wb.save(EXCEL_PATH)
