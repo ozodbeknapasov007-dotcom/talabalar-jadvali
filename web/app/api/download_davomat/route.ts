@@ -15,6 +15,7 @@ export async function GET(request: NextRequest) {
   let fileName = 'Davomat_Jurnali_Uchun_Malumotlar.xlsx'
   let mimeType = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
   const dirs = [
+    'Kontraktlar',
     'hisobotlar/rollar',
     'hisobotlar/qabul',
     'hisobotlar/qabul/guruhlar',
@@ -64,6 +65,9 @@ export async function GET(request: NextRequest) {
       fileName = "Davomat jurnali 26-02 (TO'LDIRILGAN).docx"
     }
     mimeType = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+  } else if (type === 'contracts' || type === 'kontraktlar' || role === 'contracts') {
+    fileName = 'Talabalar_va_Kontraktlar_Taqqoslash_Hisoboti.xlsx'
+    mimeType = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
   } else if (type === 'sorovnoma') {
     fileName = '1-kurs_Sorovnoma_Malumotlari.xlsx'
     mimeType = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'

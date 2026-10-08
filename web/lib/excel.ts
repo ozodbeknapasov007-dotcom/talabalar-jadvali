@@ -3,7 +3,7 @@
 import { unzipSync, zipSync, strFromU8, strToU8 } from 'fflate'
 import { GROUPS, GROUP_LEADERS } from './config'
 import { byName, formatDate, fullName, isAcademicLeave, isOfficialGroup, isOutside, isWithdrawn, kursOf, tugilganTuman } from './student'
-import type { Student } from './types'
+import type { Student, ContractStudent } from './types'
 import ISTISNOLAR from './qabul-istisnolar.json'
 import { ensureAiTranslations, withAiTranslation } from './qabul-ai'
 import { QABUL_FILE, QABUL_HEADERS, QABUL_PINFL_COL, QABUL_SHEET, QABUL_WIDTHS, REVIEW_COL, qabulCells, qabulRow, type QabulIstisno } from './qabul'
@@ -491,6 +491,134 @@ export async function sendGroupsToTelegram(
     throw new Error(data.error || 'Telegramga yuborishda server xatosi yuz berdi')
   }
   return { sent: data.sent || [], failed: data.failed || [] }
+}
+
+/** Kontraktlar va qarzdorlik jadvalini Excel formatida eksport qilish */
+export async function exportContractsExcel(
+  contracts: ContractStudent[],
+  filename = 'Kontraktlar_Qarzdorlik_Hisoboti.xlsx'
+) {
+  const X = await loadXlsx()
+  const wb = X.utils.book_new()
+
+  const headers = [
+    'T/r', 'F.I.Sh (Talaba)', 'Guruhi', 'Kurs', 'PINFL', 'Telefon',
+    'Shartnoma Summasi', "To'langan Summa", 'Qoldiq Qarzdorlik', "To'lov %", 'Holati', 'Manba'
+  ]
+
+  const rows: any[][] = [headers]
+  let totalReq = 0
+  let totalPaid = 0
+  let totalDebt = 0
+
+  contracts.forEach((c, idx) => {
+    totalReq += c.shartnoma_summa || 0
+    totalPaid += c.tolangan_summa || 0
+    if (c.qarzdorlik > 0) totalDebt += c.qarzdorlik
+
+    const holatText =
+      c.holat === 'qarzdor' ? 'Qarzdor' :
+      c.holat === 'tolangan' ? "To'liq to'langan" :
+      c.holat === 'avans' ? "Ortiqcha (Avans)" :
+      c.holat === 'shartnoma_kutilmoqda' ? 'Shartnoma kutilmoqda (1-kurs)' : 'Topilmadi'
+
+    rows.push([
+      idx + 1,
+      c.fish,
+      c.group || c.contract_group || '—',
+      c.kurs ? `${c.kurs}-kurs` : '—',
+      c.pinfl || '—',
+      c.tel || '—',
+      c.shartnoma_summa,
+      c.tolangan_summa,
+      c.qarzdorlik,
+      `${c.tolov_foiz}%`,
+      holatText,
+      c.manba || '—'
+    ])
+  })
+
+  // Jami qator
+  rows.push([
+    'JAMI', `Jami: ${contracts.length} nafar`, '', '', '', '',
+    totalReq, totalPaid, totalDebt,
+    totalReq > 0 ? `${((totalPaid / totalReq) * 100).toFixed(1)}%` : '0%',
+    '', ''
+  ])
+
+  const ws = X.utils.aoa_to_sheet(rows)
+  const range = X.utils.decode_range(ws['!ref'] || 'A1:L1')
+
+  // Header styling
+  for (let col = range.s.c; col <= range.e.c; col++) {
+    const addr = X.utils.encode_cell({ r: 0, c: col })
+    if (ws[addr]) {
+      ws[addr].s = {
+        font: { bold: true, color: { rgb: 'FFFFFF' }, name: 'Calibri' },
+        fill: { fgColor: { rgb: '1E3A8A' } },
+        alignment: { horizontal: 'center', vertical: 'center' }
+      }
+    }
+  }
+
+  // Data styling
+  for (let r = 1; r < rows.length - 1; r++) {
+    const debtVal = rows[r][8]
+    const debtAddr = X.utils.encode_cell({ r, c: 8 })
+    if (ws[debtAddr]) {
+      if (debtVal > 0) {
+        ws[debtAddr].s = { font: { bold: true, color: { rgb: 'B91C1C' } }, alignment: { horizontal: 'right' } }
+      } else if (debtVal < 0) {
+        ws[debtAddr].s = { font: { bold: true, color: { rgb: '1D4ED8' } }, alignment: { horizontal: 'right' } }
+      } else {
+        ws[debtAddr].s = { font: { color: { rgb: '047857' } }, alignment: { horizontal: 'right' } }
+      }
+      ws[debtAddr].z = '#,##0'
+    }
+
+    for (const c of [6, 7]) {
+      const addr = X.utils.encode_cell({ r, c })
+      if (ws[addr]) {
+        ws[addr].z = '#,##0'
+        ws[addr].s = { alignment: { horizontal: 'right' } }
+      }
+    }
+  }
+
+  // Total summary row styling
+  const lastRowIdx = rows.length - 1
+  for (let col = range.s.c; col <= range.e.c; col++) {
+    const addr = X.utils.encode_cell({ r: lastRowIdx, c: col })
+    if (ws[addr]) {
+      ws[addr].s = {
+        font: { bold: true, color: { rgb: '0F172A' }, name: 'Calibri' },
+        fill: { fgColor: { rgb: 'E2E8F0' } },
+        alignment: { horizontal: col >= 6 && col <= 8 ? 'right' : 'center' }
+      }
+      if (col === 6 || col === 7 || col === 8) {
+        ws[addr].z = '#,##0'
+      }
+    }
+  }
+
+  // Ustunlar kengligi
+  ws['!cols'] = [
+    { wch: 6 },
+    { wch: 32 },
+    { wch: 10 },
+    { wch: 10 },
+    { wch: 16 },
+    { wch: 20 },
+    { wch: 20 },
+    { wch: 20 },
+    { wch: 20 },
+    { wch: 12 },
+    { wch: 24 },
+    { wch: 26 },
+  ]
+
+  X.utils.book_append_sheet(wb, ws, "Qarzdorlik Hisoboti")
+  writeXlsxClean(X, wb, filename)
 }
 
 

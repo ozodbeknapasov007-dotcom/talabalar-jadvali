@@ -70,3 +70,63 @@ export interface StudentsPayload {
   source: 'supabase' | 'local' | 'github'
   fetchedAt: string
 }
+
+export interface ContractStudent {
+  id: string
+  student_row: number | null
+  fish: string
+  contract_fio: string
+  group: string
+  contract_group: string
+  kurs: number
+  pinfl: string
+  tel: string
+  shartnoma_summa: number
+  tolangan_summa: number
+  qarzdorlik: number
+  tolov_foiz: number
+  holat: 'qarzdor' | 'tolangan' | 'avans' | 'shartnoma_kutilmoqda' | 'topilmadi'
+  toifa: 'aktiv' | 'akademik_tsg' | '1-kurs' | 'faqat_kontrakt' | 'shartnomasiz'
+  manba: string
+  source_sheet: string | null
+  source_row: number | null
+}
+
+export interface ContractGroupSummary {
+  group: string
+  kurs: number
+  total_students: number
+  contracts_count: number
+  total_req: number
+  total_paid: number
+  total_debt: number
+  total_advance: number
+  debtors_count: number
+  paid_count: number
+  advance_count: number
+  pay_percent: number
+}
+
+export interface ContractKPI {
+  total_students_db: number
+  total_contract_records: number
+  active_contracts_count: number
+  total_req_sum: number
+  total_paid_sum: number
+  total_debt_sum: number
+  total_advance_sum: number
+  total_debtors_count: number
+  total_paid_full_count: number
+  total_advance_count: number
+  total_pay_percent: number
+  akademik_debt_sum: number
+  akademik_debtors_count: number
+  course1_count: number
+  updated_at: string
+}
+
+export interface ContractsPayload {
+  kpi: ContractKPI
+  groups: ContractGroupSummary[]
+  students: ContractStudent[]
+}

@@ -1,7 +1,7 @@
 'use client'
 
 import { useCallback, useDeferredValue, useEffect, useMemo, useState } from 'react'
-import { AlertTriangle, BookOpenCheck, Database, Loader2, ServerCrash } from 'lucide-react'
+import { AlertTriangle, BookOpenCheck, Database, Loader2, ServerCrash, Wallet } from 'lucide-react'
 import { exportFiltered } from '@/lib/excel'
 import { useStudents } from '@/lib/store'
 import { applyGroupSettings, COURSES, GROUP_SETTINGS, type GroupSettings } from '@/lib/config'
@@ -10,6 +10,7 @@ import type { EditFields, Student } from '@/lib/types'
 import FilterBar, { type DisplayMode } from './FilterBar'
 import GroupSettingsModal from './GroupSettingsModal'
 import GroupsJournal from './GroupsJournal'
+import ContractsView from './ContractsView'
 import Header from './Header'
 import Overview from './Overview'
 import StudentList from './StudentList'
@@ -19,7 +20,7 @@ import AddStudentModal from './AddStudentModal'
 import { Toasts, useToasts } from './Toast'
 import { cx } from './ui'
 
-type View = 'database' | 'groups'
+type View = 'database' | 'groups' | 'contracts'
 
 const PREFS_KEY = 'portal_v2_prefs'
 
@@ -28,7 +29,8 @@ function readPrefs(): { filters: Filters; mode: DisplayMode; view: View } | null
     const p = JSON.parse(localStorage.getItem(PREFS_KEY) || 'null')
     if (p && typeof p === 'object') {
       const mode: DisplayMode = p.mode === 'table' ? 'table' : p.mode === 'compact' ? 'compact' : 'cards'
-      return { filters: { ...EMPTY_FILTERS, ...p.filters }, mode, view: p.view === 'groups' ? 'groups' : 'database' }
+      const view: View = p.view === 'contracts' ? 'contracts' : p.view === 'groups' ? 'groups' : 'database'
+      return { filters: { ...EMPTY_FILTERS, ...p.filters }, mode, view }
     }
   } catch { /* bo'sh */ }
   return null
@@ -226,7 +228,11 @@ export default function Portal() {
         {data.state === 'ready' && (
           <>
             <nav className="flex flex-wrap items-center gap-2">
-              {([['database', Database, 'Umumiy baza', data.students.length], ['groups', BookOpenCheck, 'Guruhlar jurnali', groups.length]] as const).map(([v, Icon, t, n]) => (
+              {([
+                ['database', Database, 'Umumiy baza', String(data.students.length)],
+                ['groups', BookOpenCheck, 'Guruhlar jurnali', String(groups.length)],
+                ['contracts', Wallet, 'Kontraktlar & Qarzdorlik', '201 qarz'],
+              ] as const).map(([v, Icon, t, n]) => (
                 <button
                   key={v}
                   type="button"
@@ -235,7 +241,10 @@ export default function Portal() {
                     view === v ? 'border-sky/50 bg-gradient-to-r from-blue/25 to-sky/15 text-fg' : 'border-line bg-ink-900/60 text-fg-muted hover:text-fg')}
                 >
                   <Icon size={16} className={view === v ? 'text-sky' : ''} /> {t}
-                  <span className="rounded-md bg-ink-700/80 px-1.5 text-[11.5px] tabular-nums">{n}</span>
+                  <span className={cx(
+                    'rounded-md px-1.5 text-[11.5px] tabular-nums',
+                    v === 'contracts' ? 'bg-rose-500/20 text-rose-300 font-semibold' : 'bg-ink-700/80'
+                  )}>{n}</span>
                 </button>
               ))}
               <div className="flex w-full gap-1 overflow-x-auto rounded-xl border border-line bg-ink-900/60 p-1 sm:ml-auto sm:w-auto" role="tablist" aria-label="Kurs">
@@ -284,8 +293,10 @@ export default function Portal() {
                 <FilterBar filters={filters} groups={groups} onFilter={patchFilters} shown={shown.length} total={data.students.length} mode={mode} onMode={setMode} onExportShown={onExportShown} />
                 <StudentList students={shown} allStudents={data.students} mode={mode} duplicateRows={duplicateRows} onOpen={onOpen} onToggleVerify={onToggleVerify} onToggleBaza={onToggleBaza} onChangeGroup={onChangeGroup} />
               </>
-            ) : (
+            ) : view === 'groups' ? (
               <GroupsJournal key={filters.kurs || 'all'} students={data.students} groups={groups} onOpen={onOpen} notify={notify} />
+            ) : (
+              <ContractsView notify={notify} />
             )}
 
             <footer className="pt-4 pb-8 text-center text-[12px] text-fg-subtle">
