@@ -496,14 +496,15 @@ export async function sendGroupsToTelegram(
 /** Kontraktlar va qarzdorlik jadvalini Excel formatida eksport qilish */
 export async function exportContractsExcel(
   contracts: ContractStudent[],
-  filename = 'Kontraktlar_Qarzdorlik_Hisoboti.xlsx'
+  filename = '02.10.2026_GACHA_KONTRAKTLAR.xlsx'
 ) {
   const X = await loadXlsx()
   const wb = X.utils.book_new()
 
   const headers = [
-    'T/r', 'F.I.Sh (Talaba)', 'Guruhi', 'Kurs', 'PINFL', 'Telefon',
-    'Shartnoma Summasi', "To'langan Summa", 'Qoldiq Qarzdorlik', "To'lov %", 'Holati', 'Manba'
+    'GURUHI', '№', 'Familiiyasi Ismi va Sharfi',
+    "Shu vaqtgacha bo'lishi kerak bo'lgan to'lov", 'Jami', 'Shu vaqtgacha qarzi',
+    "To'lov %", 'Holati'
   ]
 
   const rows: any[][] = [headers]
@@ -516,38 +517,30 @@ export async function exportContractsExcel(
     totalPaid += c.tolangan_summa || 0
     if (c.qarzdorlik > 0) totalDebt += c.qarzdorlik
 
-    const holatText =
-      c.holat === 'qarzdor' ? 'Qarzdor' :
-      c.holat === 'tolangan' ? "To'liq to'langan" :
-      c.holat === 'avans' ? "Ortiqcha (Avans)" :
-      c.holat === 'shartnoma_kutilmoqda' ? 'Shartnoma kutilmoqda (1-kurs)' : 'Topilmadi'
+    const holatText = c.qarzdorlik > 0 ? 'Qarzdor' : "To'liq to'langan"
 
     rows.push([
-      idx + 1,
-      c.fish,
       c.group || c.contract_group || '—',
-      c.kurs ? `${c.kurs}-kurs` : '—',
-      c.pinfl || '—',
-      c.tel || '—',
+      c.file_tr || idx + 1,
+      c.fish,
       c.shartnoma_summa,
       c.tolangan_summa,
       c.qarzdorlik,
       `${c.tolov_foiz}%`,
-      holatText,
-      c.manba || '—'
+      holatText
     ])
   })
 
   // Jami qator
   rows.push([
-    'JAMI', `Jami: ${contracts.length} nafar`, '', '', '', '',
+    'JAMI', '', `Jami: ${contracts.length} nafar`,
     totalReq, totalPaid, totalDebt,
     totalReq > 0 ? `${((totalPaid / totalReq) * 100).toFixed(1)}%` : '0%',
-    '', ''
+    ''
   ])
 
   const ws = X.utils.aoa_to_sheet(rows)
-  const range = X.utils.decode_range(ws['!ref'] || 'A1:L1')
+  const range = X.utils.decode_range(ws['!ref'] || 'A1:H1')
 
   // Header styling
   for (let col = range.s.c; col <= range.e.c; col++) {
@@ -563,8 +556,8 @@ export async function exportContractsExcel(
 
   // Data styling
   for (let r = 1; r < rows.length - 1; r++) {
-    const debtVal = rows[r][8]
-    const debtAddr = X.utils.encode_cell({ r, c: 8 })
+    const debtVal = rows[r][5]
+    const debtAddr = X.utils.encode_cell({ r, c: 5 })
     if (ws[debtAddr]) {
       if (debtVal > 0) {
         ws[debtAddr].s = { font: { bold: true, color: { rgb: 'B91C1C' } }, alignment: { horizontal: 'right' } }
@@ -576,7 +569,7 @@ export async function exportContractsExcel(
       ws[debtAddr].z = '#,##0'
     }
 
-    for (const c of [6, 7]) {
+    for (const c of [3, 4]) {
       const addr = X.utils.encode_cell({ r, c })
       if (ws[addr]) {
         ws[addr].z = '#,##0'
@@ -593,9 +586,9 @@ export async function exportContractsExcel(
       ws[addr].s = {
         font: { bold: true, color: { rgb: '0F172A' }, name: 'Calibri' },
         fill: { fgColor: { rgb: 'E2E8F0' } },
-        alignment: { horizontal: col >= 6 && col <= 8 ? 'right' : 'center' }
+        alignment: { horizontal: col >= 3 && col <= 5 ? 'right' : 'center' }
       }
-      if (col === 6 || col === 7 || col === 8) {
+      if (col === 3 || col === 4 || col === 5) {
         ws[addr].z = '#,##0'
       }
     }
@@ -603,21 +596,17 @@ export async function exportContractsExcel(
 
   // Ustunlar kengligi
   ws['!cols'] = [
-    { wch: 6 },
-    { wch: 32 },
-    { wch: 10 },
-    { wch: 10 },
-    { wch: 16 },
-    { wch: 20 },
-    { wch: 20 },
-    { wch: 20 },
-    { wch: 20 },
-    { wch: 12 },
-    { wch: 24 },
-    { wch: 26 },
+    { wch: 12 }, // GURUHI
+    { wch: 6 },  // №
+    { wch: 34 }, // F.I.Sh
+    { wch: 22 }, // Reja to'lov
+    { wch: 20 }, // Jami
+    { wch: 20 }, // Qarzdorlik
+    { wch: 12 }, // To'lov %
+    { wch: 18 }, // Holati
   ]
 
-  X.utils.book_append_sheet(wb, ws, "Qarzdorlik Hisoboti")
+  X.utils.book_append_sheet(wb, ws, "KONTRAKTLAR")
   writeXlsxClean(X, wb, filename)
 }
 

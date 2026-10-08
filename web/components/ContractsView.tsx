@@ -4,21 +4,14 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import {
   AlertCircle,
   ArrowUpDown,
-  Calendar,
-  CheckCircle2,
   ChevronDown,
   ChevronRight,
   Download,
   FileSpreadsheet,
-  Filter,
   Layers,
   Loader2,
   RefreshCw,
   Search,
-  TrendingDown,
-  TrendingUp,
-  Users,
-  Wallet,
   X,
 } from 'lucide-react'
 import { exportContractsExcel } from '@/lib/excel'
@@ -29,7 +22,7 @@ interface ContractsViewProps {
   notify: (msg: string, type?: 'success' | 'warning' | 'error' | 'info') => void
 }
 
-type StatusFilter = 'all' | 'qarzdor' | 'tolangan' | 'avans'
+type StatusFilter = 'all' | 'qarzdor' | 'tolangan'
 type SortMode = 'file_order' | 'debt_desc' | 'debt_asc' | 'fio_asc' | 'group_asc' | 'percent_asc' | 'percent_desc'
 
 function formatMoney(amount: number): string {
@@ -110,9 +103,7 @@ export default function ContractsView({ notify }: ContractsViewProps) {
     if (statusFilter === 'qarzdor') {
       list = list.filter((s) => s.qarzdorlik > 0)
     } else if (statusFilter === 'tolangan') {
-      list = list.filter((s) => s.qarzdorlik === 0)
-    } else if (statusFilter === 'avans') {
-      list = list.filter((s) => s.qarzdorlik < 0)
+      list = list.filter((s) => s.qarzdorlik <= 0)
     }
 
     // Qidiruv
@@ -122,15 +113,13 @@ export default function ContractsView({ notify }: ContractsViewProps) {
         return (
           (s.fish && s.fish.toLowerCase().includes(q)) ||
           (s.group && s.group.toLowerCase().includes(q)) ||
-          (s.pinfl && s.pinfl.includes(q)) ||
-          (s.tel && s.tel.includes(q))
+          (s.pinfl && s.pinfl.includes(q))
         )
       })
     }
 
     // Saralash
     if (sortMode === 'file_order') {
-      // Fayldagi tartib bo'yicha (boshlang'ich tartib: eng katta qarzdan boshlab)
       list = [...list]
     } else {
       list = [...list].sort((a, b) => {
@@ -164,7 +153,6 @@ export default function ContractsView({ notify }: ContractsViewProps) {
     let req = 0
     let paid = 0
     let debt = 0
-    let adv = 0
     let debtors = 0
     for (const s of filteredStudents) {
       req += s.shartnoma_summa || 0
@@ -172,11 +160,9 @@ export default function ContractsView({ notify }: ContractsViewProps) {
       if (s.qarzdorlik > 0) {
         debt += s.qarzdorlik
         debtors++
-      } else if (s.qarzdorlik < 0) {
-        adv += Math.abs(s.qarzdorlik)
       }
     }
-    return { req, paid, debt, adv, debtors, total: filteredStudents.length }
+    return { req, paid, debt, debtors, total: filteredStudents.length }
   }, [filteredStudents])
 
   // Excel eksport
@@ -220,6 +206,8 @@ export default function ContractsView({ notify }: ContractsViewProps) {
   }
 
   const { kpi, summary_table = [] } = data
+  const totalStudents = kpi.total_students || 322
+  const paidCount = totalStudents - kpi.total_debtors_count
 
   return (
     <div className="space-y-6">
@@ -419,7 +407,7 @@ export default function ContractsView({ notify }: ContractsViewProps) {
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="F.I.Sh, guruh, PINFL yoki telefon bo'yicha qidirish…"
+              placeholder="F.I.Sh, guruh yoki PINFL bo'yicha qidirish…"
               className="w-full rounded-xl border border-line bg-ink-950/80 py-2 pl-9 pr-8 text-[13px] text-fg placeholder:text-fg-muted/60 focus:border-sky focus:outline-none"
             />
             {search && (
@@ -470,7 +458,7 @@ export default function ContractsView({ notify }: ContractsViewProps) {
               >
                 <option value="file_order">Fayldagi tartibda (Asl nusxa)</option>
                 <option value="debt_desc">Eng ko'p qarz (Kamayish)</option>
-                <option value="debt_asc">Eng kam qarz / Avans</option>
+                <option value="debt_asc">Qarz (O'sish)</option>
                 <option value="fio_asc">F.I.Sh (A-Z)</option>
                 <option value="group_asc">Guruh bo'yicha</option>
                 <option value="percent_asc">To'lov % (Kamayish)</option>
@@ -495,10 +483,9 @@ export default function ContractsView({ notify }: ContractsViewProps) {
         <div className="flex flex-wrap items-center gap-1.5 border-t border-line/60 pt-2.5">
           {(
             [
-              ['all', 'Barcha faol talabalar', kpi.total_students],
+              ['all', 'Barcha faol talabalar', totalStudents],
               ['qarzdor', '🔴 Qarzdorlar', kpi.total_debtors_count],
-              ['tolangan', "🟢 To'liq to'laganlar", kpi.total_paid_full_count],
-              ['avans', '🔵 Ortiqcha to\'lov (Avans)', kpi.total_advance_count],
+              ['tolangan', "🟢 Qarzi yo'qlar (To'langan)", paidCount],
             ] as const
           ).map(([val, label, count]) => (
             <button
@@ -512,8 +499,6 @@ export default function ContractsView({ notify }: ContractsViewProps) {
                     ? 'bg-rose-500/20 text-rose-300 border border-rose-500/40'
                     : val === 'tolangan'
                     ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
-                    : val === 'avans'
-                    ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40'
                     : 'bg-sky/20 text-sky border border-sky/40'
                   : 'bg-ink-800/60 text-fg-muted hover:text-fg hover:bg-ink-800'
               )}
@@ -562,12 +547,6 @@ export default function ContractsView({ notify }: ContractsViewProps) {
               Qarzdorlik:{' '}
               <strong className="text-rose-400 tabular-nums">{formatMoney(filteredTotals.debt)} so'm</strong>
             </div>
-            {filteredTotals.adv > 0 && (
-              <div>
-                Avans:{' '}
-                <strong className="text-amber-400 tabular-nums">{formatMoney(filteredTotals.adv)} so'm</strong>
-              </div>
-            )}
           </div>
         </div>
 
@@ -581,7 +560,6 @@ export default function ContractsView({ notify }: ContractsViewProps) {
                 <th className="py-3 px-3 text-right">Shu vaqtgacha bo'lishi kerak to'lov</th>
                 <th className="py-3 px-3 text-right">Jami</th>
                 <th className="py-3 px-3 text-right">Shu vaqtgacha qarzi</th>
-                <th className="py-3 px-3">Telefon</th>
                 <th className="py-3 px-3 text-center">To'lov %</th>
                 <th className="py-3 pr-4 pl-3 text-center">Holati</th>
               </tr>
@@ -589,7 +567,7 @@ export default function ContractsView({ notify }: ContractsViewProps) {
             <tbody className="divide-y divide-line/40">
               {paginatedStudents.length === 0 ? (
                 <tr>
-                  <td colSpan={9} className="py-16 text-center text-fg-muted">
+                  <td colSpan={8} className="py-16 text-center text-fg-muted">
                     Tanlangan filtrlar bo'yicha talabalar topilmadi.
                   </td>
                 </tr>
@@ -597,16 +575,14 @@ export default function ContractsView({ notify }: ContractsViewProps) {
                 paginatedStudents.map((s, idx) => {
                   const trNum = (page - 1) * pageSize + idx + 1
                   const isDebtor = s.qarzdorlik > 0
-                  const isAdvance = s.qarzdorlik < 0
-                  const isFull = s.qarzdorlik === 0
+                  const isNegative = s.qarzdorlik < 0
 
                   return (
                     <tr
                       key={s.id}
                       className={cx(
                         'transition-colors hover:bg-ink-800/40',
-                        isDebtor && 'bg-rose-950/5',
-                        isAdvance && 'bg-amber-950/5'
+                        isDebtor && 'bg-rose-950/5'
                       )}
                     >
                       {/* GURUHI */}
@@ -643,25 +619,14 @@ export default function ContractsView({ notify }: ContractsViewProps) {
                           <span className="inline-block rounded-lg bg-rose-500/15 px-2.5 py-0.5 font-bold text-rose-400">
                             +{formatMoney(s.qarzdorlik)} so'm
                           </span>
-                        ) : isAdvance ? (
-                          <span className="inline-block rounded-lg bg-amber-500/15 px-2.5 py-0.5 font-bold text-amber-400">
+                        ) : isNegative ? (
+                          <span className="inline-block rounded-lg bg-sky/15 px-2.5 py-0.5 font-bold text-sky">
                             -{formatMoney(Math.abs(s.qarzdorlik))} so'm
                           </span>
                         ) : (
                           <span className="inline-block rounded-lg bg-emerald-500/15 px-2.5 py-0.5 font-bold text-emerald-400">
-                            0 (To'liq)
+                            0 so'm
                           </span>
-                        )}
-                      </td>
-
-                      {/* Telefon */}
-                      <td className="py-3 px-3 text-fg-muted whitespace-nowrap">
-                        {s.tel ? (
-                          <a href={`tel:${s.tel}`} className="hover:text-sky hover:underline">
-                            {s.tel}
-                          </a>
-                        ) : (
-                          <span className="text-fg-muted/40">—</span>
                         )}
                       </td>
 
@@ -690,10 +655,6 @@ export default function ContractsView({ notify }: ContractsViewProps) {
                         {isDebtor ? (
                           <span className="rounded-md bg-rose-950/80 border border-rose-500/30 px-2 py-0.5 text-[11px] font-semibold text-rose-300">
                             Qarzdor
-                          </span>
-                        ) : isAdvance ? (
-                          <span className="rounded-md bg-amber-950/80 border border-amber-500/30 px-2 py-0.5 text-[11px] font-semibold text-amber-300">
-                            Avans
                           </span>
                         ) : (
                           <span className="rounded-md bg-emerald-950/80 border border-emerald-500/30 px-2 py-0.5 text-[11px] font-semibold text-emerald-300">
