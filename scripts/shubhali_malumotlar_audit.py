@@ -40,8 +40,8 @@ OUT_XLSX = os.path.join(ROOT, 'hisobotlar', 'tekshiruvlar', 'SHUBHALI_MALUMOTLAR
 # (portal eksporti ham shu faylni o'qiydi)
 EXCEPTIONS_JSON = os.path.join(ROOT, 'web', 'lib', 'qabul-istisnolar.json')
 
-# 26-07 guruhi tugatildi (26.09.2026) — talabasi 26-03 ga o'tkazildi
-GROUPS = ['26-01', '26-02', '26-03', '26-04', '26-05', '26-06']
+# 1-kurs rasmiy guruhlari
+GROUPS = ['26-01', '26-02', '26-03', '26-04', '26-05', '26-06', '26-07']
 TODAY = date.today()
 
 JIDDIY, ORTA, PAST = 'Jiddiy', "O'rta", 'Past'

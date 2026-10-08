@@ -374,21 +374,8 @@ async function buildRoleWorkbook(X: XLSXModule, students: Student[], role: Role)
   return { wb, count: activeStudents.length }
 }
 
-/** 1-sahifa "Jami talabalar" (yoki qabul_shablon uchun har bir guruh alohida sahifada) */
+/** 1-sahifa "Jami talabalar" (barcha guruhlar sahifalari bilan) */
 export async function exportRole(students: Student[], role: Role) {
-  // 1. Avval serverdan toza va rasmiy openpyxl formatdagi faylni yuklab olishga urinamiz
-  try {
-    const res = await fetch(`/api/download_export?role=${encodeURIComponent(role)}`)
-    if (res.ok) {
-      const blob = await res.blob()
-      downloadBlob(blob, withTimestamp(ROLE_META[role].file))
-      return 20
-    }
-  } catch {
-    // Server o'chiq bo'lsa brauzer fallback
-  }
-
-  // 2. Lokal / oflayn fallback: tozalangan xlsx
   const X = await loadXlsx()
   const { wb } = await buildRoleWorkbook(X, students, role)
   const fileName = withTimestamp(ROLE_META[role].file)
@@ -398,18 +385,8 @@ export async function exportRole(students: Student[], role: Role) {
 
 /** Bitta guruhni QABUL - 2026 formatida yuklab olish */
 export async function exportQabulShablonGroup(students: Student[], group: string) {
-  // Agar 1-kurs guruhi bo'lsa, serverdagi tayyor rasmiy faylga murojaat qilamiz
-  try {
-    const res = await fetch(`/api/download_export?type=qabul_group&group=${encodeURIComponent(group)}`)
-    if (res.ok) {
-      const blob = await res.blob()
-      downloadBlob(blob, withTimestamp(`${QABUL_FILE} (${group}).xlsx`))
-      return students.filter((s) => s.group === group).length
-    }
-  } catch {}
-
   const X = await loadXlsx()
-  const list = students.filter((s) => s.group === group).sort(byName)
+  const list = students.filter((s) => (s.group || '').trim() === group.trim()).sort(byName)
   await ensureAiTranslations(list)
   const wb = X.utils.book_new()
   X.utils.book_append_sheet(wb, buildQabulShablonSheet(X, list), QABUL_SHEET)
@@ -420,26 +397,15 @@ export async function exportQabulShablonGroup(students: Student[], group: string
 
 /** Tanlangan guruh(lar)ni QABUL - 2026 formatida yuklab olish */
 export async function exportQabulShablonGroups(students: Student[], groups: string[]) {
-  // Agar barcha 1-kurs yoki barcha guruhlar bo'lsa, serverdagi toza fayldan olamiz
-  if (groups.length >= 6) {
-    try {
-      const res = await fetch('/api/download_export?role=qabul_shablon')
-      if (res.ok) {
-        const blob = await res.blob()
-        downloadBlob(blob, withTimestamp(`${QABUL_FILE}.xlsx`))
-        return students.filter((s) => groups.includes((s.group || '').trim())).length
-      }
-    } catch {}
-  }
-
+  const cleanGroups = groups.map((g) => g.trim())
   const X = await loadXlsx()
   const list = students
-    .filter((s) => groups.includes((s.group || '').trim()))
+    .filter((s) => cleanGroups.includes((s.group || '').trim()))
     .sort((a, b) => groupOrder((a.group || '').trim(), (b.group || '').trim()) || byName(a, b))
   await ensureAiTranslations(list)
   const wb = X.utils.book_new()
   X.utils.book_append_sheet(wb, buildQabulShablonSheet(X, list), QABUL_SHEET)
-  const suffix = groups.length === 1 ? ` (${groups[0]})` : groups.length < GROUPS.length ? ` (${groups.length} guruh)` : ''
+  const suffix = cleanGroups.length === 1 ? ` (${cleanGroups[0]})` : cleanGroups.length < GROUPS.length ? ` (${cleanGroups.length} guruh)` : ''
   const fileName = withTimestamp(`${QABUL_FILE}${suffix}`)
   writeXlsxClean(X, wb, fileName)
   return list.length

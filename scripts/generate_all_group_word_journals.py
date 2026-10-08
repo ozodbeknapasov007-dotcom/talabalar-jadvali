@@ -39,7 +39,7 @@ with open(os.path.join(BASE_DIR, 'data', 'guruhlar.json'), 'r', encoding='utf-8'
 
 # Barcha rasmiy guruhlarni aniqlash (1-kurs, 2-kurs, 3-kurs)
 OFFICIAL_GROUPS = [
-    '26-01', '26-02', '26-03', '26-04', '26-05', '26-06', # 1-kurs
+    '26-01', '26-02', '26-03', '26-04', '26-05', '26-06', '26-07', # 1-kurs
     '25-16', '25-17', '25-18', '25-19', '25-20', '25-21', '25-22', '25-23', # 2-kurs
     '24-11', '24-12', '24-13', '24-15', '24-16' # 3-kurs
 ]
@@ -52,6 +52,7 @@ COURSE_1_ORDERS = {
     '26-04': ('T-40/2', '02.09.2026'),
     '26-05': ('T-40/2', '02.09.2026'),
     '26-06': ('T-40/2', '02.09.2026'),
+    '26-07': ('T-40/2', '02.09.2026'),
 }
 
 def set_cell_text(cell, text, bold=False, italic=False, size=9.5, align=WD_ALIGN_PARAGRAPH.LEFT):

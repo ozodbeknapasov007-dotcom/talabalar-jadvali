@@ -35,6 +35,7 @@ export const DEFAULT_GROUP_SETTINGS: GroupSettings = {
   '26-04': s(1, 'Xamdamova.M'),
   '26-05': s(1, 'Rayimova.X'),
   '26-06': s(1, 'Yuldashev.O'),
+  '26-07': s(1, 'Asraliyev.A'),
   '24-15': s(2, 'Asraliyev.A'),
   '24-16': s(2, 'Yuldashev.O'),
   '25-16': s(2, 'Xidirova.N'),
