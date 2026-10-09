@@ -1,1 +1,18 @@
-[]
+[
+  {
+    "type": "update_student",
+    "data": {
+      "row": 557,
+      "fields": {
+        "group": "Talabalar safidan chiqarilganlar",
+        "buyruq": "T-53",
+        "buyruq_sana": "09.10.2026"
+      },
+      "shnum": "",
+      "pinfl": "61901005590031",
+      "ism": "Uktamova Sarvinoz"
+    },
+    "id": "chg_1791545966758_69q3p",
+    "created_at": "2026-10-09T11:39:26.758Z"
+  }
+]
