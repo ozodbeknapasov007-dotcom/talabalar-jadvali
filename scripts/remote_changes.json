@@ -14,5 +14,21 @@
     },
     "id": "chg_1791538142021_n1q08",
     "created_at": "2026-10-09T09:29:02.021Z"
+  },
+  {
+    "type": "update_student",
+    "data": {
+      "row": 360,
+      "fields": {
+        "group": "Akademik ta'til olganlar",
+        "buyruq": "T-50",
+        "buyruq_sana": "02.10.2026"
+      },
+      "shnum": "",
+      "pinfl": "60310075680053",
+      "ism": "navro'zova ro'zigul o'lmas qizi"
+    },
+    "id": "chg_1791538143010_1j9wp",
+    "created_at": "2026-10-09T09:29:03.010Z"
   }
 ]
