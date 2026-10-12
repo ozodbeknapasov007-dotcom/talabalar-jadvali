@@ -62,5 +62,26 @@
     },
     "id": "chg_1791616283719_9txf0",
     "created_at": "2026-10-10T07:11:23.719Z"
+  },
+  {
+    "type": "add_student",
+    "data": {
+      "ism": "Jumayeva Sabina",
+      "ota": "Sobir qizi",
+      "group": "26-06",
+      "pv": "AD9154749",
+      "pinfl": "62411085590063",
+      "dob": "24.11.2008",
+      "ber": "26.10.2024",
+      "doc_tur": "Shahodatnoma",
+      "sh_doc": "UM 03752398",
+      "mak": "13-sonli umumiy o'rta ta'lim maktabi",
+      "yil": "2026",
+      "yon": "Hamshiralik ishi - 3 yillik",
+      "shnum": "331",
+      "tel": ""
+    },
+    "id": "chg_1791788749661_3ru3r",
+    "created_at": "2026-10-12T07:05:49.661Z"
   }
 ]
