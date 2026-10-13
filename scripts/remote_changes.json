@@ -187,5 +187,21 @@
     },
     "id": "chg_1791889475048_cdpff",
     "created_at": "2026-10-13T11:04:35.048Z"
+  },
+  {
+    "type": "update_student",
+    "data": {
+      "row": 418,
+      "fields": {
+        "group": "Akademik ta'til olganlar",
+        "buyruq": "T-56",
+        "buyruq_sana": "13.10.2026"
+      },
+      "shnum": "",
+      "pinfl": "61706085590047",
+      "ism": "usmonova sabrina akrom qizi"
+    },
+    "id": "chg_1791889476191_xdyun",
+    "created_at": "2026-10-13T11:04:36.191Z"
   }
 ]
