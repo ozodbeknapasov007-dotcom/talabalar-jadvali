@@ -57,6 +57,8 @@ REBUILD_PENDING = False
 # ===== GIT AUTO-PUSH SOZLAMALARI =====
 GIT_AUTO_PUSH = True   # False qilib qo'ying agar push kerak bo'lmasa
 GIT_PUSH_LOCK = threading.Lock()
+# git buyruqlari ikki oqimdan (saqlashdan keyingi push va har 4 soniyadagi pull) bir vaqtda ishlamasin
+GIT_OP_LOCK = threading.RLock()
 _git_push_timer = None
 GIT_SYNC_STATUS = {
     "state": "synced",           # "synced", "pending", "syncing", "error"
@@ -64,8 +66,86 @@ GIT_SYNC_STATUS = {
     "last_sync": time.strftime("%H:%M:%S")
 }
 
+def _git(*args, timeout=30):
+    return subprocess.run(['git', *args], cwd=BASE_DIR, capture_output=True, text=True, timeout=timeout)
+
+
+def _git_unfinished():
+    """Yarim qolgan rebase/merge: 'rebase', 'merge' yoki None"""
+    git_dir = os.path.join(BASE_DIR, '.git')
+    if os.path.isdir(os.path.join(git_dir, 'rebase-merge')) or os.path.isdir(os.path.join(git_dir, 'rebase-apply')):
+        return 'rebase'
+    if os.path.exists(os.path.join(git_dir, 'MERGE_HEAD')):
+        return 'merge'
+    return None
+
+
+_last_git_alert = 0
+
+
+def _alert_git_conflict(detail):
+    """Ziddiyatni o'zi hal qila olmasa — bot orqali ogohlantirish (soatiga ko'pi bilan bir marta)"""
+    global _last_git_alert
+    print(f"[GIT] ❌ Sinxronlash ziddiyati: {detail}")
+    if time.time() - _last_git_alert < 3600:
+        return
+    _last_git_alert = time.time()
+    try:
+        import requests
+        cfg = load_backup_config()
+        if cfg:
+            requests.post(
+                f"https://api.telegram.org/bot{cfg['token']}/sendMessage",
+                json={'chat_id': cfg['chat_id'], 'text': f"⚠️ Talabalar portali: GitHub bilan sinxronlashda ziddiyat — o'zi hal qila olmadi.\n{detail[:300]}"},
+                timeout=30,
+            )
+    except Exception as e:
+        print(f"[GIT] Ogohlantirish yuborilmadi: {e}")
+
+
+def safe_git_pull():
+    """GitHub'dan tortib olish — ziddiyatda yarim yo'lda qolib ketmaydi.
+    1) oldingi urinishdan yarim qolgan rebase/merge bo'lsa — bekor qilinadi
+    2) git pull --rebase --autostash
+    3) ziddiyat chiqsa — rebase bekor qilinadi va merge qilinadi, ziddiyatli joylarda
+       GitHub'dagi (Vercel orqali kiritilgan) ma'lumot ustun (-X theirs)
+    4) shunda ham bo'lmasa — merge bekor, holat «xato», bot orqali ogohlantirish
+    True — tortib olindi"""
+    global GIT_SYNC_STATUS
+    with GIT_OP_LOCK:
+        left = _git_unfinished()
+        if left:
+            print(f"[GIT] ⚠️ Yarim qolgan {left} topildi — bekor qilinmoqda")
+            _git(left, '--abort')
+        res = _git('pull', '--rebase', '--autostash', 'origin', 'main', '--quiet')
+        if res.returncode == 0 and not _git_unfinished():
+            return True
+        if _git_unfinished() != 'rebase':
+            # Ziddiyat emas (internet, GitHub javob bermadi va h.k.) — keyingi safar yana urinadi
+            return False
+        _git('rebase', '--abort')
+        merge = _git('pull', '--no-rebase', '--no-edit', '--autostash', '-X', 'theirs', 'origin', 'main', timeout=60)
+        if merge.returncode == 0 and not _git_unfinished():
+            print("[GIT] ✅ Ziddiyat hal qilindi — GitHub'dagi ma'lumot ustun")
+            return True
+        detail = (merge.stdout + merge.stderr).strip() or 'merge xatosi'
+        if _git_unfinished() == 'merge':
+            _git('merge', '--abort')
+        with GIT_PUSH_LOCK:
+            GIT_SYNC_STATUS["state"] = "error"
+            GIT_SYNC_STATUS["message"] = "Sinxronlash ziddiyati"
+            GIT_SYNC_STATUS["detail"] = detail[:60]
+        _alert_git_conflict(detail)
+        return False
+
+
 def _do_git_push():
     """Fonda git add + commit + push bajaradi (bloklamaydi)."""
+    with GIT_OP_LOCK:
+        _do_git_push_locked()
+
+
+def _do_git_push_locked():
     global GIT_SYNC_STATUS
     with GIT_PUSH_LOCK:
         GIT_SYNC_STATUS["state"] = "syncing"
@@ -104,11 +184,8 @@ def _do_git_push():
                 cwd=BASE_DIR, capture_output=True, text=True, timeout=30
             )
             if result_commit.returncode == 0:
-                # Masofaviy o'zgarishlar bilan ziddiyat bo'lmasligi uchun oldin rebase bilan tortib olamiz
-                subprocess.run(
-                    ['git', 'pull', '--rebase', '--autostash', 'origin', 'main', '--quiet'],
-                    cwd=BASE_DIR, capture_output=True, text=True, timeout=30
-                )
+                # Masofaviy o'zgarishlar bilan ziddiyat bo'lmasligi uchun oldin tortib olamiz
+                safe_git_pull()
                 result_push = subprocess.run(
                     ['git', 'push', 'origin', 'main'],
                     cwd=BASE_DIR, capture_output=True, text=True, timeout=60
@@ -121,7 +198,7 @@ def _do_git_push():
                         GIT_SYNC_STATUS["last_sync"] = time.strftime("%H:%M:%S")
                 else:
                     # Agar birinchi urinish o'tmasa, yana bir bor rebase qilib ko'rish
-                    subprocess.run(['git', 'pull', '--rebase', '--autostash', 'origin', 'main', '--quiet'], cwd=BASE_DIR, capture_output=True, text=True, timeout=30)
+                    safe_git_pull()
                     retry_push = subprocess.run(['git', 'push', 'origin', 'main'], cwd=BASE_DIR, capture_output=True, text=True, timeout=60)
                     if retry_push.returncode == 0:
                         print("[GIT] ✅ GitHub'ga qayta urinishda push qilindi")
@@ -260,12 +337,8 @@ def process_remote_github_changes():
     changes_file = os.path.join(BASE_DIR, 'scripts', 'remote_changes.json')
     try:
         # 1. GitHub'dan eng yangi o'zgarishlarni tortib olish
-        pull_res = subprocess.run(
-            # --autostash: saqlanmagan kod o'zgarishi bo'lsa ham pull to'xtab
-            # qolmasin (aks holda sinxronizatsiya butunlay ishlamay qoladi)
-            ['git', 'pull', '--rebase', '--autostash', 'origin', 'main', '--quiet'],
-            cwd=BASE_DIR, capture_output=True, text=True, timeout=30
-        )
+        # Ziddiyatda yarim yo'lda qolib ketmaydi (safe_git_pull); push bilan bir vaqtda ishlamaydi
+        safe_git_pull()
         if not os.path.exists(changes_file):
             return
 
