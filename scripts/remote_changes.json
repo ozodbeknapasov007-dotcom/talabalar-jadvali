@@ -123,5 +123,21 @@
     },
     "id": "chg_1791870385380_jtdj3",
     "created_at": "2026-10-13T05:46:25.380Z"
+  },
+  {
+    "type": "update_student",
+    "data": {
+      "row": 368,
+      "fields": {
+        "group": "Talabalar safidan chiqarilganlar",
+        "buyruq": "T-54",
+        "buyruq_sana": "10.09.2026"
+      },
+      "shnum": "",
+      "pinfl": "62804085590052",
+      "ism": "turdiqulova dilfuza sarvar qizi"
+    },
+    "id": "chg_1791870386003_vekut",
+    "created_at": "2026-10-13T05:46:26.003Z"
   }
 ]
