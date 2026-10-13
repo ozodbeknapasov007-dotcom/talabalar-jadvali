@@ -139,5 +139,21 @@
     },
     "id": "chg_1791870386003_vekut",
     "created_at": "2026-10-13T05:46:26.003Z"
+  },
+  {
+    "type": "update_student",
+    "data": {
+      "row": 407,
+      "fields": {
+        "group": "Akademik ta'til olganlar",
+        "buyruq": "T-55",
+        "buyruq_sana": "13.10.2026"
+      },
+      "shnum": "",
+      "pinfl": "61202085590026",
+      "ism": "Murodullayeva Gulasal"
+    },
+    "id": "chg_1791889424979_w8mhc",
+    "created_at": "2026-10-13T11:03:44.979Z"
   }
 ]
