@@ -3,8 +3,8 @@
 import { useEffect, useMemo, useState } from 'react'
 import { AlertTriangle, ChevronLeft, ChevronRight, FileText, Link2, Pencil, Save, Trash2, X } from 'lucide-react'
 import { YON_OPTIONS } from '@/lib/config'
-import { decodePinfl, dobFromPinfl, findDuplicates, formatPinfl, fullName, groupOptions, isAcademicLeave, isOfficialGroup, isSecretGroup, isWithdrawn, NAME_FLAGS, needsOrder, ORDER_DATE_RE } from '@/lib/student'
-import { EDIT_FIELDS, type EditFields, type Student } from '@/lib/types'
+import { decodePinfl, dobFromPinfl, findDuplicates, formatPinfl, fullName, groupOptions, isAcademicLeave, isLeftGroup, isOfficialGroup, isSecretGroup, isWithdrawn, lastMoveInto, NAME_FLAGS, needsOrder, ORDER_DATE_RE } from '@/lib/student'
+import { EDIT_FIELDS, type EditFields, type GroupMove, type Student } from '@/lib/types'
 import DocImages from './DocImages'
 import MalumotnomaModal from './MalumotnomaModal'
 import { BazaButton, cx, GroupBadge, Mono, StatusIcon, VerifyButton } from './ui'
@@ -42,6 +42,35 @@ function Row({ label, children }: { label: string; children: React.ReactNode }) 
       <span className="shrink-0 text-[12.5px] text-fg-muted">{label}</span>
       <span className="min-w-0 text-right text-[13.5px] font-semibold break-words text-fg">{children}</span>
     </div>
+  )
+}
+
+/** Tizimga kiritilgan vaqt: 14.10.2026 15:20 */
+function fmtMoment(iso?: string) {
+  if (!iso) return ''
+  const d = new Date(iso)
+  if (Number.isNaN(d.getTime())) return ''
+  return d.toLocaleString('ru-RU', { timeZone: 'Asia/Tashkent', day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }).replace(',', '')
+}
+
+const groupLabel = (g: string) => isAcademicLeave(g) ? "Akademik ta'til" : isWithdrawn(g) ? 'Safdan chiqarilgan' : g || 'Guruhsiz'
+
+/** Guruh almashtirishlar ro'yxati (yangisi tepada) */
+function GroupHistory({ moves }: { moves: GroupMove[] }) {
+  return (
+    <ol className="mt-2 space-y-1.5 border-t border-line/70 pt-3">
+      {[...moves].reverse().map((m, i) => (
+        <li key={i} className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5 text-[12.5px]">
+          <span className="mono font-semibold text-fg">{groupLabel(m.from)}</span>
+          <span className="text-fg-subtle">→</span>
+          <span className={cx('font-semibold', isLeftGroup(m.to) ? (isWithdrawn(m.to) ? 'text-rose' : 'text-violet') : 'mono text-fg')}>{groupLabel(m.to)}</span>
+          {m.buyruq_sana && <span className="mono text-sky-soft">{m.buyruq ? `${m.buyruq}, ` : ''}{m.buyruq_sana}</span>}
+          <span className="ml-auto text-[11.5px] text-fg-subtle">
+            {m.vaqt ? `kiritilgan ${fmtMoment(m.vaqt)}` : "qo'lda kiritilgan"}{m.manba === 'tarix' ? ' (tarixdan tiklangan)' : ''}
+          </span>
+        </li>
+      ))}
+    </ol>
   )
 }
 
@@ -125,10 +154,13 @@ function EditForm({ student, all, onCancel, onSave }: { student: Student; all: S
   const aslDefault = (g: string, x: Record<string, string>) =>
     isSecretGroup(g) && !x.asl_guruh && isOfficialGroup(student.group) && !isSecretGroup(student.group) ? { asl_guruh: student.group } : {}
 
+  // Akademik ta'tilga / safdan chiqarilsa — qaysi guruhdan chiqqani sifatida hozirgi guruhi yoziladi
+  const leftFrom = (g: string) => isLeftGroup(g) && isOfficialGroup(student.group) ? student.group : String(student.chiqqan_guruh ?? '')
+
   const onGroup = (g: string) => setF((x) => (needsOrder(student.group, g)
     // Yangi buyruq — eski raqam/sana qolib ketmasin (sana bugungi kun bilan to'ldiriladi)
-    ? { ...x, group: g, buyruq: '', buyruq_sana: new Date().toLocaleDateString('ru-RU') }
-    : { ...x, group: g, buyruq: String(student.buyruq ?? ''), buyruq_sana: String(student.buyruq_sana ?? ''), ...aslDefault(g, x) }))
+    ? { ...x, group: g, buyruq: '', buyruq_sana: new Date().toLocaleDateString('ru-RU'), chiqqan_guruh: leftFrom(g) }
+    : { ...x, group: g, buyruq: String(student.buyruq ?? ''), buyruq_sana: String(student.buyruq_sana ?? ''), chiqqan_guruh: String(student.chiqqan_guruh ?? ''), ...aslDefault(g, x) }))
 
   const submit = async () => {
     if (!f.ism.trim() || orderError) return
@@ -184,6 +216,12 @@ function EditForm({ student, all, onCancel, onSave }: { student: Student; all: S
               <Choice label="Bazadagi asl guruhi (maxfiy guruh uchun)" value={f.asl_guruh} onChange={set('asl_guruh')} options={aslChoices} />
             </div>
           )}
+          {isLeftGroup(f.group) && (
+            <div className="sm:col-span-2">
+              <Choice label={isAcademicLeave(f.group) ? "Qaysi guruhdan akademik ta'tilga chiqqan" : 'Qaysi guruhdan chiqarilgan'}
+                value={f.chiqqan_guruh} onChange={set('chiqqan_guruh')} options={aslChoices} />
+            </div>
+          )}
           <div className="sm:col-span-2"><Input label="Telefon" value={f.tel} onChange={set('tel')} placeholder="+998 90 123 45 67" /></div>
           <Input label={`Buyruq raqami${orderRequired ? ' *' : ''}`} value={f.buyruq} onChange={set('buyruq')} mono placeholder="T-40/2" highlight={orderRequired && !f.buyruq.trim()} />
           <Input label={`Buyruq sanasi${orderRequired ? ' *' : ''}`} value={f.buyruq_sana} onChange={set('buyruq_sana')} mono placeholder="02.09.2026" />
@@ -237,11 +275,26 @@ function ViewInfo({ s, onEdit, onToggleVerify, onToggleBaza }: { s: Student; onE
         <Row label="Shartnoma raqami"><span className="mono text-blue-soft">#{s.shnum || '—'}</span></Row>
         <Row label="Akademik guruh"><GroupBadge group={s.group} asl={s.asl_guruh} inline /></Row>
         {isSecretGroup(s.group) && <Row label="Bazadagi asl guruhi"><span className="mono text-amber">{s.asl_guruh || "ko'rsatilmagan"}</span></Row>}
-        {(s.buyruq || isWithdrawn(s.group) || isAcademicLeave(s.group)) && (
-          <Row label="Qabul / Holat buyrug'i">
+        {isLeftGroup(s.group) && (
+          <>
+            <Row label={isAcademicLeave(s.group) ? "Qaysi guruhdan ta'tilga chiqqan" : 'Qaysi guruhdan chiqarilgan'}>
+              {s.chiqqan_guruh
+                ? <span className="mono font-bold text-fg">{s.chiqqan_guruh}</span>
+                : <button type="button" onClick={onEdit} className="text-amber underline-offset-2 hover:underline">kiritilmagan — kiritish</button>}
+            </Row>
+            <Row label="Qachon">
+              {s.buyruq_sana
+                ? <span className="mono font-bold text-sky-soft">{s.buyruq_sana}</span>
+                : <span className="text-amber">buyruq sanasi kiritilmagan</span>}
+              {lastMoveInto(s)?.vaqt && <span className="block text-[11.5px] font-normal text-fg-subtle">tizimga kiritilgan {fmtMoment(lastMoveInto(s)?.vaqt)}</span>}
+            </Row>
+          </>
+        )}
+        {(s.buyruq || isLeftGroup(s.group)) && (
+          <Row label={isLeftGroup(s.group) ? 'Buyruq raqami' : "Qabul / Holat buyrug'i"}>
             {s.buyruq ? (
               <span className="mono font-bold text-sky-soft">
-                {s.buyruq}{s.buyruq_sana ? ` (${s.buyruq_sana})` : ''}
+                {s.buyruq}{s.buyruq_sana && !isLeftGroup(s.group) ? ` (${s.buyruq_sana})` : ''}
               </span>
             ) : (
               <span className="text-amber">kiritilmagan</span>
@@ -254,6 +307,7 @@ function ViewInfo({ s, onEdit, onToggleVerify, onToggleBaza }: { s: Student; onE
         <Row label="Ism tekshiruvi"><span className={flagCls}>{flag?.label || s.name_match || 'Tekshirilmagan'}</span></Row>
         <Row label="Operator tasdig'i"><VerifyButton student={s} onToggle={onToggleVerify} /></Row>
         <Row label="Bazaga kiritilganligi"><BazaButton student={s} onToggle={onToggleBaza} /></Row>
+        {!!s.guruh_tarixi?.length && <GroupHistory moves={s.guruh_tarixi} />}
       </Section>
       {(s.manzil_toliq || s.qatnov || s.tel_otaona) && (
         <Section n={4} title="Yashash joyi va so'rovnoma" tone="amber">
@@ -316,7 +370,7 @@ export default function StudentModal({ student: s, all, hasPrev, hasNext, onNav,
           <div className="order-last w-full min-w-0 sm:order-none sm:w-auto sm:flex-1">
             <h2 className="text-[17px] leading-snug font-extrabold text-fg sm:truncate">{fullName(s)}</h2>
             <div className="mt-0.5 flex flex-wrap items-center gap-2 text-[12px] text-fg-muted">
-              <GroupBadge group={s.group} asl={s.asl_guruh} inline />
+              <GroupBadge group={s.group} asl={s.asl_guruh} from={s.chiqqan_guruh} inline />
               <span className="mono">Shartnoma №{s.shnum || '—'}</span>
               {!isOfficialGroup(s.group) && <span className="text-rose">rasmiy kontingentga kirmaydi</span>}
             </div>

@@ -72,7 +72,7 @@ const StudentCard = memo(function StudentCard({ s, n, dup, compact, onOpen, onTo
         <span className={cx('absolute inset-y-3 left-0 w-[3px] rounded-r-full', ok ? 'bg-emerald' : 'bg-amber/70')} />
         <header className="flex flex-wrap items-center gap-1.5">
           <span className="mono text-[11px] font-bold text-fg-subtle tabular-nums">#{n}</span>
-          <GroupBadge group={s.group} asl={s.asl_guruh} short />
+          <GroupBadge group={s.group} asl={s.asl_guruh} from={s.chiqqan_guruh} short />
           <span className="chip mono border-sky/30 bg-sky/8 text-sky-soft">№ {s.shnum || '—'}</span>
           <span className="ml-auto flex items-center gap-1">
             <StatusIcon status={s.status} />
@@ -106,7 +106,7 @@ const StudentCard = memo(function StudentCard({ s, n, dup, compact, onOpen, onTo
       <span className={cx('absolute inset-y-4 left-0 w-[3px] rounded-r-full', ok ? 'bg-emerald' : 'bg-amber/70')} />
       <header className="flex flex-wrap items-center gap-1.5">
         <span className="mono text-[11.5px] font-bold text-fg-subtle tabular-nums">#{n}</span>
-        <GroupBadge group={s.group} asl={s.asl_guruh} />
+        <GroupBadge group={s.group} asl={s.asl_guruh} from={s.chiqqan_guruh} />
         <span className="chip mono border-sky/30 bg-sky/8 text-sky-soft">№ {s.shnum || '—'}</span>
         <span className="ml-auto flex items-center gap-1.5">
           <StatusIcon status={s.status} />
@@ -202,7 +202,7 @@ const TableRow = memo(function TableRow({ s, n, dup, onOpen, onToggleVerify, onT
       style={{ gridTemplateColumns: COLS }}
     >
       <span className="mono text-center text-[12px] font-bold text-fg-subtle tabular-nums">{n}</span>
-      <span><GroupBadge group={s.group} asl={s.asl_guruh} short /></span>
+      <span><GroupBadge group={s.group} asl={s.asl_guruh} from={s.chiqqan_guruh} short /></span>
       <span className="mono font-bold text-blue-soft">#{s.shnum || '—'}</span>
       <span className="truncate font-semibold text-fg" title={fullName(s)}>{fullName(s)}</span>
       <span className="truncate"><Mono value={s.pv} />{passTypeShort(s) && <span className="ml-1.5 text-[10.5px] font-bold text-fg-subtle">{passTypeShort(s)}</span>}</span>

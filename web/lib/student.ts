@@ -54,6 +54,17 @@ export function needsOrder(from: string | undefined, to: string | undefined): bo
   return isWithdrawn(t) || isAcademicLeave(t)
 }
 
+/** Akademik ta'til yoki safdan chiqarilganlar — "qaysi guruhdan chiqqan" ko'rsatiladigan guruhlar */
+export function isLeftGroup(g: string | undefined): boolean {
+  return isWithdrawn(g) || isAcademicLeave(g)
+}
+
+/** Talabaning hozirgi guruhiga o'tkazilgan oxirgi yozuv (qachon, qaysi buyruq bilan) */
+export function lastMoveInto(s: Pick<Student, 'group' | 'guruh_tarixi'>) {
+  const g = String(s.group || '').trim()
+  return [...(s.guruh_tarixi ?? [])].reverse().find((m) => m.to === g)
+}
+
 /** Buyruq sanasi: KK.OO.YYYY */
 export const ORDER_DATE_RE = /^\d{2}\.\d{2}\.\d{4}$/
 

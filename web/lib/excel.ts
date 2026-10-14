@@ -171,6 +171,9 @@ function parseStudentPhones(s: Student): { telShaxsiy: string; telOtaona: string
 const C = {
   tr: { header: 'T/R', wch: 6, val: (_s: Student, i: number) => i + 1, num: true } as Col,
   group: { header: 'Guruh', wch: 10, val: (s: Student) => isSecretGroup(s.group) ? `${s.group} (asl: ${s.asl_guruh || '?'})` : s.group || '', center: true } as Col,
+  chiqqan: { header: 'Qaysi guruhdan chiqqan', wch: 16, val: (s: Student) => s.chiqqan_guruh || '', bold: true, center: true } as Col,
+  buyruq: { header: 'Buyruq №', wch: 14, val: (s: Student) => s.buyruq || '', center: true } as Col,
+  buyruqSana: { header: 'Buyruq sanasi', wch: 16, val: (s: Student) => s.buyruq_sana || '', center: true } as Col,
   leader: { header: 'Guruh rahbari', wch: 18, val: (s: Student) => GROUP_LEADERS[s.group] || '—' } as Col,
   fish: { header: 'F.I.SH (Talaba)', wch: 34, val: (s: Student) => fullName(s), bold: true } as Col,
   shnum: { header: 'Shartnoma №', wch: 14, val: (s: Student) => numIf(s.shnum), bold: true, num: true, center: true } as Col,
@@ -270,8 +273,9 @@ type XLSXModule = typeof import('xlsx-js-style')
 /** Kutubxona faqat eksport bosilganda yuklanadi — sahifa og'irlashmasin */
 const loadXlsx = () => import('xlsx-js-style') as Promise<XLSXModule>
 
-function buildSheet(X: XLSXModule, students: Student[], role: Exclude<Role, 'qabul_shablon'>) {
-  const { bg, cols } = ROLES[role]
+function buildSheet(X: XLSXModule, students: Student[], role: Exclude<Role, 'qabul_shablon'>, colsOverride?: Col[]) {
+  const { bg } = ROLES[role]
+  const cols = colsOverride ?? ROLES[role].cols
   const grid = { style: 'thin', color: { rgb: '94A3B8' } }
   const border = { top: grid, bottom: grid, left: grid, right: grid }
   const head = {
@@ -429,7 +433,11 @@ export async function exportGroup(students: Student[], group: string) {
   const key = isWithdrawn(group) ? 'safdan' : isAcademicLeave(group) ? 'akademik' : group
   const list = students.filter((s) => inSelection(s, key)).sort(byName)
   const wb = X.utils.book_new()
-  X.utils.book_append_sheet(wb, buildSheet(X, list, 'guruh_rahbari'), sheetName(key))
+  // Akademik ta'til / safdan chiqarilganlar: F.I.SH dan keyin qaysi guruhdan, buyruq va sanasi
+  const cols = key === 'safdan' || key === 'akademik'
+    ? ROLES.guruh_rahbari.cols.flatMap((c) => c === C.leader ? [] : c === C.fish ? [c, C.chiqqan, C.buyruq, C.buyruqSana] : [c])
+    : undefined
+  X.utils.book_append_sheet(wb, buildSheet(X, list, 'guruh_rahbari', cols), sheetName(key))
   const file = key === 'safdan' ? 'Talabalar_Safidan_Chiqarilganlar' : key === 'akademik' ? 'Akademik_Tatil_Olganlar' : `Guruh_${group}_Talabalar_Royxati`
   const fileName = withTimestamp(file)
   writeXlsxClean(X, wb, fileName)

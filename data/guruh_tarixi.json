@@ -1,0 +1,184 @@
+{
+  "15": {
+    "fish": "Axmedova Saodat Hamro qizi",
+    "pinfl": "42504932740019",
+    "moves": [
+      {
+        "from": "26-01",
+        "to": "Talabalar safidan chiqarilganlar",
+        "buyruq": "",
+        "buyruq_sana": "",
+        "vaqt": "2026-09-22T12:00:48+05:00",
+        "manba": "tarix"
+      }
+    ]
+  },
+  "34": {
+    "fish": "G'iyosova Shodiyona Abduqahhor qizi",
+    "pinfl": "60202085590030",
+    "moves": [
+      {
+        "from": "26-01",
+        "to": "Talabalar safidan chiqarilganlar",
+        "buyruq": "",
+        "buyruq_sana": "",
+        "vaqt": "2026-09-22T12:00:22+05:00",
+        "manba": "tarix"
+      }
+    ]
+  },
+  "74": {
+    "fish": "Muminova Durdona Anvar qizi",
+    "pinfl": "",
+    "moves": [
+      {
+        "from": "26-06",
+        "to": "Talabalar safidan chiqarilganlar",
+        "buyruq": "",
+        "buyruq_sana": "",
+        "vaqt": "2026-09-24T15:05:22+05:00",
+        "manba": "tarix"
+      }
+    ]
+  },
+  "177": {
+    "fish": "Uzoqova Fazilat Nurali qizi",
+    "pinfl": "40712902560079",
+    "moves": [
+      {
+        "from": "26-06",
+        "to": "Talabalar safidan chiqarilganlar",
+        "buyruq": "---",
+        "buyruq_sana": "06.10.2026",
+        "vaqt": "2026-10-07T08:16:07+05:00",
+        "manba": "tarix"
+      }
+    ]
+  },
+  "180": {
+    "fish": "Qulmatova Shabbona Azamat qizi",
+    "pinfl": "61008085680019",
+    "moves": [
+      {
+        "from": "26-02",
+        "to": "Talabalar safidan chiqarilganlar",
+        "buyruq": "---",
+        "buyruq_sana": "09.10.2026",
+        "vaqt": "2026-10-09T13:13:47+05:00",
+        "manba": "tarix"
+      }
+    ]
+  },
+  "183": {
+    "fish": "Samatova Oydin Sulaymon qizi",
+    "pinfl": "42910905720012",
+    "moves": [
+      {
+        "from": "26-02",
+        "to": "Talabalar safidan chiqarilganlar",
+        "buyruq": "---",
+        "buyruq_sana": "09.10.2026",
+        "vaqt": "2026-10-09T13:12:59+05:00",
+        "manba": "tarix"
+      }
+    ]
+  },
+  "184": {
+    "fish": "Nurillayeva Dilsuz Mashrabovna",
+    "pinfl": "42506912640010",
+    "moves": [
+      {
+        "from": "26-02",
+        "to": "Talabalar safidan chiqarilganlar",
+        "buyruq": "---",
+        "buyruq_sana": "10.10.2026",
+        "vaqt": "2026-10-14T09:47:20+05:00",
+        "manba": "tarix"
+      }
+    ]
+  },
+  "360": {
+    "fish": "Navro'zova Ro'zigul O'lmas qizi",
+    "pinfl": "60310075680053",
+    "moves": [
+      {
+        "from": "25-16",
+        "to": "Akademik ta'til olganlar",
+        "buyruq": "T-50",
+        "buyruq_sana": "02.10.2026",
+        "vaqt": "2026-10-09T14:29:21+05:00",
+        "manba": "tarix"
+      }
+    ]
+  },
+  "368": {
+    "fish": "Turdiqulova Dilfuza Sarvar qizi",
+    "pinfl": "62804085590052",
+    "moves": [
+      {
+        "from": "25-16",
+        "to": "Talabalar safidan chiqarilganlar",
+        "buyruq": "T-54",
+        "buyruq_sana": "10.09.2026",
+        "vaqt": "2026-10-14T09:47:20+05:00",
+        "manba": "tarix"
+      }
+    ]
+  },
+  "389": {
+    "fish": "Shodiyeva Gulasal Alisher qizi",
+    "pinfl": "60907075590042",
+    "moves": [
+      {
+        "from": "25-17",
+        "to": "Akademik ta'til olganlar",
+        "buyruq": "T-52",
+        "buyruq_sana": "05.10.2026",
+        "vaqt": "2026-10-08T10:50:27+05:00",
+        "manba": "tarix"
+      }
+    ]
+  },
+  "407": {
+    "fish": "Murodullayeva Gulasal O'tkir qizi",
+    "pinfl": "61202085590026",
+    "moves": [
+      {
+        "from": "25-18",
+        "to": "Akademik ta'til olganlar",
+        "buyruq": "T-55",
+        "buyruq_sana": "13.10.2026",
+        "vaqt": "2026-10-14T09:47:20+05:00",
+        "manba": "tarix"
+      }
+    ]
+  },
+  "418": {
+    "fish": "Usmonova Sabrina Akrom qizi",
+    "pinfl": "61706085590047",
+    "moves": [
+      {
+        "from": "25-18",
+        "to": "Akademik ta'til olganlar",
+        "buyruq": "T-56",
+        "buyruq_sana": "13.10.2026",
+        "vaqt": "2026-10-14T09:47:20+05:00",
+        "manba": "tarix"
+      }
+    ]
+  },
+  "557": {
+    "fish": "Uktamova Sarvinoz Obid qizi",
+    "pinfl": "61901005590031",
+    "moves": [
+      {
+        "from": "25-19",
+        "to": "Talabalar safidan chiqarilganlar",
+        "buyruq": "T-53",
+        "buyruq_sana": "09.10.2026",
+        "vaqt": "2026-10-14T09:46:53+05:00",
+        "manba": "tarix"
+      }
+    ]
+  }
+}

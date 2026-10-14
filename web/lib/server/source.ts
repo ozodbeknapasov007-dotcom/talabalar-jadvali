@@ -2,8 +2,8 @@ import 'server-only'
 import { mkdir, readFile, writeFile } from 'node:fs/promises'
 import path from 'node:path'
 import { applyGroupSettings, DEFAULT_GROUP_SETTINGS, sanitizeGroupSettings, SECRET_GROUP, type GroupSettings } from '@/lib/config'
-import { buildAddedStudent, fullName } from '@/lib/student'
-import type { Change, EditFields, Student } from '@/lib/types'
+import { buildAddedStudent, fullName, isLeftGroup, lastMoveInto } from '@/lib/student'
+import type { Change, EditFields, GroupMove, Student } from '@/lib/types'
 import { getServiceSupabase } from '@/lib/supabase'
 import { syncStudentsToWebJurnal } from '@/lib/server/webjurnal'
 
@@ -39,6 +39,8 @@ const QUEUE_PATH = 'scripts/remote_changes.json'
 const GROUP_SETTINGS_PATH = 'data/guruhlar.json'
 /** Maxfiy guruh talabalarining asl guruhlari: { "<row>": { asl, fish, pinfl } } */
 const ASL_GURUH_PATH = 'data/asl_guruhlar.json'
+/** Guruh almashtirishlar tarixi: { "<row>": { fish, pinfl, moves: [{ from, to, buyruq, buyruq_sana, vaqt }] } } */
+const GROUP_HISTORY_PATH = 'data/guruh_tarixi.json'
 
 /*
   Loyiha papkalari (26.09.2026 dan). GitHub'da ham, kompyuterda ham shu yo'llar.
@@ -310,11 +312,99 @@ async function splitAslGuruh(change: Change): Promise<Change | null> {
   return { ...change, data: { ...change.data, fields: rest } }
 }
 
+/* ------------------------------ GURUH TARIXI (akademik / safdan chiqarilganlar) ------------------------------ */
+
+type GroupHistoryRecord = { fish?: string; pinfl?: string; moves: GroupMove[] }
+type GroupHistoryMap = Record<string, GroupHistoryRecord>
+
+let groupHistoryOverlay: GroupHistoryMap | null = null
+
+async function loadGroupHistory(): Promise<GroupHistoryMap> {
+  if (groupHistoryOverlay) return groupHistoryOverlay
+  try {
+    const buf = await readRepoFile([GROUP_HISTORY_PATH])
+    if (buf) {
+      const parsed = JSON.parse(buf.toString('utf-8'))
+      if (parsed && typeof parsed === 'object') return parsed as GroupHistoryMap
+    }
+  } catch { /* buzilgan fayl — bo'sh */ }
+  return {}
+}
+
+async function enrichGroupHistory(students: Student[]): Promise<Student[]> {
+  const map = await loadGroupHistory()
+  for (const s of students) {
+    const moves = map[String(s.row)]?.moves
+    if (!moves?.length) continue
+    s.guruh_tarixi = moves
+    if (isLeftGroup(s.group)) {
+      const last = lastMoveInto(s)
+      if (last?.from) s.chiqqan_guruh = last.from
+    }
+  }
+  return students
+}
+
+/**
+ * update_student dagi guruh o'zgarishini tarixga yozadi va chiqqan_guruh maydonini ajratib oladi
+ * (Supabase va Excel'da bunday ustun yo'q):
+ *  - guruh o'zgarsa — { qayerdan, qayerga, buyruq, vaqt } qo'shiladi; akademik/safdan chiqarishda
+ *    chiqqan_guruh berilgan bo'lsa "qayerdan" shu bo'ladi;
+ *  - guruh o'zgarmay chiqqan_guruh yoki buyruq tahrirlansa — oxirgi o'tkazish yozuvi tuzatiladi
+ *    (yozuv bo'lmasa, qo'lda kiritilgan deb yaratiladi).
+ * Tarixni yozib bo'lmasa ham asosiy tahrir saqlanaveradi.
+ */
+async function splitGroupHistory(change: Change): Promise<Change | null> {
+  if (change.type !== 'update_student') return change
+  const { chiqqan_guruh, ...rest } = change.data.fields
+  const groupChanged = rest.group !== undefined
+  const orderChanged = rest.buyruq !== undefined || rest.buyruq_sana !== undefined
+  if (chiqqan_guruh === undefined && !groupChanged && !orderChanged) return change
+
+  try {
+    const current = (await loadStudents()).find((s) => s.row === change.data.row)
+    if (current) {
+      const prev = String(current.group || '').trim()
+      const next = groupChanged ? String(rest.group || '').trim() : prev
+      const order = { buyruq: rest.buyruq ?? current.buyruq ?? '', buyruq_sana: rest.buyruq_sana ?? current.buyruq_sana ?? '' }
+      const map = { ...(await loadGroupHistory()) }
+      const key = String(current.row)
+      const moves = [...(map[key]?.moves ?? [])]
+      let dirty = false
+
+      if (next !== prev) {
+        const from = isLeftGroup(next) && chiqqan_guruh?.trim() ? chiqqan_guruh.trim() : prev
+        moves.push({ from, to: next, ...(isLeftGroup(next) ? order : {}), vaqt: new Date().toISOString(), manba: 'portal' })
+        dirty = true
+      } else if (isLeftGroup(prev) && (chiqqan_guruh !== undefined || orderChanged)) {
+        const i = moves.map((m) => m.to).lastIndexOf(prev)
+        const base = i >= 0 ? moves[i] : { from: '', to: prev, vaqt: '', manba: 'qolda' as const }
+        const fixed = { ...base, ...(chiqqan_guruh !== undefined ? { from: chiqqan_guruh.trim() } : {}), ...order }
+        if (i >= 0) moves[i] = fixed
+        else moves.push(fixed)
+        dirty = true
+      }
+
+      if (dirty) {
+        map[key] = { fish: current.fish || '', pinfl: String(current.pinfl || '').replace(/\s/g, ''), moves }
+        const sorted = Object.fromEntries(Object.entries(map).sort(([a], [b]) => Number(a) - Number(b)))
+        const last = moves[moves.length - 1]
+        await saveRepoJsonFile(GROUP_HISTORY_PATH, sorted, `Guruh tarixi: ${current.fish || key} ${last.from || '?'} → ${last.to}`)
+        groupHistoryOverlay = sorted
+      }
+    }
+  } catch (err) {
+    console.error('Guruh tarixini yozishda xato (tahrir baribir saqlanadi):', err)
+  }
+  if (!Object.keys(rest).length) return null
+  return { ...change, data: { ...change.data, fields: rest } }
+}
+
 export async function loadStudentsWithSource(): Promise<{ students: Student[]; source: 'supabase' | 'local' | 'github' }> {
   // 1. Avval Supabase'dan o'qish (eng tezkor, jonli va real vaqt ma'lumot)
   const sbData = await loadFromSupabase()
   if (sbData && sbData.length > 0) {
-    const enriched = await enrichAslGuruh(await enrichSurveyData(sbData))
+    const enriched = await enrichGroupHistory(await enrichAslGuruh(await enrichSurveyData(sbData)))
     return { students: enriched, source: 'supabase' }
   }
 
@@ -329,7 +419,7 @@ export async function loadStudentsWithSource(): Promise<{ students: Student[]; s
     syncMode() === 'github' ? loadQueue() : Promise.resolve([]),
   ])
   const result = queue.length ? applyQueue(students, queue) : students
-  const enriched = await enrichAslGuruh(await enrichSurveyData(result))
+  const enriched = await enrichGroupHistory(await enrichAslGuruh(await enrichSurveyData(result)))
   cachedStudents = { data: enriched, expiresAt: now + CACHE_TTL_MS }
   return { students: enriched, source: syncMode() }
 }
@@ -541,7 +631,9 @@ async function sendSupabase(change: Change): Promise<void> {
 
 export async function sendChange(incoming: Change): Promise<void> {
   invalidateCache()
-  const change = await splitAslGuruh(incoming)
+  // Tarix tahrirdan OLDIN yoziladi — hozirgi (eski) guruh "qayerdan" bo'lib qoladi
+  const withHistory = await splitGroupHistory(incoming)
+  const change = withHistory && await splitAslGuruh(withHistory)
   if (!change) return
   let supabaseOk = false
   try {

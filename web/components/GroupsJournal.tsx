@@ -124,7 +124,15 @@ function GroupCard({ code, title, leader, students, special, onOpen, notify }: {
               <button type="button" onClick={() => onOpen(s)} className="grid w-full grid-cols-[34px_minmax(0,1fr)_auto] items-center gap-3 px-4 py-2 text-left text-[13px] transition-colors hover:bg-ink-800/70">
                 <span className="mono text-center text-[12px] font-bold text-fg-subtle tabular-nums">{i + 1}</span>
                 <span className={cx('truncate font-semibold', sp ? sp.text : 'text-fg')}>{fullName(s)}</span>
-                <span className="mono text-[12px] text-fg-muted tabular-nums">{s.dob || '—'}</span>
+                {sp ? (
+                  // Maxsus bo'limda tug'ilgan sana o'rniga: qaysi guruhdan va qachon chiqqan
+                  <span className="flex items-center gap-2 text-[12px] tabular-nums">
+                    <span className={cx('mono', s.chiqqan_guruh ? 'text-fg' : 'text-amber')}>{s.chiqqan_guruh ? `${s.chiqqan_guruh} dan` : 'guruh ?'}</span>
+                    <span className="mono text-fg-muted">{s.buyruq_sana || '—'}</span>
+                  </span>
+                ) : (
+                  <span className="mono text-[12px] text-fg-muted tabular-nums">{s.dob || '—'}</span>
+                )}
               </button>
             </li>
           ))}

@@ -34,6 +34,10 @@ export interface Student {
   buyruq_sana?: string
   /** Maxfiy guruhdagi (26-07) talabaning bazadagi asl guruhi — data/asl_guruhlar.json dan */
   asl_guruh?: string
+  /** Akademik ta'tilga / safdan chiqarilganda qaysi guruhdan chiqqani — data/guruh_tarixi.json dan */
+  chiqqan_guruh?: string
+  /** Guruh almashtirishlar tarixi (eskidan yangiga) — data/guruh_tarixi.json dan */
+  guruh_tarixi?: GroupMove[]
   /** So'rovnomadan kiritilgan qo'shimcha ma'lumotlar */
   manzil_tuman?: string
   manzil_mfy?: string
@@ -47,11 +51,23 @@ export interface Student {
   sorovnoma_vaqti?: string
 }
 
+/** Bitta guruh almashtirish: qayerdan → qayerga, buyruq va tizimga kiritilgan vaqt */
+export interface GroupMove {
+  from: string
+  to: string
+  buyruq?: string
+  buyruq_sana?: string
+  /** Tizimda o'zgartirilgan vaqt (ISO). Bo'sh — qo'lda kiritilgan, vaqti noma'lum */
+  vaqt?: string
+  /** Qanday yozilgan: portal (avtomatik), qolda (oynada kiritilgan), tarix (git tarixidan tiklangan) */
+  manba?: 'portal' | 'qolda' | 'tarix'
+}
+
 /** Qo'lda tahrirlanadigan maydonlar (eski app.js dagi STUDENT_EDIT_FIELDS) */
 export const EDIT_FIELDS = [
   'ism', 'ota', 'group', 'pv', 'pinfl', 'dob', 'ber',
   'doc_tur', 'sh_doc', 'mak', 'yil', 'yon', 'shnum', 'tel',
-  'buyruq', 'buyruq_sana', 'asl_guruh',
+  'buyruq', 'buyruq_sana', 'asl_guruh', 'chiqqan_guruh',
 ] as const
 export type EditField = (typeof EDIT_FIELDS)[number]
 export type EditFields = Partial<Record<EditField, string>>
