@@ -235,7 +235,7 @@ function ViewInfo({ s, onEdit, onToggleVerify, onToggleBaza }: { s: Student; onE
       </Section>
       <Section n={3} title="Shartnoma va aloqa" tone="sky">
         <Row label="Shartnoma raqami"><span className="mono text-blue-soft">#{s.shnum || '—'}</span></Row>
-        <Row label="Akademik guruh"><GroupBadge group={s.group} asl={s.asl_guruh} /></Row>
+        <Row label="Akademik guruh"><GroupBadge group={s.group} asl={s.asl_guruh} inline /></Row>
         {isSecretGroup(s.group) && <Row label="Bazadagi asl guruhi"><span className="mono text-amber">{s.asl_guruh || "ko'rsatilmagan"}</span></Row>}
         {(s.buyruq || isWithdrawn(s.group) || isAcademicLeave(s.group)) && (
           <Row label="Qabul / Holat buyrug'i">
@@ -316,7 +316,7 @@ export default function StudentModal({ student: s, all, hasPrev, hasNext, onNav,
           <div className="order-last w-full min-w-0 sm:order-none sm:w-auto sm:flex-1">
             <h2 className="text-[17px] leading-snug font-extrabold text-fg sm:truncate">{fullName(s)}</h2>
             <div className="mt-0.5 flex flex-wrap items-center gap-2 text-[12px] text-fg-muted">
-              <GroupBadge group={s.group} asl={s.asl_guruh} />
+              <GroupBadge group={s.group} asl={s.asl_guruh} inline />
               <span className="mono">Shartnoma №{s.shnum || '—'}</span>
               {!isOfficialGroup(s.group) && <span className="text-rose">rasmiy kontingentga kirmaydi</span>}
             </div>

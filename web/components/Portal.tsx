@@ -5,7 +5,7 @@ import { AlertTriangle, BookOpenCheck, Database, Loader2, ServerCrash } from 'lu
 import { exportFiltered } from '@/lib/excel'
 import { useStudents } from '@/lib/store'
 import { applyGroupSettings, COURSES, GROUP_SETTINGS, type GroupSettings } from '@/lib/config'
-import { academicGroups, EMPTY_FILTERS, fullName, isOfficialGroup, isSecretGroup, kursOf, matches, needsOrder, scanDuplicates, searchText, selectedGroups, type Filters } from '@/lib/student'
+import { academicGroups, EMPTY_FILTERS, fullName, isOfficialGroup, kursOf, matches, scanDuplicates, searchText, selectedGroups, type Filters } from '@/lib/student'
 import type { EditFields, Student } from '@/lib/types'
 import FilterBar, { type DisplayMode } from './FilterBar'
 import GroupSettingsModal from './GroupSettingsModal'
@@ -13,7 +13,6 @@ import GroupsJournal from './GroupsJournal'
 import Header from './Header'
 import Overview from './Overview'
 import StudentList from './StudentList'
-import BuyruqModal from './BuyruqModal'
 import StudentModal from './StudentModal'
 import AddStudentModal from './AddStudentModal'
 import { Toasts, useToasts } from './Toast'
@@ -144,26 +143,6 @@ export default function Portal() {
     }
   }, [saveEdit, notify])
 
-  // Safdan chiqarish / akademik ta'til — avval buyruq raqami va sanasi so'raladi
-  const [orderAsk, setOrderAsk] = useState<{ s: Student; group: string } | null>(null)
-
-  const applyGroup = useCallback(async (s: Student, fields: EditFields) => {
-    try {
-      await saveEdit(s, fields)
-      notify(`${s.ism} guruhi → ${fields.group || 'Belgilanmagan'}${fields.buyruq ? ` (buyruq №${fields.buyruq}, ${fields.buyruq_sana})` : ''}`)
-    } catch (e) {
-      notify(`Guruh o'zgarishi brauzerda saqlandi: ${(e as Error).message}`, 'warning')
-    }
-  }, [saveEdit, notify])
-
-  const onChangeGroup = useCallback(async (s: Student, group: string) => {
-    if ((s.group || '') === group) return
-    if (needsOrder(s.group, group)) { setOrderAsk({ s, group }); return }
-    // Maxfiy guruhga o'tkazilsa — hozirgi guruhi asl guruh bo'lib qoladi
-    const asl = isSecretGroup(group) && !s.asl_guruh && isOfficialGroup(s.group) ? { asl_guruh: s.group } : {}
-    await applyGroup(s, { group, ...asl })
-  }, [applyGroup])
-
   const groupCounts = useMemo(() => {
     const c: Record<string, number> = {}
     for (const s of data.students) c[s.group] = (c[s.group] ?? 0) + 1
@@ -290,7 +269,7 @@ export default function Portal() {
                 )}
 
                 <FilterBar filters={filters} groups={groups} onFilter={patchFilters} shown={shown.length} total={data.students.length} mode={mode} onMode={setMode} onExportShown={onExportShown} />
-                <StudentList students={shown} allStudents={data.students} mode={mode} duplicateRows={duplicateRows} onOpen={onOpen} onToggleVerify={onToggleVerify} onToggleBaza={onToggleBaza} onChangeGroup={onChangeGroup} />
+                <StudentList students={shown} mode={mode} duplicateRows={duplicateRows} onOpen={onOpen} onToggleVerify={onToggleVerify} onToggleBaza={onToggleBaza} />
               </>
             ) : (
               <GroupsJournal key={filters.kurs || 'all'} students={data.students} groups={groups} onOpen={onOpen} notify={notify} />
@@ -325,15 +304,6 @@ export default function Portal() {
           defaultGroup={filters.group}
           onClose={() => setAdding(false)}
           onAdd={onAdd}
-        />
-      )}
-
-      {orderAsk && (
-        <BuyruqModal
-          student={orderAsk.s}
-          group={orderAsk.group}
-          onCancel={() => setOrderAsk(null)}
-          onSubmit={(b) => { const { s, group } = orderAsk; setOrderAsk(null); void applyGroup(s, { group, ...b }) }}
         />
       )}
 

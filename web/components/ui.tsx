@@ -9,17 +9,24 @@ export function cx(...parts: (string | false | null | undefined)[]) {
   return parts.filter(Boolean).join(' ')
 }
 
-export function GroupBadge({ group, className, short, asl }: { group: string; className?: string; short?: boolean; asl?: string }) {
+/** inline — maxfiy guruh belgisini bir qatorda to'liq ko'rsatish (profil); aks holda asl guruh chip ostida */
+export function GroupBadge({ group, className, short, asl, inline }: { group: string; className?: string; short?: boolean; asl?: string; inline?: boolean }) {
   if (!group) return <span className={cx('chip border-amber/40 bg-amber/10 text-amber', className)}>Guruhsiz</span>
   if (isSecretGroup(group)) {
-    return (
-      <span
-        className={cx('chip mono border-dashed border-amber/55 bg-amber/10 text-amber', className)}
-        title={`Maxfiy guruh — darslarga kelmaydi. Bazadagi asl guruhi: ${asl || "ko'rsatilmagan"}`}
-      >
+    const title = `Maxfiy guruh — darslarga kelmaydi. Bazadagi asl guruhi: ${asl || "ko'rsatilmagan"}`
+    const chip = (
+      <span className={cx('chip mono border-dashed border-amber/55 bg-amber/10 text-amber', inline && className)} title={title}>
         <EyeOff size={11} className="shrink-0" />
         {group}
-        <span className="font-normal text-fg-muted">{short ? '←' : '· asl'} {asl || '?'}</span>
+        {inline && <span className="font-normal text-fg-muted">· asl {asl || '?'}</span>}
+      </span>
+    )
+    if (inline) return chip
+    // Ro'yxatlar uchun: asl guruh chip ostida — tor ustun/sarlavhadan chiqib ketmaydi
+    return (
+      <span className={cx('inline-flex flex-col items-start gap-0.5 leading-none', className)} title={title}>
+        {chip}
+        <span className="mono pl-1 text-[10px] text-fg-muted">asl {asl || '?'}</span>
       </span>
     )
   }

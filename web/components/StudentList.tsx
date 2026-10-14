@@ -1,44 +1,20 @@
 'use client'
 
-import { memo, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import { memo, useLayoutEffect, useRef, useState } from 'react'
 import { useWindowVirtualizer } from '@tanstack/react-virtual'
 import { FileText, Link2, Phone } from 'lucide-react'
-import { formatPinfl, fullName, groupOptions, NAME_FLAGS, passTypeShort } from '@/lib/student'
+import { formatPinfl, fullName, NAME_FLAGS, passTypeShort } from '@/lib/student'
 import type { Student } from '@/lib/types'
 import type { DisplayMode } from './FilterBar'
 import { BazaButton, cx, GroupBadge, Mono, StatusIcon, VerifyButton } from './ui'
 
 interface Props {
   students: Student[]
-  allStudents?: Student[]
   mode: DisplayMode
   duplicateRows: Set<number>
   onOpen: (s: Student) => void
   onToggleVerify: (s: Student) => void
   onToggleBaza: (s: Student) => void
-  onChangeGroup?: (s: Student, group: string) => void
-}
-
-function QuickGroupBadge({ student, choices, short, onChangeGroup }: { student: Student; choices: [string, string][]; short?: boolean; onChangeGroup?: (s: Student, group: string) => void }) {
-  if (!onChangeGroup) return <GroupBadge group={student.group} asl={student.asl_guruh} short={short} />
-  return (
-    <span
-      className="relative inline-flex items-center"
-      onClick={(e) => e.stopPropagation()}
-      title="Guruhni tez almashtirish uchun bosing"
-    >
-      <GroupBadge group={student.group} asl={student.asl_guruh} short={short} />
-      <select
-        value={student.group || ''}
-        onChange={(e) => onChangeGroup(student, e.target.value)}
-        aria-label="Guruhni tanlash"
-        className="absolute inset-0 cursor-pointer opacity-0"
-      >
-        <option value="">Guruh belgilanmagan</option>
-        {choices.map(([g, t]) => <option key={g} value={g}>{t}</option>)}
-      </select>
-    </span>
-  )
 }
 
 /** Ro'yxat konteynerining sahifa boshidan masofasi — virtualizatsiya shu nuqtadan boshlanadi */
@@ -77,8 +53,8 @@ const Field = ({ label, children }: { label: string; children: React.ReactNode }
   </div>
 )
 
-const StudentCard = memo(function StudentCard({ s, n, dup, compact, choices, onOpen, onToggleVerify, onToggleBaza, onChangeGroup }: {
-  s: Student; n: number; dup: boolean; compact?: boolean; choices: [string, string][]; onOpen: (s: Student) => void; onToggleVerify: (s: Student) => void; onToggleBaza: (s: Student) => void; onChangeGroup?: (s: Student, group: string) => void
+const StudentCard = memo(function StudentCard({ s, n, dup, compact, onOpen, onToggleVerify, onToggleBaza }: {
+  s: Student; n: number; dup: boolean; compact?: boolean; onOpen: (s: Student) => void; onToggleVerify: (s: Student) => void; onToggleBaza: (s: Student) => void
 }) {
   const ok = s.verified === 'TASDIQLANDI'
   const flag = NAME_FLAGS[s.name_flag]
@@ -94,9 +70,9 @@ const StudentCard = memo(function StudentCard({ s, n, dup, compact, choices, onO
         )}
       >
         <span className={cx('absolute inset-y-3 left-0 w-[3px] rounded-r-full', ok ? 'bg-emerald' : 'bg-amber/70')} />
-        <header className="flex items-center gap-1.5">
+        <header className="flex flex-wrap items-center gap-1.5">
           <span className="mono text-[11px] font-bold text-fg-subtle tabular-nums">#{n}</span>
-          <QuickGroupBadge student={s} choices={choices} short onChangeGroup={onChangeGroup} />
+          <GroupBadge group={s.group} asl={s.asl_guruh} short />
           <span className="chip mono border-sky/30 bg-sky/8 text-sky-soft">№ {s.shnum || '—'}</span>
           <span className="ml-auto flex items-center gap-1">
             <StatusIcon status={s.status} />
@@ -128,9 +104,9 @@ const StudentCard = memo(function StudentCard({ s, n, dup, compact, choices, onO
       )}
     >
       <span className={cx('absolute inset-y-4 left-0 w-[3px] rounded-r-full', ok ? 'bg-emerald' : 'bg-amber/70')} />
-      <header className="flex items-center gap-1.5">
+      <header className="flex flex-wrap items-center gap-1.5">
         <span className="mono text-[11.5px] font-bold text-fg-subtle tabular-nums">#{n}</span>
-        <QuickGroupBadge student={s} choices={choices} onChangeGroup={onChangeGroup} />
+        <GroupBadge group={s.group} asl={s.asl_guruh} />
         <span className="chip mono border-sky/30 bg-sky/8 text-sky-soft">№ {s.shnum || '—'}</span>
         <span className="ml-auto flex items-center gap-1.5">
           <StatusIcon status={s.status} />
@@ -180,7 +156,7 @@ const StudentCard = memo(function StudentCard({ s, n, dup, compact, choices, onO
   )
 })
 
-function CardGrid({ students, duplicateRows, compact, choices, onOpen, onToggleVerify, onToggleBaza, onChangeGroup }: Omit<Props, 'mode'> & { compact?: boolean; choices: [string, string][] }) {
+function CardGrid({ students, duplicateRows, compact, onOpen, onToggleVerify, onToggleBaza }: Omit<Props, 'mode'> & { compact?: boolean }) {
   const ref = useRef<HTMLDivElement>(null)
   const gap = compact ? 10 : 14
   const cols = useColumns(ref, compact ? 310 : 360, gap)
@@ -206,7 +182,7 @@ function CardGrid({ students, duplicateRows, compact, choices, onOpen, onToggleV
           style={{ top: row.start - v.options.scrollMargin, gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))`, gap }}
         >
           {students.slice(row.index * cols, row.index * cols + cols).map((s, i) => (
-            <StudentCard key={s.row} s={s} n={row.index * cols + i + 1} dup={duplicateRows.has(s.row)} compact={compact} choices={choices} onOpen={onOpen} onToggleVerify={onToggleVerify} onToggleBaza={onToggleBaza} onChangeGroup={onChangeGroup} />
+            <StudentCard key={s.row} s={s} n={row.index * cols + i + 1} dup={duplicateRows.has(s.row)} compact={compact} onOpen={onOpen} onToggleVerify={onToggleVerify} onToggleBaza={onToggleBaza} />
           ))}
         </div>
       ))}
@@ -216,8 +192,8 @@ function CardGrid({ students, duplicateRows, compact, choices, onOpen, onToggleV
 
 const COLS = '40px 80px 90px minmax(190px,1.5fr) 120px 144px 88px 124px minmax(110px,1fr) 44px 104px 114px 34px'
 
-const TableRow = memo(function TableRow({ s, n, dup, choices, onOpen, onToggleVerify, onToggleBaza, onChangeGroup }: {
-  s: Student; n: number; dup: boolean; choices: [string, string][]; onOpen: (s: Student) => void; onToggleVerify: (s: Student) => void; onToggleBaza: (s: Student) => void; onChangeGroup?: (s: Student, group: string) => void
+const TableRow = memo(function TableRow({ s, n, dup, onOpen, onToggleVerify, onToggleBaza }: {
+  s: Student; n: number; dup: boolean; onOpen: (s: Student) => void; onToggleVerify: (s: Student) => void; onToggleBaza: (s: Student) => void
 }) {
   return (
     <div
@@ -226,7 +202,7 @@ const TableRow = memo(function TableRow({ s, n, dup, choices, onOpen, onToggleVe
       style={{ gridTemplateColumns: COLS }}
     >
       <span className="mono text-center text-[12px] font-bold text-fg-subtle tabular-nums">{n}</span>
-      <span><QuickGroupBadge student={s} choices={choices} short onChangeGroup={onChangeGroup} /></span>
+      <span><GroupBadge group={s.group} asl={s.asl_guruh} short /></span>
       <span className="mono font-bold text-blue-soft">#{s.shnum || '—'}</span>
       <span className="truncate font-semibold text-fg" title={fullName(s)}>{fullName(s)}</span>
       <span className="truncate"><Mono value={s.pv} />{passTypeShort(s) && <span className="ml-1.5 text-[10.5px] font-bold text-fg-subtle">{passTypeShort(s)}</span>}</span>
@@ -244,7 +220,7 @@ const TableRow = memo(function TableRow({ s, n, dup, choices, onOpen, onToggleVe
 
 const ROW_H = 50
 
-function Table({ students, duplicateRows, choices, onOpen, onToggleVerify, onToggleBaza, onChangeGroup }: Omit<Props, 'mode'> & { choices: [string, string][] }) {
+function Table({ students, duplicateRows, onOpen, onToggleVerify, onToggleBaza }: Omit<Props, 'mode'>) {
   const ref = useRef<HTMLDivElement>(null)
   const top = useOffsetTop(ref)
   const v = useWindowVirtualizer({ count: students.length, estimateSize: () => ROW_H, overscan: 12, scrollMargin: top })
@@ -265,7 +241,7 @@ function Table({ students, duplicateRows, choices, onOpen, onToggleVerify, onTog
             const s = students[item.index]
             return (
               <div key={s.row} className="absolute inset-x-0" style={{ top: item.start - v.options.scrollMargin, height: ROW_H }}>
-                <TableRow s={s} n={item.index + 1} dup={duplicateRows.has(s.row)} choices={choices} onOpen={onOpen} onToggleVerify={onToggleVerify} onToggleBaza={onToggleBaza} onChangeGroup={onChangeGroup} />
+                <TableRow s={s} n={item.index + 1} dup={duplicateRows.has(s.row)} onOpen={onOpen} onToggleVerify={onToggleVerify} onToggleBaza={onToggleBaza} />
               </div>
             )
           })}
@@ -276,7 +252,6 @@ function Table({ students, duplicateRows, choices, onOpen, onToggleVerify, onTog
 }
 
 function StudentList(props: Props) {
-  const choices = useMemo(() => groupOptions(props.allStudents ?? props.students), [props.allStudents, props.students])
   if (!props.students.length) {
     return (
       <div className="panel grid place-items-center px-6 py-16 text-center">
@@ -285,8 +260,8 @@ function StudentList(props: Props) {
       </div>
     )
   }
-  if (props.mode === 'table') return <Table {...props} choices={choices} />
-  return <CardGrid {...props} choices={choices} compact={props.mode === 'compact'} />
+  if (props.mode === 'table') return <Table {...props} />
+  return <CardGrid {...props} compact={props.mode === 'compact'} />
 }
 
 export default memo(StudentList)
