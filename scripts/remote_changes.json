@@ -203,5 +203,19 @@
     },
     "id": "chg_1791889476191_xdyun",
     "created_at": "2026-10-13T11:04:36.191Z"
+  },
+  {
+    "type": "update_student",
+    "data": {
+      "row": 566,
+      "fields": {
+        "group": "26-03"
+      },
+      "shnum": "331",
+      "pinfl": "62411085590063",
+      "ism": "Jumayeva Sabina"
+    },
+    "id": "chg_1791949652357_0prbw",
+    "created_at": "2026-10-14T03:47:32.358Z"
   }
 ]
