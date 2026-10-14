@@ -21,7 +21,8 @@ import { supabase } from './supabase'
 const KEY = 'portal_v2_pending'
 const TTL_UNSENT = 7 * 24 * 60 * 60 * 1000
 const TTL_SENT = 20 * 60 * 1000
-const REFRESH_MS = 10_000
+// Jonli o'zgarishlar Supabase Realtime orqali keladi; bu — zaxira tekshiruv (ETag bilan, o'zgarmagan bo'lsa bo'sh javob)
+const REFRESH_MS = 60_000
 
 /** Qator raqami o'chirishdan keyin surilishi mumkin — shuning uchun asl shaxsni ham eslab qolamiz */
 interface Identity { row: number; shnum: string; pinfl: string; fish: string }
@@ -247,13 +248,14 @@ export function useStudents() {
     if (inflight.current) return
     inflight.current = true
     try {
-      const res = await fetch('/api/students', { cache: 'no-store' })
+      // no-cache: brauzer ETag bilan so'raydi — o'zgarmagan bo'lsa server bo'sh 304 qaytaradi, brauzer keshdagini beradi
+      const res = await fetch('/api/students', { cache: 'no-cache' })
       const body = await res.json()
       if (!res.ok) throw new Error(body.error || `Server ${res.status}`)
       const payload = body as StudentsPayload
       setServer(payload.students)
       setSource(payload.source)
-      setFetchedAt(payload.fetchedAt)
+      setFetchedAt(new Date().toISOString())
       setState('ready')
       setError('')
       void retryUnsent()

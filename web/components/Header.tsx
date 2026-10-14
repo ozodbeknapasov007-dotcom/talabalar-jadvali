@@ -16,13 +16,15 @@ function SyncBadge({ pendingCount, notify }: { pendingCount: number; notify: Not
 
   useEffect(() => {
     let alive = true
+    // Faqat oyna ko'rinib turganda va 30 soniyada bir (trafikni tejash)
     const load = () =>
+      document.visibilityState === 'visible' &&
       fetch('/api/sync', { cache: 'no-store' })
         .then((r) => r.json())
         .then((d) => alive && setInfo(d))
         .catch(() => {})
     load()
-    const t = setInterval(load, 8000)
+    const t = setInterval(load, 30_000)
     return () => { alive = false; clearInterval(t) }
   }, [])
 

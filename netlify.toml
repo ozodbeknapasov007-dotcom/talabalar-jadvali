@@ -1,0 +1,8 @@
+# Netlify (bepul tarif: oyiga 100 GB trafik). Portal — web/ papkasidagi Next.js; Netlify uni o'zi taniydi.
+[build]
+  base = "web"
+  command = "npm run build"
+  publish = ".next"
+
+[build.environment]
+  NODE_VERSION = "22"
