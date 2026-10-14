@@ -15,7 +15,7 @@ import type { Student } from '@/lib/types'
   GET  ?action=backup_json  — 18:00 JSON baza + 4-Excel zahirasi (&key= bilan)
   GET  ?action=setup        — webhookni shu sayt manziliga ulash (maxfiy kalit bilan)
   GET  ?action=status       — bot va webhook holati (oxirgi xato, navbatdagi xabarlar)
-  POST callback_query       — "👥 Guruhlar ro'yxati" tugmalari: g:<guruh> → ro'yxat matn + rasm
+  POST callback_query       — "👥 Guruhlar ro'yxati": gl → kurslar, k:<kurs> → guruhlar, g:<guruh> → matn + rasm
   POST                      — Telegram'dan kelgan xabar (bot tugmalari, talaba/guruh qidiruvi,
                               /malumotnoma <shartnoma № yoki F.I.SH>)
 
@@ -201,32 +201,76 @@ const SPECIAL_LISTS = {
 } as const
 type SpecialList = keyof typeof SPECIAL_LISTS
 
-/** "👥 Guruhlar ro'yxati" — guruhni tanlash tugmalari (kurslar bo'yicha, har qatorda 4 ta) */
-async function sendGroupPicker(chatId: string | number) {
+type Btn = { text: string; callback_data: string }
+type View = { text: string; markup: { inline_keyboard: Btn[][] } }
+
+const inGroup = (g: string) => (s: Student) => String(s.group || '').trim() === g
+const chunk = <T,>(list: T[], n: number) => Array.from({ length: Math.ceil(list.length / n) }, (_, i) => list.slice(i * n, i * n + n))
+
+/** 1-qadam: kurslar (va akademik / safdan chiqarilganlar) */
+async function coursePickerView(): Promise<View> {
   const students = await loadStudents()
-  const groups = academicGroups(students).sort((a, b) => (kursOf(a) ?? 9) - (kursOf(b) ?? 9) || a.localeCompare(b))
   const count = (pick: (s: Student) => boolean) => students.filter(pick).length
-  const rows: { text: string; callback_data: string }[][] = []
+  const rows: Btn[][] = []
+  const lines: string[] = []
   for (const c of COURSES) {
-    const list = groups.filter((g) => kursOf(g) === c.kurs)
-    for (let i = 0; i < list.length; i += 4) {
-      rows.push(list.slice(i, i + 4).map((g) => ({ text: `${g} · ${count((s) => String(s.group || '').trim() === g)}`, callback_data: `g:${g}` })))
-    }
+    const groups = academicGroups(students, c.kurs)
+    if (!groups.length) continue
+    const n = count((s) => isOfficialGroup(s.group) && kursOf(s.group) === c.kurs)
+    rows.push([{ text: `🎓 ${c.kurs}-kurs  ·  ${groups.length} guruh  ·  ${n} nafar`, callback_data: `k:${c.kurs}` }])
+    lines.push(`🎓 <b>${c.kurs}-kurs</b> — ${groups.length} ta guruh, ${n} nafar`)
   }
   rows.push((Object.keys(SPECIAL_LISTS) as SpecialList[]).map((k) => ({
     text: `${k === 'akademik' ? "⏸ Akademik ta'til" : '🚫 Safdan chiqarilgan'} · ${count(SPECIAL_LISTS[k].pick)}`,
     callback_data: `g:${k}`,
   })))
-  const lines = COURSES.map((c) => {
-    const list = groups.filter((g) => kursOf(g) === c.kurs)
-    return list.length ? `<b>${c.kurs}-kurs:</b> ${list.join(', ')}` : ''
-  }).filter(Boolean)
-  return sendMessage(chatId,
-    `👥 <b>Guruhlar ro'yxati</b>\n\n${lines.join('\n')}\n\nGuruhni tanlang — ro'yxat <b>matn</b> va <b>rasm</b> ko'rinishida keladi.\n<i>Tugmadagi raqam — talabalar soni.</i>`,
-    { inline_keyboard: rows })
+  return {
+    text: `👥 <b>Guruhlar ro'yxati</b>\n\n${lines.join('\n')}\n\n<b>Kursni tanlang</b> — keyin guruhini tanlaysiz.\nRo'yxat <b>matn</b> va <b>rasm</b> ko'rinishida keladi.`,
+    markup: { inline_keyboard: rows },
+  }
 }
 
-const PICK_AGAIN = { inline_keyboard: [[{ text: "⬅️ Boshqa guruhni tanlash", callback_data: 'gl' }]] }
+/** 2-qadam: tanlangan kursning guruhlari (har qatorda 3 ta) */
+async function courseGroupsView(kurs: number): Promise<View> {
+  const students = await loadStudents()
+  const groups = academicGroups(students, kurs)
+  const lines = groups.map((g) => {
+    const leader = GROUP_LEADERS[g]
+    return `• <b>${esc(g)}</b> — ${students.filter(inGroup(g)).length} nafar${leader ? ` · ${esc(leader)}` : ''}`
+  })
+  return {
+    text: `🎓 <b>${kurs}-kurs guruhlari</b>\n\n${lines.join('\n')}\n\n<b>Guruhni tanlang:</b>`,
+    markup: {
+      inline_keyboard: [
+        ...chunk(groups.map((g) => ({ text: `${g} · ${students.filter(inGroup(g)).length}`, callback_data: `g:${g}` })), 3),
+        [{ text: '⬅️ Kurslarga qaytish', callback_data: 'gl' }],
+      ],
+    },
+  }
+}
+
+/** Tugma bosilgan xabarning o'zini almashtiradi (chat to'lib ketmasin); bo'lmasa (rasm ostidagi tugma) — yangi xabar */
+async function showView(chatId: string | number, view: View, editMessageId?: number) {
+  if (editMessageId) {
+    const r = await tgCall('editMessageText', {
+      chat_id: chatId, message_id: editMessageId, text: view.text, parse_mode: 'HTML', reply_markup: view.markup,
+    })
+    // "message is not modified" — shu ko'rinish allaqachon turibdi
+    if (r.ok || String(r.description || '').includes('not modified')) return
+  }
+  await sendMessage(chatId, view.text, view.markup)
+}
+
+/** Ro'yxat ostidagi tugmalar: shu kursning guruhlariga yoki kurslarga qaytish */
+const pickAgain = (key: string) => {
+  const kurs = key in SPECIAL_LISTS ? null : kursOf(key)
+  return {
+    inline_keyboard: [[
+      ...(kurs ? [{ text: `⬅️ ${kurs}-kurs guruhlari`, callback_data: `k:${kurs}` }] : []),
+      { text: '🎓 Kurslar', callback_data: 'gl' },
+    ]],
+  }
+}
 
 /** Bitta guruh (yoki akademik / safdan chiqarilganlar) ro'yxati: avval matn, keyin rasm */
 async function sendGroupList(chatId: string | number, key: string) {
@@ -236,7 +280,7 @@ async function sendGroupList(chatId: string | number, key: string) {
     .sort(byName)
   const title = special ? special.title : `Guruh ${key}`
   if (!list.length) {
-    await sendMessage(chatId, `❓ ${esc(title)}: talaba topilmadi.`, PICK_AGAIN)
+    await sendMessage(chatId, `❓ ${esc(title)}: talaba topilmadi.`, pickAgain(key))
     return
   }
   const leader = special ? '' : GROUP_LEADERS[key] || ''
@@ -257,10 +301,10 @@ async function sendGroupList(chatId: string | number, key: string) {
   try {
     const png = await renderGroupListPng({ title, subtitle, leader, stamp, students: list, special: !!special })
     const file = special ? `${key === 'akademik' ? 'Akademik_tatil' : 'Safdan_chiqarilganlar'}_royxati.png` : `Guruh_${key}_royxati.png`
-    await tgSendPhoto(chatId, png, file, `🖼 <b>${esc(title)}</b> — ${list.length} nafar\n🕒 ${stamp}`, PICK_AGAIN)
+    await tgSendPhoto(chatId, png, file, `🖼 <b>${esc(title)}</b> — ${list.length} nafar\n🕒 ${stamp}`, pickAgain(key))
   } catch (err) {
     console.error('Guruh rasmi chizilmadi:', err)
-    await sendMessage(chatId, `⚠️ Rasm yaratilmadi: ${esc((err as Error).message)}`, PICK_AGAIN)
+    await sendMessage(chatId, `⚠️ Rasm yaratilmadi: ${esc((err as Error).message)}`, pickAgain(key))
   }
 }
 
@@ -438,12 +482,14 @@ export async function POST(request: NextRequest) {
 
     if (cq) {
       const data = String(cq.data || '')
-      if (data === 'gl') await sendGroupPicker(chatId)
+      const msgId = Number(cq.message?.message_id) || undefined
+      if (data === 'gl') await showView(chatId, await coursePickerView(), msgId)
+      else if (data.startsWith('k:')) await showView(chatId, await courseGroupsView(Number(data.slice(2))), msgId)
       else if (data.startsWith('g:')) await sendGroupList(chatId, data.slice(2))
       return Response.json({ ok: true })
     }
     if (t.includes("guruhlar ro'yxati") || t.includes('guruhlar royxati') || t === '/guruhlar_royxati' || t === '/royxat') {
-      await sendGroupPicker(chatId)
+      await showView(chatId, await coursePickerView())
       return Response.json({ ok: true })
     }
 
