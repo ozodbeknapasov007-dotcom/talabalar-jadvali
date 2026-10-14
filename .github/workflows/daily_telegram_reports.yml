@@ -27,4 +27,5 @@ jobs:
             ACTION="backup_json"
           fi
           echo "Triggering Telegram report action: $ACTION"
-          curl -L -sS "https://talabalar-jadvali.netlify.app/api/telegram_webhook?action=$ACTION"
+          # Hisobot yuborilmasa (token xato va h.k.) sayt 502 qaytaradi — ish qizil bo'lib ko'rinadi
+          curl -L -sS --fail-with-body --retry 2 --retry-delay 20 --max-time 120 "https://talabalar-jadvali.netlify.app/api/telegram_webhook?action=$ACTION"

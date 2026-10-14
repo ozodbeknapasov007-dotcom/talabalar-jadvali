@@ -581,6 +581,7 @@ def load_backup_config():
     token = os.environ.get('TG_BACKUP_TOKEN', '').strip()
     chat_id = os.environ.get('TG_BACKUP_CHAT_ID', '').strip()
     channel_id = os.environ.get('TG_BACKUP_CHANNEL_ID', '').strip()
+    allowed_raw = os.environ.get('TG_ALLOWED_IDS', '')
 
     if os.path.exists(BACKUP_CONFIG_PATH):
         try:
@@ -589,6 +590,8 @@ def load_backup_config():
             token = token or str(cfg.get('bot_token', '')).strip()
             chat_id = chat_id or str(cfg.get('chat_id', '')).strip()
             channel_id = channel_id or str(cfg.get('channel_id', '')).strip()
+            ids = cfg.get('allowed_ids', '')
+            allowed_raw = allowed_raw or (','.join(map(str, ids)) if isinstance(ids, list) else str(ids))
             global BACKUP_HOUR, BACKUP_MINUTE
             BACKUP_HOUR = int(cfg.get('hour', BACKUP_HOUR))
             BACKUP_MINUTE = int(cfg.get('minute', BACKUP_MINUTE))
@@ -597,7 +600,11 @@ def load_backup_config():
 
     if not token or not (chat_id or channel_id):
         return None
-    return {'token': token, 'chat_id': chat_id, 'channel_id': channel_id}
+    # Bot pasport/JSHSHIR beradi — faqat shu chatlarga javob beriladi (asosiy chat + allowed_ids)
+    allowed = {x.strip() for x in re.split(r'[\s,;]+', allowed_raw or '') if x.strip()}
+    if chat_id:
+        allowed.add(chat_id)
+    return {'token': token, 'chat_id': chat_id, 'channel_id': channel_id, 'allowed_ids': allowed}
 
 
 def send_group_lists_to_telegram(target='channel', group_filter=None):
@@ -1458,18 +1465,33 @@ def _start_telegram_bot_polling():
                     params={'offset': offset, 'timeout': 25},
                     timeout=35
                 )
+                if resp.status_code == 409:
+                    # Webhook ulangan (sayt botga javob beradi) yoki bot boshqa joyda ishlayapti
+                    print("[BOT] ☁️ Webhook ulangan — lokal polling to'xtatildi.")
+                    return
+                if resp.status_code == 401:
+                    print("[BOT] ❌ Bot tokeni noto'g'ri yoki bekor qilingan (scripts/backup_config.json → bot_token).")
+                    return
                 if not resp.ok:
                     time.sleep(5)
                     continue
                 updates = resp.json().get('result', [])
                 for upd in updates:
                     offset = upd['update_id'] + 1
-                    msg = upd.get('message') or upd.get('edited_message')
+                    msg = upd.get('message')
                     if not msg:
                         continue
                     chat_id = msg.get('chat', {}).get('id')
                     text = str(msg.get('text') or '').strip()
                     if not text or not chat_id:
+                        continue
+                    if str(chat_id) not in cfg['allowed_ids']:
+                        requests.post(
+                            f"https://api.telegram.org/bot{token}/sendMessage",
+                            json={'chat_id': chat_id, 'parse_mode': 'HTML',
+                                  'text': f"⛔ Bu bot faqat texnikum xodimlari uchun.\n\nKirish kerak bo'lsa, administratorga ID raqamingizni yuboring: <code>{chat_id}</code>"},
+                            timeout=20
+                        )
                         continue
 
                     t_low = text.lower()

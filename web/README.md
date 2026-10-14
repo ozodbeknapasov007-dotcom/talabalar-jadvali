@@ -28,12 +28,17 @@ Sayt: https://talabalar-jadvali.netlify.app. Sozlama repo ildizidagi `netlify.to
 - `GITHUB_TOKEN` — repo'ga `contents: read & write` huquqli token.
 - `TELEGRAM_BOT_TOKEN` — @BotFather bergan token (kodda zaxira token yo'q, repo ommaviy).
 - `TELEGRAM_CHAT_ID`, ixtiyoriy `TELEGRAM_CHANNEL_ID` — hisobotlar boradigan chat/kanal.
+- `TELEGRAM_ALLOWED_IDS` — botdan foydalana oladigan boshqa xodimlar ID lari (vergul bilan). Bot faqat
+  `TELEGRAM_CHAT_ID` va shu ro'yxatdagilarga javob beradi; begona odam o'z ID sini ko'radi (`/id`).
 - `OPENROUTER_API_KEY`, `WEB_JURNAL_API_KEY`, `MYTEST_ROSTER_TOKEN` — tegishli funksiyalar uchun.
 
 **Botni ulash** (yangi token qo'yib, qayta deploy qilingach) — brauzerda bir marta oching:
 `https://talabalar-jadvali.netlify.app/api/telegram_webhook?action=setup`.
-Javobda `set_webhook.ok: true` chiqishi kerak. Webhook ulangach kompyuterdagi Python xizmati
-`getUpdates` qilmaydi; xizmat uchun tokenni `scripts/backup_config.json` → `bot_token` ga ham yozing.
+Javobda `"ok": true` va `"set_webhook": "ulandi"` chiqishi kerak. Webhook maxfiy kalit bilan ulanadi
+(tokendan hosil qilinadi), shuning uchun Telegram'ning `setWebhook` havolasini qo'lda ochmang — bot
+xabarlarni rad etadi. Holatni tekshirish: `...?action=status` (oxirgi xato, navbatdagi xabarlar).
+Webhook ulangach kompyuterdagi Python xizmati `getUpdates` qilmaydi; xizmat uchun tokenni
+`scripts/backup_config.json` → `bot_token` ga ham yozing (boshqa xodimlar: `"allowed_ids": "123,456"`).
 Kunlik hisobotlarni (09:00 kontingent, 18:00 zaxira) `.github/workflows/daily_telegram_reports.yml` chaqiradi.
 
 Saytda o'zgarishlar `scripts/remote_changes.json` navbatiga yoziladi. Kompyuterdagi
