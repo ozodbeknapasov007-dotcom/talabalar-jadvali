@@ -21,10 +21,15 @@ function SyncBadge({ pendingCount, notify }: { pendingCount: number; notify: Not
       document.visibilityState === 'visible' &&
       fetch('/api/sync', { cache: 'no-store' })
         .then((r) => r.json())
-        .then((d) => alive && setInfo(d))
+        .then((d) => {
+          if (!alive) return
+          setInfo(d)
+          // Internetdagi saytda holat o'zgarmaydi (GitHub navbati) — qayta so'ramaymiz
+          if (d?.mode !== 'local') clearInterval(t)
+        })
         .catch(() => {})
-    load()
     const t = setInterval(load, 30_000)
+    load()
     return () => { alive = false; clearInterval(t) }
   }, [])
 

@@ -22,7 +22,7 @@ const KEY = 'portal_v2_pending'
 const TTL_UNSENT = 7 * 24 * 60 * 60 * 1000
 const TTL_SENT = 20 * 60 * 1000
 // Jonli o'zgarishlar Supabase Realtime orqali keladi; bu — zaxira tekshiruv (ETag bilan, o'zgarmagan bo'lsa bo'sh javob)
-const REFRESH_MS = 60_000
+const REFRESH_MS = 5 * 60_000
 
 /** Qator raqami o'chirishdan keyin surilishi mumkin — shuning uchun asl shaxsni ham eslab qolamiz */
 interface Identity { row: number; shnum: string; pinfl: string; fish: string }
