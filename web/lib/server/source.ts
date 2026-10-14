@@ -92,11 +92,32 @@ function parseFromIndexHtml(html: string): Student[] {
   return JSON.parse(html.slice(start, end).trim().replace(/;$/, ''))
 }
 
+/*
+  GitHub fayllari keshi (faqat internetdagi sayt). Bot har xabarda bir nechta faylni GitHub'dan
+  ketma-ket o'qirdi — har biri 0,3–0,8 s. Kam o'zgaradigan fayllar maxAgeMs bilan o'qiladi;
+  saveRepoJsonFile o'sha faylni keshdan o'chiradi. students.json va navbat keshlanmaydi.
+*/
+const ghFileCache = new Map<string, { buf: Buffer | null; expiresAt: number }>()
+
+export interface ReadOpts {
+  /** Shu muddat ichida qayta o'qilsa GitHub'ga bormaydi (ms) */
+  maxAgeMs?: number
+}
+
+async function ghReadCached(rel: string, maxAgeMs?: number): Promise<Buffer | null> {
+  if (!maxAgeMs) return ghReadRaw(rel)
+  const hit = ghFileCache.get(rel)
+  if (hit && hit.expiresAt > Date.now()) return hit.buf
+  const buf = await ghReadRaw(rel)
+  ghFileCache.set(rel, { buf, expiresAt: Date.now() + maxAgeMs })
+  return buf
+}
+
 /**
- * Loyiha faylini o'qish: kompyuterda — diskdan, Vercel'da — GitHub'dan.
+ * Loyiha faylini o'qish: kompyuterda — diskdan, internetda — GitHub'dan.
  * candidates — birinchi topilgani qaytariladi (yangi joy, keyin eski joy).
  */
-export async function readRepoFile(candidates: readonly string[]): Promise<Buffer | null> {
+export async function readRepoFile(candidates: readonly string[], opts: ReadOpts = {}): Promise<Buffer | null> {
   for (const rel of candidates) {
     if (!rel) continue
     if (syncMode() === 'local') {
@@ -104,7 +125,7 @@ export async function readRepoFile(candidates: readonly string[]): Promise<Buffe
         return await readFile(path.join(REPO_DIR, ...rel.split('/')))
       } catch { /* keyingi nomzod */ }
     } else {
-      const buf = await ghReadRaw(rel)
+      const buf = await ghReadCached(rel, opts.maxAgeMs)
       if (buf) return buf
     }
   }
@@ -112,8 +133,8 @@ export async function readRepoFile(candidates: readonly string[]): Promise<Buffe
 }
 
 /** Papka ichidagi faylni o'qish (masalan hujjatlar/shartnomalar/<fayl>) */
-export function readRepoFileIn(dirs: readonly string[], name: string): Promise<Buffer | null> {
-  return readRepoFile(dirs.map((d) => (d ? `${d}/${name}` : name)))
+export function readRepoFileIn(dirs: readonly string[], name: string, opts: ReadOpts = {}): Promise<Buffer | null> {
+  return readRepoFile(dirs.map((d) => (d ? `${d}/${name}` : name)), opts)
 }
 
 async function loadBaseStudents(): Promise<Student[]> {
@@ -224,7 +245,7 @@ async function loadFromSupabase(): Promise<Student[] | null> {
 
 async function enrichSurveyData(students: Student[]): Promise<Student[]> {
   try {
-    const buf = await readRepoFile(['data/sorovnoma_1kurs.json', 'sorovnoma_1kurs.json'])
+    const buf = await readRepoFile(['data/sorovnoma_1kurs.json', 'sorovnoma_1kurs.json'], { maxAgeMs: 5 * 60_000 })
     if (buf) {
       const map = JSON.parse(buf.toString('utf-8')) as Record<string, Partial<Student>>
       for (const s of students) {
@@ -259,7 +280,7 @@ let aslGuruhOverlay: AslGuruhMap | null = null
 async function loadAslGuruhlar(): Promise<AslGuruhMap> {
   if (aslGuruhOverlay) return aslGuruhOverlay
   try {
-    const buf = await readRepoFile([ASL_GURUH_PATH])
+    const buf = await readRepoFile([ASL_GURUH_PATH], { maxAgeMs: 60_000 })
     if (buf) {
       const parsed = JSON.parse(buf.toString('utf-8'))
       if (parsed && typeof parsed === 'object') return parsed as AslGuruhMap
@@ -322,7 +343,7 @@ let groupHistoryOverlay: GroupHistoryMap | null = null
 async function loadGroupHistory(): Promise<GroupHistoryMap> {
   if (groupHistoryOverlay) return groupHistoryOverlay
   try {
-    const buf = await readRepoFile([GROUP_HISTORY_PATH])
+    const buf = await readRepoFile([GROUP_HISTORY_PATH], { maxAgeMs: 60_000 })
     if (buf) {
       const parsed = JSON.parse(buf.toString('utf-8'))
       if (parsed && typeof parsed === 'object') return parsed as GroupHistoryMap
@@ -400,12 +421,17 @@ async function splitGroupHistory(change: Change): Promise<Change | null> {
   return { ...change, data: { ...change.data, fields: rest } }
 }
 
+/** So'rovnoma, asl guruh va guruh tarixi fayllari bir vaqtda o'qiladi (avval ketma-ket edi) */
+async function enrichAll(students: Student[]): Promise<Student[]> {
+  await Promise.all([enrichSurveyData(students), enrichAslGuruh(students), enrichGroupHistory(students)])
+  return students
+}
+
 export async function loadStudentsWithSource(): Promise<{ students: Student[]; source: 'supabase' | 'local' | 'github' }> {
   // 1. Avval Supabase'dan o'qish (eng tezkor, jonli va real vaqt ma'lumot)
   const sbData = await loadFromSupabase()
   if (sbData && sbData.length > 0) {
-    const enriched = await enrichGroupHistory(await enrichAslGuruh(await enrichSurveyData(sbData)))
-    return { students: enriched, source: 'supabase' }
+    return { students: await enrichAll(sbData), source: 'supabase' }
   }
 
   // 2. Agar Supabase vaqtincha mavjud bo'lmasa, zaxira sifatida fayllar/GitHub'dan o'qish (kesh bilan)
@@ -419,7 +445,7 @@ export async function loadStudentsWithSource(): Promise<{ students: Student[]; s
     syncMode() === 'github' ? loadQueue() : Promise.resolve([]),
   ])
   const result = queue.length ? applyQueue(students, queue) : students
-  const enriched = await enrichGroupHistory(await enrichAslGuruh(await enrichSurveyData(result)))
+  const enriched = await enrichAll(result)
   cachedStudents = { data: enriched, expiresAt: now + CACHE_TTL_MS }
   return { students: enriched, source: syncMode() }
 }
@@ -695,7 +721,7 @@ export async function loadDocFile(name: string): Promise<Buffer | null> {
 export async function loadGroupSettings(): Promise<GroupSettings> {
   let settings = DEFAULT_GROUP_SETTINGS
   try {
-    const buf = await readRepoFile([GROUP_SETTINGS_PATH])
+    const buf = await readRepoFile([GROUP_SETTINGS_PATH], { maxAgeMs: 60_000 })
     if (buf) {
       const parsed = sanitizeGroupSettings(JSON.parse(buf.toString('utf-8')))
       if (Object.keys(parsed).length) settings = parsed
@@ -710,6 +736,7 @@ export async function loadGroupSettings(): Promise<GroupSettings> {
  */
 export async function saveRepoJsonFile(relPath: string, data: unknown, commitMsg: string): Promise<void> {
   const text = JSON.stringify(data, null, 2) + '\n'
+  ghFileCache.delete(relPath)
 
   if (syncMode() === 'local') {
     const file = path.join(REPO_DIR, ...relPath.split('/'))

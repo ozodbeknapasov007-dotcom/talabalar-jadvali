@@ -26,6 +26,8 @@ import type { Student } from '@/lib/types'
 */
 
 const BOT_TOKEN = TG_BOT_TOKEN
+/** Bot o'qiydigan baza va hisobot fayllari 1 daqiqa keshlanadi (har bosishda GitHub'ga bormaslik uchun) */
+const BOT_CACHE = { maxAgeMs: 60_000 }
 const DEFAULT_CHAT_ID = TG_CHAT_ID
 
 const BOT_KEYBOARD = {
@@ -52,7 +54,7 @@ const ROLE_FILES = [
 const pdfGroups = () => COURSES.find((c) => c.kurs === 1)?.groups ?? []
 
 async function loadStudentsDb(): Promise<Student[]> {
-  const buf = await readRepoFile(REPO_PATHS.baza)
+  const buf = await readRepoFile(REPO_PATHS.baza, BOT_CACHE)
   if (!buf) return []
   try {
     const data = JSON.parse(buf.toString('utf-8'))
@@ -382,8 +384,8 @@ export async function GET(request: NextRequest) {
   }
   if (action === 'backup_json') {
     const { stamp } = tashkentStamp()
-    const json = await readRepoFile(REPO_PATHS.baza)
-    const excel = await readRepoFileIn(REPO_PATHS.rollar, '4_Toliq_Malumotlar_Bazasi.xlsx')
+    const json = await readRepoFile(REPO_PATHS.baza, BOT_CACHE)
+    const excel = await readRepoFileIn(REPO_PATHS.rollar, '4_Toliq_Malumotlar_Bazasi.xlsx', BOT_CACHE)
     const rj = json ? await sendDocument(DEFAULT_CHAT_ID, json, 'talabalar_bazasi.json', `📦 <b>Talabalar bazasi (.json) — Kunlik 18:00 avto-zahira</b>\n🕒 Sana: ${stamp}`) : null
     const rx = excel ? await sendDocument(DEFAULT_CHAT_ID, excel, '4_Toliq_Malumotlar_Bazasi.xlsx', `📊 <b>4. To'liq Ma'lumotlar Bazasi (.xlsx)</b>\n🕒 Sana: ${stamp}`) : null
     const ok = !!rj?.ok && !!rx?.ok
@@ -407,7 +409,7 @@ export async function POST(request: NextRequest) {
     if (!msg?.chat?.id) return Response.json({ ok: true })
     chatId = msg.chat.id as string | number
     // Tugma bosilganda Telegram "soat" belgisini ko'rsatib turadi — darhol javob beramiz
-    if (cq?.id) await tgCall('answerCallbackQuery', { callback_query_id: cq.id })
+    if (cq?.id) void tgCall('answerCallbackQuery', { callback_query_id: cq.id })
     const text = cq ? '' : String(msg.text || '').trim()
     // "/start@bot_nomi" (guruh chatlarida) → "/start"
     const t = norm(text).replace(/^(\/\w+)@\w+/, '$1')
@@ -422,7 +424,11 @@ export async function POST(request: NextRequest) {
         `⛔ Bu bot faqat texnikum xodimlari uchun.\n\nKirish kerak bo'lsa, administratorga ID raqamingizni yuboring: <code>${esc(chatId)}</code>`)
       return Response.json({ ok: true })
     }
-    await loadGroupSettings().catch(() => null)
+    // "yozmoqda…" darhol ko'rinsin; sozlamalar bilan bir vaqtda
+    await Promise.all([
+      tgCall('sendChatAction', { chat_id: chatId, action: 'typing' }),
+      loadGroupSettings().catch(() => null),
+    ])
     const { stamp } = tashkentStamp()
 
     if (cq) {
@@ -477,7 +483,7 @@ export async function POST(request: NextRequest) {
     }
     for (const rf of ROLE_FILES) {
       if (rf.match.some((m) => t.includes(m))) {
-        const buf = await readRepoFileIn(REPO_PATHS.rollar, rf.file)
+        const buf = await readRepoFileIn(REPO_PATHS.rollar, rf.file, BOT_CACHE)
         if (buf) {
           const total = (await loadStudentsDb()).length
           await sendDocument(chatId, buf, rf.file, `📊 <b>${rf.title}</b>\n🕒 Sana: ${stamp}\n👥 Jami talabalar: ${total} nafar`)
@@ -488,13 +494,13 @@ export async function POST(request: NextRequest) {
       }
     }
     if (t.includes('json')) {
-      const buf = await readRepoFile(REPO_PATHS.baza)
+      const buf = await readRepoFile(REPO_PATHS.baza, BOT_CACHE)
       if (buf) await sendDocument(chatId, buf, 'talabalar_bazasi.json', `📦 <b>talabalar_bazasi.json (To'liq baza)</b>\n🕒 Sana: ${stamp}`)
       else await sendMessage(chatId, '❌ JSON baza fayli topilmadi.')
       return Response.json({ ok: true })
     }
     if (t.includes('guruh jurnallari') || t === '/guruhlar') {
-      const buf = await readRepoFileIn(REPO_PATHS.pdfJurnallar, 'Barcha_Guruhlar_Jurnali.pdf')
+      const buf = await readRepoFileIn(REPO_PATHS.pdfJurnallar, 'Barcha_Guruhlar_Jurnali.pdf', BOT_CACHE)
       if (buf) await sendDocument(chatId, buf, 'Barcha_Guruhlar_Jurnali.pdf', `📑 <b>Barcha ${pdfGroups().length} ta guruh jurnallari (A4 PDF)</b>\n🕒 Sana: ${stamp}`)
       else await sendMessage(chatId, '❌ PDF jurnal topilmadi.')
       return Response.json({ ok: true })
@@ -505,7 +511,7 @@ export async function POST(request: NextRequest) {
       const grpMatch = /(2[4-6]-\d{2})/i.exec(text)
       if (grpMatch) {
         const grp = grpMatch[1].toUpperCase()
-        const gDoc = await readRepoFileIn(dirs, `Davomat_jurnali_${grp}.docx`)
+        const gDoc = await readRepoFileIn(dirs, `Davomat_jurnali_${grp}.docx`, BOT_CACHE)
         if (gDoc) {
           await sendDocument(chatId, gDoc, `Davomat_jurnali_${grp}.docx`, `📄 <b>Guruh ${grp} Davomat jurnali (Word .docx)</b>\n🕒 Sana: ${stamp}\n✅ Barcha talabalar, telefonlar va manzillar to'ldirilgan`)
           return Response.json({ ok: true })
@@ -514,7 +520,7 @@ export async function POST(request: NextRequest) {
 
       // 2. Agar barcha guruhlar so'ralsa (/davomat all yoki /davomat barcha yoki zip)
       if (t.includes('all') || t.includes('barcha') || t.includes('hamma')) {
-        const allZip = await readRepoFileIn(dirs, 'Barcha_Guruhlar_Davomat_Jurnallari_Word.zip')
+        const allZip = await readRepoFileIn(dirs, 'Barcha_Guruhlar_Davomat_Jurnallari_Word.zip', BOT_CACHE)
         if (allZip) {
           await sendDocument(chatId, allZip, 'Barcha_Guruhlar_Davomat_Jurnallari_Word.zip', `📦 <b>Barcha 19 ta Guruh Davomat Jurnallari (Word .docx ZIP)</b>\n🕒 Sana: ${stamp}\n👥 1-kurs, 2-kurs va 3-kurs to'ldirilgan jurnallari`)
           return Response.json({ ok: true })
@@ -522,9 +528,9 @@ export async function POST(request: NextRequest) {
       }
 
       // 3. Standart holatda: Excel andoza + 1-kurs jurnallari ZIP arxivi + 26-02 Word namunasi
-      const excel = await readRepoFileIn(dirs, 'Davomat_Jurnali_Uchun_Malumotlar.xlsx')
-      const c1Zip = await readRepoFileIn(dirs, '1-kurs_Guruhlar_Davomat_Jurnallari_Word.zip')
-      const docx = await readRepoFileIn(dirs, "Davomat jurnali 26-02 (TO'LDIRILGAN).docx")
+      const excel = await readRepoFileIn(dirs, 'Davomat_Jurnali_Uchun_Malumotlar.xlsx', BOT_CACHE)
+      const c1Zip = await readRepoFileIn(dirs, '1-kurs_Guruhlar_Davomat_Jurnallari_Word.zip', BOT_CACHE)
+      const docx = await readRepoFileIn(dirs, "Davomat jurnali 26-02 (TO'LDIRILGAN).docx", BOT_CACHE)
 
       if (excel) {
         await sendDocument(chatId, excel, 'Davomat_Jurnali_Uchun_Malumotlar.xlsx', `📝 <b>Davomat Jurnali Uchun Talabalar Ma'lumotlari (.xlsx)</b>\n🕒 Sana: ${stamp}\n👥 Barcha 1-kurs va 26-02 guruhlari uchun andoza`)
@@ -540,7 +546,7 @@ export async function POST(request: NextRequest) {
       return Response.json({ ok: true })
     }
     if (t.includes('sorovnoma') || t.includes("so'rovnoma")) {
-      const buf = await readRepoFileIn(['hisobotlar', ''], '1-kurs_Sorovnoma_Malumotlari.xlsx')
+      const buf = await readRepoFileIn(['hisobotlar', ''], '1-kurs_Sorovnoma_Malumotlari.xlsx', BOT_CACHE)
       if (buf) {
         await sendDocument(chatId, buf, '1-kurs_Sorovnoma_Malumotlari.xlsx', `📊 <b>1-kurs Talabalari So'rovnoma Ma'lumotlari (.xlsx)</b>\n🕒 Sana: ${stamp}\n✅ Manzillar, ota-ona ma'lumotlari va toza telefon raqamlar`)
       } else {
