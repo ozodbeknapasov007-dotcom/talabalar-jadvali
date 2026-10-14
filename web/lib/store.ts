@@ -159,6 +159,7 @@ export function useStudents() {
   const [state, setState] = useState<LoadState>('loading')
   const [error, setError] = useState('')
   const inflight = useRef(false)
+  const version = useRef('')
   const inFlightAdds = useRef(new Set<string>())
   const pendingRef = useRef(pending)
   useEffect(() => { pendingRef.current = pending }, [pending])
@@ -248,13 +249,16 @@ export function useStudents() {
     if (inflight.current) return
     inflight.current = true
     try {
-      // no-cache: brauzer ETag bilan so'raydi — o'zgarmagan bo'lsa server bo'sh 304 qaytaradi, brauzer keshdagini beradi
-      const res = await fetch('/api/students', { cache: 'no-cache' })
+      // Oxirgi versiya yuboriladi — o'zgarmagan bo'lsa server ro'yxatni qayta yubormaydi ({ unchanged: true })
+      const res = await fetch('/api/students', { cache: 'no-store', headers: version.current ? { 'x-students-version': version.current } : {} })
       const body = await res.json()
       if (!res.ok) throw new Error(body.error || `Server ${res.status}`)
-      const payload = body as StudentsPayload
-      setServer(payload.students)
-      setSource(payload.source)
+      if (!body.unchanged) {
+        const payload = body as StudentsPayload & { version?: string }
+        setServer(payload.students)
+        setSource(payload.source)
+        version.current = payload.version || ''
+      }
       setFetchedAt(new Date().toISOString())
       setState('ready')
       setError('')
