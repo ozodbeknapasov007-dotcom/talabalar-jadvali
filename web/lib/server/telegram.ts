@@ -43,14 +43,15 @@ export async function tgCall(method: string, params: Record<string, unknown> = {
   return res.json().catch(() => ({ ok: false, description: 'Telegram javobi o‘qilmadi' }))
 }
 
-/** JPG rasmni Telegram'ga rasm sifatida yuborish */
+/** JPG yoki PNG rasmni Telegram'ga rasm sifatida yuborish */
 export async function tgSendPhoto(chatId: string | number, jpg: Buffer, fileName: string, caption: string, replyMarkup?: unknown) {
   const fd = new FormData()
   fd.append('chat_id', String(chatId))
   fd.append('caption', caption)
   fd.append('parse_mode', 'HTML')
   if (replyMarkup) fd.append('reply_markup', JSON.stringify(replyMarkup))
-  fd.append('photo', new Blob([new Uint8Array(jpg)], { type: 'image/jpeg' }), fileName)
+  const isPng = jpg[0] === 0x89 && jpg[1] === 0x50 // PNG
+  fd.append('photo', new Blob([new Uint8Array(jpg)], { type: isPng ? 'image/png' : 'image/jpeg' }), fileName)
   const res = await fetch(`https://api.telegram.org/bot${TG_BOT_TOKEN}/sendPhoto`, { method: 'POST', body: fd })
   const data = await res.json().catch(() => ({ ok: false }))
   if (!data.ok) throw new Error(data.description || `Telegram ${res.status} qaytardi`)
