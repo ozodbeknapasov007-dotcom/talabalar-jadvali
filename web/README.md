@@ -26,7 +26,8 @@ Sayt: https://talabalar-jadvali.netlify.app. Sozlama repo ildizidagi `netlify.to
 
 **Site configuration → Environment variables** (o'zgartirgach **Deploys → Trigger deploy** qiling):
 - `PORTAL_LOGIN`, `PORTAL_PASSWORD` — portalga kirish (`/login`). Ikkalasi bo'lmasa hech kim kira olmaydi.
-  `proxy.ts` barcha sahifa va API'larni yopadi; ochiq qoladiganlar: `/api/telegram_webhook` (maxfiy kalit)
+  `proxy.ts` barcha sahifa va API'larni yopadi (kompyuterda `localhost` orqali ochilganda login so'ralmaydi);
+  ochiq qoladiganlar: `/api/telegram_webhook` (maxfiy kalit)
   va `/api/mytest-roster` (Bearer token). Sessiya 30 kun; parol almashtirilsa hamma qayta kiradi.
 - `GITHUB_TOKEN` — repo'ga `contents: read & write` huquqli token.
 - `TELEGRAM_BOT_TOKEN` — @BotFather bergan token (kodda zaxira token yo'q, repo ommaviy).

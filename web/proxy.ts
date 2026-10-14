@@ -1,8 +1,9 @@
 import { NextResponse, type NextRequest } from 'next/server'
-import { AUTH_COOKIE, verifySessionToken } from '@/lib/auth'
+import { AUTH_COOKIE, isLocalRequest, verifySessionToken } from '@/lib/auth'
 
 /*
   Portalga kirish nazorati: login qilinmagan so'rov sahifada /login ga yo'naltiriladi, API'da 401.
+  Kompyuterda localhost orqali ochilgan portal — loginsiz (lib/auth.ts → isLocalRequest).
   Ochiq yo'llar (o'z himoyasi bor): Telegram webhook (maxfiy kalit / &key=), MyTest (Bearer token),
   kirish sahifasi va kirish API'si. Statik fayllar matcher'da chiqarib tashlangan.
 */
@@ -12,6 +13,12 @@ const isPublic = (p: string) => PUBLIC_PATHS.has(p) || p.startsWith('/api/auth/'
 
 export async function proxy(request: NextRequest) {
   const { pathname, search } = request.nextUrl
+  // nextUrl.hostname Next serverida doim "localhost" bo'ladi — brauzer ochgan haqiqiy manzil Host sarlavhasida
+  const host = (request.headers.get('host') || '').replace(/:\d+$/, '')
+  if (isLocalRequest(host)) {
+    // Lokalda kirish sahifasi kerak emas — to'g'ridan-to'g'ri portalga
+    return pathname === '/login' ? NextResponse.redirect(new URL('/', request.url)) : NextResponse.next()
+  }
   if (isPublic(pathname)) return NextResponse.next()
   if (await verifySessionToken(request.cookies.get(AUTH_COOKIE)?.value)) {
     return NextResponse.next()

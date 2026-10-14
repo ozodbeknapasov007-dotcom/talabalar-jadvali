@@ -12,6 +12,19 @@ export const SESSION_DAYS = 30
 
 const enc = new TextEncoder()
 
+const LOCAL_HOSTS = new Set(['localhost', '127.0.0.1', '[::1]', '::1'])
+
+/**
+ * Kompyuterda o'zi ochilgan portal — login so'ralmaydi. Ikkala shart ham kerak:
+ *  - internetdagi sayt emas (Netlify/Vercel muhit o'zgaruvchilari yo'q);
+ *  - manzil localhost — tarmoqdagi boshqa qurilma IP orqali ochsa (100.x.x.x:3000) login so'raladi.
+ * Netlify'da manzil har doim *.netlify.app, shuning uchun bu yerda hech qachon ochilmaydi.
+ */
+export function isLocalRequest(hostname: string): boolean {
+  const deployed = !!(process.env.NETLIFY || process.env.SITE_ID || process.env.VERCEL)
+  return !deployed && LOCAL_HOSTS.has(hostname.toLowerCase())
+}
+
 export function authConfigured(): boolean {
   return !!(process.env.PORTAL_LOGIN?.trim() && process.env.PORTAL_PASSWORD)
 }

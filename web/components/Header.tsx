@@ -359,12 +359,16 @@ function ExportMenu({ students, notify }: { students: Student[]; notify: Notify 
 /** Tizimdan chiqish — sessiya cookie'si o'chiriladi va kirish sahifasiga qaytiladi */
 function LogoutButton() {
   const [busy, setBusy] = useState(false)
+  // Kompyuterda (localhost) login so'ralmaydi — chiqish tugmasi ham kerak emas
+  const [local, setLocal] = useState(true)
+  useEffect(() => { setLocal(['localhost', '127.0.0.1', '[::1]'].includes(window.location.hostname)) }, [])
   const logout = async () => {
     if (!confirm('Tizimdan chiqasizmi?')) return
     setBusy(true)
     await fetch('/api/auth/logout', { method: 'POST' }).catch(() => null)
     window.location.replace('/login')
   }
+  if (local) return null
   return (
     <button type="button" className="btn-ghost h-9 px-2.5" onClick={logout} disabled={busy} title="Tizimdan chiqish" aria-label="Tizimdan chiqish">
       {busy ? <Loader2 size={15} className="animate-spin" /> : <LogOut size={15} />}
