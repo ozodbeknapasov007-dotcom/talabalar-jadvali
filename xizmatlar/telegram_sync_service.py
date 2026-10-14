@@ -1828,19 +1828,43 @@ def trigger_report_rebuild(delay=None, async_mode=True):
         REBUILD_TIMER.start()
 
 
-OPENROUTER_API_KEY = os.environ.get("OPENROUTER_API_KEY", "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")
+def _env_file_value(name):
+    """web/.env.local yoki loyiha ildizidagi .env dan qiymat (portal bilan bir xil kalit)"""
+    for rel in (os.path.join('web', '.env.local'), '.env'):
+        path = os.path.join(BASE_DIR, rel)
+        try:
+            with open(path, 'r', encoding='utf-8') as f:
+                for line in f:
+                    line = line.strip()
+                    if line.startswith(name + '='):
+                        return line.split('=', 1)[1].strip().strip('"').strip("'")
+        except OSError:
+            pass
+    return ''
+
+
+# Kalit kodga YOZILMAYDI (repo ommaviy — eski kalit shu sabab OpenRouter tomonidan o'chirilgan edi)
+OPENROUTER_API_KEY = os.environ.get("OPENROUTER_API_KEY", "").strip() or _env_file_value("OPENROUTER_API_KEY")
+
+# Portal tanlaydigan modellar (web/lib/ai-doc.ts → AI_MODELS bilan bir xil)
+DEFAULT_AI_MODEL = "google/gemini-3.8-flash"
 SUPPORTED_AI_MODELS = {
-    "google/gemini-3.8-flash": "google/gemini-2.5-flash",
-    "google/gemini-3.7-flash": "google/gemini-2.5-flash",
+    "google/gemini-3.8-flash": "google/gemini-3.8-flash",
+    "anthropic/claude-haiku-5.5": "anthropic/claude-haiku-5.5",
     "google/gemini-2.5-flash": "google/gemini-2.5-flash",
     "google/gemini-2.5-pro": "google/gemini-2.5-pro",
-    "google/gemini-2.0-flash-001": "google/gemini-2.0-flash-001",
-    "google/gemini-2.0-flash": "google/gemini-2.0-flash-001",
     "openai/gpt-4o": "openai/gpt-4o",
-    "flash": "google/gemini-2.5-flash",
-    "pro": "google/gemini-2.5-pro"
+    # eski nomlar
+    "google/gemini-3.7-flash": "google/gemini-3.8-flash",
+    "google/gemini-2.0-flash-001": "google/gemini-2.5-flash",
+    "google/gemini-2.0-flash": "google/gemini-2.5-flash",
+    "anthropic/claude-3.5-sonnet": "anthropic/claude-haiku-5.5",
+    "flash": "google/gemini-3.8-flash",
+    "pro": "google/gemini-2.5-pro",
 }
-OPENROUTER_MODELS = ["google/gemini-2.5-flash", "google/gemini-2.5-pro", "openai/gpt-4o"]
+# Tanlangan model javob bermasa — navbatdagilari
+AI_FALLBACK_MODELS = ["google/gemini-3.8-flash", "anthropic/claude-haiku-5.5", "google/gemini-2.5-flash"]
+OPENROUTER_MODELS = ["google/gemini-3.8-flash", "google/gemini-2.5-pro", "anthropic/claude-haiku-5.5"]
 
 def clean_uz_name(text):
     if not text:
@@ -2265,7 +2289,7 @@ Aniq JSON formatda qaytar:
 
         if blobs_raw:
             candidate_models = [model_to_use]
-            for fb in ["google/gemini-2.5-flash", "google/gemini-2.5-pro", "openai/gpt-4o"]:
+            for fb in AI_FALLBACK_MODELS:
                 if fb not in candidate_models:
                     candidate_models.append(fb)
 
@@ -3228,10 +3252,10 @@ class WebServerHandler(BaseHTTPRequestHandler):
                 qr_extracted = scan_all_qrs(image_blobs)
                 print(f"reanalyze_student QR natijasi: {qr_extracted}")
 
-                req_model = unquote(params.get('model', 'google/gemini-3.8-flash')).strip()
-                primary_model = SUPPORTED_AI_MODELS.get(req_model, req_model if '/' in req_model else "google/gemini-2.5-flash")
+                req_model = unquote(params.get('model', DEFAULT_AI_MODEL)).strip()
+                primary_model = SUPPORTED_AI_MODELS.get(req_model, req_model if '/' in req_model else DEFAULT_AI_MODEL)
                 models_to_try = [primary_model]
-                for fb_m in ["google/gemini-2.5-flash", "google/gemini-2.5-pro", "openai/gpt-4o"]:
+                for fb_m in AI_FALLBACK_MODELS:
                     if fb_m not in models_to_try:
                         models_to_try.append(fb_m)
                 print(f"reanalyze_student tanlangan model: {req_model} -> {primary_model}")
@@ -4330,7 +4354,7 @@ Aniq JSON formatda qaytar:
                 student_group = str(data.get('group', '') or '').strip()
                 existing_doc_file = str(data.get('doc_file', '') or '').strip()
                 do_analyze = bool(data.get('analyze', True))
-                req_model = str(data.get('model', 'google/gemini-3.8-flash') or 'google/gemini-3.8-flash').strip()
+                req_model = str(data.get('model', DEFAULT_AI_MODEL) or DEFAULT_AI_MODEL).strip()
 
                 passport_files = data.get('passport_files', []) or []
                 diploma_files = data.get('diploma_files', []) or []
@@ -4526,7 +4550,7 @@ Aniq JSON formatda qaytar:
                         content_items.append({'type': 'image_url', 'image_url': {'url': f'data:image/jpeg;base64,{b64}'}})
 
                     models_to_try = [used_model_actual]
-                    for fb_m in ["google/gemini-2.5-flash", "google/gemini-2.5-pro", "openai/gpt-4o"]:
+                    for fb_m in AI_FALLBACK_MODELS:
                         if fb_m not in models_to_try:
                             models_to_try.append(fb_m)
 
@@ -4737,7 +4761,7 @@ Aniq JSON formatda qaytar:
                 ai_data = {}
                 try:
                     req_model = data.get('model', '')
-                    model_to_use = SUPPORTED_AI_MODELS.get(req_model, req_model or 'google/gemini-2.5-flash')
+                    model_to_use = SUPPORTED_AI_MODELS.get(req_model, req_model or DEFAULT_AI_MODEL)
                     print(f"upload_and_attach AI modeli: {model_to_use}")
                     payload = {'model': model_to_use, 'messages': [{'role': 'user', 'content': content_items}], 'temperature': 0.0}
                     req = urllib.request.Request('https://openrouter.ai/api/v1/chat/completions', data=json.dumps(payload).encode('utf-8'), headers={'Authorization': f'Bearer {OPENROUTER_API_KEY}', 'Content-Type': 'application/json'})

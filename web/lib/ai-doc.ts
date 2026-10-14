@@ -1,12 +1,17 @@
 import { dobFromPinfl } from './student'
 import type { EditFields } from './types'
 
+/** OpenRouter modellari — Python xizmatidagi SUPPORTED_AI_MODELS bilan bir xil.
+ *  Narx (1M token, kirish/chiqish, 2026-10): Haiku 5.5 $0.10/$0.50, Gemini 3.8 Flash $0.75/$3.75, 2.5 Flash $0.30/$2.50 */
 export const AI_MODELS = [
-  ['google/gemini-2.5-flash', 'Gemini 2.5 Flash (Tez)'],
-  ['google/gemini-2.5-pro', 'Gemini 2.5 Pro (Aniq)'],
+  ['google/gemini-3.8-flash', 'Gemini 3.8 Flash (tez)'],
+  ['anthropic/claude-haiku-5.5', 'Claude Haiku 5.5 (eng arzon)'],
+  ['google/gemini-2.5-flash', 'Gemini 2.5 Flash'],
+  ['google/gemini-2.5-pro', 'Gemini 2.5 Pro (aniq)'],
   ['openai/gpt-4o', 'GPT-4o'],
-  ['anthropic/claude-3.5-sonnet', 'Claude 3.5 Sonnet'],
 ] as const
+
+export const DEFAULT_AI_MODEL: AiModelId = 'google/gemini-3.8-flash'
 
 export type AiModelId = (typeof AI_MODELS)[number][0]
 
@@ -14,10 +19,10 @@ const MODEL_STORAGE_KEY = 'portal_ai_model'
 const LOCAL_PY_SERVER = 'http://localhost:8080'
 
 export function getSavedAiModel(): AiModelId {
-  if (typeof window === 'undefined') return 'google/gemini-2.5-flash'
+  if (typeof window === 'undefined') return DEFAULT_AI_MODEL
   const saved = localStorage.getItem(MODEL_STORAGE_KEY)
   if (saved && AI_MODELS.some(([id]) => id === saved)) return saved as AiModelId
-  return 'google/gemini-2.5-flash'
+  return DEFAULT_AI_MODEL
 }
 
 export function setSavedAiModel(model: AiModelId) {
@@ -177,26 +182,85 @@ export async function getFilesFromClipboard(): Promise<File[]> {
   return files
 }
 
-/** Rasmlardan QR kodni brauzerning BarcodeDetector API si yordamida skanerlash */
-export async function scanQrFromDataUrls(dataUrls: string[]): Promise<string | null> {
-  const Detector = (globalThis as unknown as { BarcodeDetector?: new (opts: { formats: string[] }) => { detect: (img: ImageBitmap) => Promise<{ rawValue?: string }[]> } }).BarcodeDetector
-  if (!Detector) return null
+/* ------------------------------ QR KOD ------------------------------ */
 
-  try {
-    const detector = new Detector({ formats: ['qr_code'] })
-    for (const src of dataUrls) {
-      const resp = await fetch(src)
-      const blob = await resp.blob()
-      const bmp = await createImageBitmap(blob)
-      const codes = await detector.detect(bmp)
-      for (const c of codes) {
-        if (c.rawValue) return c.rawValue
+type Detector = { detect: (img: ImageBitmap) => Promise<{ rawValue?: string }[]> }
+type DetectorCtor = new (opts: { formats: string[] }) => Detector
+
+/** Rasmni QR o'qish uchun piksellarga aylantirish (katta telefon rasmlari kichraytiriladi — jsQR tezroq) */
+async function toImageData(bmp: ImageBitmap, max = 1600): Promise<ImageData> {
+  const k = Math.min(1, max / Math.max(bmp.width, bmp.height))
+  const canvas = document.createElement('canvas')
+  canvas.width = Math.round(bmp.width * k)
+  canvas.height = Math.round(bmp.height * k)
+  const ctx = canvas.getContext('2d', { willReadFrequently: true })!
+  ctx.drawImage(bmp, 0, 0, canvas.width, canvas.height)
+  return ctx.getImageData(0, 0, canvas.width, canvas.height)
+}
+
+/**
+ * Barcha rasmlardagi QR kodlar. Brauzerning BarcodeDetector'i bo'lsa — u (Android, macOS);
+ * Windows'dagi Chrome'da u yo'q, shuning uchun jsQR (avval QR umuman o'qilmasdi).
+ */
+export async function scanQrCodes(dataUrls: string[]): Promise<string[]> {
+  const Ctor = (globalThis as unknown as { BarcodeDetector?: DetectorCtor }).BarcodeDetector
+  let detector: Detector | null = null
+  try { if (Ctor) detector = new Ctor({ formats: ['qr_code'] }) } catch { detector = null }
+  const jsQR = detector ? null : (await import('jsqr')).default
+  const out: string[] = []
+  for (const src of dataUrls) {
+    try {
+      const bmp = await createImageBitmap(await (await fetch(src)).blob())
+      if (detector) {
+        for (const c of await detector.detect(bmp)) if (c.rawValue) out.push(c.rawValue)
+      } else if (jsQR) {
+        const img = await toImageData(bmp)
+        const code = jsQR(img.data, img.width, img.height, { inversionAttempts: 'attemptBoth' })
+        if (code?.data) out.push(code.data)
       }
-    }
-  } catch {
-    // BarcodeDetector ishlamasa e'tibor bermaymiz
+    } catch { /* o'qilmagan rasm — keyingisi */ }
   }
-  return null
+  return [...new Set(out)]
+}
+
+/** Birinchi topilgan QR kod (eski chaqiruvlar uchun) */
+export async function scanQrFromDataUrls(dataUrls: string[]): Promise<string | null> {
+  return (await scanQrCodes(dataUrls))[0] ?? null
+}
+
+/** ICAO 9303 nazorat raqami (7-3-1) */
+function mrzCheck(s: string): number {
+  const val = (c: string) => (c === '<' ? 0 : /\d/.test(c) ? Number(c) : c.charCodeAt(0) - 55)
+  return [...s].reduce((sum, c, i) => sum + val(c) * [7, 3, 1][i % 3], 0) % 10
+}
+
+/**
+ * ID-karta orqasidagi QR — MRZ (TD1, 3×30): "IUUZB" + hujjat raqami (9) + nazorat + JSHSHIR (14).
+ * Masalan IUUZBAE3226696662703085680021< → AE3226696, 62703085680021. Nazorat raqami mos kelmasa — null.
+ */
+export function parseIdCardQr(text: string): { pv: string; pinfl: string; dob?: string } | null {
+  const line = text.toUpperCase().replace(/[\r\n\s]/g, '')
+  const m = /^I[A-Z<]UZB([A-Z]{2}\d{7})(\d)([3-6]\d{13})/.exec(line)
+  if (!m || mrzCheck(m[1]) !== Number(m[2])) return null
+  return { pv: m[1], pinfl: m[3], dob: dobFromPinfl(m[3]) ?? undefined }
+}
+
+/** QR kodlardan maydonlar: ID-karta MRZ → pasport, JSHSHIR, tug'ilgan sana; boshqasi → shahodatnoma QR */
+export function fieldsFromQr(codes: string[]): Partial<EditFields> & { sh_qr?: string } {
+  const out: Partial<EditFields> & { sh_qr?: string } = {}
+  for (const code of codes) {
+    const id = parseIdCardQr(code)
+    if (id) {
+      out.pv = id.pv
+      out.pinfl = id.pinfl
+      if (id.dob) out.dob = id.dob
+    } else if (!out.sh_qr) {
+      out.sh_qr = code
+      const m = code.match(/\b(UM|U|AB|AA|DT|K|S)\s*(\d{6,8})\b/i)
+      if (m) out.sh_doc = `${m[1].toUpperCase()} ${m[2]}`
+    }
+  }
+  return out
 }
 
 type AiFields = Partial<EditFields> & { sh_qr?: string }
@@ -314,6 +378,17 @@ async function analyzeImagesViaPortal(images: string[], model: AiModelId): Promi
   return mapAiData(body.data)
 }
 
+/** QR kodlarni o'qib AI natijasiga qo'shadi: ID-karta MRZ (pasport, JSHSHIR, sana) AI o'qiganidan ustun */
+async function mergeQrFields(fields: AiFields, images: string[]): Promise<{ fields: AiFields; idCard: boolean }> {
+  if (!images.length) return { fields, idCard: false }
+  const qr = fieldsFromQr(await scanQrCodes(images))
+  const merged: AiFields = { ...fields, ...qr }
+  // Shahodatnoma QR/raqami — AI yoki Python o'qigani bo'lsa o'shasi qoladi
+  if (fields.sh_qr) merged.sh_qr = fields.sh_qr
+  if (fields.sh_doc) merged.sh_doc = fields.sh_doc
+  return { fields: merged, idCard: !!qr.pinfl }
+}
+
 const countFields = (fields: AiFields) => Object.keys(fields).filter((k) => k !== 'sh_qr').length
 const NOTHING_READ = "AI hujjatdan ma'lumot o'qiy olmadi — rasm aniqroq bo'lsin yoki boshqa modelni tanlang"
 
@@ -360,13 +435,14 @@ export async function analyzeAndUploadDocs(opts: {
       model,
     })
     if (res?.success && res.data) {
-      const fields = mapAiData(res.data as Record<string, unknown>)
+      const images = Array.isArray(res.images) && res.images.length ? (res.images as string[]) : (await extractDocxClient(opts.docxFile)).images
+      const { fields } = await mergeQrFields(mapAiData(res.data as Record<string, unknown>), images)
       const n = countFields(fields)
       return {
         fields,
         docFile: typeof res.filename === 'string' ? res.filename : undefined,
         qrFound: fields.sh_qr,
-        images: Array.isArray(res.images) && res.images.length ? (res.images as string[]) : (await extractDocxClient(opts.docxFile)).images,
+        images,
         namesFromDoc: true,
         message: n ? `Shartnoma biriktirildi, AI ${n} ta maydonni o'qib Excelga saqladi${fields.sh_qr ? ' (QR-kod tasdiqlandi ✓)' : ''}` : NOTHING_READ,
       }
@@ -391,13 +467,14 @@ export async function analyzeAndUploadDocs(opts: {
         })
       : await py(`/api/reanalyze_student?file=${encodeURIComponent(opts.docFile || '')}&row=${opts.row}&model=${encodeURIComponent(model)}`)
     if (res?.success && res.data) {
-      const fields = mapAiData(res.data as Record<string, unknown>)
+      const images = Array.isArray(res.images) && res.images.length ? (res.images as string[]) : previewImages
+      const { fields } = await mergeQrFields(mapAiData(res.data as Record<string, unknown>), images)
       const n = countFields(fields)
       return {
         fields,
         docFile: typeof res.filename === 'string' ? res.filename : undefined,
         qrFound: fields.sh_qr,
-        images: Array.isArray(res.images) && res.images.length ? (res.images as string[]) : previewImages,
+        images,
         message: n ? `AI ${n} ta maydonni o'qidi va Excelga saqladi${fields.sh_qr ? ' (QR-kod tasdiqlandi ✓)' : ''}` : NOTHING_READ,
       }
     }
@@ -436,21 +513,18 @@ export async function analyzeAndUploadDocs(opts: {
     }
   }
 
-  const qr = fields.sh_qr || (await scanQrFromDataUrls(previewImages.length ? previewImages : opts.existingImages || []))
-  if (qr) {
-    fields.sh_qr = qr
-    const m = qr.match(/\b(UM|U|AB|AA|DT|K|S)\s*(\d{6,8})\b/i)
-    if (m && !fields.sh_doc) fields.sh_doc = `${m[1].toUpperCase()} ${m[2]}`
-  }
+  const qrImages = previewImages.length ? previewImages : opts.existingImages || []
+  const { fields: merged, idCard } = await mergeQrFields(fields, qrImages)
+  fields = merged
+  const qr = fields.sh_qr
 
   const n = countFields(fields)
   if (!n && aiError) throw new Error(aiError)
+  const notes = [idCard && "ID-karta QR'idan pasport va JSHSHIR olindi ✓", qr && 'QR-kod topildi ✓', aiError && `eslatma: ${aiError}`].filter(Boolean)
   return {
     fields,
     qrFound: qr || undefined,
-    images: previewImages.length ? previewImages : opts.existingImages || [],
-    message: n
-      ? `AI ${n} ta maydonni aniqladi${qr ? ' (QR-kod topildi ✓)' : ''}${aiError ? ` — eslatma: ${aiError}` : ''}`
-      : NOTHING_READ,
+    images: qrImages,
+    message: n ? `${aiError ? 'QR' : 'AI'} ${n} ta maydonni aniqladi${notes.length ? ` — ${notes.join(', ')}` : ''}` : NOTHING_READ,
   }
 }

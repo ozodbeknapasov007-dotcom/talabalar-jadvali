@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { Award, FileImage, FileText, IdCard, ImageOff, Loader2, Maximize2, QrCode, RotateCw, Sparkles, Upload } from 'lucide-react'
-import { AI_MODELS, analyzeAndUploadDocs, getSavedAiModel, scanQrFromDataUrls, setSavedAiModel, type AiModelId } from '@/lib/ai-doc'
+import { AI_MODELS, analyzeAndUploadDocs, fieldsFromQr, getSavedAiModel, scanQrCodes, setSavedAiModel, type AiModelId } from '@/lib/ai-doc'
 import type { EditFields, Student } from '@/lib/types'
 import DocDropZone from './DocDropZone'
 import InlineZoomImage from './InlineZoomImage'
@@ -125,10 +125,16 @@ export default function DocImages({ file, studentRow, student, onApplyFields }: 
     setStatusMsg('QR kod qidirilmoqda…')
     try {
       const srcs = images?.map((i) => i.src) ?? []
-      const qr = await scanQrFromDataUrls(srcs)
-      if (qr) {
-        setQrResult(qr)
-        setStatusMsg(`QR kod topildi: ${qr}`)
+      const qr = fieldsFromQr(await scanQrCodes(srcs))
+      if (qr.sh_qr) setQrResult(qr.sh_qr)
+      if (qr.pinfl) {
+        // ID-karta QR'idagi MRZ — aniq ma'lumot, AI tahlilidagidek kartaga darhol yoziladi
+        const fields: Partial<EditFields> = { pv: qr.pv, pinfl: qr.pinfl, ...(qr.dob ? { dob: qr.dob } : {}) }
+        if (onApplyFields) await onApplyFields(fields)
+        setExtracted(fields)
+        setStatusMsg(`ID-karta QR'i o'qildi: ${qr.pv}, JSHSHIR ${qr.pinfl}${qr.dob ? `, ${qr.dob}` : ''}${qr.sh_qr ? ` · shahodatnoma QR: ${qr.sh_qr}` : ''}`)
+      } else if (qr.sh_qr) {
+        setStatusMsg(`QR kod topildi: ${qr.sh_qr}`)
       } else {
         setStatusMsg("Rasmlardan QR kod topilmadi (yoki AI Tahlil tugmasini bosing)")
       }

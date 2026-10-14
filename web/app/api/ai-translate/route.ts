@@ -11,7 +11,7 @@ export const maxDuration = 60
 
 interface Item { uz: string; hudud?: string; turi?: string }
 
-const MODELS = ['google/gemini-2.5-flash', 'google/gemini-2.5-pro']
+const MODELS = ['anthropic/claude-haiku-5.5', 'google/gemini-3.8-flash', 'google/gemini-2.5-flash']
 
 const STEP_UZ = `Sen O'zbekiston ta'lim muassasalari nomlarini rasmiy hujjatlarga moslab yozadigan mutaxassissan.
 Har bir nomni O'zbekiston Respublikasida rasmiy qabul qilingan o'zbekcha (lotin yozuvi) shaklga keltir:

@@ -49,13 +49,14 @@ Aniq JSON formatda qaytar:
   "yil": "2024"
 }`
 
-const FALLBACK_MODELS = ['google/gemini-2.5-flash', 'google/gemini-2.5-pro', 'openai/gpt-4o']
+// Tanlangan model javob bermasa — navbatdagilari (Python: AI_FALLBACK_MODELS)
+const FALLBACK_MODELS = ['google/gemini-3.8-flash', 'anthropic/claude-haiku-5.5', 'google/gemini-2.5-flash']
 
 export async function POST(request: Request) {
   const key = process.env.OPENROUTER_API_KEY
   if (!key) {
     return Response.json(
-      { success: false, error: "AI sozlanmagan (OPENROUTER_API_KEY yo'q) — kompyuterda Python xizmatini yoqing" },
+      { success: false, error: "AI sozlanmagan: OPENROUTER_API_KEY yo'q (Netlify → Environment variables yoki web/.env.local)" },
       { status: 503 },
     )
   }
