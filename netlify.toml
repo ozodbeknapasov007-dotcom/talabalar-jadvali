@@ -6,3 +6,7 @@
 
 [build.environment]
   NODE_VERSION = "22"
+
+# Next.js server qismi (sahifalar, API) — Netlify funksiyalari sifatida. Avtomatik ulanmadi, shuning uchun aniq ko'rsatildi
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
