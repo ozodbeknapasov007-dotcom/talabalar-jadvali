@@ -2,7 +2,7 @@
 
 import { unzipSync, zipSync, strFromU8, strToU8 } from 'fflate'
 import { GROUPS, GROUP_LEADERS } from './config'
-import { byName, formatDate, fullName, isAcademicLeave, isOfficialGroup, isOutside, isWithdrawn, kursOf, tugilganTuman } from './student'
+import { byName, formatDate, fullName, isAcademicLeave, isOfficialGroup, isOutside, isSecretGroup, isWithdrawn, kursOf, tugilganTuman } from './student'
 import type { Student, ContractStudent } from './types'
 import ISTISNOLAR from './qabul-istisnolar.json'
 import { ensureAiTranslations, withAiTranslation } from './qabul-ai'
@@ -170,7 +170,7 @@ function parseStudentPhones(s: Student): { telShaxsiy: string; telOtaona: string
 
 const C = {
   tr: { header: 'T/R', wch: 6, val: (_s: Student, i: number) => i + 1, num: true } as Col,
-  group: { header: 'Guruh', wch: 10, val: (s: Student) => s.group || '', center: true } as Col,
+  group: { header: 'Guruh', wch: 10, val: (s: Student) => isSecretGroup(s.group) ? `${s.group} (asl: ${s.asl_guruh || '?'})` : s.group || '', center: true } as Col,
   leader: { header: 'Guruh rahbari', wch: 18, val: (s: Student) => GROUP_LEADERS[s.group] || '—' } as Col,
   fish: { header: 'F.I.SH (Talaba)', wch: 34, val: (s: Student) => fullName(s), bold: true } as Col,
   shnum: { header: 'Shartnoma №', wch: 14, val: (s: Student) => numIf(s.shnum), bold: true, num: true, center: true } as Col,

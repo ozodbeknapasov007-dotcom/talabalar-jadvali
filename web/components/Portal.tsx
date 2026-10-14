@@ -5,7 +5,7 @@ import { AlertTriangle, BookOpenCheck, Database, Loader2, ServerCrash } from 'lu
 import { exportFiltered } from '@/lib/excel'
 import { useStudents } from '@/lib/store'
 import { applyGroupSettings, COURSES, GROUP_SETTINGS, type GroupSettings } from '@/lib/config'
-import { academicGroups, EMPTY_FILTERS, fullName, isOfficialGroup, kursOf, matches, needsOrder, scanDuplicates, searchText, selectedGroups, type Filters } from '@/lib/student'
+import { academicGroups, EMPTY_FILTERS, fullName, isOfficialGroup, isSecretGroup, kursOf, matches, needsOrder, scanDuplicates, searchText, selectedGroups, type Filters } from '@/lib/student'
 import type { EditFields, Student } from '@/lib/types'
 import FilterBar, { type DisplayMode } from './FilterBar'
 import GroupSettingsModal from './GroupSettingsModal'
@@ -159,7 +159,9 @@ export default function Portal() {
   const onChangeGroup = useCallback(async (s: Student, group: string) => {
     if ((s.group || '') === group) return
     if (needsOrder(s.group, group)) { setOrderAsk({ s, group }); return }
-    await applyGroup(s, { group })
+    // Maxfiy guruhga o'tkazilsa — hozirgi guruhi asl guruh bo'lib qoladi
+    const asl = isSecretGroup(group) && !s.asl_guruh && isOfficialGroup(s.group) ? { asl_guruh: s.group } : {}
+    await applyGroup(s, { group, ...asl })
   }, [applyGroup])
 
   const groupCounts = useMemo(() => {

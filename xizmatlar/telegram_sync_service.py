@@ -157,6 +157,7 @@ def _do_git_push_locked():
              'data/students.json',
              'data/talabalar_bazasi.json',
              'data/guruhlar.json',
+             'data/asl_guruhlar.json',
              'data/Talabalar_Toliq_Royxati.xlsx',
              'data/Talabalar_Yangilangan_Royxat.xlsx',
              'qayta_tekshiruv/Talabalar_Yangilangan_Royxat.xlsx',

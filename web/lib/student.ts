@@ -1,4 +1,4 @@
-import { ACADEMIC_LEAVE_GROUP, COURSES, GROUP_CODE, GROUPS, GROUP_TITLES, OQUV_YILI_BOSHI, WITHDRAWN_GROUP } from './config'
+import { ACADEMIC_LEAVE_GROUP, COURSES, GROUP_CODE, GROUPS, GROUP_TITLES, OQUV_YILI_BOSHI, SECRET_GROUP, WITHDRAWN_GROUP } from './config'
 import type { EditFields, Student } from './types'
 
 export function isWithdrawn(g: string | undefined): boolean {
@@ -8,6 +8,11 @@ export function isWithdrawn(g: string | undefined): boolean {
 
 export function isAcademicLeave(g: string | undefined): boolean {
   return String(g || '').trim().toLowerCase().includes('akademik')
+}
+
+/** Maxfiy guruh (26-07) — darslarga kelmaydiganlar, kontraktlarga kirmaydi */
+export function isSecretGroup(g: string | undefined): boolean {
+  return String(g || '').trim() === SECRET_GROUP
 }
 
 /** Rasmiy kontingentdagi akademik guruh (ro'yxatdagi yoki "YY-NN" ko'rinishidagi) */
@@ -54,7 +59,9 @@ export const ORDER_DATE_RE = /^\d{2}\.\d{2}\.\d{4}$/
 
 export function groupOptions(students: Student[]): [string, string][] {
   return [
-    ...academicGroups(students).map((g) => [g, `${g} (${kursOf(g)}-kurs, ${groupTitle(g).replace(/ ishi$/, '')})`] as [string, string]),
+    ...academicGroups(students).map((g) => [g, isSecretGroup(g)
+      ? `${g} (maxfiy guruh)`
+      : `${g} (${kursOf(g)}-kurs, ${groupTitle(g).replace(/ ishi$/, '')})`] as [string, string]),
     [ACADEMIC_LEAVE_GROUP, ACADEMIC_LEAVE_GROUP],
     [WITHDRAWN_GROUP, WITHDRAWN_GROUP],
   ]

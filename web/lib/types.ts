@@ -32,6 +32,8 @@ export interface Student {
   /** Safdan chiqarish / akademik ta'til buyrug'i (Excel 26–27-ustunlar) */
   buyruq?: string
   buyruq_sana?: string
+  /** Maxfiy guruhdagi (26-07) talabaning bazadagi asl guruhi — data/asl_guruhlar.json dan */
+  asl_guruh?: string
   /** So'rovnomadan kiritilgan qo'shimcha ma'lumotlar */
   manzil_tuman?: string
   manzil_mfy?: string
@@ -49,7 +51,7 @@ export interface Student {
 export const EDIT_FIELDS = [
   'ism', 'ota', 'group', 'pv', 'pinfl', 'dob', 'ber',
   'doc_tur', 'sh_doc', 'mak', 'yil', 'yon', 'shnum', 'tel',
-  'buyruq', 'buyruq_sana',
+  'buyruq', 'buyruq_sana', 'asl_guruh',
 ] as const
 export type EditField = (typeof EDIT_FIELDS)[number]
 export type EditFields = Partial<Record<EditField, string>>

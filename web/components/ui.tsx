@@ -1,16 +1,28 @@
 'use client'
 
-import { Check, Clock, AlertTriangle, XCircle, CheckCircle2, Database } from 'lucide-react'
+import { Check, Clock, AlertTriangle, XCircle, CheckCircle2, Database, EyeOff } from 'lucide-react'
 import { GROUP_TITLES } from '@/lib/config'
-import { isAcademicLeave, isBazaEntered, isWithdrawn } from '@/lib/student'
+import { isAcademicLeave, isBazaEntered, isSecretGroup, isWithdrawn } from '@/lib/student'
 import type { Student } from '@/lib/types'
 
 export function cx(...parts: (string | false | null | undefined)[]) {
   return parts.filter(Boolean).join(' ')
 }
 
-export function GroupBadge({ group, className, short }: { group: string; className?: string; short?: boolean }) {
+export function GroupBadge({ group, className, short, asl }: { group: string; className?: string; short?: boolean; asl?: string }) {
   if (!group) return <span className={cx('chip border-amber/40 bg-amber/10 text-amber', className)}>Guruhsiz</span>
+  if (isSecretGroup(group)) {
+    return (
+      <span
+        className={cx('chip mono border-dashed border-amber/55 bg-amber/10 text-amber', className)}
+        title={`Maxfiy guruh — darslarga kelmaydi. Bazadagi asl guruhi: ${asl || "ko'rsatilmagan"}`}
+      >
+        <EyeOff size={11} className="shrink-0" />
+        {group}
+        <span className="font-normal text-fg-muted">{short ? '←' : '· asl'} {asl || '?'}</span>
+      </span>
+    )
+  }
   if (isWithdrawn(group)) return <span className={cx('chip border-rose/40 bg-rose/10 text-rose', className)} title="Talabalar safidan chiqarilganlar">{short ? 'Chiqarilgan' : 'Safdan chiqarilgan'}</span>
   if (isAcademicLeave(group)) return <span className={cx('chip border-violet/40 bg-violet/10 text-violet', className)} title="Akademik ta'til olganlar">{short ? "Akad. ta'til" : "Akademik ta'til"}</span>
   const farm = GROUP_TITLES[group]?.startsWith('Farmatsiya')

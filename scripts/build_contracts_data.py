@@ -7,6 +7,8 @@ Buxgalteriya fayli: 02.10.2026_GACHA_KONTRAKTLAR.xlsx
 - TSCH (safdan chiqarilganlar) va akademik ta'tildagilar QAT'IYAN chiqarilmaydi.
 - Kontrakti ko'rinmasligi kerak bo'lgan talabalar (data/hidden_contracts.json)
   orqali yashiriladi va ularning holati belgilanadi.
+- Maxfiy guruh (26-07) — darslarga kelmaydiganlar: asl guruhi (data/asl_guruhlar.json)
+  bo'yicha bog'lanadi va kontraktlardan chiqariladi (yashirilgan deb belgilanadi).
 """
 
 import os
@@ -22,6 +24,8 @@ sys.stdout.reconfigure(encoding='utf-8')
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 STUDENTS_PATH = os.path.join(BASE_DIR, 'data', 'students.json')
 HIDDEN_CONTRACTS_PATH = os.path.join(BASE_DIR, 'data', 'hidden_contracts.json')
+ASL_GURUH_PATH = os.path.join(BASE_DIR, 'data', 'asl_guruhlar.json')
+SECRET_GROUP = '26-07'  # web/lib/config.ts dagi SECRET_GROUP bilan bir xil
 
 # 02.10.2026 faylini izlash
 candidate_paths = [
@@ -96,13 +100,26 @@ def build_contracts_data():
         except Exception:
             pass
 
+    # Maxfiy guruh talabalarining asl guruhlari
+    asl_map = {}
+    if os.path.exists(ASL_GURUH_PATH):
+        try:
+            with open(ASL_GURUH_PATH, 'r', encoding='utf-8') as f:
+                asl_map = json.load(f)
+        except Exception:
+            pass
+
     # Faqat 2-3 kurs faol talabalari (Akademik va TSCH chiqarilgan!)
+    # Maxfiy guruhdagilar ham olinadi — kontrakt qatorini topib, yashirish uchun
     active_students_db = []
     for s in students_db:
         grp = s.get('group', '')
         if is_academic_or_withdrawn(grp):
             continue
-        if grp.startswith('26-'):
+        is_secret = grp.strip() == SECRET_GROUP
+        s['asl_guruh'] = (asl_map.get(str(s.get('row')), {}) or {}).get('asl', '') if is_secret else ''
+        s['match_group'] = s['asl_guruh'] or grp
+        if grp.startswith('26-') and not is_secret:
             # 1-kurs talabalari buxgalteriyaning ushbu varag'ida emas
             continue
         s_fio = s.get('fish') or f"{s.get('ism', '')} {s.get('ota', '')}".strip()
@@ -169,7 +186,7 @@ def build_contracts_data():
     for kr in kontrakt_rows:
         for s in active_students_db:
             if s['row'] in used_db_rows: continue
-            if kr['parts'] == s['parts'] and kr['group'] == s.get('group'):
+            if kr['parts'] == s['parts'] and kr['group'] == s.get('match_group'):
                 matched_to_db[kr['file_row']] = s
                 matched_db_to_kr[s['row']] = kr
                 used_db_rows.add(s['row'])
@@ -216,6 +233,10 @@ def build_contracts_data():
 
         is_hidden = s_row in hidden_rows if s_row else False
         hidden_meta = hidden_records.get(str(s_row), {}) if s_row else {}
+        is_secret = bool(db_s) and str(db_s.get('group', '')).strip() == SECRET_GROUP
+        if is_secret:
+            is_hidden = True
+            hidden_meta = {'reason': f"{SECRET_GROUP} maxfiy guruh — darslarga kelmaydi (asl guruhi: {db_s.get('asl_guruh') or '?'})"}
 
         contract_items.append({
             'id': f"k_{kr['file_row']}",
@@ -228,6 +249,7 @@ def build_contracts_data():
             'group': db_s.get('group') if db_s else kr['group'],
             'contract_group': kr['group'],
             'base_group': db_s.get('group') if db_s else kr['group'],
+            'asl_guruh': db_s.get('asl_guruh', '') if db_s else '',
             'kurs': kr['kurs'],
             'pinfl': db_s.get('pinfl', '') if db_s else '',
             'shartnoma_summa': req,

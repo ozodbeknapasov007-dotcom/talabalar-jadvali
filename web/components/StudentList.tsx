@@ -20,14 +20,14 @@ interface Props {
 }
 
 function QuickGroupBadge({ student, choices, short, onChangeGroup }: { student: Student; choices: [string, string][]; short?: boolean; onChangeGroup?: (s: Student, group: string) => void }) {
-  if (!onChangeGroup) return <GroupBadge group={student.group} short={short} />
+  if (!onChangeGroup) return <GroupBadge group={student.group} asl={student.asl_guruh} short={short} />
   return (
     <span
       className="relative inline-flex items-center"
       onClick={(e) => e.stopPropagation()}
       title="Guruhni tez almashtirish uchun bosing"
     >
-      <GroupBadge group={student.group} short={short} />
+      <GroupBadge group={student.group} asl={student.asl_guruh} short={short} />
       <select
         value={student.group || ''}
         onChange={(e) => onChangeGroup(student, e.target.value)}

@@ -1,7 +1,7 @@
 import 'server-only'
 import { mkdir, readFile, writeFile } from 'node:fs/promises'
 import path from 'node:path'
-import { applyGroupSettings, DEFAULT_GROUP_SETTINGS, sanitizeGroupSettings, type GroupSettings } from '@/lib/config'
+import { applyGroupSettings, DEFAULT_GROUP_SETTINGS, sanitizeGroupSettings, SECRET_GROUP, type GroupSettings } from '@/lib/config'
 import { buildAddedStudent, fullName } from '@/lib/student'
 import type { Change, EditFields, Student } from '@/lib/types'
 import { getServiceSupabase } from '@/lib/supabase'
@@ -36,6 +36,8 @@ const GH_REPO = process.env.GITHUB_REPO || 'talabalar-jadvali'
 const GH_BRANCH = process.env.GITHUB_BRANCH || 'main'
 const QUEUE_PATH = 'scripts/remote_changes.json'
 const GROUP_SETTINGS_PATH = 'data/guruhlar.json'
+/** Maxfiy guruh talabalarining asl guruhlari: { "<row>": { asl, fish, pinfl } } */
+const ASL_GURUH_PATH = 'data/asl_guruhlar.json'
 
 /*
   Loyiha papkalari (26.09.2026 dan). GitHub'da ham, kompyuterda ham shu yo'llar.
@@ -243,11 +245,75 @@ async function enrichSurveyData(students: Student[]): Promise<Student[]> {
   return students
 }
 
+/* ------------------------------ ASL GURUHLAR (maxfiy guruh) ------------------------------ */
+
+type AslGuruhRecord = { asl: string; fish?: string; pinfl?: string }
+type AslGuruhMap = Record<string, AslGuruhRecord>
+
+// GitHub'dan o'qish kechikishi mumkin — oxirgi yozilgan holat shu yerda turadi
+let aslGuruhOverlay: AslGuruhMap | null = null
+
+async function loadAslGuruhlar(): Promise<AslGuruhMap> {
+  if (aslGuruhOverlay) return aslGuruhOverlay
+  try {
+    const buf = await readRepoFile([ASL_GURUH_PATH])
+    if (buf) {
+      const parsed = JSON.parse(buf.toString('utf-8'))
+      if (parsed && typeof parsed === 'object') return parsed as AslGuruhMap
+    }
+  } catch { /* buzilgan fayl — bo'sh */ }
+  return {}
+}
+
+async function enrichAslGuruh(students: Student[]): Promise<Student[]> {
+  const map = await loadAslGuruhlar()
+  for (const s of students) {
+    const rec = map[String(s.row)]
+    if (rec?.asl) s.asl_guruh = rec.asl
+  }
+  return students
+}
+
+/** Bitta talabaning asl guruhini yozish (bo'sh qiymat — yozuvni o'chiradi) */
+async function saveAslGuruh(s: Pick<Student, 'row' | 'fish' | 'pinfl'>, asl: string): Promise<void> {
+  const map = { ...(await loadAslGuruhlar()) }
+  const key = String(s.row)
+  if (asl) map[key] = { asl, fish: s.fish || '', pinfl: String(s.pinfl || '').replace(/\s/g, '') }
+  else delete map[key]
+  const sorted = Object.fromEntries(Object.entries(map).sort(([a], [b]) => Number(a) - Number(b)))
+  await saveRepoJsonFile(ASL_GURUH_PATH, sorted, `Asl guruh: ${s.fish || key} → ${asl || "o'chirildi"}`)
+  aslGuruhOverlay = sorted
+}
+
+/**
+ * update_student dagi asl_guruh maydonini ajratib, alohida faylga yozadi (Supabase va Excel'da
+ * bunday ustun yo'q). Talaba maxfiy guruhga o'tkazilsa va asl guruh berilmagan bo'lsa —
+ * oldingi guruhi asl guruh sifatida yoziladi. Qolgan maydonlar bilan o'zgarishni qaytaradi
+ * (boshqa maydon qolmasa — null).
+ */
+async function splitAslGuruh(change: Change): Promise<Change | null> {
+  if (change.type !== 'update_student') return change
+  const { asl_guruh, ...rest } = change.data.fields
+  const toSecret = rest.group === SECRET_GROUP
+  if (asl_guruh === undefined && !toSecret) return change
+
+  const current = (await loadStudents()).find((s) => s.row === change.data.row)
+  if (current) {
+    let asl = asl_guruh?.trim()
+    if (asl === undefined && toSecret && !current.asl_guruh && current.group && current.group !== SECRET_GROUP) {
+      asl = current.group.trim()
+    }
+    if (asl !== undefined && asl !== (current.asl_guruh || '')) await saveAslGuruh(current, asl)
+  }
+  if (!Object.keys(rest).length) return null
+  return { ...change, data: { ...change.data, fields: rest } }
+}
+
 export async function loadStudentsWithSource(): Promise<{ students: Student[]; source: 'supabase' | 'local' | 'github' }> {
   // 1. Avval Supabase'dan o'qish (eng tezkor, jonli va real vaqt ma'lumot)
   const sbData = await loadFromSupabase()
   if (sbData && sbData.length > 0) {
-    const enriched = await enrichSurveyData(sbData)
+    const enriched = await enrichAslGuruh(await enrichSurveyData(sbData))
     return { students: enriched, source: 'supabase' }
   }
 
@@ -262,7 +328,7 @@ export async function loadStudentsWithSource(): Promise<{ students: Student[]; s
     syncMode() === 'github' ? loadQueue() : Promise.resolve([]),
   ])
   const result = queue.length ? applyQueue(students, queue) : students
-  const enriched = await enrichSurveyData(result)
+  const enriched = await enrichAslGuruh(await enrichSurveyData(result))
   cachedStudents = { data: enriched, expiresAt: now + CACHE_TTL_MS }
   return { students: enriched, source: syncMode() }
 }
@@ -472,8 +538,10 @@ async function sendSupabase(change: Change): Promise<void> {
   }
 }
 
-export async function sendChange(change: Change): Promise<void> {
+export async function sendChange(incoming: Change): Promise<void> {
   invalidateCache()
+  const change = await splitAslGuruh(incoming)
+  if (!change) return
   let supabaseOk = false
   try {
     await sendSupabase(change)

@@ -5,6 +5,13 @@ export const OQUV_YILI_BOSHI = 2026
 export const ACADEMIC_LEAVE_GROUP = "Akademik ta'til olganlar"
 export const WITHDRAWN_GROUP = 'Talabalar safidan chiqarilganlar'
 
+/**
+ * Maxfiy guruh — bazaga kiritilgan, lekin darslarga kelmaydigan talabalar.
+ * Kontingentda oddiy guruh sifatida sanaladi, har bir talabaning asl guruhi
+ * (data/asl_guruhlar.json) yonida ko'rsatiladi, kontraktlarga kirmaydi.
+ */
+export const SECRET_GROUP = '26-07'
+
 /* ---------------------------------------------------------------- guruhlar */
 
 export interface GroupSetting {
@@ -25,7 +32,7 @@ const s = (kurs: number, rahbar: string, yonalish = H): GroupSetting => ({ kurs,
 /**
  * Boshlang'ich guruh sozlamalari. Portalda "Guruh sozlamalari" orqali o'zgartirilganlari
  * data/guruhlar.json da saqlanadi va applyGroupSettings() bilan shular ustiga qo'yiladi.
- * 26-07 guruhi 26.09.2026 da tugatildi (talabasi 26-03 ga o'tkazildi).
+ * 26-07 — maxfiy guruh (SECRET_GROUP), darslarga kelmaydigan talabalar uchun.
  * 2025-2026 kontingenti jadvalidagidek: 24-15, 24-16 — 2-kurs; 24-14 bitirgan (bazada yo'q).
  */
 export const DEFAULT_GROUP_SETTINGS: GroupSettings = {

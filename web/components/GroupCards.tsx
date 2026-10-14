@@ -1,8 +1,8 @@
 'use client'
 
-import { Check, Settings2, X } from 'lucide-react'
+import { Check, EyeOff, Settings2, X } from 'lucide-react'
 import { GROUP_LEADERS } from '@/lib/config'
-import { groupTitle, kursOf, selectedGroups } from '@/lib/student'
+import { groupTitle, isSecretGroup, kursOf, selectedGroups } from '@/lib/student'
 import { cx, ProgressBar } from './ui'
 
 /*
@@ -171,7 +171,14 @@ export default function GroupCards({ groups, active, onPick, onSettings }: Props
                           <Check size={13} strokeWidth={3.5} />
                         </span>
                       )}
-                      <span className={cx('mono block text-[17px] font-bold', tone.text)}>{g}</span>
+                      <span className={cx('mono flex items-center gap-1.5 text-[17px] font-bold', tone.text)}>
+                        {g}
+                        {isSecretGroup(g) && (
+                          <span className="inline-flex items-center gap-1 rounded-md border border-dashed border-amber/55 bg-amber/10 px-1.5 py-px font-sans text-[10.5px] font-bold text-amber" title="Darslarga kelmaydiganlar — kontraktlarga kirmaydi">
+                            <EyeOff size={10} /> maxfiy
+                          </span>
+                        )}
+                      </span>
                       <span className="mt-0.5 block text-[28px] leading-tight font-extrabold text-fg tabular-nums">
                         {total}<span className="ml-1 text-[12px] font-semibold text-fg-muted">nafar</span>
                       </span>

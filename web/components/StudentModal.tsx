@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { AlertTriangle, ChevronLeft, ChevronRight, FileText, Link2, Pencil, Save, Trash2, X } from 'lucide-react'
 import { YON_OPTIONS } from '@/lib/config'
-import { decodePinfl, dobFromPinfl, findDuplicates, formatPinfl, fullName, groupOptions, isAcademicLeave, isOfficialGroup, isWithdrawn, NAME_FLAGS, needsOrder, ORDER_DATE_RE } from '@/lib/student'
+import { decodePinfl, dobFromPinfl, findDuplicates, formatPinfl, fullName, groupOptions, isAcademicLeave, isOfficialGroup, isSecretGroup, isWithdrawn, NAME_FLAGS, needsOrder, ORDER_DATE_RE } from '@/lib/student'
 import { EDIT_FIELDS, type EditFields, type Student } from '@/lib/types'
 import DocImages from './DocImages'
 import MalumotnomaModal from './MalumotnomaModal'
@@ -121,10 +121,14 @@ function EditForm({ student, all, onCancel, onSave }: { student: Student; all: S
     : !ORDER_DATE_RE.test(f.buyruq_sana.trim()) ? "Buyruq sanasini KK.OO.YYYY ko'rinishida kiriting"
     : ''
 
+  // Maxfiy guruhga o'tkazilsa — asl guruh sifatida hozirgi guruhi taklif qilinadi
+  const aslDefault = (g: string, x: Record<string, string>) =>
+    isSecretGroup(g) && !x.asl_guruh && isOfficialGroup(student.group) && !isSecretGroup(student.group) ? { asl_guruh: student.group } : {}
+
   const onGroup = (g: string) => setF((x) => (needsOrder(student.group, g)
     // Yangi buyruq — eski raqam/sana qolib ketmasin (sana bugungi kun bilan to'ldiriladi)
     ? { ...x, group: g, buyruq: '', buyruq_sana: new Date().toLocaleDateString('ru-RU') }
-    : { ...x, group: g, buyruq: String(student.buyruq ?? ''), buyruq_sana: String(student.buyruq_sana ?? '') }))
+    : { ...x, group: g, buyruq: String(student.buyruq ?? ''), buyruq_sana: String(student.buyruq_sana ?? ''), ...aslDefault(g, x) }))
 
   const submit = async () => {
     if (!f.ism.trim() || orderError) return
@@ -142,6 +146,7 @@ function EditForm({ student, all, onCancel, onSave }: { student: Student; all: S
   }
 
   const groupChoices: [string, string][] = [['', 'Guruh belgilanmagan'], ...groupOptions(all)]
+  const aslChoices: [string, string][] = [['', "Ko'rsatilmagan"], ...groupOptions(all).filter(([g]) => isOfficialGroup(g) && !isSecretGroup(g))]
 
   return (
     <form className="space-y-3" onSubmit={(e) => { e.preventDefault(); void submit() }}>
@@ -174,6 +179,11 @@ function EditForm({ student, all, onCancel, onSave }: { student: Student; all: S
         <div className="grid gap-3 sm:grid-cols-2">
           <Input label="Shartnoma raqami" value={f.shnum} onChange={set('shnum')} mono placeholder="203" />
           <Choice label="Akademik guruh" value={f.group} onChange={onGroup} options={groupChoices} />
+          {isSecretGroup(f.group) && (
+            <div className="sm:col-span-2">
+              <Choice label="Bazadagi asl guruhi (maxfiy guruh uchun)" value={f.asl_guruh} onChange={set('asl_guruh')} options={aslChoices} />
+            </div>
+          )}
           <div className="sm:col-span-2"><Input label="Telefon" value={f.tel} onChange={set('tel')} placeholder="+998 90 123 45 67" /></div>
           <Input label={`Buyruq raqami${orderRequired ? ' *' : ''}`} value={f.buyruq} onChange={set('buyruq')} mono placeholder="T-40/2" highlight={orderRequired && !f.buyruq.trim()} />
           <Input label={`Buyruq sanasi${orderRequired ? ' *' : ''}`} value={f.buyruq_sana} onChange={set('buyruq_sana')} mono placeholder="02.09.2026" />
@@ -225,7 +235,8 @@ function ViewInfo({ s, onEdit, onToggleVerify, onToggleBaza }: { s: Student; onE
       </Section>
       <Section n={3} title="Shartnoma va aloqa" tone="sky">
         <Row label="Shartnoma raqami"><span className="mono text-blue-soft">#{s.shnum || '—'}</span></Row>
-        <Row label="Akademik guruh"><GroupBadge group={s.group} /></Row>
+        <Row label="Akademik guruh"><GroupBadge group={s.group} asl={s.asl_guruh} /></Row>
+        {isSecretGroup(s.group) && <Row label="Bazadagi asl guruhi"><span className="mono text-amber">{s.asl_guruh || "ko'rsatilmagan"}</span></Row>}
         {(s.buyruq || isWithdrawn(s.group) || isAcademicLeave(s.group)) && (
           <Row label="Qabul / Holat buyrug'i">
             {s.buyruq ? (
@@ -305,7 +316,7 @@ export default function StudentModal({ student: s, all, hasPrev, hasNext, onNav,
           <div className="order-last w-full min-w-0 sm:order-none sm:w-auto sm:flex-1">
             <h2 className="text-[17px] leading-snug font-extrabold text-fg sm:truncate">{fullName(s)}</h2>
             <div className="mt-0.5 flex flex-wrap items-center gap-2 text-[12px] text-fg-muted">
-              <GroupBadge group={s.group} />
+              <GroupBadge group={s.group} asl={s.asl_guruh} />
               <span className="mono">Shartnoma №{s.shnum || '—'}</span>
               {!isOfficialGroup(s.group) && <span className="text-rose">rasmiy kontingentga kirmaydi</span>}
             </div>
