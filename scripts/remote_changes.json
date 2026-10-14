@@ -245,5 +245,19 @@
     },
     "id": "chg_1791952103079_2alm9",
     "created_at": "2026-10-14T04:28:23.079Z"
+  },
+  {
+    "type": "update_student",
+    "data": {
+      "row": 179,
+      "fields": {
+        "group": "26-07"
+      },
+      "shnum": "52",
+      "pinfl": "60803048230011",
+      "ism": "xurramova sabina yuldosh qizi"
+    },
+    "id": "chg_1791952103828_0wpgq",
+    "created_at": "2026-10-14T04:28:23.828Z"
   }
 ]
