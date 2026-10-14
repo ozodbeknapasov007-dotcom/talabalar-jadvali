@@ -2847,11 +2847,67 @@ class WebServerHandler(BaseHTTPRequestHandler):
         self.send_response(200)
         self.send_header('Access-Control-Allow-Origin', '*')
         self.send_header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
-        self.send_header('Access-Control-Allow-Headers', 'Content-Type')
+        self.send_header('Access-Control-Allow-Headers', 'Content-Type, Authorization, *')
         self.end_headers()
 
     def do_GET(self):
         parsed_path = unquote(self.path.split('?')[0])
+
+        if parsed_path == '/api/mytest-roster':
+            auth_header = self.headers.get('Authorization', '')
+            token = auth_header.replace('Bearer ', '').replace('bearer ', '').strip()
+            expected_token = os.environ.get('MYTEST_ROSTER_TOKEN', 'WUjxvY_j1-5kFsS3C7QnyaiWWBpsuL8hrzdK6QTuXDI')
+            if not token or token != expected_token:
+                self.send_response(401)
+                self.send_header('Content-Type', 'application/json; charset=utf-8')
+                self.send_header('Access-Control-Allow-Origin', '*')
+                self.end_headers()
+                self.wfile.write(json.dumps({"error": "Kalit noto'g'ri"}).encode('utf-8'))
+                return
+
+            try:
+                st_path = os.path.join(BASE_DIR, 'data', 'students.json')
+                students = []
+                if os.path.exists(st_path):
+                    with open(st_path, 'r', encoding='utf-8') as f:
+                        data = json.load(f)
+                        students = data if isinstance(data, list) else data.get('students', [])
+
+                inactive_re = re.compile(r"chiqarilgan|ta'til|taʼtil|ta’til", re.I)
+                res_list = []
+                for s in students:
+                    grp = str(s.get('group', '')).strip()
+                    if not grp or inactive_re.search(grp):
+                        continue
+                    fio = clean_uz_name(s.get('fish') or f"{s.get('ism', '')} {s.get('ota', '')}".strip())
+                    if not fio:
+                        continue
+                    res_list.append({"name": fio, "group": grp})
+
+                res_list.sort(key=lambda x: (x['group'], x['name']))
+                groups = sorted(list(set(x['group'] for x in res_list)))
+
+                resp_data = {
+                    "students": res_list,
+                    "groups": groups,
+                    "count": len(res_list),
+                    "source": "local",
+                    "updatedAt": time.strftime('%Y-%m-%dT%H:%M:%S')
+                }
+                self.send_response(200)
+                self.send_header('Content-Type', 'application/json; charset=utf-8')
+                self.send_header('Access-Control-Allow-Origin', '*')
+                self.send_header('Cache-Control', 'no-store')
+                self.end_headers()
+                self.wfile.write(json.dumps(resp_data, ensure_ascii=False).encode('utf-8'))
+                return
+            except Exception as e:
+                self.send_response(502)
+                self.send_header('Content-Type', 'application/json; charset=utf-8')
+                self.send_header('Access-Control-Allow-Origin', '*')
+                self.end_headers()
+                self.wfile.write(json.dumps({"error": str(e)}).encode('utf-8'))
+                return
 
         if parsed_path in ('/kontingent_variantlari.html', '/variantlar', '/kontingent_variantlari'):
             v_html = os.path.join(BASE_DIR, 'eski_portal', 'kontingent_variantlari.html')
