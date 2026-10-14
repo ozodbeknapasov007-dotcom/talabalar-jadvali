@@ -1,8 +1,13 @@
-# Netlify (bepul tarif: oyiga 100 GB trafik). Portal — web/ papkasidagi Next.js; Netlify uni o'zi taniydi.
+# Netlify — portal web/ papkasidagi Next.js.
+# Bepul tarif (kredit): oyiga 300 kredit, har bir production deploy 15 kredit — oyiga ~20 ta deploy.
 [build]
   base = "web"
   command = "npm run build"
   publish = ".next"
+  # Faqat web/ yoki shu fayl o'zgarganda yig'iladi. Python xizmatining avtomatik commitlari
+  # (Excel, students.json, hisobotlar) qayta yig'ishni talab qilmaydi — portal ma'lumotni
+  # ishlash paytida GitHub/Supabase'dan o'qiydi. Buyruq base (web/) papkasidan ishlaydi; 0 = o'tkazib yuborish.
+  ignore = "git diff --quiet $CACHED_COMMIT_REF $COMMIT_REF -- . ../netlify.toml"
 
 [build.environment]
   NODE_VERSION = "22"
