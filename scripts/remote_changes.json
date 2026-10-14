@@ -217,5 +217,19 @@
     },
     "id": "chg_1791949652357_0prbw",
     "created_at": "2026-10-14T03:47:32.358Z"
+  },
+  {
+    "type": "update_student",
+    "data": {
+      "row": 566,
+      "fields": {
+        "group": "26-03"
+      },
+      "shnum": "331",
+      "pinfl": "62411085590063",
+      "ism": "jumayeva sabina sobir qizi"
+    },
+    "id": "chg_1791949653613_a7zpk",
+    "created_at": "2026-10-14T03:47:33.613Z"
   }
 ]
