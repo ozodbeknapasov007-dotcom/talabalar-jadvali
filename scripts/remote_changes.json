@@ -273,5 +273,19 @@
     },
     "id": "chg_1791952133256_aliax",
     "created_at": "2026-10-14T04:28:53.256Z"
+  },
+  {
+    "type": "update_student",
+    "data": {
+      "row": 79,
+      "fields": {
+        "group": "26-07"
+      },
+      "shnum": "25",
+      "pinfl": "42708915590028",
+      "ism": "Murtazayeva Kamola"
+    },
+    "id": "chg_1791952132570_3dytw",
+    "created_at": "2026-10-14T04:28:52.570Z"
   }
 ]
