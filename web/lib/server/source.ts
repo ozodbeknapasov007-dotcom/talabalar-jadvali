@@ -25,7 +25,8 @@ export type SyncMode = 'local' | 'github'
 export function syncMode(): SyncMode {
   const m = process.env.SYNC_MODE
   if (m === 'local' || m === 'github') return m
-  return process.env.VERCEL ? 'github' : 'local'
+  // Internetdagi sayt (Vercel yoki Netlify) — GitHub navbati; kompyuterda — Python xizmati
+  return process.env.VERCEL || process.env.NETLIFY || process.env.SITE_ID ? 'github' : 'local'
 }
 
 const REPO_DIR = process.env.REPO_DIR || path.resolve(process.cwd(), '..')
