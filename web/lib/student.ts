@@ -78,6 +78,14 @@ export function groupOptions(students: Student[]): [string, string][] {
   ]
 }
 
+/** Shartnoma raqamidan o'quv yili va "Sh/A" ni olib tashlash: '26/27 SH/A 15' → '15'
+ *  (2-, 3-kurslarda shunday yozilgan edi; telegram_sync_service.normalize_shnum bilan bir xil) */
+export function normalizeShnum(v: unknown): string {
+  const s = String(v ?? '').trim()
+  const m = /^\d{2}\s*\/\s*\d{2}\s*sh\s*\/\s*a\s*(\d+)$/i.exec(s)
+  return m ? m[1] : s
+}
+
 export function fullName(s: Pick<Student, 'fish' | 'ism' | 'ota'>): string {
   return (s.fish || `${s.ism || ''} ${s.ota || ''}`).trim()
 }

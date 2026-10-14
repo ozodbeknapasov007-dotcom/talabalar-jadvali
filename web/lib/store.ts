@@ -1,7 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { buildAddedStudent, fullName } from './student'
+import { buildAddedStudent, fullName, normalizeShnum } from './student'
 import { EDIT_FIELDS, type BazaStatus, type Change, type EditFields, type Student, type StudentsPayload, type VerifyStatus } from './types'
 import { supabase } from './supabase'
 
@@ -67,11 +67,16 @@ const identityOf = (s: Student): Identity => ({
   row: s.row, shnum: String(s.shnum || '').trim(), pinfl: pinOf(s), fish: fullName(s).toLowerCase(),
 })
 
-/** Server ro'yxatidagi talaba shu shaxsmi? (shartnoma raqami, JSHSHIR yoki ism bo'yicha) */
+/** Server ro'yxatidagi talaba shu shaxsmi? Avval JSHSHIR (shartnoma raqamlari turli kurslarda
+ *  takrorlanadi — raqam bo'yicha bitta talabani o'chirsa shu raqamlilarning hammasi yashirinardi),
+ *  keyin shartnoma raqami + qator, oxirida ism. */
 function isSame(s: Student, id: Identity, altShnum?: string): boolean {
-  const sh = String(s.shnum || '').trim()
-  if (id.shnum && sh) return sh === id.shnum || (!!altShnum && sh === altShnum.trim())
   if (id.pinfl && pinOf(s)) return pinOf(s) === id.pinfl
+  const sh = String(s.shnum || '').trim()
+  if (id.shnum && sh) {
+    const shOk = sh === id.shnum || (!!altShnum && sh === altShnum.trim())
+    return shOk && (s.row === id.row || fullName(s).toLowerCase() === id.fish)
+  }
   return fullName(s).toLowerCase() === id.fish
 }
 
@@ -325,6 +330,7 @@ export function useStudents() {
   const saveEdit = useCallback(async (student: Student, fields: EditFields) => {
     const clean: EditFields = {}
     for (const f of EDIT_FIELDS) if (fields[f] !== undefined) clean[f] = String(fields[f]).trim()
+    if (clean.shnum !== undefined) clean.shnum = normalizeShnum(clean.shnum)
     const key = String(student.row)
     const prev = pendingRef.current.edits[key]
     updatePending((p) => ({
@@ -426,6 +432,7 @@ export function useStudents() {
   const addStudent = useCallback(async (fields: EditFields) => {
     const clean: EditFields = {}
     for (const f of EDIT_FIELDS) if (fields[f] !== undefined) clean[f] = String(fields[f]).trim()
+    if (clean.shnum !== undefined) clean.shnum = normalizeShnum(clean.shnum)
     const cleanPinfl = (clean.pinfl || '').replace(/\s/g, '')
     const cleanFish = `${clean.ism || ''} ${clean.ota || ''}`.trim().toLowerCase()
     const cleanGroup = String(clean.group || '').trim()

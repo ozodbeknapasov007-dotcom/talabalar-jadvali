@@ -2,7 +2,7 @@ import 'server-only'
 import { mkdir, readFile, writeFile } from 'node:fs/promises'
 import path from 'node:path'
 import { applyGroupSettings, DEFAULT_GROUP_SETTINGS, sanitizeGroupSettings, SECRET_GROUP, type GroupSettings } from '@/lib/config'
-import { buildAddedStudent, fullName, isLeftGroup, lastMoveInto } from '@/lib/student'
+import { buildAddedStudent, fullName, isLeftGroup, lastMoveInto, normalizeShnum } from '@/lib/student'
 import type { Change, EditFields, GroupMove, Student } from '@/lib/types'
 import { getServiceSupabase } from '@/lib/supabase'
 import { syncStudentsToWebJurnal } from '@/lib/server/webjurnal'
@@ -180,11 +180,13 @@ function applyQueue(base: Student[], queue: Change[]): Student[] {
       const sh = String(d.shnum || '').trim()
       const p = pin(d.pinfl)
       const name = String(d.ism || d.fish || '').trim().toLowerCase()
+      // Shartnoma raqami turli kurslarda takrorlanadi — avval JSHSHIR va qator, raqam faqat yagona bo'lsa
+      const byShnum = sh && sh !== '—' && sh !== '-' ? list.filter((s) => String(s.shnum || '').trim() === sh) : []
       const hit =
-        (sh && sh !== '—' && sh !== '-' ? list.find((s) => String(s.shnum || '').trim() === sh) : undefined) ??
         (p ? list.find((s) => pin(s.pinfl) === p) : undefined) ??
-        (name ? list.find((s) => String(s.ism || '').trim().toLowerCase() === name || fullName(s).toLowerCase() === name) : undefined) ??
-        list.find((s) => s.row === Number(d.row))
+        list.find((s) => s.row === Number(d.row) && (!p || !pin(s.pinfl))) ??
+        (byShnum.length === 1 ? byShnum[0] : undefined) ??
+        (name ? list.find((s) => String(s.ism || '').trim().toLowerCase() === name || fullName(s).toLowerCase() === name) : undefined)
       if (hit) list = list.filter((s) => s !== hit)
       continue
     }
@@ -200,11 +202,15 @@ function applyQueue(base: Student[], queue: Change[]): Student[] {
       const s_sh = pin(s.shnum)
       if ((p && s_p && p !== s_p) || (sh && s_sh && s_sh !== '—' && s_sh !== '-' && sh !== s_sh)) {
         // Qator surilib qolgan! PINFL yoki shnum bo'yicha haqiqiy talabani topamiz
-        const found = list.findIndex((x) => (p && pin(x.pinfl) === p) || (sh && pin(x.shnum) === sh))
+        const found = p ? list.findIndex((x) => pin(x.pinfl) === p) : -1
+        const bySh = found === -1 && sh ? list.flatMap((x, j) => (pin(x.shnum) === sh ? [j] : [])) : []
         if (found !== -1) i = found
+        else if (bySh.length === 1) i = bySh[0]
       }
     } else if (i === -1 && (p || sh)) {
-      i = list.findIndex((x) => (p && pin(x.pinfl) === p) || (sh && pin(x.shnum) === sh))
+      i = p ? list.findIndex((x) => pin(x.pinfl) === p) : -1
+      const bySh = i === -1 && sh ? list.flatMap((x, j) => (pin(x.shnum) === sh ? [j] : [])) : []
+      if (bySh.length === 1) i = bySh[0]
     }
     if (i === -1) continue
 
@@ -580,15 +586,14 @@ async function sendSupabase(change: Change): Promise<void> {
   const sb = getServiceSupabase()
   if (change.type === 'update_student') {
     const d = change.data
-    const shnum = d.shnum
     const pinfl = d.pinfl
     const updateData: Record<string, unknown> = { ...d.fields, updated_at: new Date().toISOString() }
     if (d.fields.ism || d.fields.ota) {
       updateData.fish = `${d.fields.ism || ''} ${d.fields.ota || ''}`.trim()
     }
     let query = sb.from('students').update(updateData)
+    // Faqat JSHSHIR yoki qator: shartnoma raqami takrorlanadi va .eq('shnum') hamma mos qatorlarni o'zgartirardi
     if (pinfl) query = query.eq('pinfl', pinfl.replace(/\s/g, ''))
-    else if (shnum && shnum !== '—' && shnum !== '-') query = query.eq('shnum', shnum)
     else query = query.eq('row', d.row)
     const { error } = await query
     if (error) throw error
@@ -596,7 +601,6 @@ async function sendSupabase(change: Change): Promise<void> {
     const d = change.data
     let query = sb.from('students').update({ verified: d.status, updated_at: new Date().toISOString() })
     if (d.pinfl) query = query.eq('pinfl', d.pinfl.replace(/\s/g, ''))
-    else if (d.shnum && d.shnum !== '—' && d.shnum !== '-') query = query.eq('shnum', d.shnum)
     else query = query.eq('row', d.row)
     const { error } = await query
     if (error) throw error
@@ -604,7 +608,6 @@ async function sendSupabase(change: Change): Promise<void> {
     const d = change.data
     let query = sb.from('students').update({ baza: d.status, updated_at: new Date().toISOString() })
     if (d.pinfl) query = query.eq('pinfl', d.pinfl.replace(/\s/g, ''))
-    else if (d.shnum && d.shnum !== '—' && d.shnum !== '-') query = query.eq('shnum', d.shnum)
     else query = query.eq('row', d.row)
     const { error } = await query
     if (error) throw error
@@ -612,7 +615,6 @@ async function sendSupabase(change: Change): Promise<void> {
     const d = change.data
     let query = sb.from('students').delete()
     if (d.pinfl) query = query.eq('pinfl', d.pinfl.replace(/\s/g, ''))
-    else if (d.shnum && d.shnum !== '—' && d.shnum !== '-') query = query.eq('shnum', d.shnum)
     else query = query.eq('row', d.row)
     const { error } = await query
     if (error) throw error
@@ -657,6 +659,11 @@ async function sendSupabase(change: Change): Promise<void> {
 
 export async function sendChange(incoming: Change): Promise<void> {
   invalidateCache()
+  // "26/27 SH/A 15" → "15" (portal, bot va boshqa mijozlardan kelgan har qanday yozuv)
+  if ((incoming.type === 'update_student' || incoming.type === 'add_student')) {
+    const f = incoming.type === 'update_student' ? incoming.data.fields : incoming.data
+    if (f.shnum !== undefined) f.shnum = normalizeShnum(f.shnum)
+  }
   // Tarix tahrirdan OLDIN yoziladi — hozirgi (eski) guruh "qayerdan" bo'lib qoladi
   const withHistory = await splitGroupHistory(incoming)
   const change = withHistory && await splitAslGuruh(withHistory)

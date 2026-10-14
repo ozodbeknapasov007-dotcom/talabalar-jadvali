@@ -67,6 +67,15 @@ def clean_w(w):
     w = w.replace("abdu", "abdi").replace("zaxro", "zahro").replace("uzoq", "uzak")
     return w
 
+
+def name_skeleton(w):
+    """Familiyaning undosh skeleti — lotin yozuvidagi farqlarga chidamli:
+    Arziqulova = Arzikulova, Xasanova = Hasanova, To'xtayeva = Tuxtayeva, Izzatulloyeva = Izatullayeva,
+    Yo'ldosheva = Yuldosheva, Usmonova = Usmanova (lekin Yusupova ≠ Choriyeva)."""
+    w = clean_w(w).replace('x', 'h').replace('q', 'k')
+    w = re.sub(r'[aeiou]', '', w)
+    return re.sub(r'(.)\1+', r'\1', w)
+
 all_docx_files = []
 files_dir = os.path.join(BASE_DIR, 'hujjatlar', 'shartnomalar')
 if os.path.exists(files_dir):
@@ -101,15 +110,18 @@ def find_student_doc_file(shnum, ism, fish, group=""):
 
     name_words = [clean_w(w) for w in ism.split() if len(clean_w(w)) >= 3]
 
-    # 1. Shartnoma raqami VA kamida bitta ism/familiya mos kelishi SHART!
-    if shnum and shnum.isdigit():
+    # 1. Shartnoma raqami VA FAMILIYA mos kelishi SHART! Raqamlar turli kurslarda takrorlanadi —
+    #    faqat ism mos kelganda boshqa talabaning fayli olinardi (Yusupova Dilnura 98 ≠ Choriyeva Dilnura 98)
+    if shnum and shnum.isdigit() and name_words:
         target_num = int(shnum)
+        surname = name_words[0]
+        sur_skel = name_skeleton(surname)
         for f in all_docx_files:
             f_clean_num = re.sub(r'\(\d+\)', '', f)
             nums = re.findall(r'\b\d{1,4}\b', f_clean_num)
             if nums and any(int(n) == target_num for n in nums):
                 f_tokens = [clean_w(w) for w in re.split(r'[^a-zA-Z0-9]+', clean_w(f.lower())) if clean_w(w)]
-                if name_words and any(nw in f_tokens or (nw.rstrip('va').rstrip('a') in [t.rstrip('va').rstrip('a') for t in f_tokens] and len(nw) >= 5) for nw in name_words):
+                if surname in f_tokens or (len(sur_skel) >= 3 and any(name_skeleton(t) == sur_skel for t in f_tokens)):
                     return f
 
     # 2. To'liq Familiya va Ism bo'yicha qidirish (ikkala so'z ham aniq bo'lishi shart!)
@@ -136,12 +148,29 @@ def find_student_doc_file(shnum, ism, fish, group=""):
 
     return ""
 
+_SHNUM_PREFIX_RE = re.compile(r'^\s*\d{2}\s*/\s*\d{2}\s*sh\s*/\s*a\s*(\d+)\s*$', re.IGNORECASE)
+
+
+def normalize_shnum(v):
+    """'26/27 SH/A 15' -> '15' (telegram_sync_service.normalize_shnum bilan bir xil)"""
+    s_ = str(v or '').strip()
+    m_ = _SHNUM_PREFIX_RE.match(s_)
+    return m_.group(1) if m_ else s_
+
+
+# Turli kurslarda bir xil shartnoma raqamlari bor — "sh_<raqam>" tasdiq kaliti faqat yagona raqamga ishlatiladi
+_shnum_count = {}
+for _r in range(2, ws.max_row + 1):
+    _k = normalize_shnum(ws.cell(row=_r, column=5).value)
+    if _k:
+        _shnum_count[_k] = _shnum_count.get(_k, 0) + 1
+
 for r in range(2, ws.max_row + 1):
     tr = ws.cell(row=r, column=1).value
     ism = str(ws.cell(row=r, column=2).value or '').strip()
     yon = str(ws.cell(row=r, column=3).value or '').strip()
     status_str = str(ws.cell(row=r, column=4).value or '').strip()
-    shnum = str(ws.cell(row=r, column=5).value or '').strip()
+    shnum = normalize_shnum(ws.cell(row=r, column=5).value)
     sana_val = str(ws.cell(row=r, column=6).value or '').strip()
     sana_clean = sana_val.split()[0] if sana_val else ''
     ota = str(ws.cell(row=r, column=7).value or '').strip()
@@ -173,7 +202,7 @@ for r in range(2, ws.max_row + 1):
     
     # JSON keshdagi eng so'nggi tasdiq holati ustuvor hisoblanadi
     r_key = str(r)
-    sh_key = f"sh_{shnum}" if shnum else None
+    sh_key = f"sh_{shnum}" if shnum and _shnum_count.get(shnum) == 1 else None
     pin_key = f"pinfl_{pinfl}" if pinfl else None
     if pin_key and pin_key in verif_map:
         verified_status = verif_map[pin_key]
@@ -186,7 +215,7 @@ for r in range(2, ws.max_row + 1):
     raw_baza = str(ws.cell(row=r, column=28).value or 'KIRITILDI').strip().upper()
     baza_status = 'KIRITILMAGAN' if ('MAGAN' in raw_baza or 'YOQ' in raw_baza or "YO'Q" in raw_baza) else 'KIRITILDI'
     b_r_key = f"baza_{r}"
-    b_sh_key = f"baza_sh_{shnum}" if shnum else None
+    b_sh_key = f"baza_sh_{shnum}" if shnum and _shnum_count.get(shnum) == 1 else None
     b_pin_key = f"baza_pinfl_{pinfl}" if pinfl else None
     if b_pin_key and b_pin_key in verif_map:
         baza_status = verif_map[b_pin_key]

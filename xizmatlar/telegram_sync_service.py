@@ -287,48 +287,78 @@ def backup_excel_atomic():
         print(f"[BACKUP] Zaxira olishda xato: {e}")
 
 
-def find_student_row_in_sheet(ws, r_idx, pinfl=None, shnum=None, ism=None):
+_SHNUM_PREFIX_RE = re.compile(r'^\s*\d{2}\s*/\s*\d{2}\s*sh\s*/\s*a\s*(\d+)\s*$', re.IGNORECASE)
+
+
+def normalize_shnum(v):
+    """Shartnoma raqamidan o'quv yili va "Sh/A" ni olib tashlaydi: '26/27 SH/A 15' -> '15'.
+    2- va 3-kurslarda shunday yozilgan edi (2026-10-14 dan faqat raqam)."""
+    s_ = str(v or '').strip()
+    m = _SHNUM_PREFIX_RE.match(s_)
+    return m.group(1) if m else s_
+
+
+def find_student_row_in_sheet(ws, r_idx, pinfl=None, shnum=None, ism=None, strict=False):
     """
-    Qator indeksi (r_idx) to'g'riligini PINFL yoki Shartnoma raqami orqali tekshiradi.
-    Agar qator surilgan bo'lsa, butun jadvaldan qidirib haqiqiy qatorni topadi.
+    Talabaning Excel qatorini topadi. Tartib: JSHSHIR -> berilgan qator -> shartnoma raqami
+    (faqat jadvalda YAGONA bo'lsa — turli kurslarda bir xil raqamlar bor) -> ism.
+    strict=True (o'chirishda) — hech narsa mos kelmasa None qaytaradi, taxminiy qator emas.
     """
     pinfl_c = str(pinfl or '').replace(' ', '').strip()
-    sh_c = str(shnum or '').strip()
+    sh_c = normalize_shnum(shnum)
     if sh_c in ('—', '-'):
         sh_c = ''
     ism_c = str(ism or '').strip().lower()
 
-    # 1. Avval berilgan r_idx ni tekshirish
+    def cell_pinfl(r):
+        return str(ws.cell(row=r, column=11).value or '').replace(' ', '').strip()
+
+    def cell_shnum(r):
+        return normalize_shnum(ws.cell(row=r, column=5).value)
+
+    def name_ok(r):
+        if not ism_c:
+            return False
+        c2 = str(ws.cell(row=r, column=2).value or '').strip().lower()
+        c8 = str(ws.cell(row=r, column=8).value or '').strip().lower()
+        return c2 == ism_c or c8 == ism_c or (len(ism_c) > 6 and ism_c in c8) or (len(c2) > 6 and c2 in ism_c)
+
+    rows = range(2, ws.max_row + 1)
+
+    # 1. Berilgan qator — JSHSHIR bo'lsa u hal qiladi (shartnoma raqami takrorlanishi mumkin)
     if 2 <= r_idx <= ws.max_row:
-        cell_pinfl = str(ws.cell(row=r_idx, column=11).value or '').replace(' ', '').strip()
-        cell_shnum = str(ws.cell(row=r_idx, column=5).value or '').strip()
-        cell_ism = str(ws.cell(row=r_idx, column=2).value or '').strip().lower()
-        cell_fish = str(ws.cell(row=r_idx, column=8).value or '').strip().lower()
-        if (pinfl_c and cell_pinfl == pinfl_c) or (sh_c and cell_shnum == sh_c):
+        cp = cell_pinfl(r_idx)
+        if pinfl_c and cp:
+            if cp == pinfl_c:
+                return r_idx
+        elif sh_c and cell_shnum(r_idx) == sh_c:
             return r_idx
-        if not pinfl_c and not sh_c and ism_c and (ism_c in cell_ism or ism_c in cell_fish or cell_ism in ism_c):
+        elif not pinfl_c and not sh_c and name_ok(r_idx):
             return r_idx
 
-    # 2. Agar r_idx to'g'ri kelmasa yoki surilgan bo'lsa, jadval bo'ylab qidirish
-    if sh_c:
-        for r in range(2, ws.max_row + 1):
-            if str(ws.cell(row=r, column=5).value or '').strip() == sh_c:
-                return r
-
+    # 2. JSHSHIR bo'yicha butun jadval
     if pinfl_c:
-        for r in range(2, ws.max_row + 1):
-            if str(ws.cell(row=r, column=11).value or '').replace(' ', '').strip() == pinfl_c:
+        for r in rows:
+            if cell_pinfl(r) == pinfl_c:
                 return r
 
+    # 3. Shartnoma raqami — faqat bitta qatorda bo'lsa; bir nechta bo'lsa ism bilan ajratiladi
+    if sh_c:
+        hits = [r for r in rows if cell_shnum(r) == sh_c]
+        if len(hits) == 1:
+            return hits[0]
+        named = [r for r in hits if name_ok(r)]
+        if len(named) == 1:
+            return named[0]
+
+    # 4. Ism bo'yicha
     if ism_c and len(ism_c) > 4:
-        for r in range(2, ws.max_row + 1):
-            c2 = str(ws.cell(row=r, column=2).value or '').strip().lower()
-            c8 = str(ws.cell(row=r, column=8).value or '').strip().lower()
-            if c2 == ism_c or c8 == ism_c or (len(ism_c) > 6 and ism_c in c8):
+        for r in rows:
+            if name_ok(r):
                 return r
 
-    # 3. Agar hech narsa topilmasa, r_idx chegarada bo'lsa uni qaytaramiz
-    if 2 <= r_idx <= ws.max_row:
+    # 5. Hech narsa topilmadi — tahrirda berilgan qator (eski xatti-harakat), o'chirishda hech narsa
+    if not strict and 2 <= r_idx <= ws.max_row:
         return r_idx
     return None
 
@@ -428,7 +458,7 @@ def process_remote_github_changes():
                         # Lokal /api/update_student bilan bir xil: shartnoma
                         # raqami va telefon ham yoziladi (avval tashlab ketilardi)
                         if 'shnum' in fields:
-                            ws.cell(row=r_idx, column=5, value=str(fields['shnum']).strip())
+                            ws.cell(row=r_idx, column=5, value=normalize_shnum(fields['shnum']))
                         if 'tel' in fields:
                             ws.cell(row=r_idx, column=20, value=str(fields['tel']).strip())
                         if 'group' in fields:
@@ -475,7 +505,7 @@ def process_remote_github_changes():
                     ws.cell(row=nr, column=2, value=s_ism)
                     ws.cell(row=nr, column=3, value=data.get('yon', 'Hamshiralik ishi - 3 yillik'))
                     ws.cell(row=nr, column=4, value="To'lov qildi")
-                    ws.cell(row=nr, column=5, value=data.get('shnum', ''))
+                    ws.cell(row=nr, column=5, value=normalize_shnum(data.get('shnum', '')))
                     ws.cell(row=nr, column=6, value=time.strftime("%d.%m.%Y"))
                     ws.cell(row=nr, column=7, value=s_ota)
                     ws.cell(row=nr, column=8, value=s_fish)
@@ -497,31 +527,11 @@ def process_remote_github_changes():
                     sync_to_webjurnal_bg(data.get('group', '26-02'), [s_fish])
 
                 elif chg_type == 'delete_student':
-                    target_row = None
-                    sh_clean = str(data.get('shnum', '')).strip()
-                    pinfl_clean = str(data.get('pinfl', '')).replace(' ', '').strip()
-                    ism_clean = str(data.get('ism', '') or data.get('fish', '')).strip().lower()
-                    r_idx = int(data.get('row', 0))
-
-                    if sh_clean and sh_clean != '—' and sh_clean != '-':
-                        for r in range(2, ws.max_row + 1):
-                            if str(ws.cell(row=r, column=5).value or '').strip() == sh_clean:
-                                target_row = r
-                                break
-                    if not target_row and pinfl_clean:
-                        for r in range(2, ws.max_row + 1):
-                            if str(ws.cell(row=r, column=11).value or '').replace(' ', '').strip() == pinfl_clean:
-                                target_row = r
-                                break
-                    if not target_row and ism_clean:
-                        for r in range(2, ws.max_row + 1):
-                            c2 = str(ws.cell(row=r, column=2).value or '').strip().lower()
-                            c8 = str(ws.cell(row=r, column=8).value or '').strip().lower()
-                            if c2 == ism_clean or c8 == ism_clean or (len(ism_clean) > 6 and ism_clean in c8) or (len(c2) > 6 and c2 in ism_clean):
-                                target_row = r
-                                break
-                    if not target_row and 2 <= r_idx <= ws.max_row:
-                        target_row = r_idx
+                    # Shartnoma raqami takrorlanishi mumkin — avval JSHSHIR va qator, noaniq bo'lsa o'chirilmaydi
+                    target_row = find_student_row_in_sheet(
+                        ws, int(data.get('row', 0) or 0),
+                        pinfl=data.get('pinfl'), shnum=data.get('shnum'),
+                        ism=data.get('ism') or data.get('fish'), strict=True)
 
                     if target_row and 2 <= target_row <= ws.max_row:
                         del_sh = str(ws.cell(row=target_row, column=5).value or '').strip()
@@ -1651,20 +1661,34 @@ def sync_students_json_atomic(action, data):
             pinfl = str(data.get('pinfl', '') or '').replace(' ', '').strip()
             name = str(data.get('ism', '') or '').strip().lower()
 
+            def pin_of(s):
+                return str(s.get('pinfl', '') or '').replace(' ', '').strip()
+
+            def pick_index():
+                """Bitta talaba: JSHSHIR -> qator -> yagona shartnoma raqami -> ism (raqamlar takrorlanadi)"""
+                if pinfl:
+                    for i, s in enumerate(students):
+                        if pin_of(s) == pinfl:
+                            return i
+                if row:
+                    for i, s in enumerate(students):
+                        if int(s.get('row', 0) or 0) == row and (not pinfl or not pin_of(s) or pin_of(s) == pinfl):
+                            return i
+                sh_n = normalize_shnum(shnum)
+                if sh_n and sh_n not in ('—', '-'):
+                    hits = [i for i, s in enumerate(students) if normalize_shnum(s.get('shnum')) == sh_n]
+                    if len(hits) == 1:
+                        return hits[0]
+                if name:
+                    for i, s in enumerate(students):
+                        if str(s.get('ism', '') or '').strip().lower() == name or str(s.get('fish', '') or '').strip().lower() == name:
+                            return i
+                return None
+
+            idx = pick_index()
+
             def match(s):
-                if row and int(s.get('row', 0)) == row:
-                    return True
-                s_sh = str(s.get('shnum', '') or '').strip()
-                if shnum and s_sh and s_sh == shnum:
-                    return True
-                s_pin = str(s.get('pinfl', '') or '').replace(' ', '').strip()
-                if pinfl and s_pin and s_pin == pinfl:
-                    return True
-                s_name = str(s.get('ism', '') or '').strip().lower()
-                s_fish = str(s.get('fish', '') or '').strip().lower()
-                if name and (s_name == name or s_fish == name):
-                    return True
-                return False
+                return idx is not None and s is students[idx]
 
             if action == 'delete':
                 students = [s for s in students if not match(s)]
@@ -2384,7 +2408,7 @@ def save_manual_students(students_list):
         
         ota = str(st.get('ota', '')).strip()
         fish = f"{ism} {ota}".strip() if ota else ism
-        shnum = str(st.get('shnum', '')).strip()
+        shnum = normalize_shnum(st.get('shnum', ''))
         pass_val = str(st.get('pass_val', '')).strip().upper()
         pinfl = str(st.get('pinfl', '')).strip()
         dob = str(st.get('dob', '')).strip()
@@ -3470,26 +3494,8 @@ Aniq JSON formatda qaytar:
                 wb = openpyxl.load_workbook(os.path.join(BASE_DIR, 'data', 'Talabalar_Toliq_Royxati.xlsx'))
                 ws = wb.active
 
-                target_row = None
-                if sh_clean and sh_clean != '—' and sh_clean != '-':
-                    for r in range(2, ws.max_row + 1):
-                        if str(ws.cell(row=r, column=5).value or '').strip() == sh_clean:
-                            target_row = r
-                            break
-                if not target_row and pinfl_clean:
-                    for r in range(2, ws.max_row + 1):
-                        if str(ws.cell(row=r, column=11).value or '').replace(' ', '').strip() == pinfl_clean:
-                            target_row = r
-                            break
-                if not target_row and ism_clean:
-                    for r in range(2, ws.max_row + 1):
-                        c2 = str(ws.cell(row=r, column=2).value or '').strip().lower()
-                        c8 = str(ws.cell(row=r, column=8).value or '').strip().lower()
-                        if c2 == ism_clean or c8 == ism_clean or (len(ism_clean) > 6 and ism_clean in c8) or (len(c2) > 6 and c2 in ism_clean):
-                            target_row = r
-                            break
-                if not target_row and 2 <= row_idx <= ws.max_row:
-                    target_row = row_idx
+                # Shartnoma raqami takrorlanishi mumkin — avval JSHSHIR va qator, noaniq bo'lsa o'chirilmaydi
+                target_row = find_student_row_in_sheet(ws, row_idx, pinfl=pinfl_clean, shnum=sh_clean, ism=ism_clean, strict=True)
 
                 if not target_row or target_row < 2 or target_row > ws.max_row:
                     self.send_response(404)
@@ -3612,7 +3618,9 @@ Aniq JSON formatda qaytar:
                     cur_ota = ota if ota is not None else str(ws.cell(row=row_idx, column=7).value or '')
                     ws.cell(row=row_idx, column=8, value=f"{cur_ism} {cur_ota}".strip())
 
-                    if shnum is not None: ws.cell(row=row_idx, column=5, value=shnum)
+                    if shnum is not None:
+                        shnum = normalize_shnum(shnum)
+                        ws.cell(row=row_idx, column=5, value=shnum)
 
                     if pv is not None: ws.cell(row=row_idx, column=10, value=pv)
                     if pinfl is not None: ws.cell(row=row_idx, column=11, value=pinfl)
@@ -3871,7 +3879,7 @@ Aniq JSON formatda qaytar:
                     return
 
                 # Shartnoma raqami avtomatik qo'yilmaydi — faqat kiritilgan bo'lsagina saqlanadi
-                shnum = shnum.strip() if shnum else ""
+                shnum = normalize_shnum(shnum)
 
                 new_row = ws.max_row + 1
                 tr_num = new_row - 1
@@ -5018,7 +5026,7 @@ def update_student_data(st):
     
     ws.cell(row=target_row, column=2, value=ism)
     ws.cell(row=target_row, column=3, value=yonalis)
-    if shnum: ws.cell(row=target_row, column=5, value=shnum)
+    if shnum: ws.cell(row=target_row, column=5, value=normalize_shnum(shnum))
     ws.cell(row=target_row, column=7, value=ota)
     ws.cell(row=target_row, column=8, value=fish)
     # 9-ustun (Passport bo'yicha F.I.SH) — bu yerda yozilmaydi,
@@ -5050,21 +5058,7 @@ def delete_student_data(shnum, ism):
     wb = openpyxl.load_workbook(EXCEL_PATH)
     ws = wb.active
     
-    target_row = None
-    sh_clean = str(shnum or '').strip()
-    ism_clean = str(ism or '').strip().lower()
-    
-    if sh_clean:
-        for r in range(2, ws.max_row + 1):
-            if str(ws.cell(row=r, column=5).value or '').strip() == sh_clean:
-                target_row = r
-                break
-    if not target_row and ism_clean:
-        for r in range(2, ws.max_row + 1):
-            if str(ws.cell(row=r, column=2).value or '').strip().lower() == ism_clean:
-                target_row = r
-                break
-                
+    target_row = find_student_row_in_sheet(ws, 0, shnum=shnum, ism=ism, strict=True)
     if not target_row:
         return False
         

@@ -1,11 +1,11 @@
 {
-  "updated_at": "2026-10-14 09:47:04",
+  "updated_at": "2026-10-14 21:28:11",
   "total_students": 563,
   "students": [
     {
       "row": 238,
       "tr": 1,
-      "shnum": "26/27 SH/A 216",
+      "shnum": "216",
       "sana": "",
       "ism": "Abdurahmonova Zebo",
       "ota": "Tolibovna",
@@ -37,7 +37,7 @@
     {
       "row": 239,
       "tr": 2,
-      "shnum": "26/27 SH/A 33",
+      "shnum": "33",
       "sana": "",
       "ism": "Amirova Shodiyona",
       "ota": "Xasan qizi",
@@ -133,7 +133,7 @@
     {
       "row": 253,
       "tr": 5,
-      "shnum": "26/27 Sh/A 220",
+      "shnum": "220",
       "sana": "",
       "ism": "Ibodullayeva Madina",
       "ota": "Baxtiyor qizi",
@@ -165,7 +165,7 @@
     {
       "row": 256,
       "tr": 6,
-      "shnum": "25/26 SH/A57",
+      "shnum": "57",
       "sana": "",
       "ism": "Isomova Durdona",
       "ota": "Akram qizi",
@@ -325,7 +325,7 @@
     {
       "row": 271,
       "tr": 11,
-      "shnum": "26/27 SH/A 226",
+      "shnum": "226",
       "sana": "",
       "ism": "Muratova Barno",
       "ota": "Jobur qizi",
@@ -613,7 +613,7 @@
     {
       "row": 294,
       "tr": 20,
-      "shnum": "26/27 sh/a 235",
+      "shnum": "235",
       "sana": "",
       "ism": "Raxmatullayev Laziz",
       "ota": "Luqmon o'g'li",
@@ -741,7 +741,7 @@
     {
       "row": 301,
       "tr": 24,
-      "shnum": "26/27 Sh/A 239",
+      "shnum": "239",
       "sana": "",
       "ism": "Shodiyev Ikromjon",
       "ota": "Eshpo'lat o'g'li",
@@ -805,7 +805,7 @@
     {
       "row": 306,
       "tr": 26,
-      "shnum": "26/27 SH/A 241",
+      "shnum": "241",
       "sana": "",
       "ism": "Turayeva Manzura",
       "ota": "Yorqin qizi",
@@ -933,7 +933,7 @@
     {
       "row": 252,
       "tr": 30,
-      "shnum": "25/26 SH/A 33",
+      "shnum": "33",
       "sana": "",
       "ism": "Husanova Rayxona",
       "ota": "Husan qizi",
@@ -1157,7 +1157,7 @@
     {
       "row": 273,
       "tr": 37,
-      "shnum": "26/27 SH/A252",
+      "shnum": "252",
       "sana": "",
       "ism": "Muxtorova Dilobar",
       "ota": "Alisher qizi",
@@ -1381,7 +1381,7 @@
     {
       "row": 293,
       "tr": 44,
-      "shnum": "26/27 SH/A 259",
+      "shnum": "259",
       "sana": "",
       "ism": "Raxmatova Shaxlo",
       "ota": "Xolbobo qizi",
@@ -1477,7 +1477,7 @@
     {
       "row": 302,
       "tr": 47,
-      "shnum": "24/25 SH/A 41",
+      "shnum": "41",
       "sana": "",
       "ism": "Shoimova Laziza",
       "ota": "Shavkat qizi",
@@ -1637,7 +1637,7 @@
     {
       "row": 237,
       "tr": 52,
-      "shnum": "26/27 Sh/A 268",
+      "shnum": "268",
       "sana": "",
       "ism": "Abdullayeva Jasmina",
       "ota": "Xolbotir qizi",
@@ -1669,7 +1669,7 @@
     {
       "row": 240,
       "tr": 53,
-      "shnum": "26/27 SH/A269",
+      "shnum": "269",
       "sana": "",
       "ism": "Arziqulova Zahro",
       "ota": "Azamat qizi",
@@ -1765,7 +1765,7 @@
     {
       "row": 245,
       "tr": 56,
-      "shnum": "25/26 sh/a 6",
+      "shnum": "6",
       "sana": "",
       "ism": "Boyeva Muxlisa",
       "ota": "Qurbonali qizi",
@@ -1925,7 +1925,7 @@
     {
       "row": 254,
       "tr": 61,
-      "shnum": "26/27 sh/a 277",
+      "shnum": "277",
       "sana": "",
       "ism": "Iskandarova Lobar",
       "ota": "Tura qizi",
@@ -2149,7 +2149,7 @@
     {
       "row": 274,
       "tr": 68,
-      "shnum": "26/27 SH/A 285",
+      "shnum": "285",
       "sana": "",
       "ism": "Nabiyeva Zebiniso",
       "ota": "Abdurahmonovna",
@@ -2181,7 +2181,7 @@
     {
       "row": 275,
       "tr": 69,
-      "shnum": "26/27 SH/A 285",
+      "shnum": "285",
       "sana": "",
       "ism": "Nabiyeva Zebiniso",
       "ota": "Soyibjon qizi",
@@ -2213,7 +2213,7 @@
     {
       "row": 277,
       "tr": 70,
-      "shnum": "26/27 SH/A 286",
+      "shnum": "286",
       "sana": "",
       "ism": "Nomozova Charos",
       "ota": "Shog'dor qizi",
@@ -2277,7 +2277,7 @@
     {
       "row": 289,
       "tr": 72,
-      "shnum": "26/27 SH/A 288",
+      "shnum": "288",
       "sana": "",
       "ism": "Qurbonova Xolida",
       "ota": "Boynazar qizi",
@@ -2437,7 +2437,7 @@
     {
       "row": 312,
       "tr": 77,
-      "shnum": "25/26 SH/A 286",
+      "shnum": "286",
       "sana": "",
       "ism": "Buxorova Farangiz",
       "ota": "Tufli qizi",
@@ -2597,7 +2597,7 @@
     {
       "row": 316,
       "tr": 82,
-      "shnum": "25/26 SH/A 506",
+      "shnum": "506",
       "sana": "",
       "ism": "Mirzayeva Sevara",
       "ota": "Ne'mat qizi",
@@ -2693,7 +2693,7 @@
     {
       "row": 319,
       "tr": 85,
-      "shnum": "25/26 Sh/A509",
+      "shnum": "509",
       "sana": "",
       "ism": "Pulatova Zuhra",
       "ota": "Narzullo qizi",
@@ -2757,7 +2757,7 @@
     {
       "row": 562,
       "tr": 87,
-      "shnum": "25/26 SH/A 511",
+      "shnum": "511",
       "sana": "30.09.2026",
       "ism": "Rashidova Shaxzoda",
       "ota": "Suyun qizi",
@@ -3077,7 +3077,7 @@
     {
       "row": 330,
       "tr": 97,
-      "shnum": "25/26 SH/A 520",
+      "shnum": "520",
       "sana": "",
       "ism": "Yusupova Oygul",
       "ota": "Qurbonmurodovna",
@@ -3237,7 +3237,7 @@
     {
       "row": 335,
       "tr": 102,
-      "shnum": "25/26 sh/a 186",
+      "shnum": "186",
       "sana": "",
       "ism": "Boltayeva Shaxlo",
       "ota": "Faxriddin qizi",
@@ -3301,7 +3301,7 @@
     {
       "row": 337,
       "tr": 104,
-      "shnum": "25/26 Sh/A 116",
+      "shnum": "116",
       "sana": "",
       "ism": "Ibodullayeva Latofat",
       "ota": "Sayit qizi",
@@ -3653,7 +3653,7 @@
     {
       "row": 348,
       "tr": 115,
-      "shnum": "26/27 Sh/A 327",
+      "shnum": "327",
       "sana": "",
       "ism": "Sattorova Sevinch",
       "ota": "Otabek qizi",
@@ -4165,7 +4165,7 @@
     {
       "row": 363,
       "tr": 131,
-      "shnum": "26/27 SH/A 15",
+      "shnum": "15",
       "sana": "",
       "ism": "Qurbonaliyeva Nargiza",
       "ota": "Qahramon qizi",
@@ -4229,7 +4229,7 @@
     {
       "row": 365,
       "tr": 133,
-      "shnum": "26/27 SH/A 10",
+      "shnum": "10",
       "sana": "",
       "ism": "Salomova Jasmina",
       "ota": "Azamat qizi",
@@ -4421,7 +4421,7 @@
     {
       "row": 371,
       "tr": 139,
-      "shnum": "25/26 SH/A84",
+      "shnum": "84",
       "sana": "",
       "ism": "Xalilova Zuhra",
       "ota": "Faxriddin qizi",
@@ -4581,7 +4581,7 @@
     {
       "row": 376,
       "tr": 144,
-      "shnum": "26/27 SH/A 26",
+      "shnum": "26",
       "sana": "",
       "ism": "Abdullayeva Dildora",
       "ota": "A'zam qizi",
@@ -4645,7 +4645,7 @@
     {
       "row": 378,
       "tr": 146,
-      "shnum": "26/27 SH/A 28",
+      "shnum": "28",
       "sana": "",
       "ism": "Baratova Mahzuna",
       "ota": "Hikmatullo qizi",
@@ -4709,7 +4709,7 @@
     {
       "row": 380,
       "tr": 148,
-      "shnum": "25/26 Sh/A 107",
+      "shnum": "107",
       "sana": "",
       "ism": "Ilhomova Gulasal",
       "ota": "Nodir qizi",
@@ -4965,7 +4965,7 @@
     {
       "row": 388,
       "tr": 156,
-      "shnum": "26/27 SH/A40",
+      "shnum": "40",
       "sana": "",
       "ism": "Shamsiddinova Fotima",
       "ota": "Ramziddin qizi",
@@ -5207,7 +5207,7 @@
       "doc_tur": "Umumiy o'rta maktab",
       "yil": "2025",
       "tel": "+998 77 389-36-66 / +998 60 609-07-57 (Otasi / Onasi)",
-      "doc_file": "",
+      "doc_file": "Zaropova Sitora  226.docx",
       "status": "full",
       "pass_fish": "",
       "cert_fish": "",
@@ -5285,7 +5285,7 @@
     {
       "row": 398,
       "tr": 166,
-      "shnum": "25/26 Sh/A 140",
+      "shnum": "140",
       "sana": "",
       "ism": "Bozorova Marjona",
       "ota": "Sheraliyevna",
@@ -5317,7 +5317,7 @@
     {
       "row": 399,
       "tr": 167,
-      "shnum": "25/26 SH/A149",
+      "shnum": "149",
       "sana": "",
       "ism": "Djalolova Muslima",
       "ota": "Hamzaxon qizi",
@@ -5477,7 +5477,7 @@
     {
       "row": 404,
       "tr": 172,
-      "shnum": "25/26 Sh/A 142",
+      "shnum": "142",
       "sana": "",
       "ism": "Isamova Mohimbegim",
       "ota": "Mansur qizi",
@@ -5509,7 +5509,7 @@
     {
       "row": 405,
       "tr": 173,
-      "shnum": "25/26 SH/A150",
+      "shnum": "150",
       "sana": "",
       "ism": "Mamadiyeva Afruza",
       "ota": "Muhiddin qizi",
@@ -5765,7 +5765,7 @@
     {
       "row": 414,
       "tr": 181,
-      "shnum": "26/27 SH/A66",
+      "shnum": "66",
       "sana": "",
       "ism": "Tojiddinov Idrisbek",
       "ota": "Ozod o'g'li",
@@ -6021,7 +6021,7 @@
     {
       "row": 423,
       "tr": 189,
-      "shnum": "26/27 SH/A 74",
+      "shnum": "74",
       "sana": "",
       "ism": "Aliyeva Shahro'za",
       "ota": "Nishon qizi",
@@ -6117,7 +6117,7 @@
     {
       "row": 426,
       "tr": 192,
-      "shnum": "26/27 SH/A 76",
+      "shnum": "76",
       "sana": "",
       "ism": "Bekmirzayeva Shahrizoda",
       "ota": "Zafar qizi",
@@ -6181,7 +6181,7 @@
     {
       "row": 428,
       "tr": 194,
-      "shnum": "26/27 sh/a 78",
+      "shnum": "78",
       "sana": "",
       "ism": "Erkinova Zahro",
       "ota": "Elyorjon qizi",
@@ -6213,7 +6213,7 @@
     {
       "row": 429,
       "tr": 195,
-      "shnum": "26/27 Sh/A79",
+      "shnum": "79",
       "sana": "",
       "ism": "Eshqobilova Dilbar",
       "ota": "Ziyodulla qizi",
@@ -6309,7 +6309,7 @@
     {
       "row": 432,
       "tr": 198,
-      "shnum": "25/26 sh/a 385",
+      "shnum": "385",
       "sana": "",
       "ism": "Jurayeva Munisa",
       "ota": "Abduvoxid qizi",
@@ -6437,7 +6437,7 @@
     {
       "row": 436,
       "tr": 202,
-      "shnum": "25/26 Sh/A 159",
+      "shnum": "159",
       "sana": "",
       "ism": "Muradova Oygul",
       "ota": "Gulamovna",
@@ -6469,7 +6469,7 @@
     {
       "row": 437,
       "tr": 203,
-      "shnum": "25/26 SH/A 177",
+      "shnum": "177",
       "sana": "",
       "ism": "Muxammedova E'zoza",
       "ota": "Sodiq qizi",
@@ -6501,7 +6501,7 @@
     {
       "row": 556,
       "tr": 204,
-      "shnum": "25/26 SH/A 372",
+      "shnum": "372",
       "sana": "",
       "ism": "Niyozova Bibixonim",
       "ota": "Alisherovna",
@@ -6693,7 +6693,7 @@
     {
       "row": 443,
       "tr": 210,
-      "shnum": "26/27 Sh/A94",
+      "shnum": "94",
       "sana": "",
       "ism": "Suvonova Sevinch",
       "ota": "Orif qizi",
@@ -6789,7 +6789,7 @@
     {
       "row": 446,
       "tr": 213,
-      "shnum": "26/27 SH/A 98",
+      "shnum": "98",
       "sana": "",
       "ism": "Yusupova Dilnura",
       "ota": "Nuriddin qizi",
@@ -6853,7 +6853,7 @@
     {
       "row": 448,
       "tr": 215,
-      "shnum": "26/27 sh/a 100",
+      "shnum": "100",
       "sana": "",
       "ism": "Axmadova Zarnigor",
       "ota": "Habibullo qizi",
@@ -6949,7 +6949,7 @@
     {
       "row": 451,
       "tr": 218,
-      "shnum": "26/27 Sh/A 103",
+      "shnum": "103",
       "sana": "",
       "ism": "Egamberdiyeva Shahlo",
       "ota": "Dagar qizi",
@@ -7013,7 +7013,7 @@
     {
       "row": 453,
       "tr": 220,
-      "shnum": "26/27 SH/A105",
+      "shnum": "105",
       "sana": "",
       "ism": "Homidova Asilaxon",
       "ota": "G'ulomjon qizi",
@@ -7045,7 +7045,7 @@
     {
       "row": 454,
       "tr": 221,
-      "shnum": "26/27 SH/A106",
+      "shnum": "106",
       "sana": "",
       "ism": "Ismoilova Xumoroy",
       "ota": "Qudratilla qizi",
@@ -7077,7 +7077,7 @@
     {
       "row": 455,
       "tr": 222,
-      "shnum": "25/26 SH/A 229",
+      "shnum": "229",
       "sana": "",
       "ism": "Mavlonova Mastura",
       "ota": "Gulmurod qizi",
@@ -7301,7 +7301,7 @@
     {
       "row": 462,
       "tr": 229,
-      "shnum": "26/27 Sh/A114",
+      "shnum": "114",
       "sana": "",
       "ism": "Odilova Marjona",
       "ota": "Baxodir qizi",
@@ -7557,7 +7557,7 @@
     {
       "row": 471,
       "tr": 237,
-      "shnum": "26/27 SH/A123",
+      "shnum": "123",
       "sana": "",
       "ism": "Xoliqulova Nozima",
       "ota": "Qalandar qizi",
@@ -7589,7 +7589,7 @@
     {
       "row": 472,
       "tr": 238,
-      "shnum": "26/27 SH/A174",
+      "shnum": "174",
       "sana": "",
       "ism": "Xudoyorova Shahzoda",
       "ota": "Shuxrat qizi",
@@ -7621,7 +7621,7 @@
     {
       "row": 473,
       "tr": 239,
-      "shnum": "26/37 SH/A 125",
+      "shnum": "125",
       "sana": "",
       "ism": "Yusupova Hosila",
       "ota": "Akmal qizi",
@@ -7877,7 +7877,7 @@
     {
       "row": 481,
       "tr": 247,
-      "shnum": "25/26 SH/A 264",
+      "shnum": "264",
       "sana": "",
       "ism": "Ibrohimova Gulasal",
       "ota": "Nurbek qizi",
@@ -7973,7 +7973,7 @@
     {
       "row": 484,
       "tr": 250,
-      "shnum": "25/26 Sh/A 266",
+      "shnum": "266",
       "sana": "",
       "ism": "Maxmudova Nigina",
       "ota": "Maqsudjon qizi",
@@ -8005,7 +8005,7 @@
     {
       "row": 485,
       "tr": 251,
-      "shnum": "25/26 SH/A 272",
+      "shnum": "272",
       "sana": "",
       "ism": "Muhammadiyeva Rayhon",
       "ota": "Rahmatovna",
@@ -8069,7 +8069,7 @@
     {
       "row": 487,
       "tr": 253,
-      "shnum": "25/26 SH/A 369",
+      "shnum": "369",
       "sana": "",
       "ism": "Normo'minova Asal",
       "ota": "Qulmamatovna",
@@ -8325,7 +8325,7 @@
     {
       "row": 494,
       "tr": 261,
-      "shnum": "26/27 sh/a 147",
+      "shnum": "147",
       "sana": "",
       "ism": "Shodiyeva Nilufar",
       "ota": "Omonovna",
@@ -8357,7 +8357,7 @@
     {
       "row": 495,
       "tr": 262,
-      "shnum": "25/26 SH/A 263",
+      "shnum": "263",
       "sana": "",
       "ism": "Shukurillayeva Dilnura",
       "ota": "Jasurbek qizi",
@@ -8453,7 +8453,7 @@
     {
       "row": 498,
       "tr": 265,
-      "shnum": "25/26 Sh/A 260",
+      "shnum": "260",
       "sana": "",
       "ism": "Umirova Sevara",
       "ota": "Avlayor qizi",
@@ -8517,7 +8517,7 @@
     {
       "row": 500,
       "tr": 267,
-      "shnum": "26/27 SH/A153",
+      "shnum": "153",
       "sana": "",
       "ism": "Xudoykulova Munisa",
       "ota": "Muzurovna",
@@ -8581,7 +8581,7 @@
     {
       "row": 502,
       "tr": 269,
-      "shnum": "26/27 sh/a 155",
+      "shnum": "155",
       "sana": "",
       "ism": "Yorboboyeva Shaxzoda",
       "ota": "Zokirjon qizi",
@@ -8773,7 +8773,7 @@
     {
       "row": 508,
       "tr": 275,
-      "shnum": "26/27 SH/A 161",
+      "shnum": "161",
       "sana": "",
       "ism": "Esonmurodova Nurgul",
       "ota": "Nuriddin qizi",
@@ -8901,7 +8901,7 @@
     {
       "row": 512,
       "tr": 279,
-      "shnum": "26/27 Sh/A165",
+      "shnum": "165",
       "sana": "",
       "ism": "Nosirova Umida",
       "ota": "Zafariddin qizi",
@@ -8965,7 +8965,7 @@
     {
       "row": 514,
       "tr": 281,
-      "shnum": "25/26 Sh/A246",
+      "shnum": "246",
       "sana": "",
       "ism": "Olimova Durdona",
       "ota": "Uktam qizi",
@@ -9093,7 +9093,7 @@
     {
       "row": 518,
       "tr": 285,
-      "shnum": "25/26 SH/A 338",
+      "shnum": "338",
       "sana": "",
       "ism": "Quysinova Sumbula",
       "ota": "G'ayrat qizi",
@@ -9317,7 +9317,7 @@
     {
       "row": 525,
       "tr": 292,
-      "shnum": "26/27 SH/A178",
+      "shnum": "178",
       "sana": "",
       "ism": "Turayeva Malika",
       "ota": "Abdulla qizi",
@@ -9381,7 +9381,7 @@
     {
       "row": 527,
       "tr": 294,
-      "shnum": "26/27 sh/a 180",
+      "shnum": "180",
       "sana": "",
       "ism": "Xayitova Madina",
       "ota": "G'ayrat qizi",
@@ -9541,7 +9541,7 @@
     {
       "row": 532,
       "tr": 299,
-      "shnum": "25/26 Sh/A367",
+      "shnum": "367",
       "sana": "",
       "ism": "Boymurodova Shahnoza",
       "ota": "Shuxrat qizi",
@@ -9573,7 +9573,7 @@
     {
       "row": 533,
       "tr": 300,
-      "shnum": "25/26 SH/A 375",
+      "shnum": "375",
       "sana": "",
       "ism": "Bozorova Aziza",
       "ota": "Ravshan qizi",
@@ -9733,7 +9733,7 @@
     {
       "row": 538,
       "tr": 305,
-      "shnum": "25/26 sh/a 333",
+      "shnum": "333",
       "sana": "",
       "ism": "Ibodova Parvina",
       "ota": "Abdurashid qizi",
@@ -9765,7 +9765,7 @@
     {
       "row": 539,
       "tr": 306,
-      "shnum": "25/26 sh/a 33",
+      "shnum": "33",
       "sana": "",
       "ism": "Ibragimova Odina",
       "ota": "Azamat qizi",
@@ -9925,7 +9925,7 @@
     {
       "row": 544,
       "tr": 311,
-      "shnum": "25/26 SH/A358",
+      "shnum": "358",
       "sana": "",
       "ism": "Ochilova Gulnora",
       "ota": "Jurayevna",
@@ -10053,7 +10053,7 @@
     {
       "row": 548,
       "tr": 315,
-      "shnum": "25/26 Sh/A361",
+      "shnum": "361",
       "sana": "",
       "ism": "Saidova Nozima",
       "ota": "Sanjar qizi",
@@ -10149,7 +10149,7 @@
     {
       "row": 551,
       "tr": 318,
-      "shnum": "25/26 Sh/A 346",
+      "shnum": "346",
       "sana": "",
       "ism": "Shovxiddinova Latofat",
       "ota": "Ruzimurod qizi",
@@ -10181,7 +10181,7 @@
     {
       "row": 552,
       "tr": 319,
-      "shnum": "25/26 Sh/A365",
+      "shnum": "365",
       "sana": "",
       "ism": "Sunnatillayeva E'zoza",
       "ota": "Jamshid qizi",
@@ -12823,7 +12823,7 @@
       "doc_tur": "Shahodatnoma",
       "yil": "2026",
       "tel": "+998 87 591-09-18 / +998 88 566-08-02 (Onasi)",
-      "doc_file": "",
+      "doc_file": "Abdurahmonova Zahrabonu 204.docx",
       "status": "full",
       "pass_fish": "Abduraxmonova Zahrobonu Toxir qizi",
       "cert_fish": "Abduraxmonova Zahrobonu Toxir qizi",

@@ -294,8 +294,13 @@ async function malumotnomaCommand(chatId: string | number, query: string) {
     return
   }
   if (found.length > 1) {
-    await sendMessage(chatId, `🔍 ${found.length} ta talaba topildi — shartnoma raqami bilan yozing:\n\n` +
-      found.slice(0, 10).map((s) => `• ${esc(s.fish)} (Guruh ${esc(s.group || '—')}) — <code>/malumotnoma ${esc(s.shnum || '—')}</code>`).join('\n'))
+    // Shartnoma raqami bir nechta talabada bo'lsa (turli kurslar) — F.I.SH bilan so'rash taklif qilinadi
+    const shnumCount = (sh: string) => students.filter((x) => norm(x.shnum) === norm(sh)).length
+    await sendMessage(chatId, `🔍 ${found.length} ta talaba topildi — quyidagilardan birini yuboring:\n\n` +
+      found.slice(0, 10).map((s) => {
+        const arg = s.shnum && shnumCount(s.shnum) === 1 ? s.shnum : s.fish
+        return `• ${esc(s.fish)} (Guruh ${esc(s.group || '—')}) — <code>/malumotnoma ${esc(arg)}</code>`
+      }).join('\n'))
     return
   }
   const s = found[0]
