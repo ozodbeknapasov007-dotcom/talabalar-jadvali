@@ -141,12 +141,23 @@ class HttpError extends Error {
   constructor(message: string, readonly status: number) { super(message) }
 }
 
+/** Sessiya tugagan (401) — kirish sahifasiga, keyin shu joyga qaytish */
+function toLogin() {
+  const next = `${window.location.pathname}${window.location.search}`
+  window.location.replace(`/login${next && next !== '/' ? `?next=${encodeURIComponent(next)}` : ''}`)
+}
+
 async function postChange(change: Change) {
   const res = await fetch('/api/changes', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(change),
   })
+  // 401 — tahrir rad etilmagan: brauzerda saqlanib turadi va qayta kirgach yuboriladi
+  if (res.status === 401) {
+    toLogin()
+    throw new HttpError('Kirish talab qilinadi', 0)
+  }
   const body = await res.json().catch(() => ({}))
   if (!res.ok || !body.success) throw new HttpError(body.error || `Server ${res.status} qaytardi`, res.status)
 }
@@ -256,6 +267,10 @@ export function useStudents() {
     try {
       // Oxirgi versiya yuboriladi — o'zgarmagan bo'lsa server ro'yxatni qayta yubormaydi ({ unchanged: true })
       const res = await fetch('/api/students', { cache: 'no-store', headers: version.current ? { 'x-students-version': version.current } : {} })
+      if (res.status === 401) {
+        toLogin()
+        return
+      }
       const body = await res.json()
       if (!res.ok) throw new Error(body.error || `Server ${res.status}`)
       if (!body.unchanged) {

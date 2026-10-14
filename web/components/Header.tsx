@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import { Archive, ChevronDown, ClipboardList, CloudCheck, CloudUpload, FileSpreadsheet, FileText, Loader2, Moon, RefreshCw, Download, Send, Sun, UserPlus } from 'lucide-react'
+import { Archive, ChevronDown, ClipboardList, CloudCheck, CloudUpload, FileSpreadsheet, FileText, Loader2, LogOut, Moon, RefreshCw, Download, Send, Sun, UserPlus } from 'lucide-react'
 import { exportRole, ROLE_META, sendRoleToTelegram, type Role } from '@/lib/excel'
 import type { Student } from '@/lib/types'
 import type { Notify } from './Toast'
@@ -356,6 +356,22 @@ function ExportMenu({ students, notify }: { students: Student[]; notify: Notify 
   )
 }
 
+/** Tizimdan chiqish — sessiya cookie'si o'chiriladi va kirish sahifasiga qaytiladi */
+function LogoutButton() {
+  const [busy, setBusy] = useState(false)
+  const logout = async () => {
+    if (!confirm('Tizimdan chiqasizmi?')) return
+    setBusy(true)
+    await fetch('/api/auth/logout', { method: 'POST' }).catch(() => null)
+    window.location.replace('/login')
+  }
+  return (
+    <button type="button" className="btn-ghost h-9 px-2.5" onClick={logout} disabled={busy} title="Tizimdan chiqish" aria-label="Tizimdan chiqish">
+      {busy ? <Loader2 size={15} className="animate-spin" /> : <LogOut size={15} />}
+    </button>
+  )
+}
+
 function ThemeButton() {
   const [theme, setTheme] = useState<'dark' | 'light'>('dark')
 
@@ -414,6 +430,7 @@ export default function Header({
           </button>
           <ThemeButton />
           <ExportMenu students={students} notify={notify} />
+          <LogoutButton />
         </div>
       </div>
     </header>
