@@ -39,7 +39,8 @@ Javobda `"ok": true` va `"set_webhook": "ulandi"` chiqishi kerak. Webhook maxfiy
 xabarlarni rad etadi. Holatni tekshirish: `...?action=status` (oxirgi xato, navbatdagi xabarlar).
 Webhook ulangach kompyuterdagi Python xizmati `getUpdates` qilmaydi; xizmat uchun tokenni
 `scripts/backup_config.json` → `bot_token` ga ham yozing (boshqa xodimlar: `"allowed_ids": "123,456"`).
-Kunlik hisobotlarni (09:00 kontingent, 18:00 zaxira) `.github/workflows/daily_telegram_reports.yml` chaqiradi.
+Kunlik hisobotlar — Netlify jadval funksiyalari: `netlify/functions/kunlik-kontingent.mts` (har kuni 09:00)
+va `kunlik-zahira.mts` (18:00, Toshkent vaqti). Netlify → Logs & metrics → Functions da ko'rinadi, **Run now** bilan sinash mumkin.
 
 Saytda o'zgarishlar `scripts/remote_changes.json` navbatiga yoziladi. Kompyuterdagi
 Python xizmati navbatni tortib, Excelga qo'llaydi va `students.json` ni yangilaydi.

@@ -4,14 +4,14 @@ import { malumotnomaBlocker, malumotnomaData, malumotnomaFileName } from '@/lib/
 import { renderMalumotnomaJpg } from '@/lib/server/malumotnoma-rasm'
 import { academicGroups, groupTitle, isAcademicLeave, isOfficialGroup, isOutside, kursOf } from '@/lib/student'
 import { loadGroupSettings, REPO_PATHS, readRepoFile, readRepoFileIn } from '@/lib/server/source'
-import { TG_ALLOWED_IDS, TG_BOT_TOKEN, TG_CHAT_ID, TG_WEBHOOK_SECRET, tgCall, tgEsc as esc, tgSendPhoto } from '@/lib/server/telegram'
+import { siteOrigin, TG_ALLOWED_IDS, TG_BOT_TOKEN, TG_CHAT_ID, TG_REPORT_KEY, TG_WEBHOOK_SECRET, tgCall, tgEsc as esc, tgSendPhoto } from '@/lib/server/telegram'
 import type { Student } from '@/lib/types'
 
 /*
   24/7 Telegram bot webhook va kunlik hisobotlar (eski api/telegram_webhook.js dan ko'chirilgan).
 
-  GET  ?action=kontingent   — 09:00 kontingent hisoboti (GitHub Actions chaqiradi)
-  GET  ?action=backup_json  — 18:00 JSON baza + 4-Excel zahirasi
+  GET  ?action=kontingent   — 09:00 kontingent hisoboti (Netlify jadval funksiyasi, &key= bilan)
+  GET  ?action=backup_json  — 18:00 JSON baza + 4-Excel zahirasi (&key= bilan)
   GET  ?action=setup        — webhookni shu sayt manziliga ulash (maxfiy kalit bilan)
   GET  ?action=status       — bot va webhook holati (oxirgi xato, navbatdagi xabarlar)
   POST                      — Telegram'dan kelgan xabar (bot tugmalari, talaba/guruh qidiruvi,
@@ -281,7 +281,7 @@ export async function GET(request: NextRequest) {
   const action = (request.nextUrl.searchParams.get('action') || '').toLowerCase()
   if (!action) return Response.json({ ok: true, configured: !!(BOT_TOKEN && DEFAULT_CHAT_ID), hint: 'Holat: ?action=status, ulash: ?action=setup' })
   if (!BOT_TOKEN || !DEFAULT_CHAT_ID) return notConfigured()
-  const webhookUrl = `${request.nextUrl.origin}/api/telegram_webhook`
+  const webhookUrl = `${siteOrigin(request.nextUrl.origin)}/api/telegram_webhook`
 
   if (action === 'status') return Response.json(await botStatus(webhookUrl))
 
@@ -309,6 +309,10 @@ export async function GET(request: NextRequest) {
     return Response.json({ ...status, ok: !!set.ok && status.ok, set_webhook: set.ok ? 'ulandi' : explainTgError(set) }, { status: set.ok ? 200 : 502 })
   }
 
+  // Kunlik hisobotlar — faqat Netlify jadval funksiyasi (netlify/functions/kunlik-*.mts) kalit bilan chaqiradi
+  if ((action === 'kontingent' || action === 'backup_json') && request.nextUrl.searchParams.get('key') !== TG_REPORT_KEY) {
+    return Response.json({ ok: false, error: 'Kalit noto‘g‘ri' }, { status: 403 })
+  }
   await loadGroupSettings()
   if (action === 'kontingent') {
     const result = await sendMessage(DEFAULT_CHAT_ID, await kontingentText('Kunlik 09:00 avto-hisobot'))

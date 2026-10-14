@@ -18,6 +18,18 @@ export const TG_ALLOWED_IDS = new Set(
 export const TG_WEBHOOK_SECRET = process.env.TELEGRAM_WEBHOOK_SECRET?.trim() ||
   (TG_BOT_TOKEN ? createHash('sha256').update(`webhook:${TG_BOT_TOKEN}`).digest('hex').slice(0, 48) : '')
 
+/** Kunlik hisobotlarni (?action=kontingent / backup_json) chaqirish kaliti — netlify/functions/kunlik-*.mts
+ *  ham xuddi shunday hisoblaydi. Kalitsiz begona odam chatga hisobot yubora olmaydi. */
+export const TG_REPORT_KEY = TG_BOT_TOKEN ? createHash('sha256').update(`report:${TG_BOT_TOKEN}`).digest('hex').slice(0, 32) : ''
+
+/** Saytning asosiy manzili. Netlify so'rovni ba'zan deploy nusxasi (abc123--sayt.netlify.app) orqali
+ *  uzatadi — webhook unga ulansa, keyingi deploylar botga yetib bormaydi. */
+export function siteOrigin(requestOrigin: string) {
+  const env = process.env.URL?.trim()
+  if (env?.startsWith('https://') && !env.includes('--')) return env.replace(/\/$/, '')
+  return requestOrigin.replace(/^(https?:\/\/)[0-9a-f]{24}--/, '$1')
+}
+
 /** Telegram HTML rejimi uchun matnni xavfsiz qilish (<, >, & belgilari xabarni buzadi) */
 export const tgEsc = (v: unknown) => String(v ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
 

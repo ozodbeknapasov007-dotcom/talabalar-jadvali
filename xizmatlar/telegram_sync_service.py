@@ -1351,19 +1351,33 @@ def _mark_backup_sent():
         pass
 
 
+def _local_schedule_enabled():
+    """Kunlik hisobotlarni 2026-10-14 dan Netlify jadval funksiyalari yuboradi (web/netlify/functions/kunlik-*.mts,
+    kompyuter o'chiq bo'lsa ham). Lokal jadval faqat backup_config.json da "local_schedule": true bo'lsa ishlaydi —
+    aks holda hisobot ikki marta kelardi."""
+    try:
+        with open(BACKUP_CONFIG_PATH, 'r', encoding='utf-8') as f:
+            return bool(json.load(f).get('local_schedule', False))
+    except Exception:
+        return False
+
+
 def _start_daily_backup_scheduler():
     """
-    1) Har kuni soat 09:00 da (Yakshanba — tm_wday == 6 dan tashqari, Dushanba–Shanba)
-       avtomatik ravishda Kontingent hisobotini Telegram botga yuboradi.
-    2) Har kuni soat 18:00 da avtomatik ravishda .json baza ma'lumotlarini (talabalar_bazasi.json)
-       Telegram botga yuboradi.
+    (Faqat "local_schedule": true bo'lsa.)
+    1) Har kuni soat 09:00 da Kontingent hisobotini Telegram botga yuboradi.
+    2) Har kuni soat 18:00 da .json baza ma'lumotlarini (talabalar_bazasi.json) Telegram botga yuboradi.
     """
+    if not _local_schedule_enabled():
+        print("[ZAHIRA] ☁️ Kunlik hisobotlarni Netlify yuboradi (09:00 kontingent, 18:00 zahira) — lokal jadval o'chiq.")
+        return
+
     def loop():
         while True:
             try:
                 now = time.localtime()
-                # 1. Soat 09:00 da Kontingent hisoboti (Yakshanba = 6 dan boshqa barcha kunlari)
-                if now.tm_wday != 6 and (now.tm_hour > 9 or (now.tm_hour == 9 and now.tm_min >= 0)):
+                # 1. Soat 09:00 da Kontingent hisoboti (har kuni)
+                if now.tm_hour >= 9:
                     if not _kontingent_already_sent_today():
                         if send_kontingent_to_telegram(reason='Kunlik 09:00 avto-hisobot'):
                             _mark_kontingent_sent()
@@ -1412,7 +1426,7 @@ def send_bot_welcome_menu(chat_id=None):
         "• <b>📋 4. To'liq Ma'lumotlar (.xlsx)</b> — O'zingiz uchun to'liq baza\n"
         "• <b>📦 JSON Baza (.json)</b> — To'liq JSON baza fayli\n\n"
         "⏰ <i>Avtomatik rejim:</i>\n"
-        "— Har kuni <b>09:00</b> da (Yakshanbadan tashqari): <b>Kontingent hisoboti</b>\n"
+        "— Har kuni <b>09:00</b> da: <b>Kontingent hisoboti</b>\n"
         "— Har kuni <b>18:00</b> da: <b>.json baza zahirasi</b>"
     )
     try:
@@ -5143,7 +5157,7 @@ def run_server(port=8080):
         _start_daily_backup_scheduler()
         _start_telegram_bot_polling()
         if load_backup_config():
-            print(f"[ZAHIRA & BOT] 🤖 Telegram Bot tugmalari, 09:00 Kontingent (Dush-Shan) va {BACKUP_HOUR:02d}:{BACKUP_MINUTE:02d} .json zahira yoqildi!")
+            print("[ZAHIRA & BOT] 🤖 Telegram bot sozlamasi topildi")
         else:
             print("[ZAHIRA] ⚠️ Sozlanmagan: scripts/backup_config.json yarating (bot_token, chat_id)")
     except Exception as e_bk:
