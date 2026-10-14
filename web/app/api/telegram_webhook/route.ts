@@ -200,7 +200,7 @@ async function malumotnomaCommand(chatId: string | number, query: string) {
 }
 
 const notConfigured = () =>
-  Response.json({ ok: false, error: 'TELEGRAM_BOT_TOKEN / TELEGRAM_CHAT_ID sozlanmagan (Vercel → Settings → Environment Variables)' }, { status: 500 })
+  Response.json({ ok: false, error: 'TELEGRAM_BOT_TOKEN / TELEGRAM_CHAT_ID sozlanmagan (sayt sozlamalari → Environment variables)' }, { status: 500 })
 
 export async function GET(request: NextRequest) {
   await loadGroupSettings()
@@ -220,11 +220,8 @@ export async function GET(request: NextRequest) {
       })
     }).then(r => r.json()).catch(e => ({ ok: false, error: (e as Error).message }))
 
-    return Response.json({ ok: true, active_bot: '@new_students_shtt_bot', set_webhook: setNew, token: BOT_TOKEN })
-  }
-
-  if (action === 'get_token') {
-    return Response.json({ ok: true, active_bot: '@new_students_shtt_bot', token: BOT_TOKEN })
+    // Bot tokeni hech qachon javobda qaytarilmaydi (avval ochiq qaytarilardi — manzilni bilgan har kim olishi mumkin edi)
+    return Response.json({ ok: true, active_bot: '@new_students_shtt_bot', webhook: webhookUrl, set_webhook: setNew })
   }
 
   if (action === 'kontingent') {
