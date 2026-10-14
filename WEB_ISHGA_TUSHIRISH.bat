@@ -9,7 +9,7 @@ echo       TALABALAR PORTALI - ASOSIY WEB SAHIFA (Next.js)
 echo ======================================================================
 echo.
 echo   [OK] Asosiy Web Portal:  http://localhost:3000
-echo   [OK] Onlayn Portal:      https://talabalar-royhati.vercel.app
+echo   [OK] Onlayn Portal:      https://talabalar-jadvali.netlify.app
 echo.
 echo   Tahrirlash va saqlash uchun ma'lumot xizmati ham ishlashi kerak
 echo   (ISHGA_TUSHIRISH.bat ikkalasini birga ishga tushiradi).

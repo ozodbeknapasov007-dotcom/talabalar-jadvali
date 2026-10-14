@@ -27,7 +27,7 @@ echo ======================================================================
 echo   ✅ TIZIM ISHGA TUSHDI!
 echo.
 echo   🌐 Asosiy portal:        http://localhost:3000
-echo   ☁️  Onlayn portal:        https://talabalar-royhati.vercel.app
+echo   ☁️  Onlayn portal:        https://talabalar-jadvali.netlify.app
 echo   🗄️  Eski portal (arxiv):  http://localhost:8080
 echo.
 echo   Ochilgan ikki oynani yopmang — ular portal ishlashi uchun kerak.

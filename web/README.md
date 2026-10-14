@@ -19,16 +19,24 @@ kompyuterdagi Python xizmatiga (`ISHGA_TUSHIRISH.bat`, `localhost:8080`) yuboril
 Xizmat o'chiq bo'lsa, sarlavhada **"Python xizmati o'chiq"** degan qizil belgi chiqadi.
 Tahrirlar brauzerda saqlanib turadi va xizmat yoqilgach qayta yuboriladi.
 
-## Vercel'ga joylash (alohida manzil)
+## Netlify'ga joylash
 
-1. Vercel → **Add New Project** → shu GitHub repo.
-2. **Root Directory**: `web` (Framework: Next.js avtomatik aniqlanadi).
-3. **Environment Variables**:
-   - `GITHUB_TOKEN` — repo'ga `contents: read & write` huquqli **yangi** token
-     (eski `gho_...` tokenni bekor qiling — u ommaviy repoda ochiq turibdi).
-4. Deploy. Hammasi to'g'ri ishlasa, asosiy domenni shu loyihaga o'tkazasiz.
+Sayt: https://talabalar-jadvali.netlify.app. Sozlama repo ildizidagi `netlify.toml` da
+(base = `web`, `@netlify/plugin-nextjs`, Node 22) — `main` ga push qilinganda o'zi yig'iladi.
 
-Vercel'da o'zgarishlar `scripts/remote_changes.json` navbatiga yoziladi. Kompyuterdagi
+**Site configuration → Environment variables** (o'zgartirgach **Deploys → Trigger deploy** qiling):
+- `GITHUB_TOKEN` — repo'ga `contents: read & write` huquqli token.
+- `TELEGRAM_BOT_TOKEN` — @BotFather bergan token (kodda zaxira token yo'q, repo ommaviy).
+- `TELEGRAM_CHAT_ID`, ixtiyoriy `TELEGRAM_CHANNEL_ID` — hisobotlar boradigan chat/kanal.
+- `OPENROUTER_API_KEY`, `WEB_JURNAL_API_KEY`, `MYTEST_ROSTER_TOKEN` — tegishli funksiyalar uchun.
+
+**Botni ulash** (yangi token qo'yib, qayta deploy qilingach) — brauzerda bir marta oching:
+`https://talabalar-jadvali.netlify.app/api/telegram_webhook?action=setup`.
+Javobda `set_webhook.ok: true` chiqishi kerak. Webhook ulangach kompyuterdagi Python xizmati
+`getUpdates` qilmaydi; xizmat uchun tokenni `scripts/backup_config.json` → `bot_token` ga ham yozing.
+Kunlik hisobotlarni (09:00 kontingent, 18:00 zaxira) `.github/workflows/daily_telegram_reports.yml` chaqiradi.
+
+Saytda o'zgarishlar `scripts/remote_changes.json` navbatiga yoziladi. Kompyuterdagi
 Python xizmati navbatni tortib, Excelga qo'llaydi va `students.json` ni yangilaydi.
 Sayt har 45 soniyada (va oynaga qaytilganda) yangi ma'lumotni o'zi tortadi.
 
@@ -58,7 +66,7 @@ Sayt har 45 soniyada (va oynaga qaytilganda) yangi ma'lumotni o'zi tortadi.
 - **Bot**: `/malumotnoma 285` (shartnoma raqami yoki F.I.SH) — faqat `TELEGRAM_CHAT_ID` chatida ishlaydi, JPG rasm yuboradi.
 - Matn faqat bazadan olinadi (F.I.SH, yo'nalish, guruh); o'quv yili va bosqich sanadan hisoblanadi.
   Safdan chiqarilgan talabaga berilmaydi.
-- Botga yuborish uchun `TELEGRAM_BOT_TOKEN` va `TELEGRAM_CHAT_ID` kerak (Vercel'da yoki `.env.local` da).
+- Botga yuborish uchun `TELEGRAM_BOT_TOKEN` va `TELEGRAM_CHAT_ID` kerak (Netlify'da yoki `.env.local` da).
 - **Shablonni o'zgartirish**: `assets/malumotnoma/shablon.docx` ni Word'da oching va tahrirlang.
   `{{FISH}}`, `{{OQUV_YILI}}`, `{{YONALISH}}`, `{{BOSQICH}}`, `{{GURUH}}`, `{{SANA}}` belgilarini o'chirmang —
   shu joylarga talaba ma'lumotlari qo'yiladi. Word fayl shablonning o'zidan to'ldiriladi. JPG rasm esa logotip va

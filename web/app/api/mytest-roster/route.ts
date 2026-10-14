@@ -7,7 +7,7 @@ export const dynamic = 'force-dynamic'
 /*
   MyTest Admin uchun talabalar ro'yxati: faqat F.I.O va guruh (PINFL, pasport, telefon — yo'q).
   Chetlatilganlar va akademik ta'tildagilar berilmaydi.
-  Kalit: Vercel → Environment Variables → MYTEST_ROSTER_TOKEN; so'rovda "Authorization: Bearer <kalit>".
+  Kalit: Netlify → Environment variables → MYTEST_ROSTER_TOKEN; so'rovda "Authorization: Bearer <kalit>".
 */
 
 const INACTIVE = /chiqarilgan|ta'til|taʼtil|ta’til/i

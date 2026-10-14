@@ -2,7 +2,7 @@
 
 Shahrisabz Tibbiyot Texnikumi 1-kurs talabalarining shartnoma, pasport va ta'lim hujjatlari bazasi.
 Asosiy portal — **web/** (Next.js). Ma'lumotlar Excel'da saqlanadi, Python xizmati ularni yangilaydi
-va GitHub'ga yuboradi, onlayn portal (Vercel) GitHub'dan o'qiydi.
+va GitHub'ga yuboradi, onlayn portal (Netlify) GitHub'dan o'qiydi.
 
 ## Ishga tushirish
 
@@ -14,7 +14,7 @@ va GitHub'ga yuboradi, onlayn portal (Vercel) GitHub'dan o'qiydi.
 | `BOTNI_ISHGA_TUSHIRISH.bat` | Faqat ma'lumot xizmati va Telegram bot |
 | `YANGILASH.bat` | Hisobotlar, qabul shabloni va shubhali ma'lumotlar tekshiruvini qayta yaratadi |
 
-Onlayn: https://talabalar-royhati.vercel.app (Vercel → Root Directory: `web`)
+Onlayn: https://talabalar-jadvali.netlify.app (Netlify, sozlamasi `netlify.toml` da: base = `web`)
 
 ## Papkalar
 
@@ -38,5 +38,5 @@ data/Talabalar_Toliq_Royxati.xlsx  ──(03_hisobot_yasat.py)──►  data/st
         │ yozadi                                                        │
 xizmatlar/telegram_sync_service.py ◄── web/ (lokal: localhost:8080)     │ git push
         ▲                                                               ▼
-        └──── scripts/remote_changes.json ◄── web/ (Vercel) ◄──── GitHub (data/students.json)
+        └──── scripts/remote_changes.json ◄── web/ (Netlify) ◄──── GitHub (data/students.json)
 ```
