@@ -231,5 +231,19 @@
     },
     "id": "chg_1791949653613_a7zpk",
     "created_at": "2026-10-14T03:47:33.613Z"
+  },
+  {
+    "type": "update_student",
+    "data": {
+      "row": 179,
+      "fields": {
+        "group": "26-07"
+      },
+      "shnum": "52",
+      "pinfl": "60803048230011",
+      "ism": "Xurramova Sabina"
+    },
+    "id": "chg_1791952103079_2alm9",
+    "created_at": "2026-10-14T04:28:23.079Z"
   }
 ]
