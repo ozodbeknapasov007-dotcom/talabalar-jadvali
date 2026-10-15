@@ -880,8 +880,31 @@ def _get_tuman_from_pinfl(pinfl):
     return ''
 
 def build_json_database_file():
-    """Talabalar_Toliq_Royxati.xlsx asosida to'liq .json bazani (talabalar_bazasi.json) yangilaydi."""
+    """To'liq .json bazani (talabalar_bazasi.json) yangilaydi.
+
+    Asosiy manba — data/students.json (03_hisobot_yasat.py yozadi, portal/bot tahrirlari shu yerga tushadi):
+    unda barcha maydonlar bor (status, buyruq, pass_type, tr ...). Excel'dan qayta yig'ish faqat
+    students.json yo'q bo'lsagina ishlaydi — aks holda baza qisqargan 18 maydonli formatga tushib qolardi.
+    """
     json_path = os.path.join(BASE_DIR, 'data', 'talabalar_bazasi.json')
+    students_path = os.path.join(BASE_DIR, 'data', 'students.json')
+    if os.path.exists(students_path):
+        try:
+            with open(students_path, 'r', encoding='utf-8') as sf:
+                records = json.load(sf)
+            payload = {
+                'updated_at': time.strftime('%Y-%m-%d %H:%M:%S'),
+                'total_students': len(records),
+                'students': records
+            }
+            tmp_path = json_path + '.tmp'
+            with open(tmp_path, 'w', encoding='utf-8') as jf:
+                json.dump(payload, jf, ensure_ascii=False, indent=2)
+            os.replace(tmp_path, json_path)
+            return json_path, len(records)
+        except Exception as e:
+            print(f"[ZAHIRA] students.json'dan JSON baza yaratishda xato: {e}")
+            return json_path, '?'
     try:
         wb = openpyxl.load_workbook(EXCEL_PATH, data_only=True)
         ws = wb.active
